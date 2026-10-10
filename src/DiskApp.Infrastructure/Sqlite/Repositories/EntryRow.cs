@@ -3,8 +3,8 @@ using DiskApp.Core.Domain;
 namespace DiskApp.Infrastructure.Sqlite.Repositories;
 
 /// <summary>
-/// Строка таблицы <c>entries</c> как её читает Dapper (колонки <c>snake_case</c> → свойства); даты остаются текстом
-/// и разбираются при переводе в <see cref="FileEntry"/>, чтобы горячий путь поиска не зависел от обработчиков типов.
+/// Строка таблицы <c>entries</c> как её читает Dapper (колонки <c>snake_case</c> → свойства); даты читаются тиками
+/// и переводятся при создании <see cref="FileEntry"/>, чтобы горячий путь поиска не зависел от обработчиков типов.
 /// </summary>
 internal sealed class EntryRow
 {
@@ -25,9 +25,9 @@ internal sealed class EntryRow
 
     public long Size { get; set; }
 
-    public string CreatedUtc { get; set; } = string.Empty;
+    public long CreatedUtc { get; set; }
 
-    public string ModifiedUtc { get; set; } = string.Empty;
+    public long ModifiedUtc { get; set; }
 
     public long Attributes { get; set; }
 
@@ -47,8 +47,8 @@ internal sealed class EntryRow
         Extension = Ext,
         IsDirectory = IsDir != 0,
         Size = Size,
-        CreatedUtc = SqliteTime.Parse(CreatedUtc),
-        ModifiedUtc = SqliteTime.Parse(ModifiedUtc),
+        CreatedUtc = SqliteTime.Decode(CreatedUtc),
+        ModifiedUtc = SqliteTime.Decode(ModifiedUtc),
         Attributes = (FileAttributes)Attributes,
         RelPath = RelPath,
         Kind = (FileKind)Kind,

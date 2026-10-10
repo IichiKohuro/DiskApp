@@ -30,7 +30,7 @@ public sealed class SqliteRootRepository(SqliteDatabase database, IClock clock) 
     public Task<Root> AddAsync(Root root, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(root);
-        var createdUtc = SqliteTime.Format(clock.UtcNow);
+        var createdUtc = SqliteTime.Encode(clock.UtcNow);
 
         return WriteAsync(connection =>
         {
@@ -48,7 +48,7 @@ public sealed class SqliteRootRepository(SqliteDatabase database, IClock clock) 
                     IncludeHidden = root.IncludeHidden ? 1 : 0,
                     IncludeSystem = root.IncludeSystem ? 1 : 0,
                     root.MaxDepth,
-                    LastScanUtc = SqliteTime.Format(root.LastScanUtc),
+                    LastScanUtc = SqliteTime.Encode(root.LastScanUtc),
                     Status = (int)root.Status,
                     root.ErrorMessage,
                     CreatedUtc = createdUtc,
@@ -78,7 +78,7 @@ public sealed class SqliteRootRepository(SqliteDatabase database, IClock clock) 
                 IncludeHidden = root.IncludeHidden ? 1 : 0,
                 IncludeSystem = root.IncludeSystem ? 1 : 0,
                 root.MaxDepth,
-                LastScanUtc = SqliteTime.Format(root.LastScanUtc),
+                LastScanUtc = SqliteTime.Encode(root.LastScanUtc),
                 Status = (int)root.Status,
                 root.ErrorMessage,
             }) == 1, cancellationToken);
@@ -98,7 +98,7 @@ public sealed class SqliteRootRepository(SqliteDatabase database, IClock clock) 
     public Task SetLastScanAsync(long id, DateTimeOffset scannedAtUtc, CancellationToken cancellationToken = default)
         => WriteAsync(connection => connection.Execute(
             "UPDATE roots SET last_scan_utc = @LastScanUtc WHERE id = @Id",
-            new { Id = id, LastScanUtc = SqliteTime.Format(scannedAtUtc) }), cancellationToken);
+            new { Id = id, LastScanUtc = SqliteTime.Encode(scannedAtUtc) }), cancellationToken);
 
     private sealed class RootRow
     {
@@ -116,7 +116,7 @@ public sealed class SqliteRootRepository(SqliteDatabase database, IClock clock) 
 
         public long? MaxDepth { get; set; }
 
-        public string? LastScanUtc { get; set; }
+        public long? LastScanUtc { get; set; }
 
         public long Status { get; set; }
 
@@ -131,7 +131,7 @@ public sealed class SqliteRootRepository(SqliteDatabase database, IClock clock) 
             IncludeHidden = IncludeHidden != 0,
             IncludeSystem = IncludeSystem != 0,
             MaxDepth = MaxDepth is null ? null : checked((int)MaxDepth.Value),
-            LastScanUtc = SqliteTime.ParseOrNull(LastScanUtc),
+            LastScanUtc = SqliteTime.DecodeOrNull(LastScanUtc),
             Status = (RootStatus)Status,
             ErrorMessage = ErrorMessage,
         };

@@ -40,13 +40,13 @@ public static class DapperConfiguration
     {
         public override void SetValue(IDbDataParameter parameter, DateTimeOffset value)
         {
-            parameter.DbType = DbType.String;
-            parameter.Value = SqliteTime.Format(value);
+            parameter.DbType = DbType.Int64;
+            parameter.Value = SqliteTime.Encode(value);
         }
 
         public override DateTimeOffset Parse(object value) => value switch
         {
-            string text => SqliteTime.Parse(text),
+            long ticks => SqliteTime.Decode(ticks),
             DateTimeOffset offset => offset,
             DateTime dateTime => new DateTimeOffset(DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)),
             _ => throw new InvalidCastException($"Невозможно прочитать дату из значения типа {value.GetType().Name}."),

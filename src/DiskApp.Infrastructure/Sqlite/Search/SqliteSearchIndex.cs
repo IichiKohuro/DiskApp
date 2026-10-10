@@ -434,14 +434,14 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
                     Extension = reader.GetString(4),
                     IsDirectory = reader.GetInt64(5) != 0,
                     Size = reader.GetInt64(6),
-                    CreatedUtc = SqliteTime.Parse(reader.GetString(7)),
-                    ModifiedUtc = SqliteTime.Parse(reader.GetString(8)),
+                    CreatedUtc = SqliteTime.Decode(reader.GetInt64(7)),
+                    ModifiedUtc = SqliteTime.Decode(reader.GetInt64(8)),
                     Attributes = (FileAttributes)reader.GetInt64(9),
                     RelPath = reader.GetString(10),
                     Kind = (FileKind)reader.GetInt64(11),
                 },
                 reader.IsDBNull(12) ? 0 : reader.GetInt32(12),
-                reader.IsDBNull(13) ? null : SqliteTime.Parse(reader.GetString(13)),
+                reader.IsDBNull(13) ? null : SqliteTime.Decode(reader.GetInt64(13)),
                 reader.GetInt64(14) != 0));
         }
     }
@@ -568,7 +568,7 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     }
 
     private static (object? From, object? To)[] Dates(IReadOnlyList<DateRange> ranges)
-        => ranges.Select(static range => ((object?)SqliteTime.Format(range.FromUtc), (object?)SqliteTime.Format(range.ToUtc))).ToArray();
+        => ranges.Select(static range => ((object?)SqliteTime.Encode(range.FromUtc), (object?)SqliteTime.Encode(range.ToUtc))).ToArray();
 
     private static (object? From, object? To)[] Sizes(IReadOnlyList<SizeRange> ranges)
         => ranges.Select(static range => ((object?)range.Min, (object?)(range.Max == long.MaxValue ? null : range.Max))).ToArray();

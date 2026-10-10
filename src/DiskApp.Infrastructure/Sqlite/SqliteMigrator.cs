@@ -73,7 +73,7 @@ public static partial class SqliteMigrator
                 record.CommandText = "INSERT INTO schema_version (version, name, applied_utc) VALUES ($version, $name, $applied)";
                 record.Parameters.AddWithValue("$version", migration.Version);
                 record.Parameters.AddWithValue("$name", migration.Name);
-                record.Parameters.AddWithValue("$applied", SqliteTime.Format(DateTimeOffset.UtcNow));
+                record.Parameters.AddWithValue("$applied", SqliteTime.Encode(DateTimeOffset.UtcNow));
                 record.ExecuteNonQuery();
             }
 
@@ -91,7 +91,7 @@ public static partial class SqliteMigrator
             CREATE TABLE IF NOT EXISTS schema_version (
                 version     INTEGER PRIMARY KEY,
                 name        TEXT NOT NULL,
-                applied_utc TEXT NOT NULL
+                applied_utc INTEGER NOT NULL
             )
             """;
         command.ExecuteNonQuery();

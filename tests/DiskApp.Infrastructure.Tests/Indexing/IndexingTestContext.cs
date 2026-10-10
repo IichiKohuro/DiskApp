@@ -94,11 +94,11 @@ internal sealed class IndexingTestContext : IAsyncDisposable
     /// <summary>
     /// Записи индекса: путь → (папка, размер, время изменения).
     /// </summary>
-    public Dictionary<string, (bool IsDirectory, long Size, string Modified)> IndexSnapshot()
+    public Dictionary<string, (bool IsDirectory, long Size, long Modified)> IndexSnapshot()
     {
         using var connection = Database.Connections.Open();
         return connection
-            .Query<(string RelPath, long IsDir, long Size, string Modified)>(
+            .Query<(string RelPath, long IsDir, long Size, long Modified)>(
                 "SELECT rel_path, is_dir, size, modified_utc FROM entries WHERE root_id = @RootId",
                 new { RootId = Root.Id })
             .ToDictionary(static row => row.RelPath, static row => (row.IsDir != 0, row.Size, row.Modified), StringComparer.Ordinal);
@@ -107,10 +107,10 @@ internal sealed class IndexingTestContext : IAsyncDisposable
     /// <summary>
     /// Что лежит на диске: путь → (папка, размер, время изменения); внутрь ссылок не заходит.
     /// </summary>
-    public Dictionary<string, (bool IsDirectory, long Size, string Modified)> DiskSnapshot()
+    public Dictionary<string, (bool IsDirectory, long Size, long Modified)> DiskSnapshot()
     {
         var options = new EnumerationOptions { RecurseSubdirectories = true, AttributesToSkip = 0, IgnoreInaccessible = true };
-        var result = new Dictionary<string, (bool, long, string)>(StringComparer.Ordinal);
+        var result = new Dictionary<string, (bool, long, long)>(StringComparer.Ordinal);
         foreach (var info in new DirectoryInfo(Files.FullPath).EnumerateFileSystemInfos("*", options))
         {
             var relPath = Path.GetRelativePath(Files.FullPath, info.FullName);
@@ -122,7 +122,7 @@ internal sealed class IndexingTestContext : IAsyncDisposable
             }
 
             var size = info is FileInfo file ? file.Length : 0;
-            result[relPath] = (isDirectory, size, SqliteTime.Format(new DateTimeOffset(info.LastWriteTimeUtc)));
+            result[relPath] = (isDirectory, size, SqliteTime.Encode(new DateTimeOffset(info.LastWriteTimeUtc)));
         }
 
         return result;

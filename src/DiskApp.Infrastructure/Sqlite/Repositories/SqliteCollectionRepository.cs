@@ -31,7 +31,7 @@ public sealed class SqliteCollectionRepository(SqliteDatabase database, IClock c
     {
         ArgumentNullException.ThrowIfNull(collection);
         ArgumentException.ThrowIfNullOrWhiteSpace(collection.Name);
-        var createdUtc = SqliteTime.Format(clock.UtcNow);
+        var createdUtc = SqliteTime.Encode(clock.UtcNow);
 
         return WriteAsync(connection =>
         {

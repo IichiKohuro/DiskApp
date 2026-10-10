@@ -27,7 +27,7 @@ public sealed class SqliteScanLogRepository(SqliteDatabase database) : SqliteRep
                 {
                     entry.RootId,
                     entry.ScanId,
-                    OccurredUtc = SqliteTime.Format(entry.OccurredUtc),
+                    OccurredUtc = SqliteTime.Encode(entry.OccurredUtc),
                     Level = (int)entry.Level,
                     entry.Path,
                     entry.Message,
@@ -71,7 +71,7 @@ public sealed class SqliteScanLogRepository(SqliteDatabase database) : SqliteRep
 
         public long ScanId { get; set; }
 
-        public string OccurredUtc { get; set; } = string.Empty;
+        public long OccurredUtc { get; set; }
 
         public long Level { get; set; }
 
@@ -79,6 +79,6 @@ public sealed class SqliteScanLogRepository(SqliteDatabase database) : SqliteRep
 
         public string Message { get; set; } = string.Empty;
 
-        public ScanLogEntry ToEntry() => new(RootId, ScanId, SqliteTime.Parse(OccurredUtc), (ScanLogLevel)Level, Path, Message) { Id = Id };
+        public ScanLogEntry ToEntry() => new(RootId, ScanId, SqliteTime.Decode(OccurredUtc), (ScanLogLevel)Level, Path, Message) { Id = Id };
     }
 }

@@ -24,7 +24,7 @@ public sealed class SqliteQueryHistoryRepository(SqliteDatabase database) : Sqli
             INSERT INTO query_history (query, use_count, last_used_utc) VALUES (@Query, 1, @UsedAt)
             ON CONFLICT (query) DO UPDATE SET use_count = use_count + 1, last_used_utc = excluded.last_used_utc
             """,
-            new { Query = trimmed, UsedAt = SqliteTime.Format(usedAtUtc) }), cancellationToken);
+            new { Query = trimmed, UsedAt = SqliteTime.Encode(usedAtUtc) }), cancellationToken);
     }
 
     /// <inheritdoc />
@@ -72,8 +72,8 @@ public sealed class SqliteQueryHistoryRepository(SqliteDatabase database) : Sqli
 
         public long UseCount { get; set; }
 
-        public string LastUsedUtc { get; set; } = string.Empty;
+        public long LastUsedUtc { get; set; }
 
-        public QueryHistoryEntry ToEntry() => new(Query, checked((int)UseCount), SqliteTime.Parse(LastUsedUtc));
+        public QueryHistoryEntry ToEntry() => new(Query, checked((int)UseCount), SqliteTime.Decode(LastUsedUtc));
     }
 }

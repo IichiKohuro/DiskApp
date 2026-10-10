@@ -1,5 +1,5 @@
 -- V001: начальная схема индекса (docs/ARCHITECTURE.md, раздел 4; ADR-0005).
--- Даты — текст ISO 8601 в UTC (yyyy-MM-ddTHH:mm:ss.fffffffZ): сравнение строк совпадает с хронологическим.
+-- Даты — целые тики UTC (DateTimeOffset.UtcTicks, 100 нс от 0001-01-01; ADR-0007): 8 байт вместо 28 у текста ISO 8601.
 -- name_folded — имя, свёрнутое для поиска (SearchText.Fold: нижний регистр по правилам .NET и ё → е): COLLATE NOCASE
 -- в SQLite не сворачивает кириллицу. По этой колонке строятся и FTS, и префиксный поиск.
 
@@ -11,10 +11,10 @@ CREATE TABLE roots (
     include_hidden INTEGER NOT NULL DEFAULT 0,
     include_system INTEGER NOT NULL DEFAULT 0,
     max_depth      INTEGER NULL,
-    last_scan_utc  TEXT    NULL,
+    last_scan_utc  INTEGER NULL,
     status         INTEGER NOT NULL DEFAULT 0,
     error_message  TEXT    NULL,
-    created_utc    TEXT    NOT NULL
+    created_utc    INTEGER NOT NULL
 );
 
 CREATE TABLE entries (
@@ -26,8 +26,8 @@ CREATE TABLE entries (
     ext          TEXT    NOT NULL DEFAULT '',
     is_dir       INTEGER NOT NULL DEFAULT 0,
     size         INTEGER NOT NULL DEFAULT 0,
-    created_utc  TEXT    NOT NULL,
-    modified_utc TEXT    NOT NULL,
+    created_utc  INTEGER NOT NULL,
+    modified_utc INTEGER NOT NULL,
     attributes   INTEGER NOT NULL DEFAULT 0,
     rel_path     TEXT    NOT NULL,
     kind         INTEGER NOT NULL DEFAULT 0,
@@ -68,7 +68,7 @@ END;
 CREATE TABLE usage (
     entry_id        INTEGER PRIMARY KEY REFERENCES entries(id) ON DELETE CASCADE,
     open_count      INTEGER NOT NULL DEFAULT 0,
-    last_opened_utc TEXT    NULL
+    last_opened_utc INTEGER NULL
 );
 
 CREATE INDEX ix_usage_last_opened ON usage (last_opened_utc);
@@ -76,7 +76,7 @@ CREATE INDEX ix_usage_last_opened ON usage (last_opened_utc);
 CREATE TABLE favorites (
     entry_id   INTEGER PRIMARY KEY REFERENCES entries(id) ON DELETE CASCADE,
     sort_order INTEGER NOT NULL,
-    pinned_utc TEXT    NOT NULL
+    pinned_utc INTEGER NOT NULL
 );
 
 CREATE TABLE tags (
@@ -99,7 +99,7 @@ CREATE TABLE collections (
     name        TEXT    NOT NULL,
     kind        INTEGER NOT NULL DEFAULT 0,
     query       TEXT    NULL,
-    created_utc TEXT    NOT NULL
+    created_utc INTEGER NOT NULL
 );
 
 CREATE TABLE collection_items (
@@ -112,7 +112,7 @@ CREATE TABLE collection_items (
 CREATE TABLE query_history (
     query         TEXT    PRIMARY KEY,
     use_count     INTEGER NOT NULL DEFAULT 1,
-    last_used_utc TEXT    NOT NULL
+    last_used_utc INTEGER NOT NULL
 );
 
 CREATE INDEX ix_query_history_last_used ON query_history (last_used_utc);
@@ -126,7 +126,7 @@ CREATE TABLE scan_log (
     id           INTEGER PRIMARY KEY,
     root_id      INTEGER NOT NULL REFERENCES roots(id) ON DELETE CASCADE,
     scan_id      INTEGER NOT NULL,
-    occurred_utc TEXT    NOT NULL,
+    occurred_utc INTEGER NOT NULL,
     level        INTEGER NOT NULL DEFAULT 0,
     path         TEXT    NULL,
     message      TEXT    NOT NULL

@@ -19,7 +19,7 @@ public sealed class SqliteUsageRepository(SqliteDatabase database) : SqliteRepos
             INSERT INTO usage (entry_id, open_count, last_opened_utc) VALUES (@EntryId, 1, @OpenedAt)
             ON CONFLICT (entry_id) DO UPDATE SET open_count = open_count + 1, last_opened_utc = excluded.last_opened_utc
             """,
-            new { EntryId = entryId, OpenedAt = SqliteTime.Format(openedAtUtc) }), cancellationToken);
+            new { EntryId = entryId, OpenedAt = SqliteTime.Encode(openedAtUtc) }), cancellationToken);
 
     /// <inheritdoc />
     public Task<UsageStat?> GetAsync(long entryId, CancellationToken cancellationToken = default)
@@ -71,8 +71,8 @@ public sealed class SqliteUsageRepository(SqliteDatabase database) : SqliteRepos
 
         public long OpenCount { get; set; }
 
-        public string? LastOpenedUtc { get; set; }
+        public long? LastOpenedUtc { get; set; }
 
-        public UsageStat ToStat() => new(EntryId, checked((int)OpenCount), SqliteTime.ParseOrNull(LastOpenedUtc));
+        public UsageStat ToStat() => new(EntryId, checked((int)OpenCount), SqliteTime.DecodeOrNull(LastOpenedUtc));
     }
 }

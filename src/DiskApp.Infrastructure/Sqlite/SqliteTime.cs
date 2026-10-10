@@ -1,37 +1,30 @@
-using System.Globalization;
-
 namespace DiskApp.Infrastructure.Sqlite;
 
 /// <summary>
-/// Даты в SQLite хранятся текстом ISO 8601 в UTC с семью знаками долей секунды и суффиксом <c>Z</c>:
-/// лексикографический порядок совпадает с хронологическим, индексы по датам работают как по числам.
+/// Даты в SQLite хранятся целым числом — тиками UTC (<see cref="DateTimeOffset.UtcTicks"/>, 100 нс от 0001-01-01):
+/// полная точность времени файловой системы, 8 байт вместо 28 у текста ISO 8601, порядок чисел совпадает
+/// с хронологическим (ADR-0007). В SQL перевести в дату: <c>datetime((x - 621355968000000000) / 10000000, 'unixepoch')</c>.
 /// </summary>
 public static class SqliteTime
 {
-    private const string Pattern = "yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'";
+    /// <summary>
+    /// Значение для записи в базу.
+    /// </summary>
+    public static long Encode(DateTimeOffset value) => value.UtcTicks;
 
     /// <summary>
-    /// Текст для записи в базу.
+    /// Значение для записи или <c>null</c>.
     /// </summary>
-    public static string Format(DateTimeOffset value) => value.UtcDateTime.ToString(Pattern, CultureInfo.InvariantCulture);
+    public static long? Encode(DateTimeOffset? value) => value?.UtcTicks;
 
     /// <summary>
-    /// Текст или <c>null</c>.
+    /// Дата из базы.
     /// </summary>
-    public static string? Format(DateTimeOffset? value) => value is null ? null : Format(value.Value);
+    /// <exception cref="ArgumentOutOfRangeException">Число вне диапазона дат .NET.</exception>
+    public static DateTimeOffset Decode(long ticks) => new(ticks, TimeSpan.Zero);
 
     /// <summary>
-    /// Значение из базы.
+    /// Дата из базы или <c>null</c> для <c>NULL</c>.
     /// </summary>
-    /// <exception cref="FormatException">Текст не в формате <c>yyyy-MM-ddTHH:mm:ss.fffffffZ</c>.</exception>
-    public static DateTimeOffset Parse(string text)
-    {
-        ArgumentNullException.ThrowIfNull(text);
-        return DateTimeOffset.ParseExact(text, Pattern, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
-    }
-
-    /// <summary>
-    /// Значение из базы или <c>null</c> для <c>NULL</c>.
-    /// </summary>
-    public static DateTimeOffset? ParseOrNull(string? text) => text is null ? null : Parse(text);
+    public static DateTimeOffset? DecodeOrNull(long? ticks) => ticks is null ? null : Decode(ticks.Value);
 }

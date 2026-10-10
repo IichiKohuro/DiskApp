@@ -121,7 +121,7 @@ public sealed class SqliteMigratorTests
             INSERT INTO entries (root_id, name, name_folded, ext, rel_path, created_utc, modified_utc)
             VALUES (@RootId, 'Quarterly Report.pdf', 'quarterly report.pdf', 'pdf', 'Quarterly Report.pdf', @Now, @Now)
             """,
-            new { RootId = rootId, Now = SqliteTime.Format(DateTimeOffset.UtcNow) });
+            new { RootId = rootId, Now = SqliteTime.Encode(DateTimeOffset.UtcNow) });
 
         // Act & Assert: вставка
         Match(connection, "port").ShouldBe(["Quarterly Report.pdf"]);
@@ -144,7 +144,7 @@ public sealed class SqliteMigratorTests
         using var connection = new SqliteConnectionFactory(database.FilePath).Open();
         SqliteMigrator.Apply(connection);
         var rootId = InsertRoot(connection);
-        var now = SqliteTime.Format(DateTimeOffset.UtcNow);
+        var now = SqliteTime.Encode(DateTimeOffset.UtcNow);
         var entryId = connection.ExecuteScalar<long>(
             """
             INSERT INTO entries (root_id, name, name_folded, rel_path, created_utc, modified_utc)
@@ -173,7 +173,7 @@ public sealed class SqliteMigratorTests
         using var connection = new SqliteConnectionFactory(database.FilePath).Open();
         SqliteMigrator.Apply(connection);
         var rootId = InsertRoot(connection);
-        var now = SqliteTime.Format(DateTimeOffset.UtcNow);
+        var now = SqliteTime.Encode(DateTimeOffset.UtcNow);
         const string insert = "INSERT INTO entries (root_id, name, name_folded, rel_path, created_utc, modified_utc) VALUES (@RootId, 'a', 'a', 'docs\\a', @Now, @Now)";
         connection.Execute(insert, new { RootId = rootId, Now = now });
 
@@ -185,7 +185,7 @@ public sealed class SqliteMigratorTests
     private static long InsertRoot(System.Data.IDbConnection connection)
         => connection.ExecuteScalar<long>(
             "INSERT INTO roots (path, label, created_utc) VALUES ('D:\\Projects', 'Projects', @Now); SELECT last_insert_rowid();",
-            new { Now = SqliteTime.Format(DateTimeOffset.UtcNow) });
+            new { Now = SqliteTime.Encode(DateTimeOffset.UtcNow) });
 
     private static string[] Match(System.Data.IDbConnection connection, string term)
         => connection.Query<string>("SELECT e.name FROM entries_fts JOIN entries AS e ON e.id = entries_fts.rowid WHERE entries_fts MATCH @Term ORDER BY e.name", new { Term = $"\"{term}\"" }).ToArray();

@@ -34,7 +34,7 @@ public sealed class SqliteFavoriteRepository(SqliteDatabase database) : SqliteRe
                 INSERT OR IGNORE INTO favorites (entry_id, sort_order, pinned_utc)
                 VALUES (@EntryId, (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM favorites), @PinnedAt)
                 """,
-                new { EntryId = entryId, PinnedAt = SqliteTime.Format(pinnedAtUtc) },
+                new { EntryId = entryId, PinnedAt = SqliteTime.Encode(pinnedAtUtc) },
                 transaction);
             var row = connection.QuerySingle<FavoriteRow>($"SELECT {Columns} FROM favorites WHERE entry_id = @EntryId", new { EntryId = entryId }, transaction);
             transaction.Commit();
@@ -72,8 +72,8 @@ public sealed class SqliteFavoriteRepository(SqliteDatabase database) : SqliteRe
 
         public long SortOrder { get; set; }
 
-        public string PinnedUtc { get; set; } = string.Empty;
+        public long PinnedUtc { get; set; }
 
-        public Favorite ToFavorite() => new(EntryId, checked((int)SortOrder), SqliteTime.Parse(PinnedUtc));
+        public Favorite ToFavorite() => new(EntryId, checked((int)SortOrder), SqliteTime.Decode(PinnedUtc));
     }
 }

@@ -389,7 +389,8 @@ public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepo
         command.CommandText = sql;
         foreach (var name in UpsertParameters)
         {
-            command.Parameters.Add(name, SqliteType.Text);
+            // Тип параметра выводится из значения: числа и даты-тики уходят в SQLite целыми, а не текстом.
+            command.Parameters.Add(new SqliteParameter { ParameterName = name });
         }
 
         command.Prepare();
@@ -400,8 +401,8 @@ public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepo
     {
         var relPath = _paths.NormalizeRelative(entry.RelPath);
         object parentRelPath = ParentOf(relPath) is { } parent ? parent : DBNull.Value;
-        var created = SqliteTime.Format(entry.CreatedUtc);
-        var modified = SqliteTime.Format(entry.ModifiedUtc);
+        var created = SqliteTime.Encode(entry.CreatedUtc);
+        var modified = SqliteTime.Encode(entry.ModifiedUtc);
         var nameFolded = Fold(entry.Name);
 
         foreach (var command in commands)

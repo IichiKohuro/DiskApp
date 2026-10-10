@@ -163,7 +163,7 @@ flowchart LR
 
 Этап 1.3. `SqliteConnectionFactory` открывает соединения из пула Microsoft.Data.Sqlite и на каждом применяет PRAGMA: `journal_mode=WAL`, `synchronous=NORMAL`, `temp_store=MEMORY`, `cache_size=-65536` (64 МБ), `mmap_size=256 МБ`, `foreign_keys=ON`, `busy_timeout=5000`. Один писатель — `SqliteWriter`: выделенный поток с одним постоянным соединением читает задания из `Channel`; задание — синхронный делегат, его исключение возвращается вызывающему и не останавливает очередь. Чтение — из пула соединений параллельно, в WAL читатель видит снимок и не ждёт писателя (проверено тестом). `SqliteDatabase` при старте делает `PRAGMA quick_check`; повреждённый файл (или не-база) переименовывается в `index.corrupt-<дата>.db`, создаётся новый, итог `DatabaseInitialization.WasRecovered` сообщает оболочке, что индекс надо построить заново; предложение резервной копии — этап 16.1. Обслуживание: `OptimizeAsync` (`PRAGMA optimize` и усечение WAL), `VacuumAsync`; расписание при простое — этап 10.
 
-Даты хранятся текстом ISO 8601 в UTC с семью знаками долей секунды (`SqliteTime`), поэтому порядок строк совпадает с хронологическим; Dapper настроен на `snake_case` → `PascalCase` и этот формат дат (`DapperConfiguration`).
+Даты хранятся целым числом — тиками UTC (`DateTimeOffset.UtcTicks`, 100 нс от 0001-01-01; `SqliteTime`, ADR-0007): полная точность времени файловой системы, 8 байт вместо 28 у текста ISO 8601, порядок чисел совпадает с хронологическим. Прочитать в SQL: `datetime((x - 621355968000000000) / 10000000, 'unixepoch')`. Dapper настроен на `snake_case` → `PascalCase` и этот формат дат (`DapperConfiguration`).
 
 Миграции — SQL-скрипты `V001__init.sql`, `V002__…` во встроенных ресурсах `DiskApp.Infrastructure` (`Sqlite/Migrations`), `SqliteMigrator` применяет недостающие по порядку, каждую в своей транзакции вместе с записью в `schema_version`; тест проверяет апгрейд с первой версии до текущей.
 
@@ -193,10 +193,10 @@ erDiagram
         integer include_hidden
         integer include_system
         integer max_depth
-        text last_scan_utc
+        integer last_scan_utc
         integer status
         text error_message
-        text created_utc
+        integer created_utc
     }
     entries {
         integer id PK
@@ -207,8 +207,8 @@ erDiagram
         text ext
         integer is_dir
         integer size
-        text created_utc
-        text modified_utc
+        integer created_utc
+        integer modified_utc
         integer attributes
         text rel_path
         integer kind
@@ -217,12 +217,12 @@ erDiagram
     usage {
         integer entry_id PK
         integer open_count
-        text last_opened_utc
+        integer last_opened_utc
     }
     favorites {
         integer entry_id PK
         integer sort_order
-        text pinned_utc
+        integer pinned_utc
     }
     tags {
         integer id PK
@@ -264,7 +264,7 @@ erDiagram
         integer id PK
         integer entry_id FK
         integer collector_id FK
-        text detected_utc
+        integer detected_utc
         text source_host
         integer state
     }
@@ -273,7 +273,7 @@ erDiagram
         integer item_id FK
         integer warehouse_id FK
         text target_path
-        text decided_utc
+        integer decided_utc
         integer by_rule
     }
 ```
