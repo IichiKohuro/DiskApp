@@ -55,7 +55,7 @@
 
 ### Текущая позиция
 
-> **Этап 4 → подэтап 4.2 «Контракты».** 4.1 готов 2026-10-11: сервер внутри процесса десктопа, `/health`, ProblemDetails.
+> **Этап 4 → подэтап 4.3 «Endpoints».** 4.1 и 4.2 готовы 2026-10-11: сервер внутри процесса десктопа, `/health`, ProblemDetails, контракты API и хаба.
 > 2026-10-11: этап 3 закрыт — парсер запроса с фильтрами на RU и EN, исполнение через FTS5 trigram и префикс по `name_folded`, фильтр `in:` диапазонами путей, ранжирование с пресетами, нечёткий поиск, подсветка, кэш уточнения, подсказки и история. На синтетической базе в 1 млн записей p95 всех запросов от 1,9 до 44,5 мс (бюджет 50 мс); 761 тест зелёный. Даты в SQLite переведены в целые тики (ADR-0007): база 389 МБ против бюджета 250 МБ — нужен ответ на вопрос 15. Дальше: 4.1 хост → 4.2 контракты → 4.3 endpoints.
 
 ### Протокол сессии
@@ -423,10 +423,10 @@
 
 #### 4.2 Контракты (`DiskApp.Contracts`)
 
-- [ ] DTO: `RootDto`, `EntryDto` (включая ключ иконки, вид, подсветку), `SearchRequest`, `SearchResponse`, `SuggestResponse`, `BrowseResponse`, `OperationRequest`, `OperationDto`, `OperationProgressDto`, `ConflictDecisionDto`, `SettingsDto`, `IndexStatusDto`, `TagDto`, `CollectionDto`, `AppInfoDto`
-- [ ] Маршруты константами (`ApiRoutes.V1.*`), префикс `/api/v1`
-- [ ] `IDiskAppHubClient`: `OnIndexProgress`, `OnRootStatusChanged`, `OnEntriesChanged(batch)`, `OnOperationProgress`, `OnOperationCompleted`, `OnOperationNeedsDecision`, `OnSettingsChanged`
-- [ ] `JsonSerializerContext` (source generation) для всех DTO; camelCase; перечисления строками
+- [x] DTO: `RootDto`, `EntryDto` (включая ключ иконки, вид, подсветку), `SearchRequest`, `SearchResponse`, `SuggestResponse`, `BrowseResponse`, `OperationRequest`, `OperationDto`, `OperationProgressDto`, `ConflictDecisionDto`, `SettingsDto`, `IndexStatusDto`, `TagDto`, `CollectionDto`, `AppInfoDto` — плюс запросы создания и изменения (`CreateRootRequest`, `TagRequest`, `CollectionRequest` и др.), `HealthDto`, `HubStatusDto`; перечисления повторяют доменные по именам и порядку (тест), перевод — `DtoMapper` на сервере
+- [x] Маршруты константами (`ApiRoutes.V1.*`), префикс `/api/v1` — плюс методы-помощники для клиентов и `HubRoutes`
+- [x] `IDiskAppHubClient`: `OnIndexProgress`, `OnRootStatusChanged`, `OnEntriesChanged(batch)`, `OnOperationProgress`, `OnOperationCompleted`, `OnOperationNeedsDecision`, `OnSettingsChanged`
+- [x] `JsonSerializerContext` (source generation) для всех DTO; camelCase; перечисления строками (имена как в коде: `FullScan`, `Idle`), `null` не пишется; свойства запросов с `set`, чтобы значения по умолчанию переживали частичный JSON
 
 #### 4.3 Endpoints (Minimal API, группы)
 

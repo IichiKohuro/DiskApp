@@ -8,6 +8,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="DiskApp.Server.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DiskApp.Contracts\DiskApp.Contracts.csproj" />
     <ProjectReference Include="..\DiskApp.Core\DiskApp.Core.csproj" />
     <ProjectReference Include="..\DiskApp.Infrastructure\DiskApp.Infrastructure.csproj" />

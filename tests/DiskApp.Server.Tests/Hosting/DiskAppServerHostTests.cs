@@ -54,7 +54,7 @@ public sealed class DiskAppServerHostTests : IDisposable
         health.Status.ShouldBe("ok");
         health.Version.ShouldNotBeNullOrWhiteSpace();
         health.SchemaVersion.ShouldBeGreaterThanOrEqualTo(1);
-        health.Indexer.ShouldBe("idle");
+        health.Indexer.ShouldBe(Contracts.Roots.IndexerState.Idle);
         File.Exists(_data.Resolve("index.db")).ShouldBeTrue();
     }
 

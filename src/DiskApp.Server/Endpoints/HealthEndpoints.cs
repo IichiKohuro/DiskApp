@@ -1,11 +1,10 @@
-using System.Text.Json;
-
 using DiskApp.Contracts;
 using DiskApp.Contracts.App;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Indexing;
 using DiskApp.Infrastructure.Sqlite;
 using DiskApp.Server.Hosting;
+using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -34,7 +33,6 @@ internal static class HealthEndpoints
         }
 
         var uptime = Math.Max(0, (long)(clock.UtcNow - state.StartedUtc).TotalSeconds);
-        var indexerState = JsonNamingPolicy.CamelCase.ConvertName(indexer.GetAggregateState().ToString());
-        return TypedResults.Ok(new HealthDto("ok", state.Version, uptime, database.GetSchemaVersion(), indexerState));
+        return TypedResults.Ok(new HealthDto("ok", state.Version, uptime, database.GetSchemaVersion(), indexer.GetAggregateState().ToDto()));
     }
 }

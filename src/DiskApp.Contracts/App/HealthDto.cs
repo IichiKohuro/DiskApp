@@ -1,3 +1,5 @@
+using DiskApp.Contracts.Roots;
+
 namespace DiskApp.Contracts.App;
 
 /// <summary>
@@ -7,5 +9,5 @@ namespace DiskApp.Contracts.App;
 /// <param name="Version">Версия приложения.</param>
 /// <param name="UptimeSeconds">Сколько секунд работает сервер.</param>
 /// <param name="SchemaVersion">Версия схемы базы.</param>
-/// <param name="Indexer">Общее состояние индексации: <c>idle</c>, <c>indexing</c>, <c>paused</c>, <c>partiallyOffline</c>, <c>error</c>.</param>
-public sealed record HealthDto(string Status, string Version, long UptimeSeconds, int SchemaVersion, string Indexer);
+/// <param name="Indexer">Общее состояние индексации.</param>
+public sealed record HealthDto(string Status, string Version, long UptimeSeconds, int SchemaVersion, IndexerState Indexer);
