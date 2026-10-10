@@ -123,7 +123,16 @@ public sealed class TemporaryDirectory : IDisposable
 
     private void ClearReadOnlyAttributes()
     {
-        foreach (var entry in new DirectoryInfo(FullPath).EnumerateFileSystemInfos("*", SearchOption.AllDirectories))
+        // Не заходим внутрь junction и символических ссылок: ссылка на предка зациклила бы обход,
+        // а Directory.Delete удаляет саму ссылку, не трогая цель.
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            AttributesToSkip = FileAttributes.ReparsePoint,
+            IgnoreInaccessible = true,
+        };
+
+        foreach (var entry in new DirectoryInfo(FullPath).EnumerateFileSystemInfos("*", options))
         {
             if (entry.Attributes.HasFlag(FileAttributes.ReadOnly))
             {

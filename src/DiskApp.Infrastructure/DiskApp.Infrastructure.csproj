@@ -3,6 +3,11 @@
   <!-- Реализации интерфейсов ядра: SQLite (Microsoft.Data.Sqlite + Dapper, миграции, FTS5), файловая система,
        FileSystemWatcher, Windows Shell. Зависит только от Core. -->
 
+  <PropertyGroup>
+    <!-- LibraryImport генерирует небезопасный код для вызовов Win32 (Platform/Windows/NativeMethods.cs). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\DiskApp.Core\DiskApp.Core.csproj" />
   </ItemGroup>

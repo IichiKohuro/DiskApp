@@ -20,6 +20,36 @@ public interface IFileIndexRepository
     Task<UpsertResult> UpsertAsync(IReadOnlyList<FileEntry> entries, long scanId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// То же, что <see cref="UpsertAsync"/>, но дополнительно сообщает, какие записи пакета добавлены и какие обновлены:
+    /// по ним конвейер сканирования строит агрегированное событие изменений по папкам.
+    /// </summary>
+    Task<UpsertDetails> UpsertDetailedAsync(IReadOnlyList<FileEntry> entries, long scanId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Следующий идентификатор сканирования корня: на единицу больше наибольшего у его записей (1 для пустого корня).
+    /// Одновременно корень сканирует только одна задача, поэтому гонки здесь нет.
+    /// </summary>
+    Task<long> NextScanIdAsync(long rootId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Помечает запись и её поддерево сканированием, не меняя остальных полей; возвращает число помеченных.
+    /// Так сохраняются записи папок, которые не удалось прочитать в этом сканировании (нет доступа, временная ошибка).
+    /// </summary>
+    Task<int> MarkSubtreeAsync(long rootId, string relPath, long scanId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Удаляет из поддерева (сама папка не трогается) записи, не помеченные сканированием; возвращает число удалённых.
+    /// Завершение mark-and-sweep для пересканирования одной папки.
+    /// </summary>
+    Task<int> SweepSubtreeAsync(long rootId, string relPath, long scanId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Прямые дети папки по её относительному пути; пустой путь — верхний уровень корня. Без сортировки и страниц:
+    /// используется сверкой для сравнения с содержимым папки на диске.
+    /// </summary>
+    Task<IReadOnlyList<FileEntry>> GetChildrenOfPathAsync(long rootId, string relPath, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Удаляет запись и всё её поддерево; возвращает число удалённых.
     /// </summary>
     Task<int> DeleteSubtreeAsync(long rootId, string relPath, CancellationToken cancellationToken = default);
@@ -85,6 +115,18 @@ public readonly record struct UpsertResult(int Inserted, int Updated, int Unchan
 
     /// <summary>Сумма двух итогов (именованный аналог оператора).</summary>
     public static UpsertResult Add(UpsertResult left, UpsertResult right) => left + right;
+}
+
+/// <summary>
+/// Итог пакетной записи с номерами (индексами в пакете) добавленных и обновлённых записей.
+/// </summary>
+/// <param name="Totals">Счётчики.</param>
+/// <param name="InsertedIndices">Индексы добавленных записей в переданном пакете, по возрастанию.</param>
+/// <param name="UpdatedIndices">Индексы обновлённых записей, по возрастанию.</param>
+public sealed record UpsertDetails(UpsertResult Totals, IReadOnlyList<int> InsertedIndices, IReadOnlyList<int> UpdatedIndices)
+{
+    /// <summary>Пустой итог.</summary>
+    public static UpsertDetails Empty { get; } = new(default, [], []);
 }
 
 /// <summary>

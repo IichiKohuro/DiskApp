@@ -60,49 +60,63 @@ public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepo
     }
 
     /// <inheritdoc />
-    public Task<UpsertResult> UpsertAsync(IReadOnlyList<FileEntry> entries, long scanId, CancellationToken cancellationToken = default)
+    public async Task<UpsertResult> UpsertAsync(IReadOnlyList<FileEntry> entries, long scanId, CancellationToken cancellationToken = default)
+        => (await UpsertCoreAsync(entries, scanId, collectIndices: false, cancellationToken).ConfigureAwait(false)).Totals;
+
+    /// <inheritdoc />
+    public Task<UpsertDetails> UpsertDetailedAsync(IReadOnlyList<FileEntry> entries, long scanId, CancellationToken cancellationToken = default)
+        => UpsertCoreAsync(entries, scanId, collectIndices: true, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<long> NextScanIdAsync(long rootId, CancellationToken cancellationToken = default)
+        => WriteAsync(connection => connection.ExecuteScalar<long>(
+            "SELECT COALESCE(MAX(scan_id), 0) + 1 FROM entries WHERE root_id = @RootId",
+            new { RootId = rootId }), cancellationToken);
+
+    /// <inheritdoc />
+    public Task<int> MarkSubtreeAsync(long rootId, string relPath, long scanId, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(entries);
-        if (entries.Count == 0)
+        ArgumentNullException.ThrowIfNull(relPath);
+        var path = _paths.NormalizeRelative(relPath);
+        var (from, to) = DescendantRange(path);
+
+        return WriteAsync(connection => path.Length == 0
+            ? connection.Execute("UPDATE entries SET scan_id = @ScanId WHERE root_id = @RootId", new { RootId = rootId, ScanId = scanId })
+            : connection.Execute(
+                "UPDATE entries SET scan_id = @ScanId WHERE root_id = @RootId AND (rel_path = @Path OR (rel_path >= @From AND rel_path < @To))",
+                new { RootId = rootId, ScanId = scanId, Path = path, From = from, To = to }), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<int> SweepSubtreeAsync(long rootId, string relPath, long scanId, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(relPath);
+        var path = _paths.NormalizeRelative(relPath);
+        if (path.Length == 0)
         {
-            return Task.FromResult(default(UpsertResult));
+            return SweepAsync(rootId, scanId, cancellationToken);
         }
 
-        return WriteAsync(connection =>
-        {
-            using var transaction = connection.BeginTransaction();
-            using var mark = Prepare(connection, transaction, MarkUnchangedSql);
-            using var insert = Prepare(connection, transaction, InsertSql);
-            using var update = Prepare(connection, transaction, UpdateSql);
-            SqliteCommand[] commands = [mark, insert, update];
+        var (from, to) = DescendantRange(path);
+        return WriteAsync(connection => DeleteCounted(
+            connection,
+            "root_id = @RootId AND rel_path >= @From AND rel_path < @To AND scan_id <> @ScanId",
+            new { RootId = rootId, ScanId = scanId, From = from, To = to }), cancellationToken);
+    }
 
-            var inserted = 0;
-            var updated = 0;
-            var unchanged = 0;
+    /// <inheritdoc />
+    public Task<IReadOnlyList<FileEntry>> GetChildrenOfPathAsync(long rootId, string relPath, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(relPath);
+        var path = _paths.NormalizeRelative(relPath);
+        var sql = path.Length == 0
+            ? $"SELECT {EntryRow.Columns} FROM entries WHERE root_id = @RootId AND parent_id IS NULL"
+            : $"SELECT {EntryRow.Columns} FROM entries WHERE root_id = @RootId AND parent_id = (SELECT p.id FROM entries AS p WHERE p.root_id = @RootId AND p.rel_path = @Path)";
 
-            foreach (var entry in entries)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                Bind(commands, entry, scanId);
-
-                if (mark.ExecuteNonQuery() == 1)
-                {
-                    unchanged++;
-                }
-                else if (insert.ExecuteNonQuery() == 1)
-                {
-                    inserted++;
-                }
-                else
-                {
-                    update.ExecuteNonQuery();
-                    updated++;
-                }
-            }
-
-            transaction.Commit();
-            return new UpsertResult(inserted, updated, unchanged);
-        }, cancellationToken);
+        return ReadAsync<IReadOnlyList<FileEntry>>(connection => connection
+            .Query<EntryRow>(sql, new { RootId = rootId, Path = path })
+            .Select(static row => row.ToEntry())
+            .ToArray(), cancellationToken);
     }
 
     /// <inheritdoc />
@@ -295,6 +309,61 @@ public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepo
     /// Имя в нижнем регистре по правилам .NET для колонки <c>name_folded</c> (ADR-0005).
     /// </summary>
     internal static string Fold(string name) => name.ToLowerInvariant();
+
+    private Task<UpsertDetails> UpsertCoreAsync(IReadOnlyList<FileEntry> entries, long scanId, bool collectIndices, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+        if (entries.Count == 0)
+        {
+            return Task.FromResult(UpsertDetails.Empty);
+        }
+
+        return WriteAsync(connection =>
+        {
+            using var transaction = connection.BeginTransaction();
+            using var mark = Prepare(connection, transaction, MarkUnchangedSql);
+            using var insert = Prepare(connection, transaction, InsertSql);
+            using var update = Prepare(connection, transaction, UpdateSql);
+            SqliteCommand[] commands = [mark, insert, update];
+
+            var unchanged = 0;
+            var insertedIndices = new List<int>(collectIndices ? 16 : 0);
+            var updatedIndices = new List<int>(collectIndices ? 16 : 0);
+            var inserted = 0;
+            var updated = 0;
+
+            for (var i = 0; i < entries.Count; i++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                Bind(commands, entries[i], scanId);
+
+                if (mark.ExecuteNonQuery() == 1)
+                {
+                    unchanged++;
+                }
+                else if (insert.ExecuteNonQuery() == 1)
+                {
+                    inserted++;
+                    if (collectIndices)
+                    {
+                        insertedIndices.Add(i);
+                    }
+                }
+                else
+                {
+                    update.ExecuteNonQuery();
+                    updated++;
+                    if (collectIndices)
+                    {
+                        updatedIndices.Add(i);
+                    }
+                }
+            }
+
+            transaction.Commit();
+            return new UpsertDetails(new UpsertResult(inserted, updated, unchanged), insertedIndices, updatedIndices);
+        }, cancellationToken);
+    }
 
     /// <summary>
     /// Удаляет записи по условию и возвращает их число. Считается отдельным запросом: каскад по <c>parent_id</c>

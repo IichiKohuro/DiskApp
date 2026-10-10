@@ -12,7 +12,8 @@ namespace DiskApp.Core.Domain;
 public sealed record ExclusionRule(ExclusionKind Kind, string Pattern)
 {
     /// <summary>
-    /// Стандартный набор исключений (PLAN.md, этап 2.1): служебные папки Windows, артефакты сборки, временные файлы.
+    /// Стандартный набор исключений (PLAN.md, этапы 2.1 и 2.3): служебные папки Windows, артефакты сборки, временные файлы
+    /// и недокачанные загрузки (<c>~$</c> Office, <c>.crdownload</c> Chrome, <c>.part</c> Firefox) — их же пропускает наблюдатель.
     /// Пользователь редактирует его в настройках.
     /// </summary>
     public static IReadOnlyList<ExclusionRule> Defaults { get; } =
@@ -25,6 +26,9 @@ public sealed record ExclusionRule(ExclusionKind Kind, string Pattern)
         Glob("bin"),
         Glob("obj"),
         Glob("*.tmp"),
+        Glob("~$*"),
+        Glob("*.crdownload"),
+        Glob("*.part"),
     ];
 
     /// <summary>Исключить по glob-шаблону имени (<c>*.tmp</c>) или пути (<c>**/node_modules</c>).</summary>
