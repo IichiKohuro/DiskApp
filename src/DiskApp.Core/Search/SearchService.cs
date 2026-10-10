@@ -4,6 +4,7 @@ using DiskApp.Core.Abstractions;
 using DiskApp.Core.Domain;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
+using DiskApp.Core.Settings;
 
 namespace DiskApp.Core.Search;
 
@@ -529,6 +530,23 @@ public sealed record SearchOptions
     /// (перестановка соседних букв — тоже одна) на пять символов: «reprot» находит «report», а «repo» не тянет «reptile».
     /// </summary>
     public double FuzzyMinimumSimilarity { get; init; } = 0.8;
+
+    /// <summary>
+    /// Параметры из настроек поиска. Лимит кандидатов ограничен 100…5 000 (ADR-0005): больше — вне бюджета 50 мс.
+    /// </summary>
+    public static SearchOptions FromSettings(SearchSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        var defaults = new SearchOptions();
+        return defaults with
+        {
+            CandidateLimit = settings.CandidateLimit > 0 ? Math.Clamp(settings.CandidateLimit, 100, 5_000) : defaults.CandidateLimit,
+            HistoryLimit = settings.HistoryLimit > 0 ? settings.HistoryLimit : defaults.HistoryLimit,
+            FrecencyHalfLife = settings.FrecencyHalfLifeDays > 0 ? TimeSpan.FromDays(settings.FrecencyHalfLifeDays) : defaults.FrecencyHalfLife,
+            Preset = RankingWeights.ParsePreset(settings.RankingPreset),
+        };
+    }
 }
 
 /// <summary>

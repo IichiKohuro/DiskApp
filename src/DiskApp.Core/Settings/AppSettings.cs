@@ -164,8 +164,8 @@ public sealed record SearchSettings
     /// <summary>Размер страницы результатов.</summary>
     public int PageSize { get; set; } = 50;
 
-    /// <summary>Максимум кандидатов из базы до ранжирования (ADR-0005).</summary>
-    public int CandidateLimit { get; set; } = 5_000;
+    /// <summary>Максимум кандидатов из базы до ранжирования: 100…5 000 (ADR-0005); 2 000 держит p95 в бюджете (этап 3.6).</summary>
+    public int CandidateLimit { get; set; } = 2_000;
 
     /// <summary>Сколько запросов хранить в истории.</summary>
     public int HistoryLimit { get; set; } = 100;

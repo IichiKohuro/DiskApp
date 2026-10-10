@@ -47,6 +47,7 @@ public sealed class IndexerService : IAsyncDisposable
     private TaskCompletionSource _idle = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Task? _dispatcher;
     private Task? _scheduler;
+    private int _disposed;
 
     /// <summary>
     /// Создаёт оркестратор; работа начинается в <see cref="StartAsync"/>.
@@ -248,6 +249,12 @@ public sealed class IndexerService : IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
+        // Хост останавливает индексатор раньше базы, а контейнер потом освобождает его ещё раз.
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
         await _stop.CancelAsync().ConfigureAwait(false);
         _pause.Resume();
         _progressSubscription.Dispose();

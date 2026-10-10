@@ -1,0 +1,127 @@
+using DiskApp.Contracts;
+using DiskApp.Core.Abstractions;
+using DiskApp.Core.Domain;
+using DiskApp.Core.Events;
+using DiskApp.Core.FileSystem;
+using DiskApp.Core.Indexing;
+using DiskApp.Core.Indexing.Watching;
+using DiskApp.Core.Paths;
+using DiskApp.Core.Repositories;
+using DiskApp.Core.Search;
+using DiskApp.Core.Settings;
+using DiskApp.Infrastructure.FileSystem;
+using DiskApp.Infrastructure.Settings;
+using DiskApp.Infrastructure.Sqlite;
+using DiskApp.Infrastructure.Sqlite.Repositories;
+using DiskApp.Infrastructure.Sqlite.Search;
+using DiskApp.Server.Hosting;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace DiskApp.Server;
+
+/// <summary>
+/// Регистрация сервера в общем DI-контейнере (PLAN.md, этап 4.1): сервисы Core и Infrastructure, запуск базы
+/// и индексатора, JSON-контекст API, ProblemDetails. Десктоп добавляет свои сервисы в тот же контейнер.
+/// </summary>
+public static class ServerServiceCollectionExtensions
+{
+    /// <summary>
+    /// Добавляет сервисы сервера.
+    /// </summary>
+    public static IServiceCollection AddDiskAppServer(this IServiceCollection services, DiskAppServerOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(options);
+
+        services.AddSingleton(options);
+        services.AddSingleton(options.Paths);
+        services.AddSingleton<ServerState>();
+        services.AddSingleton<IClock>(SystemClock.Instance);
+        services.AddSingleton(PathNormalizer.Current);
+        services.AddSingleton(FileKindMap.Default);
+
+        // Настройки читаются при первом обращении; повреждённый файл откладывается, работа идёт на значениях по умолчанию.
+        services.AddSingleton(static provider =>
+        {
+            var paths = provider.GetRequiredService<IAppPaths>();
+            var store = AppSettingsStore.Create(paths.SettingsPath);
+            var result = store.Load();
+            if (result.Outcome == SettingsLoadOutcome.Corrupt)
+            {
+                ServerLog.SettingsRecovered(provider.GetRequiredService<ILogger<ServerState>>(), paths.SettingsPath, result.Outcome.ToString(), result.CorruptFilePath);
+            }
+
+            return store;
+        });
+        services.AddSingleton<ISettingsStore<AppSettings>>(static provider => provider.GetRequiredService<JsonSettingsStore<AppSettings>>());
+
+        AddStorage(services, options);
+        AddIndexing(services);
+        AddSearch(services);
+
+        services.AddHostedService<ServerStartupService>();
+        services.AddProblemDetails();
+        services.ConfigureHttpJsonOptions(static json => json.SerializerOptions.TypeInfoResolverChain.Insert(0, DiskAppJsonContext.Default));
+        return services;
+    }
+
+    private static void AddStorage(IServiceCollection services, DiskAppServerOptions options)
+    {
+        services.AddSingleton(_ => new SqliteDatabase(options.Paths.DatabasePath));
+        services.AddSingleton<IRootRepository>(static provider => new SqliteRootRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<IClock>()));
+        services.AddSingleton<IFileIndexRepository>(static provider => new SqliteFileIndexRepository(
+            provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>(), provider.GetRequiredService<FileKindMap>()));
+        services.AddSingleton<IScanLogRepository>(static provider => new SqliteScanLogRepository(provider.GetRequiredService<SqliteDatabase>()));
+        services.AddSingleton<IUsageRepository>(static provider => new SqliteUsageRepository(provider.GetRequiredService<SqliteDatabase>()));
+        services.AddSingleton<IFavoriteRepository>(static provider => new SqliteFavoriteRepository(provider.GetRequiredService<SqliteDatabase>()));
+        services.AddSingleton<ITagRepository>(static provider => new SqliteTagRepository(provider.GetRequiredService<SqliteDatabase>()));
+        services.AddSingleton<ICollectionRepository>(static provider => new SqliteCollectionRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<IClock>()));
+        services.AddSingleton<IQueryHistoryRepository>(static provider => new SqliteQueryHistoryRepository(provider.GetRequiredService<SqliteDatabase>()));
+    }
+
+    private static void AddIndexing(IServiceCollection services)
+    {
+        services.AddSingleton<IIndexEventBus, IndexEventBus>();
+        services.AddSingleton<IFileSystemLister>(FileSystemLister.Instance);
+        services.AddSingleton<IRootWatcherFactory>(static provider => new FileSystemRootWatcherFactory(provider.GetRequiredService<PathNormalizer>()));
+        services.AddSingleton<IDriveInfoProvider, DriveInfoProvider>();
+        services.AddSingleton<IBackgroundPriority>(ThreadBackgroundPriority.Instance);
+        services.AddSingleton(static provider => new EntryFactory(provider.GetRequiredService<PathNormalizer>(), provider.GetRequiredService<FileKindMap>()));
+
+        // Индексатор создаётся после открытия базы: восстановленный после повреждения индекс сканируется заново целиком.
+        services.AddSingleton(static provider =>
+        {
+            var database = provider.GetRequiredService<ServerState>().Database;
+            var recovered = database.IsCompletedSuccessfully && database.GetAwaiter().GetResult().WasRecovered;
+            var settings = provider.GetRequiredService<ISettingsStore<AppSettings>>().Current;
+            return new IndexerService(
+                provider.GetRequiredService<IRootRepository>(),
+                provider.GetRequiredService<IFileIndexRepository>(),
+                provider.GetRequiredService<IScanLogRepository>(),
+                provider.GetRequiredService<IFileSystemLister>(),
+                provider.GetRequiredService<IRootWatcherFactory>(),
+                provider.GetRequiredService<IDriveInfoProvider>(),
+                provider.GetRequiredService<IIndexEventBus>(),
+                provider.GetRequiredService<IClock>(),
+                provider.GetRequiredService<EntryFactory>(),
+                IndexerOptions.FromSettings(settings.Indexing, forceFullScan: recovered),
+                provider.GetRequiredService<IBackgroundPriority>(),
+                provider.GetRequiredService<ILogger<IndexerService>>());
+        });
+    }
+
+    private static void AddSearch(IServiceCollection services)
+    {
+        services.AddSingleton<ISearchIndex>(static provider => new SqliteSearchIndex(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
+        services.AddSingleton(static provider => new SearchService(
+            provider.GetRequiredService<ISearchIndex>(),
+            provider.GetRequiredService<IRootRepository>(),
+            provider.GetRequiredService<IQueryHistoryRepository>(),
+            provider.GetRequiredService<ITagRepository>(),
+            provider.GetRequiredService<IClock>(),
+            provider.GetRequiredService<PathNormalizer>(),
+            SearchOptions.FromSettings(provider.GetRequiredService<ISettingsStore<AppSettings>>().Current.Search)));
+    }
+}
