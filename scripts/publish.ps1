@@ -1,45 +1,91 @@
 <#
 .SYNOPSIS
-    Собирает DiskApp в один самодостаточный exe для запуска без установленного .NET.
+    Собирает DiskApp для запуска без установленного .NET и кладёт результат в releases\.
 
 .DESCRIPTION
-    Решение 10 плана: self-contained, single-file, ReadyToRun. Результат — releases\DiskApp.exe
-    (папка в .gitignore). Нативные библиотеки (Skia, HarfBuzz, ANGLE) упакованы внутрь и распаковываются
-    при первом запуске. Установщик и автообновление (Velopack) появятся в этапе 11; этот скрипт — для
-    ручного запуска и ежедневного использования до него.
+    Решение 10 плана: self-contained, ReadyToRun. Имя результата:
+        diskapp_v{версия}_{стадия}[_singlefile].exe
+    Версия берётся из VersionPrefix в Directory.Build.props; стадия — alpha, beta, rc или release и для
+    всех стадий, кроме release, попадает в версию сборки как суффикс SemVer (0.1.0-alpha), поэтому
+    в настройках приложения показывается та же стадия.
+
+    Single-file (по умолчанию): один exe с упакованными нативными библиотеками (Skia, HarfBuzz, ANGLE),
+    они распаковываются при первом запуске; в имени есть _singlefile. Обычная сборка (-SingleFile:$false) —
+    папка releases\diskapp_v{версия}_{стадия}\ с exe и библиотеками рядом, без суффикса в имени.
+
+    Папка releases\ в .gitignore. Установщик и автообновление (Velopack) появятся в этапе 11.
+
+.PARAMETER Stage
+    Стадия зрелости: alpha (ранняя, не всё готово), beta (функции есть, идёт проверка), rc (кандидат
+    в релиз) или release (стабильная). По умолчанию alpha.
 
 .PARAMETER Runtime
     Идентификатор платформы: win-x64 (по умолчанию) или win-arm64.
 
+.PARAMETER SingleFile
+    Собирать в один exe. По умолчанию $true.
+
 .EXAMPLE
     .\scripts\publish.ps1
-    .\scripts\publish.ps1 -Runtime win-arm64
+    .\scripts\publish.ps1 -Stage beta
+    .\scripts\publish.ps1 -Stage release -SingleFile:$false
 #>
 param(
+    [ValidateSet('alpha', 'beta', 'rc', 'release')]
+    [string]$Stage = 'alpha',
+
     [ValidateSet('win-x64', 'win-arm64')]
-    [string]$Runtime = 'win-x64'
+    [string]$Runtime = 'win-x64',
+
+    [bool]$SingleFile = $true
 )
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$output = Join-Path $root 'releases'
+$releases = Join-Path $root 'releases'
+$project = Join-Path $root 'src\DiskApp.Desktop'
 
-dotnet publish (Join-Path $root 'src\DiskApp.Desktop') `
-    -c Release `
-    -r $Runtime `
-    --self-contained true `
-    -p:PublishSingleFile=true `
-    -p:IncludeNativeLibrariesForSelfExtract=true `
-    -p:PublishReadyToRun=true `
-    -p:DebugType=embedded `
-    -o $output `
-    --nologo
+$props = Get-Content (Join-Path $root 'Directory.Build.props') -Raw
+if ($props -notmatch '<VersionPrefix>([^<]+)</VersionPrefix>') { throw 'VersionPrefix не найден в Directory.Build.props' }
+$version = $Matches[1].Trim()
 
+$baseName = "diskapp_v${version}_${Stage}"
+if ($SingleFile) { $baseName += '_singlefile' }
+$exeName = "$baseName.exe"
+
+$publishDirectory = if ($SingleFile) { Join-Path $releases ".publish-$Runtime" } else { Join-Path $releases $baseName }
+if (Test-Path $publishDirectory) { Remove-Item $publishDirectory -Recurse -Force }
+
+$arguments = @(
+    'publish', $project,
+    '-c', 'Release',
+    '-r', $Runtime,
+    '--self-contained', 'true',
+    "-p:PublishSingleFile=$($SingleFile.ToString().ToLowerInvariant())",
+    "-p:IncludeNativeLibrariesForSelfExtract=$($SingleFile.ToString().ToLowerInvariant())",
+    '-p:PublishReadyToRun=true',
+    '-p:DebugType=embedded',
+    '-o', $publishDirectory,
+    '--nologo'
+)
+if ($Stage -ne 'release') { $arguments += "-p:VersionSuffix=$Stage" }
+
+& dotnet @arguments
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish завершился с кодом $LASTEXITCODE" }
 
 # Рядом с exe не нужны XML-документация сборок и отладочные символы нативных библиотек (100 МБ).
-Get-ChildItem $output -Include *.xml, *.pdb -Recurse | Remove-Item -Force
+Get-ChildItem $publishDirectory -Include *.xml, *.pdb -Recurse | Remove-Item -Force
 
-$exe = Join-Path $output 'DiskApp.exe'
-$size = [math]::Round((Get-Item $exe).Length / 1MB, 1)
-Write-Host "Готово: $exe ($size МБ, $Runtime)"
+if ($SingleFile) {
+    $target = Join-Path $releases $exeName
+    Move-Item (Join-Path $publishDirectory 'DiskApp.exe') $target -Force
+    Remove-Item $publishDirectory -Recurse -Force
+}
+else {
+    # Переименование apphost безопасно: имя DiskApp.dll зашито в exe при сборке.
+    Rename-Item (Join-Path $publishDirectory 'DiskApp.exe') $exeName
+    $target = Join-Path $publishDirectory $exeName
+}
+
+$size = [math]::Round((Get-Item $target).Length / 1MB, 1)
+Write-Host "Готово: $target ($size МБ, $Runtime, версия $version, стадия $Stage$(if ($SingleFile) { ', single-file' }))"

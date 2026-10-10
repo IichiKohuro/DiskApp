@@ -145,7 +145,7 @@ DiskApp подходит к задаче иначе:
 
 | Клавиши | Действие |
 |---|---|
-| `Ctrl+Alt+Space` | Показать/скрыть быстрый поиск (глобально) |
+| `Ctrl+Alt+D` | Показать/скрыть быстрый поиск (глобально); если занято — `Ctrl+Alt+F`, затем `Ctrl+Alt+Space`, действующее сочетание показано в настройках |
 | `Ctrl+Alt+I` | Разобрать входящие (глобально) |
 | `↑` `↓` `PgUp` `PgDn` | Навигация по результатам |
 | `Enter` | Открыть |
@@ -377,10 +377,10 @@ dotnet run --project src/DiskApp.Desktop
 dotnet test
 ```
 
-Самодостаточный exe без установленного .NET (self-contained, single-file, ReadyToRun) — в `releases\DiskApp.exe`:
+Самодостаточный exe без установленного .NET (self-contained, ReadyToRun) собирает скрипт; результат — `releases\diskapp_v{версия}_{стадия}[_singlefile].exe`, например `releases\diskapp_v0.1.0_alpha_singlefile.exe`. Стадия (`alpha`, `beta`, `rc`, `release`) задаётся параметром `-Stage` и попадает в версию сборки; `-SingleFile:$false` даёт обычную папку с библиотеками рядом и без суффикса в имени:
 
 ```powershell
-.\scripts\publish.ps1
+.\scripts\publish.ps1 -Stage alpha
 ```
 
 Полезные параметры запуска: `--minimized` (сразу в трей), `--show`, `--settings`, `--search "запрос"`, `--portable`; позже — `--add <путь>…` и `--safe-mode`.
