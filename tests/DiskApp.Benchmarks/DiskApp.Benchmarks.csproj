@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Бенчмарки BenchmarkDotNet для бюджетов производительности (PLAN.md, раздел 8).
+       Запуск в конфигурации Release через dotnet run; аргументы BenchmarkDotNet (фильтр и т. п.) передаются после разделителя аргументов. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsTestProject>false</IsTestProject>
+    <!-- BenchmarkDotNet и отладочные символы: без оптимизаций измерения бессмысленны, поэтому проект собирается в Release. -->
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DiskApp.Core\DiskApp.Core.csproj" />
+    <ProjectReference Include="..\..\src\DiskApp.Infrastructure\DiskApp.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+</Project>

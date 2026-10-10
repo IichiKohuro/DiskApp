@@ -1,0 +1,11 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sty="using:FluentAvalonia.Styling"
+             x:Class="DiskApp.UI.App"
+             RequestedThemeVariant="Default">
+    <!-- RequestedThemeVariant="Default" следует системной светлой или тёмной теме. -->
+
+    <Application.Styles>
+        <sty:FluentAvaloniaTheme PreferSystemTheme="True" />
+    </Application.Styles>
+</Application>

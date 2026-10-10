@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Реализации интерфейсов ядра: SQLite (Microsoft.Data.Sqlite + Dapper, миграции, FTS5), файловая система,
+       FileSystemWatcher, Windows Shell. Зависит только от Core. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiskApp.Core\DiskApp.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+
+</Project>

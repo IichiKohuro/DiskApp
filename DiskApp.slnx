@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="CHANGELOG.md" />
+    <File Path="CLAUDE.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="PLAN.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/DiskApp.Client/DiskApp.Client.csproj" />
+    <Project Path="src/DiskApp.Contracts/DiskApp.Contracts.csproj" />
+    <Project Path="src/DiskApp.Core/DiskApp.Core.csproj" />
+    <Project Path="src/DiskApp.Desktop/DiskApp.Desktop.csproj" />
+    <Project Path="src/DiskApp.Infrastructure/DiskApp.Infrastructure.csproj" />
+    <Project Path="src/DiskApp.Server/DiskApp.Server.csproj" />
+    <Project Path="src/DiskApp.UI/DiskApp.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DiskApp.Benchmarks/DiskApp.Benchmarks.csproj" />
+    <Project Path="tests/DiskApp.Core.Tests/DiskApp.Core.Tests.csproj" />
+    <Project Path="tests/DiskApp.Infrastructure.Tests/DiskApp.Infrastructure.Tests.csproj" />
+    <Project Path="tests/DiskApp.Server.Tests/DiskApp.Server.Tests.csproj" />
+    <Project Path="tests/DiskApp.UI.Tests/DiskApp.UI.Tests.csproj" />
+  </Folder>
+</Solution>

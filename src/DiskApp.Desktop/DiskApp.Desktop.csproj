@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Точка входа десктопа: окна, трей, глобальные хоткеи, один экземпляр, автозапуск, сервер внутри процесса. -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>DiskApp</AssemblyName>
+    <ApplicationIcon>..\..\assets\DiskApp.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiskApp.Server\DiskApp.Server.csproj" />
+    <ProjectReference Include="..\DiskApp.UI\DiskApp.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" />
+    <!-- Инструменты разработчика Avalonia 12 (F12) только в отладочной сборке. -->
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Extensions.Hosting" />
+    <PackageReference Include="Serilog.Sinks.File" />
+  </ItemGroup>
+
+</Project>

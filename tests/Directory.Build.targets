@@ -1,0 +1,21 @@
+<Project>
+
+  <!-- Пакеты и глобальные using, общие для всех тестовых проектов (кроме бенчмарков).
+       Тесты идут через Microsoft.Testing.Platform (см. global.json): xunit.v3 сам является раннером,
+       Microsoft.NET.Test.Sdk, xunit.runner.visualstudio и coverlet.collector (VSTest) не нужны.
+       Отчёты: dotnet test с аргументами платформы после разделителя: report-trx и coverage. -->
+
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

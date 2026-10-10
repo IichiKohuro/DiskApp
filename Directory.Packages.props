@@ -1,0 +1,50 @@
+<Project>
+
+  <!-- Централизованные версии пакетов (Central Package Management).
+       Источник версий — PLAN.md, этап 0.3: стабильные версии на nuget.org по состоянию на 2026-10-10.
+       Новый пакет добавляется сюда и отмечается в журнале изменений плана. -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+    <AvaloniaVersion>12.1.4</AvaloniaVersion>
+  </PropertyGroup>
+
+  <ItemGroup Label="UI">
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
+    <PackageVersion Include="FluentAvaloniaUI" Version="3.1.0" />
+    <PackageVersion Include="FluentIcons.Avalonia" Version="2.1.343" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Hosting and logging">
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageVersion Include="Serilog" Version="4.4.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Data and file system">
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageVersion Include="Dapper" Version="2.1.89" />
+    <PackageVersion Include="System.IO.Abstractions" Version="22.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Client">
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup Label="Tests and benchmarks">
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
+    <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+  </ItemGroup>
+
+</Project>

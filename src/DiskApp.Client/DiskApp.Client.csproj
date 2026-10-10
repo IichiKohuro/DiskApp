@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Типизированный REST-клиент (IDiskAppApi) и обёртка SignalR с переподключением.
+       Зависит только от Contracts; платформенного кода нет — используется десктопом, Android и Web. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiskApp.Contracts\DiskApp.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+  </ItemGroup>
+
+</Project>

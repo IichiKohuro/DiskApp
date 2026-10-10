@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Домен и логика: корни, записи, разбор запросов, ранжирование, сканирование, файловые операции, интерфейсы инфраструктуры.
+       Не ссылается ни на один проект решения и не знает об ASP.NET Core, Avalonia и SQLite (архитектурный тест в DiskApp.Core.Tests). -->
+
+  <ItemGroup>
+    <PackageReference Include="System.IO.Abstractions" />
+  </ItemGroup>
+
+</Project>

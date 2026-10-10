@@ -81,6 +81,8 @@ graph TD
 - `Contracts` не ссылается ни на что: это общий язык сервера и клиентов.
 - Платформенный код (P/Invoke, реестр, Shell) живёт в `Infrastructure` (сервисная сторона) и `Desktop` (сторона интерфейса: хоткеи, трей, IPC); `UI` остаётся кроссплатформенным.
 
+Тест живёт в `tests/DiskApp.Core.Tests/Architecture` (и `tests/DiskApp.UI.Tests/Architecture` для правила интерфейса): он читает `ProjectReference` из всех `src/*.csproj` и сверяет их с таблицей слоёв README, а также проверяет фактические ссылки скомпилированных сборок (`GetReferencedAssemblies`). Новый проект в `src/` или новая ссылка между проектами требуют правки таблицы и теста.
+
 Один DI-контейнер на процесс: `WebApplicationBuilder.Services` получает сервисы ядра и инфраструктуры, десктоп добавляет туда же ViewModels и свои сервисы. Это упрощает время жизни объектов и тестирование.
 
 ## 3. Запуск десктопа
@@ -303,7 +305,7 @@ SignalR: один хаб `DiskAppHub : Hub<IDiskAppHubClient>`. События: 
 
 ## 9. Интерфейс
 
-Этапы 6–9. `DiskApp.UI` — общий Avalonia-проект: `ViewModels/` (CommunityToolkit.Mvvm), `Views/`, `Controls/`, `Services/` (навигация, диалоги, InfoBar, диспетчер), `Styles/` (дизайн-токены), `Localization/` (`.resx` RU и EN). `DiskApp.Desktop` добавляет окна и платформенное: трей, хоткеи, IPC, автозапуск.
+Этапы 6–9. `DiskApp.UI` — общий Avalonia-проект: `ViewModels/` (CommunityToolkit.Mvvm), `Views/`, `Controls/`, `Services/` (навигация, диалоги, InfoBar, диспетчер), `Styles/` (дизайн-токены), `Localization/` (`.resx` RU и EN). `DiskApp.Desktop` добавляет окна и платформенное: трей, хоткеи, IPC, автозапуск. Класс приложения `App` (тема `FluentAvaloniaTheme`, ресурсы) тоже лежит в `DiskApp.UI`, чтобы его переиспользовали Android и Browser; десктоп создаёт `ClassicDesktopStyleApplicationLifetime` явно в `Program` и сам назначает окна, поэтому `App` не знает о `MainWindow`.
 
 Окна:
 
@@ -362,7 +364,7 @@ Serilog пишет структурные логи в `logs\diskapp-<дата>.l
 
 ## 15. Сборка и поставка
 
-Этапы 0 и 11. `.slnx`, `Directory.Build.props` (net10.0, nullable, warnings as errors, анализаторы `latest-recommended`), `Directory.Packages.props` (центральные версии). CI — GitHub Actions на `windows-latest`: restore, build Release, test, `dotnet format --verify-no-changes`, результаты тестов и покрытие. Публикация — self-contained, single-file, ReadyToRun для `win-x64` и `win-arm64`; версия из git (MinVer). Установщик и дельта-обновления — Velopack с GitHub Releases как источником; портативная сборка — zip с файлом `portable`.
+Этапы 0 и 11. `.slnx`, `Directory.Build.props` (net10.0, nullable, warnings as errors, анализаторы `latest-recommended`, стиль из `.editorconfig` при сборке), `Directory.Packages.props` (центральные версии). Тесты — xunit v3 на Microsoft.Testing.Platform (`global.json` → `test.runner`): отчёты TRX и покрытие дают расширения `Microsoft.Testing.Extensions.TrxReport` и `CodeCoverage`, а не VSTest-коллекторы. CI — GitHub Actions на `windows-latest`: restore, build Release, test, `dotnet format --verify-no-changes`, результаты тестов и покрытие. Публикация — self-contained, single-file, ReadyToRun для `win-x64` и `win-arm64`; версия из git (MinVer). Установщик и дельта-обновления — Velopack с GitHub Releases как источником; портативная сборка — zip с файлом `portable`.
 
 ## 16. Бюджеты и измерения
 

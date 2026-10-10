@@ -1,0 +1,5 @@
+# Уточнения для тестового кода поверх корневого .editorconfig.
+# Имена тестов — Method_Scenario_Expected; суффикс Async для асинхронных тестов не требуется.
+
+[*.cs]
+dotnet_naming_rule.async_methods_should_end_with_async.severity = none
