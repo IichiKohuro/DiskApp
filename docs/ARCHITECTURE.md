@@ -2,7 +2,7 @@
 
 Документ описывает, как устроено приложение: процессы, проекты, данные, конвейеры индексации и поиска, API, интерфейс и платформенные сервисы. Что делает продукт — в [README.md](../README.md); почему решили именно так — в [ADR](ADR/README.md); порядок работ и критерии — в [PLAN.md](../PLAN.md).
 
-Статус: проектная документация. Разделы помечены этапом плана, на котором появляется реализация; по мере реализации документ уточняется фактическими цифрами и схемами.
+Статус: проектная документация с фактами этапа 0 (2026-10-10). Разделы 3, 9, 10, 14–16 описывают реализованное и замеренное; остальные — замысел, помеченный этапом плана, на котором появится реализация. По мере реализации документ уточняется цифрами и схемами.
 
 ## Содержание
 
@@ -53,6 +53,8 @@ flowchart LR
 | Headless | `DiskApp.Server.Host` или `DiskApp.Desktop --headless` | По настройке | Как в удалённом | 4 (опц.), 13 |
 | Удалённый | Тот же сервер с включённым доступом по сети | Выбранные интерфейсы LAN, фиксированный порт, HTTPS | Токены сопряжённых устройств, права на устройство | 13 |
 
+Состояние после этапа 0: в коде живут `DiskApp.Desktop` (оболочка, окна, Win32) и `DiskApp.UI` (страницы на макете `ISearchService`); `Core`, `Infrastructure`, `Contracts`, `Server` и `Client` — пустые проекты с архитектурными и дымовыми тестами. Спайки S3 и S4 подтвердили, что сервер внутри процесса и FTS5 укладываются в бюджеты (раздел 16), поэтому схема выше остаётся целевой без изменений.
+
 ## 2. Проекты и зависимости
 
 ```mermaid
@@ -83,34 +85,62 @@ graph TD
 
 Тест живёт в `tests/DiskApp.Core.Tests/Architecture` (и `tests/DiskApp.UI.Tests/Architecture` для правила интерфейса): он читает `ProjectReference` из всех `src/*.csproj` и сверяет их с таблицей слоёв README, а также проверяет фактические ссылки скомпилированных сборок (`GetReferencedAssemblies`). Новый проект в `src/` или новая ссылка между проектами требуют правки таблицы и теста.
 
-Один DI-контейнер на процесс: `WebApplicationBuilder.Services` получает сервисы ядра и инфраструктуры, десктоп добавляет туда же ViewModels и свои сервисы. Это упрощает время жизни объектов и тестирование.
+Тесты: по проекту на каждый `src/` плюс `tests/DiskApp.Desktop.Tests` (одиночный экземпляр, протокол канала), общая библиотека фикстур `tests/DiskApp.Testing` (`TemporaryDirectory`, `TemporaryDatabase`; подключается ко всем тестовым проектам из `tests/Directory.Build.targets`) и `tests/DiskApp.Benchmarks`.
+
+Один DI-контейнер на процесс: `WebApplicationBuilder.Services` получает сервисы ядра и инфраструктуры, десктоп добавляет туда же ViewModels и свои сервисы. Это упрощает время жизни объектов и тестирование. На этапе 0 контейнер строит `Program.BuildServices` из `ServiceCollection` (`AddDiskAppUi` для ViewModel и сервисов интерфейса, `DesktopShell` как `IAppCommands`); с этапа 4 его место займёт `WebApplicationBuilder`, а спайк S3 подтвердил, что интерфейс и хаб могут брать сервисы из одного `app.Services` (ADR-0004).
 
 ## 3. Запуск десктопа
 
-Цель — иконка в трее менее чем за секунду при тёплом старте и показ окна поиска по хоткею менее чем за 100 мс. Для этого тяжёлое выполняется параллельно и лениво.
+Цель — иконка в трее менее чем за секунду при тёплом старте и показ окна поиска по хоткею менее чем за 100 мс. Для этого тяжёлое выполняется параллельно и лениво. Схема соответствует коду этапа 0 (`Program.Main`, `DesktopShell.Start`); в заметках — метки времени из журнала при тёплом старте (ADR-0003). Запуск Kestrel появится на этапе 4: он пойдёт в фоне сразу после захвата мьютекса, параллельно с Avalonia, а окно поиска подключит SignalR после готовности сервера.
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant Main as Program.Main
-    participant Paths as AppPaths / Serilog
-    participant Single as Одиночный экземпляр
-    participant Host as Kestrel + DI
-    participant App as Avalonia App
-    participant Tray as TrayIcon / хоткеи
-    participant QS as QuickSearchWindow
-    Main->>Paths: определить папку данных (обычная или portable), поднять логи
-    Main->>Single: захватить Mutex; если занят — передать аргументы по named pipe и выйти
-    Main->>Host: собрать контейнер, запустить Kestrel на 127.0.0.1:0 (в фоне)
-    Main->>App: старт Avalonia (параллельно с Kestrel)
-    App->>Tray: показать иконку, зарегистрировать RegisterHotKey, запустить pipe-сервер
-    Host-->>App: адрес сервера готов (TaskCompletionSource)
-    App->>QS: создать окно заранее и скрыть; подключить SignalR
-    Note over App,QS: главное окно создаётся только при первом обращении
+    participant Paths as AppPaths и Serilog
+    participant Guard as SingleInstanceGuard
+    participant Peer as Первый экземпляр
+    participant App as Avalonia и DI
+    participant Shell as DesktopShell
+    participant Win32 as MessageWindow и RegisterHotKey
+    Main->>Paths: папка данных (обычная или --portable), журнал в режиме shared
+    Note over Main: вход в Main — 146 мс
+    Main->>Guard: Mutex Local\DiskApp.{пользователь}.{сеанс}.Instance
+    alt мьютекс занят — это второй экземпляр
+        Main->>Peer: InstanceClient — аргументы одной строкой JSON по именованному каналу, таймаут 3 с
+        Peer-->>Main: принято
+        Note over Main: выход с кодом 0 (1, если канал не ответил) — ≈ 50 мс
+    else первый экземпляр
+        Main->>App: SetupWithLifetime (ShutdownMode OnExplicitShutdown), контейнер DI
+        Note over App: Avalonia готова — 601 мс
+        App->>Shell: Start(args)
+        Shell->>Shell: создать QuickSearchWindow заранее и скрыть
+        Shell->>Win32: message-only окно, RegisterHotKey по списку кандидатов (ADR-0006)
+        Shell->>Shell: TrayIcon с NativeMenu, InstanceServer на канале
+        Note over Shell: трей показан — 917 мс
+        Shell->>Shell: ApplyArguments — главное окно, если не --minimized, затем --settings и --search
+        Note over Shell: главное окно создаётся при первом обращении — 1 482 мс
+    end
 ```
 
-Остановка: `Exit` из трея → подтверждение при активных операциях → остановка подписок SignalR → `IHostApplicationLifetime.StopApplication()` → ожидание завершения писателя SQLite → выход.
+Регистрация горячей клавиши идёт по цепочке кандидатов; итог попадает в `HotkeyStatus`, который показывают главная страница, настройки и `InfoBar` главного окна:
 
-Параметры командной строки: `--minimized`, `--show`, `--search "q"`, `--add <пути>`, `--settings`, `--portable`, `--safe-mode`, `--headless` (этап 13), а также URI `diskapp://open?path=…` и `diskapp://search?q=…`. Любой из них, полученный вторым экземпляром, пересылается первому.
+```mermaid
+flowchart LR
+    Start([RegisterHotkey]) --> MW{Message-only окно создано?}
+    MW -- нет --> Off["HotkeyStatus: не зарегистрирован<br/>поиск из трея и через --search"]
+    MW -- да --> D[Ctrl+Alt+D]
+    D -- занято, ошибка 1409 --> F[Ctrl+Alt+F]
+    F -- занято --> S[Ctrl+Alt+Space]
+    S -- занято --> Off
+    D -- свободно --> OK["HotkeyStatus: действует Ctrl+Alt+D"]
+    F -- свободно --> Fallback["действует запасное<br/>InfoBar «Запасное сочетание клавиш»"]
+    S -- свободно --> Fallback
+```
+
+Остановка сейчас: «Выход» из меню трея → `DesktopShell.Exit`: окна закрываются (флаг `AllowClose`, иначе закрытие прячет окно в трей), снимаются хоткей, message-only окно, трей и сервер канала → `lifetime.Shutdown()`. С этапа 4 добавятся подтверждение при активных операциях, остановка подписок SignalR, `IHostApplicationLifetime.StopApplication()` и ожидание завершения писателя SQLite.
+
+Параметры командной строки: работают `--minimized`, `--show`, `--search "q"`, `--settings`, `--portable` (`StartupArguments`); позже `--add <пути>` и URI `diskapp://open?path=…`, `diskapp://search?q=…` (этап 6.4), `--safe-mode` (этап 10), `--headless` (этап 13). Любой из них, полученный вторым экземпляром, пересылается первому; запуск без аргументов при работающем экземпляре выводит главное окно на передний план.
 
 ## 4. Данные
 
@@ -319,15 +349,54 @@ SignalR: один хаб `DiskAppHub : Hub<IDiskAppHubClient>`. События: 
 
 Прототип интерфейса (2026-10-10) собран до ядра на макетных данных: `ISearchService` с реализацией `SampleSearchService` в `DiskApp.UI` заменяется обёрткой над `IDiskAppApi` в этапе 5, интерфейс при этом не меняется. Команды оболочки (`IAppCommands`: показать поиск, главное окно, страницу по ключу) реализует `DesktopShell` в `DiskApp.Desktop`, который владеет треем, хоткеем и окнами и разбирает аргументы запуска (`StartupArguments`). `MainWindow` наследует `FAAppWindow` FluentAvalonia (заголовок и системные кнопки в стиле Windows 11), Mica включает `Backdrop.ApplyMica` с fallback на сплошной цвет темы; `QuickSearchWindow` — окно без рамки с `ExperimentalAcrylicBorder` и скруглением через `DwmSetWindowAttribute`. Страницы подбираются по `DataTemplate` из `App.axaml`, без рефлексии; подсветка совпадений — контрол `HighlightTextBlock`.
 
+Состав оболочки и интерфейса после этапа 0:
+
+```mermaid
+flowchart TB
+    subgraph Desktop["DiskApp.Desktop"]
+        Program["Program.Main<br/>AppPaths · Serilog · SingleInstanceGuard · DI"]
+        Shell["DesktopShell : IAppCommands"]
+        Tray["TrayIcon · NativeMenu"]
+        Hotkey["MessageWindow · GlobalHotkey<br/>Platform/Windows"]
+        Pipe["InstanceServer · InstanceClient<br/>именованный канал"]
+        MainWin["MainWindow : FAAppWindow<br/>Mica (Backdrop)"]
+        QSWin["QuickSearchWindow<br/>Acrylic · DWM-углы · показ у курсора"]
+        Program --> Shell
+        Shell --> Tray
+        Shell --> Hotkey
+        Shell --> Pipe
+        Shell --> MainWin
+        Shell --> QSWin
+    end
+    subgraph UI["DiskApp.UI"]
+        MainVM["MainViewModel<br/>страницы · InfoBar · состояние индекса"]
+        Pages["HomeViewModel · SettingsViewModel<br/>SearchPage · заглушки разделов"]
+        QSVM["QuickSearchViewModel<br/>debounce 60 мс · клавиатура"]
+        Search["ISearchService"]
+        Sample["SampleSearchService<br/>макет до этапа 5"]
+        Status["HotkeyStatus · IThemeService"]
+        MainWin --> MainVM --> Pages
+        QSWin --> QSVM
+        Pages --> Search
+        QSVM --> Search
+        Search --> Sample
+        Pages --> Status
+    end
+    Hotkey -. WM_HOTKEY .-> Shell
+    Pipe -. аргументы второго экземпляра .-> Shell
+    Shell -. регистрирует итог .-> Status
+```
+
 ## 10. Платформенные сервисы
 
 | Интерфейс (Core) | Windows-реализация | Где живёт | Этап |
 |---|---|---|---|
 | `IPlatformShell` | `ShellExecuteEx`, `SHOpenWithDialog`, `SHOpenFolderAndSelectItems`, `IFileOperation`, буфер обмена с `DataFormats.Files` | Infrastructure | 7 |
 | `IIconProvider` | `SHGetFileInfo`, `IShellItemImageFactory`, кэш PNG на диске | Infrastructure | 7 |
-| `IGlobalHotkeyService` | `RegisterHotKey`, приём `WM_HOTKEY` собственным message-only окном (`MessageWindow`, `CreateWindowEx` с `HWND_MESSAGE`); `Win32Properties` в Avalonia 12 нет | Desktop | 6 |
-| Трей | Avalonia `TrayIcon` + `NativeMenu` | Desktop | 6 |
-| Одиночный экземпляр, IPC | `Mutex` + `NamedPipeServerStream` | Desktop | 6 |
+| Горячая клавиша | `GlobalHotkey` + `MessageWindow`: `RegisterHotKey` с `MOD_NOREPEAT`, приём `WM_HOTKEY` собственным message-only окном (`CreateWindowEx` с `HWND_MESSAGE`); `Win32Properties` в Avalonia 12 нет. Цепочка сочетаний `Ctrl+Alt+D` → `F` → `Space` (ADR-0006), итог в `HotkeyStatus`; настраиваемое сочетание — этап 6.5 | Desktop | есть (0.6) |
+| Трей | Avalonia `TrayIcon` + `NativeMenu` (Открыть, Быстрый поиск, Настройки, Выход); щелчок переключает окно поиска | Desktop | есть (0.6) |
+| Одиночный экземпляр, IPC | `SingleInstanceGuard` (`Mutex` на пользователя и сеанс) + `InstanceServer`/`InstanceClient` (`NamedPipeServerStream`, `CurrentUserOnly`, строка JSON через source generator) | Desktop | есть (0.6) |
+| Окна в стиле Windows 11 | `Backdrop.ApplyMica` (Mica с fallback), `WindowEffects` (`DwmSetWindowAttribute` для углов, `GetCursorPos` для показа у курсора) | Desktop | есть (0.6) |
 | Автозапуск | `HKCU\…\CurrentVersion\Run` | Desktop | 6 |
 | Интеграции оболочки | `shell:sendto`, `HKCU\Software\Classes\*\shell\DiskApp`, протокол `diskapp://` | Desktop | 8 |
 | Quick Switch диалогов | Win32 (`#32770`, `WM_SETTEXT`) или UI Automation, за флагом | Desktop | 8 |
@@ -362,25 +431,44 @@ SignalR: один хаб `DiskAppHub : Hub<IDiskAppHubClient>`. События: 
 
 ## 14. Наблюдаемость и диагностика
 
-Serilog пишет структурные логи в `logs\diskapp-<дата>.log` с ротацией по дням и ограничением размера; уровень настраивается. Глобальные обработчики исключений (AppDomain, TaskScheduler, Avalonia) логируют и показывают окно «Что-то пошло не так» с кнопкой «Собрать диагностический архив» (логи, настройки без секретов, версия, окружение). Endpoint `/health`. Телеметрии нет. Режим `--safe-mode` отключает автоиндексацию и интеграции для разбора проблем.
+Serilog пишет структурные логи в `logs\diskapp-<дата>.log`: ротация по дням, хранятся 14 файлов, режим `shared` (второй экземпляр пишет в тот же файл), уровень Debug (`Microsoft` — Information), `Log.Logger` отдаётся через DI. Метки `StartupTimer` (время от старта процесса) пишутся на входе в `Main`, после готовности Avalonia, при показе трея, открытии главного окна и первом кадре окна поиска — по ним снимаются замеры раздела 16. `Log.Fatal` ловит необработанное исключение в `Main`.
+
+Позже (этапы 10 и 4): настраиваемый уровень и ограничение размера; глобальные обработчики исключений (AppDomain, TaskScheduler, Avalonia) логируют и показывают окно «Что-то пошло не так» с кнопкой «Собрать диагностический архив» (логи, настройки без секретов, версия, окружение); endpoint `/health`; режим `--safe-mode` отключает автоиндексацию и интеграции для разбора проблем. Телеметрии нет.
 
 ## 15. Сборка и поставка
 
-Этапы 0 и 11. `.slnx`, `Directory.Build.props` (net10.0, nullable, warnings as errors, анализаторы `latest-recommended`, стиль из `.editorconfig` при сборке), `Directory.Packages.props` (центральные версии). Тесты — xunit v3 на Microsoft.Testing.Platform (`global.json` → `test.runner`): отчёты TRX и покрытие дают расширения `Microsoft.Testing.Extensions.TrxReport` и `CodeCoverage`, а не VSTest-коллекторы. CI — GitHub Actions на `windows-latest`: restore, build Release, test, `dotnet format --verify-no-changes`, результаты тестов и покрытие. Публикация — self-contained, single-file, ReadyToRun для `win-x64` и `win-arm64`; версия из git (MinVer). Установщик и дельта-обновления — Velopack с GitHub Releases как источником; портативная сборка — zip с файлом `portable`.
+Этапы 0 и 11. `.slnx`, `Directory.Build.props` (net10.0, nullable, warnings as errors, анализаторы `latest-recommended`, стиль из `.editorconfig` при сборке, `GenerateDocumentationFile` ради правила IDE0005, `VersionPrefix`), `Directory.Packages.props` (центральные версии). Тесты — xunit v3 на Microsoft.Testing.Platform (`global.json` → `test.runner`): отчёты TRX и покрытие дают расширения `Microsoft.Testing.Extensions.TrxReport` и `CodeCoverage`, а не VSTest-коллекторы.
+
+CI — GitHub Actions на `windows-latest` (`.github/workflows/ci.yml`): SDK по `global.json`, кэш NuGet, `restore` → `build -c Release` → `test` с TRX и Cobertura (сводка покрытия ReportGenerator в job summary, артефакт `test-results`) → `dotnet format --verify-no-changes`; запускается на push в `main`, pull request и вручную. Ветка `main` защищена от принудительной отправки и удаления (`scripts/protect-main.ps1`); готовые ветки сливаются в неё локально fast-forward (CONTRIBUTING.md).
+
+Публикация сейчас — `scripts/publish.ps1`: `dotnet publish` self-contained, single-file, ReadyToRun для `win-x64` (или `win-arm64`), результат `releases\diskapp_v{версия}_{стадия}[_singlefile].exe`; стадия (`alpha`, `beta`, `rc`, `release`) становится суффиксом SemVer к `VersionPrefix`. Такая сборка весит около 200 МБ из-за self-contained ASP.NET Core и Avalonia; бюджет установщика 80 МБ — задача этапа 11 (тримминг, версия из git через MinVer, установщик и дельта-обновления Velopack с GitHub Releases как источником, портативная сборка zip с файлом `portable`).
 
 ## 16. Бюджеты и измерения
 
 Бюджеты производительности и способы измерения — в PLAN.md, раздел 8. Результаты фактических замеров (дата, конфигурация машины, цифры) записываются сюда по итогам этапов 0.6 (спайки), 3.6, 4.7 и 10.1.
 
-| Дата | Конфигурация | Метрика | Результат |
+Итоги спайков этапа 0.6 (код S3 и S4 — в `spikes/`, S1 и S2 проверены прототипом и тестами):
+
+| Спайк | Что проверяли | Итог | ADR |
 |---|---|---|---|
-| 2026-10-10 | Ноутбук разработчика: Windows 11, 22 CPU, SSD, .NET 10.0.12, Release framework-dependent, тёплый старт | Старт до иконки в трее | 917 мс (вход в `Main` 146 мс, Avalonia готова 601 мс) |
-| 2026-10-10 | то же | Главное окно открыто | 1 482 мс |
-| 2026-10-10 | то же | Показ окна поиска до первого кадра | 82 мс первый показ, 1 мс последующие |
-| 2026-10-10 | то же | Второй экземпляр: `Main` → аргументы переданы → выход | ≈ 50 мс |
-| 2026-10-10 | то же, спайк S3 | Старт Kestrel + SignalR (`CreateSlimBuilder`, холодный) | 138 мс, рабочий набор +17 МБ |
-| 2026-10-10 | то же, спайк S3 | Loopback: HTTP GET / SignalR Invoke / push сервер→клиент, медиана | 0,12 / 0,16 / 0,17 мс |
-| 2026-10-10 | то же, спайк S4, SQLite 3.53.3 | Вставка 1 млн записей, FTS по имени | 7,7 с (129 тыс. строк/с), файл 161 МБ |
-| 2026-10-10 | то же, спайк S4 | Вставка 1 млн записей, FTS по имени и пути | 16,5 с (60 тыс. строк/с), файл 334 МБ |
-| 2026-10-10 | то же, спайк S4 | Поиск от 3 символов, trigram `MATCH` (`COUNT`) | 0,6–5 мс при 9–35 тыс. совпадений |
-| 2026-10-10 | то же, спайк S4 | Поиск по 2 символам (полный скан `LIKE`) | 140–390 мс — вне бюджета, см. ADR-0005 |
+| S1 | Стиль Windows 11 в Avalonia 12 + FluentAvalonia 3 | `FAAppWindow`, Mica с fallback, Acrylic и DWM-углы у окна поиска, тема и акцент системы; показ окна поиска 82 мс в первый раз, 1 мс далее | [0002](ADR/0002-windows11-shell-in-avalonia.md) |
+| S2 | Трей, горячая клавиша, один экземпляр | `TrayIcon` + `NativeMenu`, `RegisterHotKey` с message-only окном (в Avalonia 12 нет `Win32Properties`), `Mutex` + именованный канал; трей через 917 мс, второй экземпляр ≈ 50 мс | [0003](ADR/0003-tray-hotkey-single-instance.md) |
+| S3 | Kestrel + Minimal API + SignalR внутри процесса | `CreateSlimBuilder`, порт из `app.Urls`, общий DI подтверждён; старт 138 мс и +17 МБ, loopback 0,1–0,2 мс | [0004](ADR/0004-kestrel-in-process.md) |
+| S4 | SQLite FTS5 trigram на 1 млн записей | FTS только по имени, подстрока с 3 символов через `MATCH`, 1–2 символа — префикс по `name_folded`, без `LIKE` (регистр кириллицы) и без `bm25`; бюджет БД ужесточён до 250 МБ | [0005](ADR/0005-fts5-trigram-index-layout.md) |
+| S5 (опц.) | `FileSystemWatcher` под нагрузкой | Отложен до этапа 2.3; риск переполнения буфера закрыт пересканированием | — |
+
+Замеры:
+
+| Дата | Конфигурация | Метрика | Бюджет | Результат |
+|---|---|---|---|---|
+| 2026-10-10 | Ноутбук разработчика: Windows 11, 22 CPU, SSD, .NET 10.0.12, Release framework-dependent, тёплый старт | Старт до иконки в трее | < 1 с | 917 мс (вход в `Main` 146 мс, Avalonia готова 601 мс) |
+| 2026-10-10 | то же | Главное окно открыто | — (не на критическом пути) | 1 482 мс |
+| 2026-10-10 | то же | Показ окна поиска до первого кадра | < 100 мс | 82 мс первый показ, 1 мс последующие |
+| 2026-10-10 | то же | Второй экземпляр: `Main` → аргументы переданы → выход | — | ≈ 50 мс |
+| 2026-10-10 | то же, спайк S3 | Старт Kestrel + SignalR (`CreateSlimBuilder`, холодный) | не задерживать трей; память < 150 МБ | 138 мс, рабочий набор +17 МБ |
+| 2026-10-10 | то же, спайк S3 | Loopback: HTTP GET / SignalR Invoke / push сервер→клиент, медиана | доли мс | 0,12 / 0,16 / 0,17 мс |
+| 2026-10-10 | то же, спайк S4, SQLite 3.53.3 | Вставка 1 млн записей, FTS по имени | ≥ 2 000 файлов/с (ограничивает сканер) | 7,7 с (129 тыс. строк/с), файл 161 МБ |
+| 2026-10-10 | то же, спайк S4 | Вставка 1 млн записей, FTS по имени и пути | — (отклонено) | 16,5 с (60 тыс. строк/с), файл 334 МБ |
+| 2026-10-10 | то же, спайк S4 | Размер БД на 1 млн записей, FTS по имени | ≤ 250 МБ | 161 МБ |
+| 2026-10-10 | то же, спайк S4 | Поиск от 3 символов, trigram `MATCH` (`COUNT`) | < 50 мс | 0,6–5 мс при 9–35 тыс. совпадений; с `ORDER BY rank` 22–34 мс, на очень частой триграмме 532 мс — поэтому ранг свой |
+| 2026-10-10 | то же, спайк S4 | Поиск по 2 символам (полный скан `LIKE`) | < 50 мс | 140–390 мс — вне бюджета, заменён префиксом по `name_folded` (ADR-0005) |
