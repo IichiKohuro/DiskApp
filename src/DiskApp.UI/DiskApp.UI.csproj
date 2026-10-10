@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Общий кроссплатформенный интерфейс Avalonia: приложение, ViewModels, Views, стили, локализация.
+       Зависит только от Client: любой экран работает поверх IDiskAppApi и переносится на Android и в браузер. -->
+
+  <PropertyGroup>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiskApp.Client\DiskApp.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="FluentAvaloniaUI" />
+    <PackageReference Include="FluentIcons.Avalonia" />
+  </ItemGroup>
+
+</Project>

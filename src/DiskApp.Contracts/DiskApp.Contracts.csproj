@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Общий язык сервера и клиентов: DTO, маршруты API, типизированные интерфейсы SignalR-хаба, JSON source generation.
+       Не ссылается ни на что из решения. -->
+
+</Project>

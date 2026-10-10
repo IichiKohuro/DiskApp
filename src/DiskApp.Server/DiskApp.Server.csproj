@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Minimal API, SignalR-хаб, hosted services индексации и операций, OpenAPI.
+       Библиотека: хост поднимает DiskApp.Desktop (внутри процесса) или отдельная служба. -->
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DiskApp.Contracts\DiskApp.Contracts.csproj" />
+    <ProjectReference Include="..\DiskApp.Core\DiskApp.Core.csproj" />
+    <ProjectReference Include="..\DiskApp.Infrastructure\DiskApp.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

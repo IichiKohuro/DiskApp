@@ -1,0 +1,17 @@
+<Project>
+
+  <!-- Общие настройки тестовых проектов поверх корневого Directory.Build.props. -->
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- Проект бенчмарков переопределяет на false и не попадает в dotnet test. -->
+    <IsTestProject>true</IsTestProject>
+    <!-- Тестовые проекты xunit.v3 — исполняемые: сборка сама является раннером Microsoft.Testing.Platform. -->
+    <OutputType>Exe</OutputType>
+    <!-- Имена тестов вида Method_Scenario_Expected содержат подчёркивания; публичные классы тестов — требование xunit. -->
+    <NoWarn>$(NoWarn);CA1707;CA1515</NoWarn>
+  </PropertyGroup>
+
+</Project>
