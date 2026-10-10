@@ -54,7 +54,7 @@ public sealed class DirectoryScanner(IFileSystemLister lister, EntryFactory entr
         var startRelPath = entries.Paths.NormalizeRelative(request.RelPath);
         var startFullPath = entries.FullPath(root, startRelPath);
         var startDepth = entries.Depth(startRelPath);
-        var state = new ScanState(request, output, counters, pause);
+        var state = new ScanState(request, output, counters, pause, new DescentGuard(lister, entries.Paths, request.FollowReparsePoints));
 
         if (startRelPath.Length > 0 && request.Matcher.IsPathExcluded(startRelPath))
         {
@@ -101,10 +101,7 @@ public sealed class DirectoryScanner(IFileSystemLister lister, EntryFactory entr
             counters.AddEntries(1);
         }
 
-        if (request.FollowReparsePoints && lister.GetDirectoryIdentity(startFullPath) is { } startIdentity)
-        {
-            state.Visited.TryAdd(startIdentity, 0);
-        }
+        state.Descent.RegisterStart(startFullPath);
 
         // Начальная папка читается здесь, её подпапки уходят в общую очередь потоков; пакет начальной папки
         // пишется до запуска потоков, чтобы папки верхнего уровня оказались в индексе раньше своих детей.
@@ -217,43 +214,26 @@ public sealed class DirectoryScanner(IFileSystemLister lister, EntryFactory entr
 
         var added = 0;
         var childDepth = depth + 1;
-        foreach (var item in listing.Items)
+        foreach (var listed in listing.Items)
         {
-            var childRelPath = entries.Child(relPath, item.Name);
-            if (request.Matcher.IsExcluded(item.Name, childRelPath, item.IsDirectory, item.Attributes, item.Size, childDepth))
+            var childRelPath = entries.Child(relPath, listed.Name);
+            if (request.Matcher.IsExcluded(listed.Name, childRelPath, listed.IsDirectory, listed.Attributes, listed.Size, childDepth))
             {
                 continue;
             }
 
+            var item = EntryFactory.RefreshDirectory(lister, entries.Paths.Combine(fullPath, listed.Name), listed);
+
             buffer.Add(entries.Create(request.Root.Id, childRelPath, item));
             added++;
 
-            if (item.IsDirectory && request.Matcher.CanDescend(childDepth) && ShouldDescend(state, fullPath, item))
+            if (item.IsDirectory && request.Matcher.CanDescend(childDepth) && state.Descent.ShouldDescend(fullPath, item))
             {
                 descend((childRelPath, childDepth));
             }
         }
 
         state.Counters.AddEntries(added);
-    }
-
-    private bool ShouldDescend(ScanState state, string parentFullPath, in FileSystemItem item)
-    {
-        if (!state.Request.FollowReparsePoints)
-        {
-            return !item.IsReparsePoint;
-        }
-
-        var identity = lister.GetDirectoryIdentity(entries.Paths.Combine(parentFullPath, item.Name));
-        if (identity is null)
-        {
-            return !item.IsReparsePoint;
-        }
-
-        // Обычные папки обходятся всегда (дубликат через ссылку конечен), ссылки — только если цель ещё не встречалась:
-        // так ссылка на предка не зацикливает обход.
-        var isNew = state.Visited.TryAdd(identity, 0);
-        return isNew || !item.IsReparsePoint;
     }
 
     private static void Flush(ScanState state, ref List<FileEntry> buffer, CancellationToken cancellationToken)
@@ -276,7 +256,7 @@ public sealed class DirectoryScanner(IFileSystemLister lister, EntryFactory entr
         }
     }
 
-    private sealed class ScanState(ScanRequest request, ChannelWriter<EntryBatch> output, ScanCounters counters, PauseToken pause)
+    private sealed class ScanState(ScanRequest request, ChannelWriter<EntryBatch> output, ScanCounters counters, PauseToken pause, DescentGuard descent)
     {
         private readonly Lock _errorsGate = new();
         private readonly List<ScanError> _errors = [];
@@ -289,7 +269,7 @@ public sealed class DirectoryScanner(IFileSystemLister lister, EntryFactory entr
 
         public PauseToken Pause { get; } = pause;
 
-        public ConcurrentDictionary<string, byte> Visited { get; } = new(StringComparer.Ordinal);
+        public DescentGuard Descent { get; } = descent;
 
         public ConcurrentBag<string> FailedDirectories { get; } = [];
 

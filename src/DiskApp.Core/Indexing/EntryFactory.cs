@@ -65,6 +65,25 @@ public sealed class EntryFactory(PathNormalizer paths, FileKindMap kinds)
     }
 
     /// <summary>
+    /// Точные метаданные папки. NTFS хранит копию времени и атрибутов папки в записи родителя и обновляет её лениво
+    /// (например, когда папку открывают для перечисления), поэтому данные перечисления для папок отстают от настоящих.
+    /// Для папок, кроме ссылок, берутся сведения из самой папки, как у наблюдателя; для файлов данные перечисления точны.
+    /// Если запросить не удалось, возвращаются данные перечисления.
+    /// </summary>
+    public static FileSystemItem RefreshDirectory(IFileSystemLister lister, string fullPath, in FileSystemItem item)
+    {
+        ArgumentNullException.ThrowIfNull(lister);
+
+        if (!item.IsDirectory || item.IsReparsePoint)
+        {
+            return item;
+        }
+
+        var stat = lister.Stat(fullPath);
+        return stat.Item is { IsDirectory: true } fresh ? fresh with { Name = item.Name } : item;
+    }
+
+    /// <summary>
     /// Изменилась ли запись по сравнению со сведениями с диска — те же поля, по которым репозиторий
     /// пропускает неизменённые строки: тип, имя, размер, время изменения, атрибуты.
     /// </summary>
