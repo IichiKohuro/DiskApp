@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Спайк S4 (PLAN.md, этап 0.6): SQLite FTS5 с токенизатором trigram на 1 млн синтетических записей.
+       Одноразовый код вне решения; анализаторы ослаблены. Запуск: dotnet run -c Release; после разделителя
+       аргументов можно передать rows=1000000 и dir=путь. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>none</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+
+</Project>

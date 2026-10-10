@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Спайк S3 (PLAN.md, этап 0.6): Kestrel с Minimal API и SignalR внутри процесса на 127.0.0.1:0.
+       Одноразовый код вне решения; анализаторы ослаблены. Запуск: dotnet run -c Release. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>none</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+  </ItemGroup>
+
+</Project>
