@@ -3,24 +3,66 @@ using System.Diagnostics.CodeAnalysis;
 namespace DiskApp.Core.Results;
 
 /// <summary>
-/// Фабрика результатов: домен сообщает об ошибках значением, а не исключением (PLAN.md, этап 1.1),
-/// чтобы горячие пути поиска и индексации не платили за раскрутку стека.
+/// Результат операции без значения и фабрика для <see cref="Result{T}"/>: домен сообщает об ошибках значением,
+/// а не исключением (PLAN.md, этап 1.1), чтобы горячие пути поиска и индексации не платили за раскрутку стека.
+/// <c>default</c> считается ошибкой <see cref="DomainError.Uninitialized"/>, а не успехом.
 /// </summary>
-public static class Result
+public readonly record struct Result
 {
+    private readonly DomainError? _error;
+    private readonly bool _initialized;
+
+    private Result(DomainError? error)
+    {
+        _error = error;
+        _initialized = true;
+    }
+
+    /// <summary>
+    /// Операция завершилась успешно.
+    /// </summary>
+    public bool IsSuccess => _initialized && _error is null;
+
+    /// <summary>
+    /// Операция завершилась ошибкой; подробности в <see cref="Error"/>.
+    /// </summary>
+    public bool IsFailure => !IsSuccess;
+
+    /// <summary>
+    /// Ошибка; <c>null</c> при успехе.
+    /// </summary>
+    public DomainError? Error => _initialized ? _error : DomainError.Uninitialized;
+
+    /// <summary>
+    /// Успех без значения.
+    /// </summary>
+    public static Result Ok() => new(null);
+
+    /// <summary>
+    /// Ошибка без значения.
+    /// </summary>
+    public static Result Fail(DomainError error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        return new(error);
+    }
+
     /// <summary>
     /// Успех с значением.
     /// </summary>
     public static Result<T> Ok<T>(T value) => new(value, null);
 
     /// <summary>
-    /// Ошибка.
+    /// Ошибка с типом значения.
     /// </summary>
     public static Result<T> Fail<T>(DomainError error)
     {
         ArgumentNullException.ThrowIfNull(error);
         return new(default, error);
     }
+
+    /// <inheritdoc />
+    public override string ToString() => IsSuccess ? "Ok" : $"Fail({Error})";
 }
 
 /// <summary>
