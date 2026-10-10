@@ -30,6 +30,18 @@ public sealed class StartupArgumentsTests
         parsed.Portable.ShouldBeTrue();
         parsed.Show.ShouldBeFalse();
         parsed.SearchQuery.ShouldBeNull();
+        parsed.Exit.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Parse_Exit_SetsExitFlag()
+    {
+        // Act
+        var parsed = StartupArguments.Parse(["--EXIT"]);
+
+        // Assert
+        parsed.Exit.ShouldBeTrue();
+        parsed.ShowSearch.ShouldBeFalse();
     }
 
     [Theory]

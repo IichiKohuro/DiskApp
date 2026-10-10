@@ -179,6 +179,12 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     /// </summary>
     private void ApplyArguments(StartupArguments startup, bool initialLaunch)
     {
+        if (startup.Exit)
+        {
+            Exit();
+            return;
+        }
+
         var showMain = initialLaunch
             ? !startup.Minimized || startup.Show || startup.OpenSettings
             : startup.Show || startup.OpenSettings || (!startup.Minimized && !startup.ShowSearch);

@@ -123,4 +123,20 @@ public sealed class SingleInstanceTests
         names.Pipe.ShouldNotContain(" ");
         names.Pipe.ShouldNotContain("\\");
     }
+
+    [Fact]
+    public void ForCurrentUser_PortableDataScope_SeparatesCopiesByDataFolder()
+    {
+        // Act
+        var installed = InstanceNames.ForCurrentUser();
+        var portable = InstanceNames.ForCurrentUser(dataScope: @"D:\Tools\DiskApp\data");
+        var samePortable = InstanceNames.ForCurrentUser(dataScope: @"d:\tools\diskapp\data\");
+        var otherPortable = InstanceNames.ForCurrentUser(dataScope: @"E:\DiskApp\data");
+
+        // Assert
+        portable.ShouldNotBe(installed);
+        portable.ShouldBe(samePortable);
+        portable.ShouldNotBe(otherPortable);
+        portable.Mutex.ShouldStartWith(installed.Mutex[..^".Instance".Length]);
+    }
 }

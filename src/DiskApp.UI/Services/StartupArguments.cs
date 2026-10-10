@@ -9,12 +9,14 @@ namespace DiskApp.UI.Services;
 /// <param name="OpenSettings">Открыть страницу настроек.</param>
 /// <param name="SearchQuery">Показать быстрый поиск с этим запросом (пустая строка — без запроса); <c>null</c> — не показывать.</param>
 /// <param name="Portable">Портативный режим: данные рядом с исполняемым файлом.</param>
+/// <param name="Exit">Завершить запущенный экземпляр штатно (скрипты, установщик); если он не запущен — ничего не делать.</param>
 public sealed record StartupArguments(
     bool Minimized,
     bool Show,
     bool OpenSettings,
     string? SearchQuery,
-    bool Portable)
+    bool Portable,
+    bool Exit = false)
 {
     /// <summary>Аргументы по умолчанию: обычный запуск с главным окном.</summary>
     public static StartupArguments Default { get; } = new(false, false, false, null, false);
@@ -34,6 +36,7 @@ public sealed record StartupArguments(
         var show = false;
         var settings = false;
         var portable = false;
+        var exit = false;
         string? search = null;
 
         for (var i = 0; i < args.Count; i++)
@@ -57,6 +60,9 @@ public sealed record StartupArguments(
                 case "--portable":
                     portable = true;
                     break;
+                case "--exit":
+                    exit = true;
+                    break;
                 case "--search":
                     if (inlineValue is not null)
                     {
@@ -77,6 +83,6 @@ public sealed record StartupArguments(
             }
         }
 
-        return new StartupArguments(minimized, show, settings, search, portable);
+        return new StartupArguments(minimized, show, settings, search, portable, exit);
     }
 }

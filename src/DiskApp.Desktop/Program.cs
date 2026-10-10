@@ -8,6 +8,7 @@ using DiskApp.Desktop.Shell;
 using DiskApp.Desktop.SingleInstance;
 using DiskApp.Desktop.Startup;
 using DiskApp.Infrastructure;
+using DiskApp.Server;
 using DiskApp.UI;
 using DiskApp.UI.Services;
 
@@ -21,6 +22,7 @@ namespace DiskApp.Desktop;
 internal static class Program
 {
     private static readonly TimeSpan SecondInstanceTimeout = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan ServerStopTimeout = TimeSpan.FromSeconds(5);
 
     // Код инициализации. До запуска Avalonia нельзя использовать её API, сторонние библиотеки
     // и код, зависящий от SynchronizationContext: платформа ещё не готова.
@@ -36,13 +38,19 @@ internal static class Program
                 StartupTimer.Milliseconds, paths.DataDirectory, paths.IsPortable);
 
             // Один экземпляр на пользователя: второй передаёт аргументы первому и завершается.
-            var names = InstanceNames.ForCurrentUser();
+            var names = InstanceNames.ForCurrentUser(dataScope: paths.IsPortable ? paths.DataDirectory : null);
             using var instance = SingleInstanceGuard.Acquire(names.Mutex);
             if (!instance.IsFirstInstance)
             {
                 var delivered = InstanceClient.TrySendAsync(names.Pipe, args, SecondInstanceTimeout).GetAwaiter().GetResult();
                 Log.Information("Экземпляр уже запущен; аргументы {Arguments} {Outcome}", args, delivered ? "переданы ему" : "не доставлены");
                 return delivered ? 0 : 1;
+            }
+
+            if (StartupArguments.Parse(args).Exit)
+            {
+                Log.Information("--exit: запущенного экземпляра нет, завершать нечего");
+                return 0;
             }
 
             // Приложение живёт в трее: закрытие окон его не завершает, выход — из меню трея.
@@ -52,16 +60,28 @@ internal static class Program
                 ShutdownMode = ShutdownMode.OnExplicitShutdown,
             };
 
+            // Общий контейнер сервера и оболочки собирается в фоне, пока поднимается Avalonia: на критическом пути трея его нет.
+            var hostCreation = Task.Run(() => CreateServerHost(paths, lifetime, names));
             BuildAvaloniaApp().SetupWithLifetime(lifetime);
             Log.Information("Avalonia готова через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
 
-            using var services = BuildServices(lifetime, names);
-            var shell = services.GetRequiredService<DesktopShell>();
-            shell.Start(args);
+            var host = hostCreation.GetAwaiter().GetResult();
+            try
+            {
+                var shell = host.Services.GetRequiredService<DesktopShell>();
+                shell.Start(args);
 
-            var exitCode = lifetime.Start(args);
-            Log.Information("DiskApp завершён с кодом {ExitCode}", exitCode);
-            return exitCode;
+                // База, индексатор и Kestrel запускаются после трея, в фоне.
+                var serverStart = Task.Run(() => StartServerAsync(host));
+                var exitCode = lifetime.Start(args);
+                StopServer(host, serverStart);
+                Log.Information("DiskApp завершён с кодом {ExitCode}", exitCode);
+                return exitCode;
+            }
+            finally
+            {
+                Task.Run(async () => await host.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
+            }
         }
         catch (Exception exception)
         {
@@ -84,16 +104,60 @@ internal static class Program
             .WithInterFont()
             .LogToTrace();
 
-    private static ServiceProvider BuildServices(IClassicDesktopStyleApplicationLifetime lifetime, InstanceNames names)
+    private static DiskAppServerHost CreateServerHost(AppPaths paths, IClassicDesktopStyleApplicationLifetime lifetime, InstanceNames names)
     {
-        var services = new ServiceCollection();
-        services.AddSingleton(Log.Logger);
-        services.AddSingleton(lifetime);
-        services.AddSingleton(names);
-        services.AddDiskAppUi();
-        services.AddSingleton<DesktopShell>();
-        services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
-        return services.BuildServiceProvider();
+        var options = new DiskAppServerOptions
+        {
+            Paths = paths,
+#if DEBUG
+            EnvironmentName = "Development",
+#endif
+        };
+
+        var host = DiskAppServerHost.Create(options, services =>
+        {
+            services.AddSerilog(Log.Logger);
+            services.AddSingleton(Log.Logger);
+            services.AddSingleton(lifetime);
+            services.AddSingleton(names);
+            services.AddDiskAppUi();
+            services.AddSingleton<DesktopShell>();
+            services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
+        });
+        Log.Information("Контейнер сервера и оболочки собран через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
+        return host;
+    }
+
+    private static async Task StartServerAsync(DiskAppServerHost host)
+    {
+        try
+        {
+            await host.StartAsync().ConfigureAwait(false);
+            Log.Information("Сервер слушает {Address}: готов через {StartupMs} мс после старта процесса", host.BaseAddress, StartupTimer.Milliseconds);
+        }
+        catch (Exception exception)
+        {
+            // Без сервера интерфейс работает на макетных данных; причина — в журнале.
+            Log.Error(exception, "Сервер не запустился");
+        }
+    }
+
+    private static void StopServer(DiskAppServerHost host, Task serverStart)
+    {
+        // Вне потока интерфейса: продолжения не должны ждать остановленный диспетчер Avalonia.
+        Task.Run(async () =>
+        {
+            await serverStart.ConfigureAwait(false);
+            using var timeout = new CancellationTokenSource(ServerStopTimeout);
+            try
+            {
+                await host.StopAsync(timeout.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                Log.Warning("Сервер не остановился за {Timeout}", ServerStopTimeout);
+            }
+        }).GetAwaiter().GetResult();
     }
 
     private static Serilog.Core.Logger CreateLogger(AppPaths paths)
