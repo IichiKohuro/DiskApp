@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Тесты десктопной оболочки без окон: одиночный экземпляр (мьютекс, именованный канал, протокол),
+       пути данных. Платформенный код (хоткей, DWM) проверяется вручную по QA_CHECKLIST.md. -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DiskApp.Desktop\DiskApp.Desktop.csproj" />
+  </ItemGroup>
+
+</Project>

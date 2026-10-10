@@ -37,4 +37,8 @@
     <PackageReference Include="Serilog.Sinks.File" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="DiskApp.Desktop.Tests" />
+  </ItemGroup>
+
 </Project>

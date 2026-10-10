@@ -23,6 +23,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/DiskApp.Benchmarks/DiskApp.Benchmarks.csproj" />
     <Project Path="tests/DiskApp.Core.Tests/DiskApp.Core.Tests.csproj" />
+    <Project Path="tests/DiskApp.Desktop.Tests/DiskApp.Desktop.Tests.csproj" />
     <Project Path="tests/DiskApp.Infrastructure.Tests/DiskApp.Infrastructure.Tests.csproj" />
     <Project Path="tests/DiskApp.Server.Tests/DiskApp.Server.Tests.csproj" />
     <Project Path="tests/DiskApp.Testing/DiskApp.Testing.csproj" />

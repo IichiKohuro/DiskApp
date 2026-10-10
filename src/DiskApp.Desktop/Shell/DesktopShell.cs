@@ -5,8 +5,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Platform;
+using Avalonia.Threading;
 
 using DiskApp.Desktop.Platform.Windows;
+using DiskApp.Desktop.SingleInstance;
+using DiskApp.Desktop.Startup;
 using DiskApp.Desktop.Windows;
 using DiskApp.UI.Services;
 using DiskApp.UI.ViewModels;
@@ -20,8 +23,9 @@ using Serilog;
 namespace DiskApp.Desktop.Shell;
 
 /// <summary>
-/// Оболочка десктопа: иконка в трее с меню, глобальная горячая клавиша, главное окно (создаётся при первом
-/// обращении) и заранее созданное окно быстрого поиска. Реализует <see cref="IAppCommands"/> для интерфейса.
+/// Оболочка десктопа: иконка в трее с меню, глобальная горячая клавиша, приём аргументов от вторых экземпляров,
+/// главное окно (создаётся при первом обращении) и заранее созданное окно быстрого поиска.
+/// Реализует <see cref="IAppCommands"/> для интерфейса.
 /// </summary>
 internal sealed class DesktopShell : IAppCommands, IDisposable
 {
@@ -30,32 +34,36 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
     private readonly IClassicDesktopStyleApplicationLifetime _lifetime;
     private readonly IServiceProvider _services;
+    private readonly InstanceNames _names;
     private readonly ILogger _log;
 
     private TrayIcon? _tray;
     private MessageWindow? _messageWindow;
     private GlobalHotkey? _hotkey;
     private string? _hotkeyError;
+    private InstanceServer? _instanceServer;
     private MainWindow? _mainWindow;
     private QuickSearchWindow? _quickSearch;
     private bool _exiting;
 
     /// <summary>
-    /// Создаёт оболочку; окна и трей появляются в <see cref="Start"/>.
+    /// Создаёт оболочку; окна, трей и приём аргументов появляются в <see cref="Start"/>.
     /// </summary>
-    public DesktopShell(IClassicDesktopStyleApplicationLifetime lifetime, IServiceProvider services, ILogger log)
+    public DesktopShell(IClassicDesktopStyleApplicationLifetime lifetime, IServiceProvider services, InstanceNames names, ILogger log)
     {
         ArgumentNullException.ThrowIfNull(lifetime);
         ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(names);
         ArgumentNullException.ThrowIfNull(log);
 
         _lifetime = lifetime;
         _services = services;
+        _names = names;
         _log = log.ForContext<DesktopShell>();
     }
 
     /// <summary>
-    /// Поднимает трей, хоткей и окно поиска; показывает главное окно, если не передан <c>--minimized</c>.
+    /// Поднимает трей, хоткей, окно поиска и сервер одиночного экземпляра; применяет аргументы запуска.
     /// Вызывать на UI-потоке после настройки Avalonia.
     /// </summary>
     public void Start(IReadOnlyList<string> args)
@@ -63,29 +71,20 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         ArgumentNullException.ThrowIfNull(args);
 
         var startup = StartupArguments.Parse(args);
-        var searchViewModel = _services.GetRequiredService<QuickSearchViewModel>();
-        _quickSearch = new QuickSearchWindow { DataContext = searchViewModel };
+        _quickSearch = new QuickSearchWindow { DataContext = _services.GetRequiredService<QuickSearchViewModel>() };
 
         CreateTray();
+        _log.Information("Трей показан через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
+
         RegisterHotkey();
 
-        if (!startup.Minimized || startup.Show || startup.OpenSettings)
-        {
-            ShowMainWindow();
-        }
+        _instanceServer = new InstanceServer(_names.Pipe, OnSecondInstanceArguments, _log);
+        _instanceServer.Start();
 
-        if (startup.OpenSettings)
-        {
-            NavigateTo(PageKeys.Settings);
-        }
+        ApplyArguments(startup, initialLaunch: true);
 
-        if (startup.ShowSearch)
-        {
-            searchViewModel.Query = startup.SearchQuery ?? string.Empty;
-            ShowQuickSearch();
-        }
-
-        _log.Information("Оболочка запущена: трей, хоткей {HotkeyState}, аргументы {Arguments}",
+        _log.Information("Оболочка запущена через {StartupMs} мс: хоткей {HotkeyState}, аргументы {Arguments}",
+            StartupTimer.Milliseconds,
             _hotkey is null ? "не зарегистрирован" : "Ctrl+Alt+Space",
             startup);
     }
@@ -115,7 +114,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     }
 
     /// <summary>
-    /// Завершает приложение: закрывает окна, снимает хоткей и трей, останавливает цикл сообщений.
+    /// Завершает приложение: закрывает окна, снимает хоткей, трей и сервер экземпляра, останавливает цикл сообщений.
     /// </summary>
     public void Exit()
     {
@@ -146,6 +145,9 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        _instanceServer?.Dispose();
+        _instanceServer = null;
+
         if (OperatingSystem.IsWindows())
         {
             _hotkey?.Dispose();
@@ -159,6 +161,36 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     }
 
     private static PixelPoint? CursorPosition() => OperatingSystem.IsWindows() ? WindowEffects.GetCursorPosition() : null;
+
+    /// <summary>
+    /// Применяет аргументы: при первом запуске главное окно показывается, если не просили <c>--minimized</c>;
+    /// от второго экземпляра без аргументов — просто выводит главное окно на передний план.
+    /// </summary>
+    private void ApplyArguments(StartupArguments startup, bool initialLaunch)
+    {
+        var showMain = initialLaunch
+            ? !startup.Minimized || startup.Show || startup.OpenSettings
+            : startup.Show || startup.OpenSettings || (!startup.Minimized && !startup.ShowSearch);
+
+        if (showMain)
+        {
+            ShowMainWindow();
+        }
+
+        if (startup.OpenSettings)
+        {
+            NavigateTo(PageKeys.Settings);
+        }
+
+        if (startup.ShowSearch)
+        {
+            _services.GetRequiredService<QuickSearchViewModel>().Query = startup.SearchQuery ?? string.Empty;
+            ShowQuickSearch();
+        }
+    }
+
+    private void OnSecondInstanceArguments(IReadOnlyList<string> args)
+        => Dispatcher.UIThread.Post(() => ApplyArguments(StartupArguments.Parse(args), initialLaunch: false));
 
     private void CreateTray()
     {
@@ -227,6 +259,8 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         var viewModel = _services.GetRequiredService<MainViewModel>();
         var window = new MainWindow { DataContext = viewModel };
         _lifetime.MainWindow = window;
+
+        window.Opened += (_, _) => _log.Information("Главное окно открыто через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
 
         if (_hotkeyError is not null)
         {

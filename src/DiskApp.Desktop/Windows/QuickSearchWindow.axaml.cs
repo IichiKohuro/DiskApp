@@ -1,9 +1,13 @@
+using System.Diagnostics;
+
 using Avalonia;
 using Avalonia.Controls;
 
 using DiskApp.Desktop.Platform.Windows;
 using DiskApp.UI.Models;
 using DiskApp.UI.ViewModels;
+
+using Serilog;
 
 namespace DiskApp.Desktop.Windows;
 
@@ -14,6 +18,7 @@ namespace DiskApp.Desktop.Windows;
 public partial class QuickSearchWindow : Window
 {
     private QuickSearchViewModel? _viewModel;
+    private int _showCount;
 
     /// <summary>
     /// Создаёт окно и подключает скрытие при потере фокуса.
@@ -35,6 +40,9 @@ public partial class QuickSearchWindow : Window
     /// </summary>
     public void ShowAt(PixelPoint? anchor)
     {
+        var watch = Stopwatch.StartNew();
+        var showNumber = ++_showCount;
+
         var screens = Screens;
         var screen = (anchor is { } point ? screens.ScreenFromPoint(point) : null)
             ?? screens.Primary
@@ -54,6 +62,9 @@ public partial class QuickSearchWindow : Window
 
         Activate();
         SearchView.FocusQuery();
+
+        // Замер S1: от вызова до первого кадра. Первый показ включает построение шаблонов, последующие — только показ.
+        RequestAnimationFrame(_ => Log.Debug("Окно поиска: показ №{Number} за {Milliseconds:F0} мс до первого кадра", showNumber, watch.Elapsed.TotalMilliseconds));
     }
 
     /// <summary>
