@@ -1,6 +1,6 @@
-using DiskApp.Infrastructure.Sqlite;
-
 using Dapper;
+
+using DiskApp.Infrastructure.Sqlite;
 
 namespace DiskApp.Infrastructure.Tests.Sqlite;
 
