@@ -317,13 +317,15 @@ SignalR: один хаб `DiskAppHub : Hub<IDiskAppHubClient>`. События: 
 
 Стиль Windows 11: FluentAvaloniaUI (`PreferSystemTheme`, `PreferUserAccentColor`), `TransparencyLevelHint` Mica → Acrylic → сплошной цвет, радиусы 8 px у окон и 4 px у контролов, Segoe UI Variable с fallback, Segoe Fluent Icons / FluentIcons, анимации 150–250 мс с учётом системного «уменьшить движение». Виртуализация во всех списках, LRU-кэш растровых иконок и миниатюр.
 
+Прототип интерфейса (2026-10-10) собран до ядра на макетных данных: `ISearchService` с реализацией `SampleSearchService` в `DiskApp.UI` заменяется обёрткой над `IDiskAppApi` в этапе 5, интерфейс при этом не меняется. Команды оболочки (`IAppCommands`: показать поиск, главное окно, страницу по ключу) реализует `DesktopShell` в `DiskApp.Desktop`, который владеет треем, хоткеем и окнами и разбирает аргументы запуска (`StartupArguments`). `MainWindow` наследует `FAAppWindow` FluentAvalonia (заголовок и системные кнопки в стиле Windows 11), Mica включает `Backdrop.ApplyMica` с fallback на сплошной цвет темы; `QuickSearchWindow` — окно без рамки с `ExperimentalAcrylicBorder` и скруглением через `DwmSetWindowAttribute`. Страницы подбираются по `DataTemplate` из `App.axaml`, без рефлексии; подсветка совпадений — контрол `HighlightTextBlock`.
+
 ## 10. Платформенные сервисы
 
 | Интерфейс (Core) | Windows-реализация | Где живёт | Этап |
 |---|---|---|---|
 | `IPlatformShell` | `ShellExecuteEx`, `SHOpenWithDialog`, `SHOpenFolderAndSelectItems`, `IFileOperation`, буфер обмена с `DataFormats.Files` | Infrastructure | 7 |
 | `IIconProvider` | `SHGetFileInfo`, `IShellItemImageFactory`, кэш PNG на диске | Infrastructure | 7 |
-| `IGlobalHotkeyService` | `RegisterHotKey`, приём `WM_HOTKEY` через `Win32Properties.AddWndProcHookCallback` | Desktop | 6 |
+| `IGlobalHotkeyService` | `RegisterHotKey`, приём `WM_HOTKEY` собственным message-only окном (`MessageWindow`, `CreateWindowEx` с `HWND_MESSAGE`); `Win32Properties` в Avalonia 12 нет | Desktop | 6 |
 | Трей | Avalonia `TrayIcon` + `NativeMenu` | Desktop | 6 |
 | Одиночный экземпляр, IPC | `Mutex` + `NamedPipeServerStream` | Desktop | 6 |
 | Автозапуск | `HKCU\…\CurrentVersion\Run` | Desktop | 6 |
