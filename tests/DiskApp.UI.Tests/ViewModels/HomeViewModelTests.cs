@@ -83,6 +83,6 @@ public sealed class HomeViewModelTests
     private static HomeViewModel Create(out IAppCommands commands)
     {
         commands = Substitute.For<IAppCommands>();
-        return new HomeViewModel(new SampleSearchService(static () => Now), commands, static () => Now);
+        return new HomeViewModel(new SampleSearchService(static () => Now), commands, new HotkeyStatus(), static () => Now);
     }
 }

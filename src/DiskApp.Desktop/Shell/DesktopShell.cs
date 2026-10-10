@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.Versioning;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -32,6 +33,17 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     private const int SearchHotkeyId = 1;
     private const string IconUri = "avares://DiskApp/Assets/DiskApp.ico";
 
+    /// <summary>
+    /// Сочетания для быстрого поиска по убыванию предпочтения (ADR-0006): регистрируется первое свободное.
+    /// </summary>
+    [SupportedOSPlatform("windows")]
+    private static HotkeyCandidate[] QuickSearchHotkeys() =>
+    [
+        new(NativeMethods.ModControl | NativeMethods.ModAlt, NativeMethods.VkD, "Ctrl + Alt + D", new KeyGesture(Key.D, KeyModifiers.Control | KeyModifiers.Alt)),
+        new(NativeMethods.ModControl | NativeMethods.ModAlt, NativeMethods.VkF, "Ctrl + Alt + F", new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Alt)),
+        new(NativeMethods.ModControl | NativeMethods.ModAlt, NativeMethods.VkSpace, "Ctrl + Alt + Space", new KeyGesture(Key.Space, KeyModifiers.Control | KeyModifiers.Alt)),
+    ];
+
     private readonly IClassicDesktopStyleApplicationLifetime _lifetime;
     private readonly IServiceProvider _services;
     private readonly InstanceNames _names;
@@ -40,7 +52,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     private TrayIcon? _tray;
     private MessageWindow? _messageWindow;
     private GlobalHotkey? _hotkey;
-    private string? _hotkeyError;
+    private HotkeyCandidate? _activeHotkey;
     private InstanceServer? _instanceServer;
     private MainWindow? _mainWindow;
     private QuickSearchWindow? _quickSearch;
@@ -73,10 +85,9 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         var startup = StartupArguments.Parse(args);
         _quickSearch = new QuickSearchWindow { DataContext = _services.GetRequiredService<QuickSearchViewModel>() };
 
+        RegisterHotkey();
         CreateTray();
         _log.Information("Трей показан через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
-
-        RegisterHotkey();
 
         _instanceServer = new InstanceServer(_names.Pipe, OnSecondInstanceArguments, _log);
         _instanceServer.Start();
@@ -85,7 +96,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         _log.Information("Оболочка запущена через {StartupMs} мс: хоткей {HotkeyState}, аргументы {Arguments}",
             StartupTimer.Milliseconds,
-            _hotkey is null ? "не зарегистрирован" : "Ctrl+Alt+Space",
+            _activeHotkey?.Text ?? "не зарегистрирован",
             startup);
     }
 
@@ -200,7 +211,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         open.Click += (_, _) => ShowMainWindow();
         menu.Items.Add(open);
 
-        var search = new NativeMenuItem("Быстрый поиск") { Gesture = new KeyGesture(Key.Space, KeyModifiers.Control | KeyModifiers.Alt) };
+        var search = new NativeMenuItem("Быстрый поиск") { Gesture = _activeHotkey?.Gesture };
         search.Click += (_, _) => ShowQuickSearch();
         menu.Items.Add(search);
 
@@ -231,25 +242,66 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         }
     }
 
+    /// <summary>
+    /// Регистрирует первое свободное сочетание из <see cref="QuickSearchHotkeys"/> и записывает итог в <see cref="HotkeyStatus"/>.
+    /// </summary>
     private void RegisterHotkey()
     {
+        var status = _services.GetRequiredService<HotkeyStatus>();
+
         if (!OperatingSystem.IsWindows())
         {
-            _hotkeyError = "глобальные горячие клавиши пока только для Windows";
+            status.IsRegistered = false;
+            status.Message = "Глобальные горячие клавиши пока работают только в Windows.";
             return;
         }
 
         try
         {
             _messageWindow = new MessageWindow();
-            _hotkey = GlobalHotkey.Register(_messageWindow, SearchHotkeyId, NativeMethods.ModControl | NativeMethods.ModAlt, NativeMethods.VkSpace);
-            _hotkey.Pressed += (_, _) => ToggleQuickSearch();
         }
         catch (Win32Exception exception)
         {
-            _hotkeyError = exception.Message;
-            _log.Warning(exception, "Горячая клавиша Ctrl+Alt+Space не зарегистрирована");
+            status.IsRegistered = false;
+            status.Message = $"Не удалось создать окно для приёма клавиш: {exception.Message}";
+            _log.Warning(exception, "Окно сообщений для горячей клавиши не создано");
+            return;
         }
+
+        var candidates = QuickSearchHotkeys();
+        var failures = new List<string>();
+        foreach (var candidate in candidates)
+        {
+            try
+            {
+                _hotkey = GlobalHotkey.Register(_messageWindow, SearchHotkeyId, candidate.Modifiers, candidate.VirtualKey);
+            }
+            catch (Win32Exception exception)
+            {
+                failures.Add($"{candidate.Text} — {exception.Message}");
+                _log.Debug("Сочетание {Hotkey} не зарегистрировано: {Reason}", candidate.Text, exception.Message);
+                continue;
+            }
+
+            _hotkey.Pressed += (_, _) => ToggleQuickSearch();
+            _activeHotkey = candidate;
+            status.QuickSearchText = candidate.Text;
+            status.IsRegistered = true;
+            status.Message = ReferenceEquals(candidate, candidates[0])
+                ? string.Empty
+                : $"Сочетание {candidates[0].Text} занято другим приложением, поэтому действует {candidate.Text}.";
+
+            if (status.Message.Length > 0)
+            {
+                _log.Warning("Запасное сочетание: {Message}", status.Message);
+            }
+
+            return;
+        }
+
+        status.IsRegistered = false;
+        status.Message = "Ни одно сочетание не удалось зарегистрировать: " + string.Join("; ", failures) + ". Поиск открывается щелчком по иконке в трее.";
+        _log.Warning("Горячая клавиша недоступна: {Message}", status.Message);
     }
 
     private void ToggleQuickSearch() => _quickSearch?.Toggle(CursorPosition());
@@ -262,16 +314,23 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         window.Opened += (_, _) => _log.Information("Главное окно открыто через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
 
-        if (_hotkeyError is not null)
+        var hotkeys = _services.GetRequiredService<HotkeyStatus>();
+        if (!hotkeys.IsRegistered)
         {
-            viewModel.ShowNotice(
-                "Горячая клавиша недоступна",
-                $"Ctrl + Alt + Space не зарегистрирована: {_hotkeyError} Поиск открывается щелчком по иконке в трее.",
-                FAInfoBarSeverity.Warning);
+            viewModel.ShowNotice("Горячая клавиша недоступна", hotkeys.Message, FAInfoBarSeverity.Warning);
+        }
+        else if (hotkeys.Message.Length > 0)
+        {
+            viewModel.ShowNotice("Запасное сочетание клавиш", hotkeys.Message, FAInfoBarSeverity.Informational);
         }
 
         return window;
     }
+
+    /// <summary>
+    /// Сочетание клавиш: модификаторы и код для <c>RegisterHotKey</c>, подпись и жест для меню.
+    /// </summary>
+    private sealed record HotkeyCandidate(uint Modifiers, uint VirtualKey, string Text, KeyGesture Gesture);
 
     private WindowIcon? LoadIcon()
     {

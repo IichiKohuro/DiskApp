@@ -12,7 +12,7 @@
     <Grid Margin="{StaticResource PagePadding}" RowDefinitions="Auto,*" MaxWidth="{StaticResource PageMaxWidth}">
         <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
             <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="Поиск" />
-            <TextBlock Classes="secondary" Text="То же окно, что по Ctrl + Alt + Space, только внутри главного окна: запрос сохраняется между ними." />
+            <TextBlock Classes="secondary" Text="То же окно, что всплывает по горячей клавише, только внутри главного окна: запрос сохраняется между ними." />
         </StackPanel>
         <Border Grid.Row="1" Classes="card" Padding="12">
             <views:QuickSearchView x:Name="Search" />

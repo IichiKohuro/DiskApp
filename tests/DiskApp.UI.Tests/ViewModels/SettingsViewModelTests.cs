@@ -4,7 +4,7 @@ using DiskApp.UI.ViewModels;
 namespace DiskApp.UI.Tests.ViewModels;
 
 /// <summary>
-/// Настройки: выбор темы применяется сразу, корни индекса загружаются, версия подписана.
+/// Настройки: выбор темы применяется сразу, корни индекса загружаются, версия и действующий хоткей подписаны.
 /// </summary>
 public sealed class SettingsViewModelTests
 {
@@ -16,7 +16,7 @@ public sealed class SettingsViewModelTests
         themes.Current.Returns(AppTheme.Dark);
 
         // Act
-        var viewModel = new SettingsViewModel(themes, new SampleSearchService());
+        var viewModel = new SettingsViewModel(themes, new SampleSearchService(), new HotkeyStatus());
 
         // Assert
         viewModel.SelectedTheme.Theme.ShouldBe(AppTheme.Dark);
@@ -29,7 +29,7 @@ public sealed class SettingsViewModelTests
     {
         // Arrange
         var themes = Substitute.For<IThemeService>();
-        var viewModel = new SettingsViewModel(themes, new SampleSearchService());
+        var viewModel = new SettingsViewModel(themes, new SampleSearchService(), new HotkeyStatus());
 
         // Act
         viewModel.SelectedTheme = viewModel.Themes.Single(option => option.Theme == AppTheme.Light);
@@ -42,7 +42,7 @@ public sealed class SettingsViewModelTests
     public async Task Initialization_WithSampleIndex_LoadsRootsAndVersion()
     {
         // Arrange
-        var viewModel = new SettingsViewModel(Substitute.For<IThemeService>(), new SampleSearchService());
+        var viewModel = new SettingsViewModel(Substitute.For<IThemeService>(), new SampleSearchService(), new HotkeyStatus());
 
         // Act
         await viewModel.Initialization;
@@ -51,6 +51,23 @@ public sealed class SettingsViewModelTests
         viewModel.Roots.Count.ShouldBe(4);
         viewModel.Roots[0].ShouldBe(@"D:\Projects");
         viewModel.VersionText.ShouldStartWith("Версия 0.");
-        viewModel.SearchHotkeyText.ShouldBe("Ctrl + Alt + Space");
+    }
+
+    [Fact]
+    public void Hotkeys_WhenShellRegistersFallback_ReflectsActiveCombination()
+    {
+        // Arrange
+        var hotkeys = new HotkeyStatus();
+        var viewModel = new SettingsViewModel(Substitute.For<IThemeService>(), new SampleSearchService(), hotkeys);
+
+        // Act
+        hotkeys.QuickSearchText = "Ctrl + Alt + F";
+        hotkeys.IsRegistered = true;
+        hotkeys.Message = "Сочетание Ctrl + Alt + D занято.";
+
+        // Assert
+        viewModel.Hotkeys.QuickSearchText.ShouldBe("Ctrl + Alt + F");
+        viewModel.Hotkeys.IsRegistered.ShouldBeTrue();
+        HotkeyStatus.DefaultQuickSearchText.ShouldBe("Ctrl + Alt + D");
     }
 }

@@ -32,14 +32,16 @@ public sealed partial class SettingsViewModel : PageViewModel
     /// <summary>
     /// Создаёт страницу и запускает загрузку корней индекса (<see cref="Initialization"/>).
     /// </summary>
-    public SettingsViewModel(IThemeService themes, ISearchService search)
+    public SettingsViewModel(IThemeService themes, ISearchService search, HotkeyStatus hotkeys)
         : base(PageKeys.Settings, "Настройки", FASymbol.Settings)
     {
         ArgumentNullException.ThrowIfNull(themes);
         ArgumentNullException.ThrowIfNull(search);
+        ArgumentNullException.ThrowIfNull(hotkeys);
 
         _themes = themes;
         _search = search;
+        Hotkeys = hotkeys;
 
         Themes =
         [
@@ -94,8 +96,8 @@ public sealed partial class SettingsViewModel : PageViewModel
     [ObservableProperty]
     public partial bool RemindAboutInbox { get; set; }
 
-    /// <summary>Горячая клавиша быстрого поиска (решение 15 плана; настраиваемой станет в этапе 6.5).</summary>
-    public string SearchHotkeyText { get; } = "Ctrl + Alt + Space";
+    /// <summary>Действующее сочетание быстрого поиска (решение 15 плана, ADR-0006; настраиваемым станет в этапе 6.5).</summary>
+    public HotkeyStatus Hotkeys { get; }
 
     /// <summary>Горячая клавиша разбора входящих.</summary>
     public string InboxHotkeyText { get; } = "Ctrl + Alt + I";

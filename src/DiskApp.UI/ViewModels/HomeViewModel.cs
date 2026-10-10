@@ -23,24 +23,26 @@ public sealed partial class HomeViewModel : PageViewModel
     /// <summary>
     /// Создаёт страницу и сразу запускает загрузку данных (<see cref="Initialization"/>).
     /// </summary>
-    public HomeViewModel(ISearchService search, IAppCommands commands)
-        : this(search, commands, static () => DateTimeOffset.Now)
+    public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys)
+        : this(search, commands, hotkeys, static () => DateTimeOffset.Now)
     {
     }
 
     /// <summary>
     /// Создаёт страницу с заданными часами (для тестов и превью).
     /// </summary>
-    public HomeViewModel(ISearchService search, IAppCommands commands, Func<DateTimeOffset> clock)
+    public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, Func<DateTimeOffset> clock)
         : base(PageKeys.Home, "Главная", FASymbol.Home)
     {
         ArgumentNullException.ThrowIfNull(search);
         ArgumentNullException.ThrowIfNull(commands);
+        ArgumentNullException.ThrowIfNull(hotkeys);
         ArgumentNullException.ThrowIfNull(clock);
 
         _search = search;
         _commands = commands;
         _clock = clock;
+        Hotkeys = hotkeys;
 
         Greeting = GreetingFor(clock().Hour);
         IndexStatusText = string.Empty;
@@ -51,6 +53,9 @@ public sealed partial class HomeViewModel : PageViewModel
 
     /// <summary>Завершается, когда первая загрузка данных закончена; нужно тестам и оболочке.</summary>
     public Task Initialization { get; }
+
+    /// <summary>Действующее сочетание быстрого поиска для подсказок.</summary>
+    public HotkeyStatus Hotkeys { get; }
 
     /// <summary>Приветствие по времени суток.</summary>
     [ObservableProperty]

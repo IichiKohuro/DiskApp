@@ -42,15 +42,19 @@
             </ui:FASettingsExpander>
 
             <TextBlock Classes="section" Text="Быстрый поиск" />
-            <ui:FASettingsExpander Header="Горячая клавиша" Description="Показать или скрыть окно быстрого поиска из любого приложения">
+            <ui:FASettingsExpander Header="Горячая клавиша"
+                                   Description="Показать или скрыть окно быстрого поиска из любого приложения"
+                                   IsExpanded="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                 <ui:FASettingsExpander.IconSource>
                     <ui:FASymbolIconSource Symbol="Keyboard" />
                 </ui:FASettingsExpander.IconSource>
                 <ui:FASettingsExpander.Footer>
                     <Border Classes="chip" Padding="10,4">
-                        <TextBlock Text="{Binding SearchHotkeyText}" FontSize="13" />
+                        <TextBlock Text="{Binding Hotkeys.QuickSearchText}" FontSize="13" />
                     </Border>
                 </ui:FASettingsExpander.Footer>
+                <ui:FASettingsExpanderItem Content="{Binding Hotkeys.Message}"
+                                           IsVisible="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             </ui:FASettingsExpander>
             <ui:FASettingsExpander Header="Разбор входящих" Description="Открыть сессию разбора «Загрузок»">
                 <ui:FASettingsExpander.IconSource>

@@ -31,6 +31,12 @@ internal static unsafe partial class NativeMethods
     /// <summary>Виртуальный код клавиши «пробел».</summary>
     public const uint VkSpace = 0x20;
 
+    /// <summary>Виртуальный код клавиши D.</summary>
+    public const uint VkD = 0x44;
+
+    /// <summary>Виртуальный код клавиши F.</summary>
+    public const uint VkF = 0x46;
+
     /// <summary>Родитель для окна, которое только принимает сообщения (<c>HWND_MESSAGE</c>).</summary>
     public const nint HwndMessage = -3;
 

@@ -92,11 +92,12 @@ public sealed class MainViewModelTests
         var search = new SampleSearchService(static () => Now);
         var commands = Substitute.For<IAppCommands>();
         var themes = Substitute.For<IThemeService>();
+        var hotkeys = new HotkeyStatus();
 
         return new MainViewModel(
-            new HomeViewModel(search, commands, static () => Now),
+            new HomeViewModel(search, commands, hotkeys, static () => Now),
             new QuickSearchViewModel(search, static () => Now),
-            new SettingsViewModel(themes, search),
+            new SettingsViewModel(themes, search, hotkeys),
             search,
             static () => Now);
     }

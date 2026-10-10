@@ -19,6 +19,7 @@ public static class UiServiceCollectionExtensions
 
         services.AddSingleton<ISearchService, SampleSearchService>();
         services.AddSingleton<IThemeService, AppThemeService>();
+        services.AddSingleton<HotkeyStatus>();
 
         // ViewModel страниц живут столько же, сколько приложение: состояние поиска и настроек переживает закрытие окон.
         services.AddSingleton<MainViewModel>();

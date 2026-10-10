@@ -10,18 +10,26 @@ namespace DiskApp.Desktop.Tests.SingleInstance;
 public sealed class SingleInstanceTests
 {
     [Fact]
-    public async Task Acquire_FromAnotherThreadWhileHeld_ReportsNotFirst()
+    public void Acquire_FromAnotherThreadWhileHeld_ReportsNotFirst()
     {
         // Arrange
         var name = @"Local\DiskApp.Tests." + Guid.NewGuid().ToString("N");
         using var first = SingleInstanceGuard.Acquire(name);
 
-        // Act: мьютекс реентерабелен для своего потока, поэтому «второй экземпляр» изображает другой поток.
-        using var second = await Task.Run(() => SingleInstanceGuard.Acquire(name), TestContext.Current.CancellationToken);
+        // Act: мьютекс реентерабелен для своего потока, поэтому «второй экземпляр» изображает отдельный поток
+        // (не из пула: пул может вернуть тот же поток, что владеет мьютексом).
+        var secondIsFirst = true;
+        var thread = new Thread(() =>
+        {
+            using var second = SingleInstanceGuard.Acquire(name);
+            secondIsFirst = second.IsFirstInstance;
+        });
+        thread.Start();
+        thread.Join(TimeSpan.FromSeconds(5)).ShouldBeTrue();
 
         // Assert
         first.IsFirstInstance.ShouldBeTrue();
-        second.IsFirstInstance.ShouldBeFalse();
+        secondIsFirst.ShouldBeFalse();
     }
 
     [Fact]

@@ -15,14 +15,16 @@ public static class DesignData
     private static readonly Lazy<SampleSearchService> SearchService = new(static () => new SampleSearchService());
     private static readonly NullAppCommands Commands = new();
 
+    private static readonly HotkeyStatus Hotkeys = new() { IsRegistered = true };
+
     /// <summary>Главная страница.</summary>
-    public static HomeViewModel Home => new(SearchService.Value, Commands);
+    public static HomeViewModel Home => new(SearchService.Value, Commands, Hotkeys);
 
     /// <summary>Быстрый поиск.</summary>
     public static QuickSearchViewModel QuickSearch => new(SearchService.Value);
 
     /// <summary>Настройки.</summary>
-    public static SettingsViewModel Settings => new(new AppThemeService(), SearchService.Value);
+    public static SettingsViewModel Settings => new(new AppThemeService(), SearchService.Value, Hotkeys);
 
     /// <summary>Оболочка главного окна.</summary>
     public static MainViewModel Main => new(Home, QuickSearch, Settings, SearchService.Value);
