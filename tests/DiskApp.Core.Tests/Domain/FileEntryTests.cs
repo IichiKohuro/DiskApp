@@ -112,6 +112,20 @@ public sealed class FileEntryTests
         entry.IsReparsePoint.ShouldBeTrue();
     }
 
+    [Theory]
+    [InlineData(FileAttributes.Archive, false)]
+    [InlineData(FileAttributes.Offline, true)]
+    [InlineData((FileAttributes)0x00400000, true)]
+    [InlineData((FileAttributes)0x00040000 | FileAttributes.Archive, true)]
+    public void IsCloudPlaceholder_RecallAttributes_Detected(FileAttributes attributes, bool expected)
+    {
+        // Arrange
+        var entry = FileEntry.Create(1, null, "cloud.docx", false, 10, Created, Modified, attributes, normalizer: PathNormalizer.Windows);
+
+        // Act & Assert
+        entry.IsCloudPlaceholder.ShouldBe(expected);
+    }
+
     [Fact]
     public void Create_EmptyRelPath_Throws()
     {

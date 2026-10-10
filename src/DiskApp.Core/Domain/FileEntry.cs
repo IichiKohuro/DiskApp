@@ -57,6 +57,12 @@ public sealed record FileEntry
     public bool IsReparsePoint => (Attributes & FileAttributes.ReparsePoint) != 0;
 
     /// <summary>
+    /// Облачная заглушка (OneDrive «по запросу» и подобные: атрибуты <c>RECALL_ON_DATA_ACCESS</c>, <c>RECALL_ON_OPEN</c>, <c>OFFLINE</c>).
+    /// Содержимое и миниатюры таких файлов не читаются, иначе файл скачается (PLAN.md, этап 2.5).
+    /// </summary>
+    public bool IsCloudPlaceholder => (Attributes & ((FileAttributes)0x00400000 | (FileAttributes)0x00040000 | FileAttributes.Offline)) != 0;
+
+    /// <summary>
     /// Создаёт запись по относительному пути: имя, расширение и вид выводятся сами.
     /// </summary>
     /// <param name="rootId">Корень.</param>

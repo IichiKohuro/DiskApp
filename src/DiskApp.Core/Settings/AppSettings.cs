@@ -118,6 +118,12 @@ public sealed record IndexingSettings
     /// <summary>Период сверки индекса с диском, минуты; 0 — отключено.</summary>
     public int ReconcileIntervalMinutes { get; set; } = 360;
 
+    /// <summary>Заходить ли внутрь junction и символических ссылок (с защитой от циклов).</summary>
+    public bool FollowReparsePoints { get; set; }
+
+    /// <summary>Потоков обхода на корень; 0 — по типу диска (SSD — 4, HDD — 1, сеть — 2).</summary>
+    public int MaxScanParallelism { get; set; }
+
     /// <summary>Равенство по содержимому: список исключений сравнивается поэлементно, а не по ссылке.</summary>
     public bool Equals(IndexingSettings? other)
         => other is not null
@@ -126,6 +132,8 @@ public sealed record IndexingSettings
             && BatchSize == other.BatchSize
             && WatcherDebounceMilliseconds == other.WatcherDebounceMilliseconds
             && ReconcileIntervalMinutes == other.ReconcileIntervalMinutes
+            && FollowReparsePoints == other.FollowReparsePoints
+            && MaxScanParallelism == other.MaxScanParallelism
             && Exclusions.SequenceEqual(other.Exclusions);
 
     /// <inheritdoc />
@@ -137,6 +145,8 @@ public sealed record IndexingSettings
         hash.Add(BatchSize);
         hash.Add(WatcherDebounceMilliseconds);
         hash.Add(ReconcileIntervalMinutes);
+        hash.Add(FollowReparsePoints);
+        hash.Add(MaxScanParallelism);
         foreach (var rule in Exclusions)
         {
             hash.Add(rule);

@@ -4,6 +4,7 @@
        Не ссылается ни на один проект решения и не знает об ASP.NET Core, Avalonia и SQLite (архитектурный тест в DiskApp.Core.Tests). -->
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="System.IO.Abstractions" />
   </ItemGroup>
 
