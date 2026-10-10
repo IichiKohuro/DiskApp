@@ -7,8 +7,8 @@ namespace DiskApp.Core.Search;
 /// </summary>
 /// <param name="Entry">Запись индекса.</param>
 /// <param name="Score">Оценка ранжирования; больше — выше.</param>
-/// <param name="NameHighlights">Диапазоны совпадений в имени.</param>
-/// <param name="PathHighlights">Диапазоны совпадений в относительном пути.</param>
+/// <param name="NameHighlights">Диапазоны совпадений в имени (<see cref="FileEntry.Name"/>).</param>
+/// <param name="PathHighlights">Диапазоны совпадений в папке полного пути (<see cref="FullPath"/>).</param>
 /// <param name="RankReason">Короткое объяснение оценки («начало слова, frecency 2,1»); <c>null</c>, если отладка выключена.</param>
 public sealed record SearchHit(
     FileEntry Entry,
@@ -17,6 +17,21 @@ public sealed record SearchHit(
     IReadOnlyList<TextRange> PathHighlights,
     string? RankReason = null)
 {
+    /// <summary>Полный путь: корень и путь записи.</summary>
+    public string FullPath { get; init; } = string.Empty;
+
+    /// <summary>В избранном.</summary>
+    public bool IsFavorite { get; init; }
+
+    /// <summary>Сколько раз открывали.</summary>
+    public int OpenCount { get; init; }
+
+    /// <summary>Когда открывали последний раз.</summary>
+    public DateTimeOffset? LastOpenedUtc { get; init; }
+
+    /// <summary>Лучший тип совпадения термов с именем.</summary>
+    public MatchKind Match { get; init; } = MatchKind.None;
+
     /// <summary>
     /// Результат без подсветки.
     /// </summary>
