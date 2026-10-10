@@ -17,6 +17,12 @@ internal static class Program
             return await ScanBudgetCheck.RunAsync(files);
         }
 
+        if (args.Length > 0 && string.Equals(args[0], "search-budget", StringComparison.OrdinalIgnoreCase))
+        {
+            var records = args.Length > 1 ? int.Parse(args[1], CultureInfo.InvariantCulture) : 1_000_000;
+            return await Search.SearchBudgetCheck.RunAsync(records, args.Length > 2 ? args[2] : null);
+        }
+
         var summaries = BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         return summaries.Any(static summary => summary.HasCriticalValidationErrors) ? 1 : 0;
     }

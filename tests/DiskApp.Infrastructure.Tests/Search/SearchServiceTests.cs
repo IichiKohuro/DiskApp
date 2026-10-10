@@ -415,7 +415,7 @@ public sealed class SearchServiceTests
             return inner.FindAsync(plan, query, cancellationToken);
         }
 
-        public Task<long> CountAsync(SearchPlan plan, CancellationToken cancellationToken = default) => inner.CountAsync(plan, cancellationToken);
+        public Task<CandidateCount> CountAsync(SearchPlan plan, long cap, CancellationToken cancellationToken = default) => inner.CountAsync(plan, cap, cancellationToken);
 
         public Task<IReadOnlyList<SearchCandidate>> FindRecentAsync(int limit, CancellationToken cancellationToken = default) => inner.FindRecentAsync(limit, cancellationToken);
 

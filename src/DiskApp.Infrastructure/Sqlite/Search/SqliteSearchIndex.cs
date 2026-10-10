@@ -22,7 +22,6 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     /// <summary>Сколько записей добирается сверх лимита: начинающиеся с терма и недавно открытые или избранные.</summary>
     public const int BoostLimit = 500;
 
-    private const int MaxResolvedFolders = 100;
     private const int SqliteInterrupt = 9;
     private const long CloudAttributes = 0x00400000 | 0x00040000 | 0x1000;
     private const string Columns = """
@@ -36,6 +35,12 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         """;
 
     private readonly PathNormalizer _paths = paths ?? PathNormalizer.Current;
+
+    /// <summary>
+    /// Сколько времени тратить на подсчёт совпадений при дополнительных условиях; не успели — число «не меньше N».
+    /// Выдача не ждёт дорогого точного счёта (FTS по частому слову плюс фильтр).
+    /// </summary>
+    public TimeSpan CountTimeout { get; init; } = TimeSpan.FromMilliseconds(20);
 
     /// <inheritdoc />
     public Task<CandidateBatch> FindAsync(SearchPlan plan, CandidateQuery query, CancellationToken cancellationToken = default)
@@ -58,10 +63,15 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             var partial = false;
             try
             {
-                Read(connection, MainSql(plan, conditions, query.Limit), conditions.Parameters, collected, linked.Token);
+                // Только фильтры: если совпадений больше лимита, сортировка всех по времени дорога — вместо неё
+                // обходим индекс времени изменения с конца и останавливаемся на лимите.
+                var newestFirst = plan.Source == CandidateSource.Filters
+                    && CountUpTo(connection, plan, conditions, query.Limit + 1L, linked.Token) > query.Limit;
+                Read(connection, MainSql(plan, conditions, query.Limit, newestFirst), conditions.Parameters, collected, linked.Token);
             }
-            catch (SqliteException exception) when (exception.SqliteErrorCode == SqliteInterrupt)
+            catch (Exception exception) when (IsInterruption(exception))
             {
+                // Прерывание по отмене пользователя — исключение; по таймауту (в том числе до старта запроса) — частичный результат.
                 cancellationToken.ThrowIfCancellationRequested();
                 partial = true;
             }
@@ -76,10 +86,14 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         }, cancellationToken);
     }
 
+    private static bool IsInterruption(Exception exception)
+        => exception is OperationCanceledException || (exception is SqliteException sqlite && sqlite.SqliteErrorCode == SqliteInterrupt);
+
     /// <inheritdoc />
-    public Task<long> CountAsync(SearchPlan plan, CancellationToken cancellationToken = default)
+    public Task<CandidateCount> CountAsync(SearchPlan plan, long cap, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(plan);
+        ArgumentOutOfRangeException.ThrowIfLessThan(cap, 1);
 
         return Task.Run(() =>
         {
@@ -87,14 +101,29 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             var conditions = BuildConditions(connection, plan);
             if (conditions is null)
             {
-                return 0L;
+                return new CandidateCount(0, true);
             }
 
-            using var command = Command(connection, $"SELECT COUNT(*) FROM {Source(plan)} WHERE {Where(plan, conditions)}", conditions.Parameters);
-            using var registration = cancellationToken.Register(() => Interrupt(connection));
             try
             {
-                return Convert.ToInt64(command.ExecuteScalar(), CultureInfo.InvariantCulture);
+                // Без дополнительных условий счёт берётся прямо из FTS или из индекса имени — дёшево и точно
+                // даже для сотен тысяч совпадений; с условиями — не дальше потолка.
+                var onlyTerms = conditions.Clauses.Count == 0 && plan.ExcludedTerms.Count == 0;
+                if (onlyTerms && plan.Source == CandidateSource.FullText && plan.ShortTerms.Count == 0)
+                {
+                    conditions.Parameters["$match"] = string.Join(' ', plan.FtsTerms.Select(Quote));
+                    return new CandidateCount(Scalar(connection, "SELECT COUNT(*) FROM entries_fts WHERE entries_fts MATCH $match", conditions.Parameters, cancellationToken), true);
+                }
+
+                if (onlyTerms && plan.Source == CandidateSource.NamePrefix && plan.ShortTerms.Count == 1)
+                {
+                    conditions.Parameters["$prefix_from"] = plan.ShortTerms[0];
+                    conditions.Parameters["$prefix_to"] = Next(plan.ShortTerms[0]);
+                    return new CandidateCount(Scalar(connection, "SELECT COUNT(*) FROM entries WHERE name_folded >= $prefix_from AND name_folded < $prefix_to", conditions.Parameters, cancellationToken), true);
+                }
+
+                var (counted, completed) = CountWithin(connection, plan, conditions, cap + 1, CountTimeout, cancellationToken);
+                return completed && counted <= cap ? new CandidateCount(counted, true) : new CandidateCount(Math.Min(counted, cap), false);
             }
             catch (SqliteException exception) when (exception.SqliteErrorCode == SqliteInterrupt)
             {
@@ -252,21 +281,80 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     /// <summary>
     /// SQL основного запроса кандидатов; виден тестам для проверки параметризации.
     /// </summary>
-    internal static string MainSql(SearchPlan plan, Conditions conditions, int limit)
+    internal static string MainSql(SearchPlan plan, Conditions conditions, int limit, bool newestFirst = false)
     {
         conditions.Parameters["$limit"] = limit;
         var order = plan.Source switch
         {
             CandidateSource.NamePrefix => "ORDER BY e.name_folded",
-            CandidateSource.Filters => "ORDER BY e.modified_utc DESC",
+            CandidateSource.Filters when newestFirst => "ORDER BY e.modified_utc DESC",
             _ => string.Empty,
         };
 
-        return $"SELECT {Columns} FROM {Source(plan)} {Joins} WHERE {Where(plan, conditions)} {order} LIMIT $limit";
+        var source = plan.Source != CandidateSource.Filters ? Source(plan)
+            : newestFirst ? "entries AS e INDEXED BY ix_entries_modified"
+            : conditions.ScopeJoinSource ?? Source(plan);
+        return $"SELECT {Columns} FROM {source} {Joins} WHERE {Where(plan, conditions)} {order} LIMIT $limit";
     }
 
     private static string Source(SearchPlan plan)
         => plan.Source == CandidateSource.FullText ? "entries_fts JOIN entries AS e ON e.id = entries_fts.rowid" : "entries AS e";
+
+    /// <summary>
+    /// Сколько записей подходит под план, но не больше <paramref name="upTo"/>: подзапрос с LIMIT останавливает обход.
+    /// </summary>
+    private static long CountUpTo(SqliteConnection connection, SearchPlan plan, Conditions conditions, long upTo, CancellationToken cancellationToken)
+    {
+        conditions.Parameters["$count_limit"] = upTo;
+        var source = plan.Source == CandidateSource.Filters && conditions.ScopeJoinSource is { } join ? join : Source(plan);
+        return Scalar(connection, $"SELECT COUNT(*) FROM (SELECT 1 FROM {source} WHERE {Where(plan, conditions)} LIMIT $count_limit)", conditions.Parameters, cancellationToken);
+    }
+
+    /// <summary>
+    /// Считает совпадения построчно, не дольше <paramref name="budget"/> и не больше <paramref name="upTo"/>:
+    /// при прерывании возвращает, сколько успели, и признак незавершённости. Отмена пользователем — исключение.
+    /// </summary>
+    private static (long Count, bool Completed) CountWithin(
+        SqliteConnection connection,
+        SearchPlan plan,
+        Conditions conditions,
+        long upTo,
+        TimeSpan budget,
+        CancellationToken cancellationToken)
+    {
+        conditions.Parameters["$count_limit"] = upTo;
+        var source = plan.Source == CandidateSource.Filters && conditions.ScopeJoinSource is { } join ? join : Source(plan);
+        using var command = Command(connection, $"SELECT 1 FROM {source} WHERE {Where(plan, conditions)} LIMIT $count_limit", conditions.Parameters);
+        using var timeout = new CancellationTokenSource(budget);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
+        using var registration = linked.Token.Register(() => Interrupt(connection));
+        long counted = 0;
+        try
+        {
+            linked.Token.ThrowIfCancellationRequested();
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                counted++;
+            }
+
+            return (counted, true);
+        }
+        catch (Exception exception) when (IsInterruption(exception))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return (counted, false);
+        }
+    }
+
+    private static long Scalar(SqliteConnection connection, string sql, IReadOnlyDictionary<string, object?> parameters, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        using var command = Command(connection, sql, parameters);
+        using var registration = cancellationToken.Register(() => Interrupt(connection));
+        cancellationToken.ThrowIfCancellationRequested();
+        return Convert.ToInt64(command.ExecuteScalar(), CultureInfo.InvariantCulture);
+    }
 
     private static string Where(SearchPlan plan, Conditions conditions)
     {
@@ -330,6 +418,9 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         cancellationToken.ThrowIfCancellationRequested();
         using var command = Command(connection, sql, parameters);
         using var registration = cancellationToken.Register(() => Interrupt(connection));
+
+        // Отмена до старта запроса не прерывает его (sqlite3_interrupt без выполняющихся запросов ничего не делает).
+        cancellationToken.ThrowIfCancellationRequested();
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
@@ -424,7 +515,7 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
 
         if (plan.IncludeFolders.Count > 0)
         {
-            var clause = FolderClause(connection, plan.IncludeFolders, conditions, "$if");
+            var clause = FolderClause(connection, plan.IncludeFolders, conditions, "include");
             if (clause is null)
             {
                 return null;
@@ -433,17 +524,18 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             conditions.Clauses.Add(clause);
         }
 
-        if (plan.ExcludeFolders.Count > 0 && FolderClause(connection, plan.ExcludeFolders, conditions, "$ef") is { } excluded)
+        if (plan.ExcludeFolders.Count > 0 && FolderClause(connection, plan.ExcludeFolders, conditions, "exclude") is { } excluded)
         {
             conditions.Clauses.Add($"NOT ({excluded})");
         }
 
-        AddRanges(conditions, plan.IncludeSizes.Select(static range => ((object?)range.Min, (object?)(range.Max == long.MaxValue ? null : range.Max))).ToArray(), "e.size", "$is", inclusiveMax: true, negate: false, filesOnly: true);
-        AddRanges(conditions, plan.ExcludeSizes.Select(static range => ((object?)range.Min, (object?)(range.Max == long.MaxValue ? null : range.Max))).ToArray(), "e.size", "$es", inclusiveMax: true, negate: true, filesOnly: true);
-        AddRanges(conditions, Dates(plan.IncludeModified), "e.modified_utc", "$im", inclusiveMax: false, negate: false, filesOnly: false);
-        AddRanges(conditions, Dates(plan.ExcludeModified), "e.modified_utc", "$em", inclusiveMax: false, negate: true, filesOnly: false);
-        AddRanges(conditions, Dates(plan.IncludeCreated), "e.created_utc", "$ic", inclusiveMax: false, negate: false, filesOnly: false);
-        AddRanges(conditions, Dates(plan.ExcludeCreated), "e.created_utc", "$ec", inclusiveMax: false, negate: true, filesOnly: false);
+        // У папок размер 0, поэтому для диапазонов от 1 байта проверка «это файл» лишняя и только мешает счёту по индексу размера.
+        AddRanges(conditions, Sizes(plan.IncludeSizes), "e.size", "$is", inclusiveMax: true, negate: false, filesOnlyWhenFromZero: true);
+        AddRanges(conditions, Sizes(plan.ExcludeSizes), "e.size", "$es", inclusiveMax: true, negate: true, filesOnlyWhenFromZero: true);
+        AddRanges(conditions, Dates(plan.IncludeModified), "e.modified_utc", "$im", inclusiveMax: false, negate: false, filesOnlyWhenFromZero: false);
+        AddRanges(conditions, Dates(plan.ExcludeModified), "e.modified_utc", "$em", inclusiveMax: false, negate: true, filesOnlyWhenFromZero: false);
+        AddRanges(conditions, Dates(plan.IncludeCreated), "e.created_utc", "$ic", inclusiveMax: false, negate: false, filesOnlyWhenFromZero: false);
+        AddRanges(conditions, Dates(plan.ExcludeCreated), "e.created_utc", "$ec", inclusiveMax: false, negate: true, filesOnlyWhenFromZero: false);
 
         foreach (var attribute in plan.IncludeAttributes)
         {
@@ -478,6 +570,9 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     private static (object? From, object? To)[] Dates(IReadOnlyList<DateRange> ranges)
         => ranges.Select(static range => ((object?)SqliteTime.Format(range.FromUtc), (object?)SqliteTime.Format(range.ToUtc))).ToArray();
 
+    private static (object? From, object? To)[] Sizes(IReadOnlyList<SizeRange> ranges)
+        => ranges.Select(static range => ((object?)range.Min, (object?)(range.Max == long.MaxValue ? null : range.Max))).ToArray();
+
     private static string AttributeClause(AttributeFilter attribute) => attribute switch
     {
         AttributeFilter.Directory => "e.is_dir = 1",
@@ -505,7 +600,7 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         conditions.Clauses.Add($"{column} {(negate ? "NOT IN" : "IN")} ({string.Join(", ", names)})");
     }
 
-    private static void AddRanges(Conditions conditions, (object? From, object? To)[] ranges, string column, string prefix, bool inclusiveMax, bool negate, bool filesOnly)
+    private static void AddRanges(Conditions conditions, (object? From, object? To)[] ranges, string column, string prefix, bool inclusiveMax, bool negate, bool filesOnlyWhenFromZero)
     {
         if (ranges.Length == 0)
         {
@@ -516,7 +611,7 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         for (var i = 0; i < ranges.Length; i++)
         {
             var parts = new List<string>();
-            if (filesOnly)
+            if (filesOnlyWhenFromZero && ranges[i].From is null or 0L)
             {
                 parts.Add("e.is_dir = 0");
             }
@@ -540,55 +635,168 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         conditions.Clauses.Add(negate ? $"NOT {clause}" : clause);
     }
 
-    private string? FolderClause(SqliteConnection connection, IReadOnlyList<FolderScope> scopes, Conditions conditions, string prefix)
+    /// <summary>
+    /// Условие «внутри одной из папок». Папки по имени разрешаются все (их может быть сотни — «2025», «src»), диапазоны
+    /// потомков сливаются в непересекающиеся (вложенный диапазон поглощается внешним) и кладутся во временную таблицу
+    /// соединения с индексом. Для записи проверяется один ближайший слева диапазон — поиск по индексу, а не перебор.
+    /// </summary>
+    private string? FolderClause(SqliteConnection connection, IReadOnlyList<FolderScope> scopes, Conditions conditions, string kind)
     {
-        var alternatives = new List<string>();
-        var index = 0;
+        var separator = _paths.Separator;
+        var ranges = new List<(long RootId, string From, string To)>();
+        var wholeRoots = new List<long>();
         foreach (var scope in scopes)
         {
             if (scope.FolderName is { } folderName)
             {
                 using var command = Command(
                     connection,
-                    "SELECT root_id, rel_path FROM entries WHERE name_folded = $name AND is_dir = 1 LIMIT $limit",
-                    new Dictionary<string, object?> { ["$name"] = folderName, ["$limit"] = MaxResolvedFolders });
+                    "SELECT root_id, rel_path FROM entries WHERE name_folded = $name AND is_dir = 1",
+                    new Dictionary<string, object?> { ["$name"] = folderName });
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    alternatives.Add(Range(reader.GetInt64(0), reader.GetString(1), conditions, $"{prefix}{index++}", includeSelf: false));
+                    var relPath = reader.GetString(1);
+                    ranges.Add((reader.GetInt64(0), relPath + separator, relPath + (char)(separator + 1)));
                 }
             }
             else if (scope.RootId is { } rootId)
             {
-                alternatives.Add(string.IsNullOrEmpty(scope.RelPath)
-                    ? Root(rootId, conditions, $"{prefix}{index++}")
-                    : Range(rootId, scope.RelPath, conditions, $"{prefix}{index++}", includeSelf: false));
+                if (string.IsNullOrEmpty(scope.RelPath))
+                {
+                    wholeRoots.Add(rootId);
+                }
+                else
+                {
+                    ranges.Add((rootId, scope.RelPath + separator, scope.RelPath + (char)(separator + 1)));
+                }
             }
         }
 
-        return alternatives.Count == 0 ? null : "(" + string.Join(" OR ", alternatives) + ")";
-    }
-
-    private static string Root(long rootId, Conditions conditions, string name)
-    {
-        conditions.Parameters[name] = rootId;
-        return $"e.root_id = {name}";
-    }
-
-    private string Range(long rootId, string relPath, Conditions conditions, string name, bool includeSelf)
-    {
-        var separator = _paths.Separator;
-        conditions.Parameters[name + "r"] = rootId;
-        conditions.Parameters[name + "f"] = relPath + separator;
-        conditions.Parameters[name + "t"] = relPath + (char)(separator + 1);
-        var descendants = $"(e.root_id = {name}r AND e.rel_path >= {name}f AND e.rel_path < {name}t)";
-        if (!includeSelf)
+        if (ranges.Count == 0 && wholeRoots.Count == 0)
         {
-            return descendants;
+            return null;
         }
 
-        conditions.Parameters[name + "s"] = relPath;
-        return $"({descendants} OR (e.root_id = {name}r AND e.rel_path = {name}s))";
+        var alternatives = new List<string>();
+        if (wholeRoots.Count > 0)
+        {
+            var names = new List<string>();
+            for (var i = 0; i < wholeRoots.Count; i++)
+            {
+                conditions.Parameters[$"$scope_{kind}_root{i}"] = wholeRoots[i];
+                names.Add($"$scope_{kind}_root{i}");
+            }
+
+            alternatives.Add($"e.root_id IN ({string.Join(", ", names)})");
+        }
+
+        if (ranges.Count > 0)
+        {
+            var table = $"diskapp_scope_{kind}";
+            var disjoint = Disjoint(ranges);
+            FillScopeTable(connection, table, disjoint);
+
+            // Проверка строки — бинарный поиск в памяти через функцию .NET: дешевле коррелированного подзапроса.
+            var set = new ScopeSet(disjoint);
+            var function = $"diskapp_in_{kind}";
+            connection.CreateFunction(function, (long rootId, string relPath) => set.Contains(rootId, relPath), isDeterministic: true);
+            alternatives.Add($"{function}(e.root_id, e.rel_path)");
+
+            // Если других корней в условии нет, подсчёт и выборка только по фильтрам идут от диапазонов по индексу путей.
+            if (kind == "include" && wholeRoots.Count == 0)
+            {
+                conditions.ScopeJoinSource = $"temp.{table} AS s CROSS JOIN entries AS e ON e.root_id = s.root_id AND e.rel_path >= s.from_ AND e.rel_path < s.to_";
+            }
+        }
+
+        return "(" + string.Join(" OR ", alternatives) + ")";
+    }
+
+    private static List<(long RootId, string From, string To)> Disjoint(List<(long RootId, string From, string To)> ranges)
+    {
+        // Диапазоны потомков папок либо не пересекаются, либо вложены: после сортировки вложенный идёт сразу за внешним.
+        ranges.Sort(static (left, right) =>
+        {
+            var byRoot = left.RootId.CompareTo(right.RootId);
+            return byRoot != 0 ? byRoot : string.CompareOrdinal(left.From, right.From);
+        });
+
+        var result = new List<(long RootId, string From, string To)>(ranges.Count);
+        foreach (var range in ranges)
+        {
+            if (result.Count > 0 && result[^1].RootId == range.RootId && string.CompareOrdinal(range.From, result[^1].To) < 0)
+            {
+                continue;
+            }
+
+            result.Add(range);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Непересекающиеся диапазоны путей по корням для проверки «внутри папки» бинарным поиском.
+    /// </summary>
+    private sealed class ScopeSet
+    {
+        private readonly Dictionary<long, (string[] From, string[] To)> _byRoot = [];
+
+        public ScopeSet(List<(long RootId, string From, string To)> sortedDisjoint)
+        {
+            foreach (var group in sortedDisjoint.GroupBy(static range => range.RootId))
+            {
+                _byRoot[group.Key] = (group.Select(static range => range.From).ToArray(), group.Select(static range => range.To).ToArray());
+            }
+        }
+
+        public bool Contains(long rootId, string relPath)
+        {
+            if (!_byRoot.TryGetValue(rootId, out var ranges))
+            {
+                return false;
+            }
+
+            var index = Array.BinarySearch(ranges.From, relPath, StringComparer.Ordinal);
+            if (index < 0)
+            {
+                index = ~index - 1;
+            }
+
+            return index >= 0 && string.CompareOrdinal(relPath, ranges.To[index]) < 0;
+        }
+    }
+
+    private static void FillScopeTable(SqliteConnection connection, string table, List<(long RootId, string From, string To)> ranges)
+    {
+        using (var create = connection.CreateCommand())
+        {
+            create.CommandText = $"""
+                CREATE TEMP TABLE IF NOT EXISTS {table} (root_id INTEGER NOT NULL, from_ TEXT NOT NULL, to_ TEXT NOT NULL);
+                CREATE INDEX IF NOT EXISTS temp.{table}_ix ON {table} (root_id, from_);
+                DELETE FROM temp.{table};
+                """;
+            create.ExecuteNonQuery();
+        }
+
+        using var transaction = connection.BeginTransaction();
+        using var insert = connection.CreateCommand();
+        insert.Transaction = transaction;
+        insert.CommandText = $"INSERT INTO temp.{table} (root_id, from_, to_) VALUES ($root, $from, $to)";
+        var root = insert.Parameters.Add("$root", SqliteType.Integer);
+        var from = insert.Parameters.Add("$from", SqliteType.Text);
+        var to = insert.Parameters.Add("$to", SqliteType.Text);
+        insert.Prepare();
+        foreach (var range in ranges)
+        {
+            root.Value = range.RootId;
+            from.Value = range.From;
+            to.Value = range.To;
+            insert.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
     }
 
     /// <summary>
@@ -601,6 +809,9 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
 
         /// <summary>Значения параметров.</summary>
         public Dictionary<string, object?> Parameters { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>Источник «диапазоны папок ⋈ записи» для запросов только из фильтров с <c>in:</c>; иначе <c>null</c>.</summary>
+        public string? ScopeJoinSource { get; set; }
 
         /// <inheritdoc />
         public override string ToString()

@@ -14,8 +14,11 @@ public interface ISearchIndex
     /// </summary>
     Task<CandidateBatch> FindAsync(SearchPlan plan, CandidateQuery query, CancellationToken cancellationToken = default);
 
-    /// <summary>Сколько записей подходит под план всего.</summary>
-    Task<long> CountAsync(SearchPlan plan, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Сколько записей подходит под план. Если подсчёт дорог (фильтры поверх сотен тысяч совпадений), считается не больше
+    /// <paramref name="cap"/> — тогда <see cref="CandidateCount.IsExact"/> ложно и интерфейс пишет «20 000+».
+    /// </summary>
+    Task<CandidateCount> CountAsync(SearchPlan plan, long cap, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Подборка для пустого запроса: избранное и недавно открытые, затем недавно изменённые файлы.
@@ -52,6 +55,13 @@ public sealed record CandidateBatch(IReadOnlyList<SearchCandidate> Candidates, b
     /// <summary>Пустая выборка.</summary>
     public static CandidateBatch Empty { get; } = new([], false, false);
 }
+
+/// <summary>
+/// Итог подсчёта совпадений.
+/// </summary>
+/// <param name="Count">Число совпадений или потолок подсчёта.</param>
+/// <param name="IsExact">Подсчитано точно; иначе совпадений не меньше <see cref="Count"/>.</param>
+public readonly record struct CandidateCount(long Count, bool IsExact);
 
 /// <summary>
 /// Запись-кандидат с данными для ранжирования.

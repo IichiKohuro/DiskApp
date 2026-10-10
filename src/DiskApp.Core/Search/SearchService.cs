@@ -78,13 +78,23 @@ public sealed class SearchService
         var fuzzyAdded = false;
         var exactCount = 0;
 
+        using var countCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        Task<CandidateCount>? countTask = null;
         if (plan.IsEmpty)
         {
             candidates = await _index.FindRecentAsync(Math.Max(request.Limit, _options.RecentLimit), cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            var batch = TryRefine(plan) ?? await _index.FindAsync(plan, new CandidateQuery(_options.CandidateLimit, _options.QueryTimeout), cancellationToken).ConfigureAwait(false);
+            var refined = TryRefine(plan);
+            if (refined is null)
+            {
+                // Подсчёт идёт параллельно выборке на другом соединении (WAL допускает параллельных читателей):
+                // если выборка окажется усечённой, число уже готово или почти готово.
+                countTask = _index.CountAsync(plan, _options.CountCap, countCancellation.Token);
+            }
+
+            var batch = refined ?? await _index.FindAsync(plan, new CandidateQuery(_options.CandidateLimit, _options.QueryTimeout), cancellationToken).ConfigureAwait(false);
             candidates = batch.Candidates;
             truncated = batch.Truncated;
             partial = batch.Partial;
@@ -131,16 +141,25 @@ public sealed class SearchService
             : null;
 
         long total = ranked.Count;
+        var exactTotal = !partial && !fuzzyAdded;
         if (truncated && !partial)
         {
-            total = Math.Max(total, await _index.CountAsync(plan, cancellationToken).ConfigureAwait(false));
+            var count = await (countTask ?? _index.CountAsync(plan, _options.CountCap, cancellationToken)).ConfigureAwait(false);
+            total = Math.Max(total, count.Count);
+            exactTotal = count.IsExact && !fuzzyAdded;
+        }
+        else if (countTask is not null)
+        {
+            // Выборка полная — число известно и так; параллельный подсчёт больше не нужен.
+            await countCancellation.CancelAsync().ConfigureAwait(false);
+            await countTask.ContinueWith(static _ => { }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).ConfigureAwait(false);
         }
 
         return new SearchPage(hits, total, next, stopwatch.Elapsed, partial)
         {
             ParsedQuery = query,
             Warnings = plan.Warnings,
-            IsTotalApproximate = partial || fuzzyAdded,
+            IsTotalApproximate = !exactTotal,
             IncludesFuzzy = fuzzyAdded,
         };
     }
@@ -475,8 +494,14 @@ public sealed record SearchRequest
 /// </summary>
 public sealed record SearchOptions
 {
-    /// <summary>Наибольшее число кандидатов из индекса до ранжирования (ADR-0005: порядка 5 000).</summary>
-    public int CandidateLimit { get; init; } = 5_000;
+    /// <summary>
+    /// Наибольшее число кандидатов из индекса до ранжирования (PLAN.md, 3.2: «например 2 000»; ADR-0005 допускал до 5 000).
+    /// При усечении индекс добирает начинающиеся с терма, недавно открытые и избранные, поэтому лучшие не теряются.
+    /// </summary>
+    public int CandidateLimit { get; init; } = 2_000;
+
+    /// <summary>Потолок подсчёта общего числа совпадений, если он дорог; больше — «20 000+».</summary>
+    public long CountCap { get; init; } = 20_000;
 
     /// <summary>Предел времени запроса к индексу; по истечении — частичный результат.</summary>
     public TimeSpan QueryTimeout { get; init; } = TimeSpan.FromMilliseconds(500);
