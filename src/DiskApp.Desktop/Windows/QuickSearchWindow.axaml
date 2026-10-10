@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="using:DiskApp.UI.Views"
+        xmlns:vm="using:DiskApp.UI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="500"
+        x:Class="DiskApp.Desktop.Windows.QuickSearchWindow"
+        x:DataType="vm:QuickSearchViewModel"
+        Title="DiskApp — быстрый поиск"
+        Width="720" Height="500"
+        MinWidth="480" MinHeight="300"
+        WindowDecorations="None"
+        Topmost="True"
+        ShowInTaskbar="False"
+        CanResize="False"
+        ShowActivated="True"
+        WindowStartupLocation="Manual"
+        TransparencyLevelHint="AcrylicBlur, Blur, None"
+        TransparencyBackgroundFallback="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+        Background="Transparent">
+    <!-- Всплывающее окно поиска: без рамки, поверх всех окон, Acrylic (при недоступности — сплошной цвет темы),
+         скруглённые углы через DWM в code-behind, тонкая обводка. Скрывается по Esc, потере фокуса и хоткею. -->
+    <Panel>
+        <ExperimentalAcrylicBorder x:Name="Acrylic" CornerRadius="8" IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial BackgroundSource="Digger"
+                                             TintColor="{DynamicResource SolidBackgroundFillColorBase}"
+                                             TintOpacity="0.72"
+                                             MaterialOpacity="0.6" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+        <Border CornerRadius="8"
+                BorderThickness="1"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                Padding="12">
+            <views:QuickSearchView x:Name="SearchView" />
+        </Border>
+    </Panel>
+</Window>

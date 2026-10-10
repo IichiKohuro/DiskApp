@@ -1,0 +1,33 @@
+<wnd:FAAppWindow xmlns="https://github.com/avaloniaui"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                 xmlns:wnd="using:FluentAvalonia.UI.Windowing"
+                 xmlns:ic="using:FluentIcons.Avalonia"
+                 xmlns:views="using:DiskApp.UI.Views"
+                 xmlns:vm="using:DiskApp.UI.ViewModels"
+                 mc:Ignorable="d" d:DesignWidth="1120" d:DesignHeight="740"
+                 x:Class="DiskApp.Desktop.Windows.MainWindow"
+                 x:DataType="vm:MainViewModel"
+                 Title="DiskApp"
+                 Width="1120" Height="740"
+                 MinWidth="720" MinHeight="480"
+                 WindowStartupLocation="CenterScreen">
+    <!-- Главное окно в стиле Windows 11: FAAppWindow рисует системные кнопки и расширяет содержимое в область
+         заголовка, Mica включает Backdrop.ApplyMica в code-behind. Верхняя полоса — перетаскиваемый заголовок. -->
+    <Grid RowDefinitions="Auto,*">
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    Spacing="10"
+                    Height="32"
+                    Margin="16,0,0,0"
+                    IsHitTestVisible="False">
+            <ic:SymbolIcon Symbol="HardDrive"
+                           FontSize="16"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+            <TextBlock Text="DiskApp" FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
+        <views:MainView Grid.Row="1" />
+    </Grid>
+</wnd:FAAppWindow>
