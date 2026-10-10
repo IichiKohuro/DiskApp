@@ -33,6 +33,12 @@ public sealed record SearchQuery
     /// <summary>Курсор следующей страницы; <c>null</c> — первая страница.</summary>
     public SearchCursor? Cursor { get; init; }
 
+    /// <summary>Токены исходной строки с позициями: для подсветки синтаксиса и подсказок.</summary>
+    public IReadOnlyList<QueryToken> Tokens { get; init; } = [];
+
+    /// <summary>Замечания разбора: непонятые значения фильтров, неверное регулярное выражение.</summary>
+    public IReadOnlyList<string> Warnings { get; init; } = [];
+
     /// <summary>Запрос без текста, фильтров и регулярного выражения.</summary>
     public bool IsEmpty => Terms.Count == 0 && Filters.Count == 0 && RegexPattern is null;
 
@@ -57,6 +63,68 @@ public sealed record SearchQuery
     /// Фильтры с указанным ключом в порядке ввода.
     /// </summary>
     public IEnumerable<SearchFilter> FiltersOf(SearchFilterKey key) => Filters.Where(filter => filter.Key == key);
+
+    /// <summary>
+    /// Каноническая строка запроса: термы, фразы в кавычках, фильтры с каноническими ключами, регулярное выражение.
+    /// Разбор этой строки даёт те же термы, фильтры и выражение (round-trip, PLAN.md, этап 3.1).
+    /// </summary>
+    public override string ToString()
+    {
+        var parts = new List<string>(Terms.Count + Filters.Count + 1);
+        foreach (var term in Terms)
+        {
+            var text = term.IsPhrase ? $"\"{term.Text}\"" : term.Text;
+            parts.Add(term.IsNegated ? "-" + text : text);
+        }
+
+        foreach (var filter in Filters)
+        {
+            var value = filter.Value.Any(char.IsWhiteSpace) || filter.Value.StartsWith('"') ? $"\"{filter.Value}\"" : filter.Value;
+            var text = $"{QueryParser.CanonicalKey(filter.Key)}:{value}";
+            parts.Add(filter.IsNegated ? "-" + text : text);
+        }
+
+        if (RegexPattern is not null)
+        {
+            parts.Add($"/{RegexPattern}/");
+        }
+
+        return string.Join(' ', parts);
+    }
+}
+
+/// <summary>
+/// Токен исходной строки запроса.
+/// </summary>
+/// <param name="Kind">Вид токена.</param>
+/// <param name="Start">Позиция первого символа (включая знак отрицания).</param>
+/// <param name="Length">Длина в исходной строке.</param>
+/// <param name="Text">Исходный текст токена.</param>
+public sealed record QueryToken(QueryTokenKind Kind, int Start, int Length, string Text)
+{
+    /// <summary>Позиция за последним символом.</summary>
+    public int End => Start + Length;
+}
+
+/// <summary>
+/// Виды токенов запроса.
+/// </summary>
+public enum QueryTokenKind
+{
+    /// <summary>Слово.</summary>
+    Term,
+
+    /// <summary>Фраза в кавычках.</summary>
+    Phrase,
+
+    /// <summary>Фильтр <c>ключ:значение</c>.</summary>
+    Filter,
+
+    /// <summary>Фильтр без значения (<c>ext:</c>) — пользователь ещё печатает; при поиске не учитывается.</summary>
+    IncompleteFilter,
+
+    /// <summary>Регулярное выражение <c>/…/</c>.</summary>
+    Regex,
 }
 
 /// <summary>

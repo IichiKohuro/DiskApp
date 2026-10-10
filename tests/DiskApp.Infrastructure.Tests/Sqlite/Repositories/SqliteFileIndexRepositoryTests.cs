@@ -150,8 +150,8 @@ public sealed class SqliteFileIndexRepositoryTests
         (await context.GetAsync("archive/moved/deep/c.txt")).Depth.ShouldBe(4);
         (await context.Entries.GetByPathAsync(context.Root.Id, P("docs/sub/b.txt"), TestContext.Current.CancellationToken)).ShouldBeNull();
         using var reader = context.Database.Connections.Open();
-        reader.Query<string>("SELECT name FROM entries_fts WHERE entries_fts MATCH '\"moved\"'").ShouldBe(["moved"]);
-        reader.Query<string>("SELECT name FROM entries_fts WHERE entries_fts MATCH '\"sub\"'").ShouldBeEmpty();
+        reader.Query<string>("SELECT e.name FROM entries_fts JOIN entries AS e ON e.id = entries_fts.rowid WHERE entries_fts MATCH '\"moved\"'").ShouldBe(["moved"]);
+        reader.Query<string>("SELECT e.name FROM entries_fts JOIN entries AS e ON e.id = entries_fts.rowid WHERE entries_fts MATCH '\"sub\"'").ShouldBeEmpty();
     }
 
     [Fact]

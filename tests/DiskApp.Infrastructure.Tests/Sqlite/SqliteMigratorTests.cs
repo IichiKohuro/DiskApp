@@ -188,5 +188,5 @@ public sealed class SqliteMigratorTests
             new { Now = SqliteTime.Format(DateTimeOffset.UtcNow) });
 
     private static string[] Match(System.Data.IDbConnection connection, string term)
-        => connection.Query<string>("SELECT name FROM entries_fts WHERE entries_fts MATCH @Term ORDER BY name", new { Term = $"\"{term}\"" }).ToArray();
+        => connection.Query<string>("SELECT e.name FROM entries_fts JOIN entries AS e ON e.id = entries_fts.rowid WHERE entries_fts MATCH @Term ORDER BY e.name", new { Term = $"\"{term}\"" }).ToArray();
 }

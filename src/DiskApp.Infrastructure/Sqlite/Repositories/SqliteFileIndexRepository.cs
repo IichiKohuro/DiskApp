@@ -306,9 +306,9 @@ public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepo
         => ReadAsync(connection => connection.ExecuteScalar<long>("SELECT COUNT(*) FROM entries"), cancellationToken);
 
     /// <summary>
-    /// Имя в нижнем регистре по правилам .NET для колонки <c>name_folded</c> (ADR-0005).
+    /// Имя для колонки <c>name_folded</c>: свёртка для поиска (<see cref="SearchText.Fold"/>, ADR-0005).
     /// </summary>
-    internal static string Fold(string name) => name.ToLowerInvariant();
+    internal static string Fold(string name) => SearchText.Fold(name);
 
     private Task<UpsertDetails> UpsertCoreAsync(IReadOnlyList<FileEntry> entries, long scanId, bool collectIndices, CancellationToken cancellationToken)
     {

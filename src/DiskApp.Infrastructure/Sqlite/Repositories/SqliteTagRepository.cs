@@ -2,6 +2,7 @@ using Dapper;
 
 using DiskApp.Core.Domain;
 using DiskApp.Core.Repositories;
+using DiskApp.Core.Search;
 
 namespace DiskApp.Infrastructure.Sqlite.Repositories;
 
@@ -132,7 +133,7 @@ public sealed class SqliteTagRepository(SqliteDatabase database) : SqliteReposit
             .Query<long>("SELECT entry_id FROM entry_tags WHERE tag_id = @TagId ORDER BY entry_id", new { TagId = tagId })
             .ToArray(), cancellationToken);
 
-    private static string Fold(string name) => name.Trim().ToLowerInvariant();
+    private static string Fold(string name) => SearchText.Fold(name.Trim());
 
     private sealed class TagRow
     {

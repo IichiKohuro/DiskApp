@@ -1,6 +1,7 @@
 -- V001: начальная схема индекса (docs/ARCHITECTURE.md, раздел 4; ADR-0005).
 -- Даты — текст ISO 8601 в UTC (yyyy-MM-ddTHH:mm:ss.fffffffZ): сравнение строк совпадает с хронологическим.
--- name_folded — имя в нижнем регистре по правилам .NET: COLLATE NOCASE в SQLite не сворачивает кириллицу.
+-- name_folded — имя, свёрнутое для поиска (SearchText.Fold: нижний регистр по правилам .NET и ё → е): COLLATE NOCASE
+-- в SQLite не сворачивает кириллицу. По этой колонке строятся и FTS, и префиксный поиск.
 
 CREATE TABLE roots (
     id             INTEGER PRIMARY KEY,
@@ -42,25 +43,26 @@ CREATE INDEX ix_entries_size        ON entries (size);
 CREATE INDEX ix_entries_kind        ON entries (kind);
 CREATE INDEX ix_entries_scan        ON entries (root_id, scan_id);
 
--- FTS5 trigram только по имени (ADR-0005): external content на entries, синхронизация триггерами.
+-- FTS5 trigram только по имени (ADR-0005), в свёрнутом виде: «отчет» находит «Отчёт».
+-- External content на entries, синхронизация триггерами.
 CREATE VIRTUAL TABLE entries_fts USING fts5(
-    name,
+    name_folded,
     content = 'entries',
     content_rowid = 'id',
     tokenize = 'trigram'
 );
 
 CREATE TRIGGER entries_fts_ai AFTER INSERT ON entries BEGIN
-    INSERT INTO entries_fts (rowid, name) VALUES (new.id, new.name);
+    INSERT INTO entries_fts (rowid, name_folded) VALUES (new.id, new.name_folded);
 END;
 
 CREATE TRIGGER entries_fts_ad AFTER DELETE ON entries BEGIN
-    INSERT INTO entries_fts (entries_fts, rowid, name) VALUES ('delete', old.id, old.name);
+    INSERT INTO entries_fts (entries_fts, rowid, name_folded) VALUES ('delete', old.id, old.name_folded);
 END;
 
-CREATE TRIGGER entries_fts_au AFTER UPDATE OF name ON entries BEGIN
-    INSERT INTO entries_fts (entries_fts, rowid, name) VALUES ('delete', old.id, old.name);
-    INSERT INTO entries_fts (rowid, name) VALUES (new.id, new.name);
+CREATE TRIGGER entries_fts_au AFTER UPDATE OF name_folded ON entries BEGIN
+    INSERT INTO entries_fts (entries_fts, rowid, name_folded) VALUES ('delete', old.id, old.name_folded);
+    INSERT INTO entries_fts (rowid, name_folded) VALUES (new.id, new.name_folded);
 END;
 
 CREATE TABLE usage (
