@@ -13,3 +13,4 @@
 - PLAN.md: поэтапный план разработки с критериями готовности, решениями, рисками и бюджетами производительности.
 - Каркас репозитория: `.gitignore`, `.editorconfig`, `global.json`, LICENSE (MIT), CLAUDE.md, CHANGELOG.md.
 - `docs/`: ARCHITECTURE.md, ADR/0001 (архитектурный стиль), QA_CHECKLIST.md, FEEDBACK.md.
+- Каркас решения: `DiskApp.slnx`, `Directory.Build.props`, `Directory.Packages.props`; проекты `src/` (Core, Infrastructure, Contracts, Server, Client, UI, Desktop) и `tests/` (Core, Infrastructure, Server, UI, Benchmarks); архитектурные тесты слоёв и дымовые тесты SQLite FTS5, Kestrel на loopback и headless-интерфейса; `DiskApp.Desktop` показывает пустое окно в теме FluentAvalonia.
