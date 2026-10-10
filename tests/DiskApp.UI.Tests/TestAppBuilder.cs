@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Headless;
 
-using DiskApp.UI;
 using DiskApp.UI.Tests;
 
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]

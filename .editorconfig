@@ -245,9 +245,9 @@ dotnet_naming_rule.private_fields_should_be__camelcase.severity = suggestion
 dotnet_naming_rule.private_fields_should_be__camelcase.symbols = private_fields
 dotnet_naming_rule.private_fields_should_be__camelcase.style = _camelcase
 
-dotnet_naming_rule.private_static_fields_should_be_s_camelcase.severity = suggestion
-dotnet_naming_rule.private_static_fields_should_be_s_camelcase.symbols = private_static_fields
-dotnet_naming_rule.private_static_fields_should_be_s_camelcase.style = s_camelcase
+dotnet_naming_rule.private_static_fields_should_be__camelcase.severity = suggestion
+dotnet_naming_rule.private_static_fields_should_be__camelcase.symbols = private_static_fields
+dotnet_naming_rule.private_static_fields_should_be__camelcase.style = _camelcase
 
 dotnet_naming_rule.public_constant_fields_should_be_pascalcase.severity = suggestion
 dotnet_naming_rule.public_constant_fields_should_be_pascalcase.symbols = public_constant_fields
@@ -319,7 +319,7 @@ dotnet_naming_symbols.non_field_members.applicable_kinds = property, event, meth
 dotnet_naming_symbols.non_field_members.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 dotnet_naming_symbols.non_field_members.required_modifiers = 
 
-dotnet_naming_symbols.type_parameters.applicable_kinds = namespace
+dotnet_naming_symbols.type_parameters.applicable_kinds = type_parameter
 dotnet_naming_symbols.type_parameters.applicable_accessibilities = *
 dotnet_naming_symbols.type_parameters.required_modifiers = 
 
@@ -382,14 +382,8 @@ dotnet_naming_style.camelcase.required_suffix =
 dotnet_naming_style.camelcase.word_separator = 
 dotnet_naming_style.camelcase.capitalization = camel_case
 
-dotnet_naming_style.s_camelcase.required_prefix = s_
-dotnet_naming_style.s_camelcase.required_suffix = 
-dotnet_naming_style.s_camelcase.word_separator = 
-dotnet_naming_style.s_camelcase.capitalization = camel_case
-
-
 # ---------------------------------------------------------------------------
-# DiskApp: уточнения поверх шаблона dotnet new editorconfig
+# DiskApp: уточнения поверх шаблона dotnet new editorconfig (PLAN.md, этапы 0.2 и 0.4; CONTRIBUTING.md, «Стиль кода»)
 # ---------------------------------------------------------------------------
 
 [*.cs]
@@ -397,26 +391,38 @@ dotnet_naming_style.s_camelcase.capitalization = camel_case
 csharp_style_namespace_declarations = file_scoped:warning
 csharp_prefer_braces = true:warning
 csharp_using_directive_placement = outside_namespace:warning
+# Порядок using задан выше: System.* первыми, группы разделены пустой строкой.
+# Неиспользуемые using — ошибка сборки; dotnet format их удаляет.
+# IDE0005 проверяется при сборке и в dotnet format только при GenerateDocumentationFile=true (Directory.Build.props).
+dotnet_diagnostic.IDE0005.severity = warning
+# Модификаторы доступа всегда явные
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
 # var: явные типы для встроенных, var когда тип очевиден
 csharp_style_var_for_built_in_types = false:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_style_var_elsewhere = true:silent
-# Современные конструкции
+# Предпочтения выражений: современные конструкции как подсказки, dotnet format применяет их
 csharp_style_prefer_primary_constructors = true:suggestion
 csharp_prefer_simple_using_statement = true:suggestion
 csharp_style_prefer_switch_expression = true:suggestion
 csharp_style_prefer_pattern_matching = true:suggestion
+csharp_style_prefer_not_pattern = true:suggestion
 dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
 
 [*.{cs,vb}]
-# Именование как предупреждения: типы, методы, свойства PascalCase; интерфейсы с I; приватные поля _camelCase
+# Именование как предупреждения: типы, методы, свойства PascalCase; интерфейсы с I;
+# приватные поля _camelCase, в том числе статические (без префикса s_); константы и static readonly — PascalCase
 dotnet_naming_rule.types_and_namespaces_should_be_pascalcase.severity = warning
 dotnet_naming_rule.interfaces_should_be_ipascalcase.severity = warning
 dotnet_naming_rule.methods_should_be_pascalcase.severity = warning
 dotnet_naming_rule.properties_should_be_pascalcase.severity = warning
 dotnet_naming_rule.private_fields_should_be__camelcase.severity = warning
+dotnet_naming_rule.private_static_fields_should_be__camelcase.severity = warning
 
-# Асинхронные методы заканчиваются на Async
+# Асинхронные методы заканчиваются на Async (в тестах отключено: tests/.editorconfig)
 dotnet_naming_rule.async_methods_should_end_with_async.severity = warning
 dotnet_naming_rule.async_methods_should_end_with_async.symbols = async_methods
 dotnet_naming_rule.async_methods_should_end_with_async.style = async_suffix

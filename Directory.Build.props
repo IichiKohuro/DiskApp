@@ -17,6 +17,10 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- XML-документация генерируется, чтобы IDE0005 (неиспользуемые using) проверялся при сборке и в dotnet format;
+         отсутствие комментария к публичному члену (CS1591) ошибкой не считается. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <!-- Уязвимости в зависимостях остаются предупреждениями: о них сообщает NuGet, но они не должны внезапно ломать сборку. -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
   </PropertyGroup>
