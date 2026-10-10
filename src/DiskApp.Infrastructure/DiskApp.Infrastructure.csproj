@@ -12,4 +12,14 @@
     <PackageReference Include="Microsoft.Data.Sqlite" />
   </ItemGroup>
 
+  <!-- Миграции схемы: SQL-скрипты V001__name.sql как встроенные ресурсы, применяются по порядку (SqliteMigrator). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Sqlite\Migrations\*.sql" LogicalName="DiskApp.Infrastructure.Sqlite.Migrations.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DiskApp.Infrastructure.Tests" />
+    <InternalsVisibleTo Include="DiskApp.Benchmarks" />
+  </ItemGroup>
+
 </Project>

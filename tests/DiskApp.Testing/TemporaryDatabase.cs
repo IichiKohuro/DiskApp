@@ -63,14 +63,13 @@ public sealed class TemporaryDatabase : IDisposable
     }
 
     /// <summary>
-    /// Сбрасывает пул соединений к этой базе (иначе файл остаётся открытым) и удаляет папку с базой. Повторный вызов безопасен.
+    /// Сбрасывает все пулы соединений процесса (файл держат соединения из пула любой строки подключения, в том числе
+    /// фабрики приложения с другими параметрами) и удаляет папку с базой. Повторный вызов безопасен.
+    /// Соединения, занятые другими тестами, не трогаются: они закроются при возврате в пул.
     /// </summary>
     public void Dispose()
     {
-        using (var connection = new SqliteConnection(ConnectionString))
-        {
-            SqliteConnection.ClearPool(connection);
-        }
+        SqliteConnection.ClearAllPools();
 
         Directory.Dispose();
     }
