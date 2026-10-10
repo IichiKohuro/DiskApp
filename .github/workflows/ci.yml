@@ -1,0 +1,78 @@
+# Непрерывная интеграция (PLAN.md, подэтап 0.5): каждый коммит в main и каждый PR собираются в Release,
+# прогоняются тесты с отчётами TRX и покрытием, проверяется форматирование. Сводка покрытия попадает
+# в job summary, отчёты — в артефакты.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  build:
+    name: Сборка, тесты, формат (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Исходники
+        uses: actions/checkout@v4
+
+      - name: .NET SDK по global.json
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Кэш пакетов NuGet
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Packages.props', 'Directory.Build.props', 'tests/Directory.Build.props', 'tests/Directory.Build.targets', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Восстановление пакетов
+        run: dotnet restore
+
+      - name: Сборка Release
+        run: dotnet build -c Release --no-restore
+
+      - name: Тесты с отчётами TRX и покрытием
+        run: dotnet test -c Release --no-build -- --report-trx --coverage --coverage-output-format cobertura
+
+      - name: Форматирование
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Сводка покрытия
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool
+          reportgenerator -reports:"TestResults/*.cobertura.xml" -targetdir:coverage-report -reporttypes:"MarkdownSummaryGithub;Cobertura"
+          Get-Content coverage-report/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+      - name: Отчёты тестов и покрытия
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            TestResults/*.trx
+            TestResults/*.cobertura.xml
+            coverage-report/Cobertura.xml
+          if-no-files-found: warn
+          retention-days: 14
