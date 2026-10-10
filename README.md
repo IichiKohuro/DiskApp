@@ -373,7 +373,13 @@ dotnet run --project src/DiskApp.Desktop
 dotnet test
 ```
 
-Полезные параметры запуска: `--minimized` (сразу в трей), `--search "запрос"`, `--add <путь>…`, `--portable`, `--safe-mode`.
+Самодостаточный exe без установленного .NET (self-contained, single-file, ReadyToRun) — в `releases\DiskApp.exe`:
+
+```powershell
+.\scripts\publish.ps1
+```
+
+Полезные параметры запуска: `--minimized` (сразу в трей), `--show`, `--settings`, `--search "запрос"`, `--portable`; позже — `--add <путь>…` и `--safe-mode`.
 
 ## Данные и настройки
 

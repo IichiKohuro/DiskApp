@@ -5,12 +5,18 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <AssemblyName>DiskApp</AssemblyName>
-    <ApplicationIcon>..\..\assets\DiskApp.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\DiskApp.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- P/Invoke через LibraryImport с указателями на функции (хоткей, message-only окно). -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Иконка трея и окон (avares://DiskApp/Assets/DiskApp.ico); тот же файл — иконка exe (ApplicationIcon).
+         Файл лежит внутри проекта: ресурс за его пределами в avares-индекс не попадает. -->
+    <AvaloniaResource Include="Assets\DiskApp.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DiskApp.Server\DiskApp.Server.csproj" />
