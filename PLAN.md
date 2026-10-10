@@ -55,8 +55,8 @@
 
 ### Текущая позиция
 
-> **Этап 0 → подэтап 0.4 «Качество кода и соглашения».**
-> Подэтапы 0.1–0.3 выполнены 2026-10-10. Решение `DiskApp.slnx` собирается без предупреждений: 7 проектов `src/`, 4 тестовых проекта и бенчмарки в `tests/`, 16 тестов зелёные (архитектурные правила слоёв, SQLite FTS5 trigram, Kestrel на loopback, headless-интерфейс), `dotnet format --verify-no-changes` проходит. Тесты идут через Microsoft.Testing.Platform (`global.json`), а не VSTest. `DiskApp.Desktop` показывает пустое окно (проверено под Xvfb на Linux; на Windows — при следующем запуске у пользователя). Дальше — соглашения 0.4 (шаблон теста, CONTRIBUTING.md), затем CI (0.5) и спайки (0.6).
+> **Этап 0 → подэтап 0.5 «CI».**
+> Подэтапы 0.1–0.4 выполнены 2026-10-10. Соглашения закреплены: `.editorconfig` (file-scoped namespaces, порядок `using`, `_camelCase`, `Async`; неиспользуемые `using` — ошибка сборки), CONTRIBUTING.md (ветки, Conventional Commits, шаблон теста), фикстуры `TemporaryDirectory` и `TemporaryDatabase` в `tests/DiskApp.Testing`. 33 теста зелёные, `dotnet format --verify-no-changes` проходит. Дальше — CI (0.5), затем спайки (0.6).
 
 ### Протокол сессии
 
@@ -159,7 +159,7 @@
 
 ### Этап 0 — Окружение и каркас репозитория
 
-**Статус:** 🔄 (0.1–0.3 готовы) · **Объём:** M · **Версия:** v0.1 · **Зависит от:** —
+**Статус:** 🔄 (0.1–0.4 готовы) · **Объём:** M · **Версия:** v0.1 · **Зависит от:** —
 
 **Цель.** На чистой машине получить рабочее окружение, собирающееся решение с тестами и CI, и снять технические риски короткими спайками до начала основной разработки.
 
@@ -167,13 +167,13 @@
 
 - [x] .NET SDK 10: установлен 10.0.401 (`winget install --id Microsoft.DotNet.SDK.10 -e`)
 - [x] Git: установлен 2.55.0 (`winget install --id Git.Git -e`); настроены `init.defaultBranch main` и `core.autocrlf true`
-- [ ] Git: задать `user.name` и `user.email` (личные данные, вводит пользователь)
+- [x] Git: `user.name` и `user.email` заданы пользователем глобально (проверено 2026-10-10)
 - [x] IDE: Visual Studio Community 2026 18.10 установлена в `C:\Program Files\Microsoft Visual Studio\18\Community` с нагрузками `Microsoft.VisualStudio.Workload.ManagedDesktop` и `Microsoft.VisualStudio.Workload.NetWeb` (`winget install --id Microsoft.VisualStudio.Community -e --override "--passive --norestart --wait --add … --includeRecommended"`). Альтернативы (Rider, VS Code) не ставились
 - [x] Расширение «Avalonia for Visual Studio» 12.3.2.0 (`AvaloniaTeam.AvaloniaVS`, XAML-превью) установлено для текущего пользователя: VSIX скачан с Marketplace, поставлен через `VSIXInstaller /quiet`
 - [x] Шаблоны Avalonia: установлены Avalonia.Templates 12.1.4 (`dotnet new install Avalonia.Templates`)
 - [x] Дополнительно установлены: GitHub CLI 2.102.0 (`GitHub.cli`), PowerShell 7.6.6 (`Microsoft.PowerShell`), DB Browser for SQLite 3.13.1 (`DBBrowserForSQLite.DBBrowserForSQLite`)
 - [x] Проверка окружения: тестовый `avalonia.app` (Avalonia 12.1.4, net10.0) собран без предупреждений и ошибок; папка удалена
-- [ ] Перезапустить терминал и IDE, чтобы PATH подхватил `dotnet` и `git`
+- [x] Терминал перезапущен: `dotnet` и `git` находятся без ручного обновления PATH (проверено 2026-10-10)
 
 #### 0.2 Репозиторий
 
@@ -199,10 +199,10 @@
 
 #### 0.4 Качество кода и соглашения
 
-- [ ] `.editorconfig`: порядок `using`, file-scoped namespaces, поля `_camelCase`, суффикс `Async`, `var` по правилам, предпочтения выражений
-- [ ] `dotnet format --verify-no-changes` проходит локально
-- [ ] Шаблон теста: Arrange/Act/Assert, имена `Method_Scenario_Expected`, фикстуры для временных папок и БД
-- [ ] Соглашения git в CONTRIBUTING.md: Conventional Commits, ветки `feat/`, `fix/`, `chore/`, `docs/`
+- [x] `.editorconfig`: порядок `using` (System первыми, группы через пустую строку), file-scoped namespaces, поля `_camelCase` (статические тоже, без `s_`), суффикс `Async`, `var` по правилам, предпочтения выражений — как подсказки, которые применяет `dotnet format`. Дополнительно: неиспользуемые `using` (IDE0005) и неявные модификаторы доступа — предупреждения, то есть ошибки сборки; для IDE0005 в `Directory.Build.props` включён `GenerateDocumentationFile` (CS1591 подавлен); исправлена ошибка шаблона (`type_parameters` были привязаны к `namespace`)
+- [x] `dotnet format --verify-no-changes` проходит локально (новое правило сразу поймало лишний `using` в `TestAppBuilder.cs`)
+- [x] Шаблон теста: Arrange/Act/Assert, имена `Method_Scenario_Expected` — описан в CONTRIBUTING.md (раздел 7) и показан на тестах фикстур. Фикстуры — в новом проекте `tests/DiskApp.Testing` (библиотека, не тестовый проект; ссылка и глобальный `using` для всех тестовых проектов — из `tests/Directory.Build.targets`): `TemporaryDirectory` (уникальная папка в `%TEMP%DiskApp.Tests`, пути только внутри неё, удаление с повторами и снятием «только для чтения») и `TemporaryDatabase` (файловая SQLite в собственной папке, сброс пула соединений при очистке); 17 тестов на фикстуры
+- [x] Соглашения в CONTRIBUTING.md: единица работы и DoD, ветки `feat/`, `fix/`, `chore/`, `docs/`, Conventional Commits (типы, области, примеры), PR, команды проверки, стиль кода, тесты и фикстуры, карта документации, зависимости. Ссылки из README, CLAUDE.md и PLAN
 
 #### 0.5 CI
 
@@ -1102,7 +1102,7 @@
 ### Тестирование
 
 - Пирамида: модульные тесты Core → интеграционные Infrastructure и Server → headless UI → ручной чеклист.
-- Временные папки и БД только через фикстуры с гарантированной очисткой.
+- Временные папки и БД только через фикстуры с гарантированной очисткой: `TemporaryDirectory` и `TemporaryDatabase` из `tests/DiskApp.Testing`.
 - Нестабильный тест уходит в карантин с задачей на исправление, а не удаляется.
 
 ### Документация
@@ -1118,6 +1118,7 @@
 | docs/FEEDBACK.md | Что заметили при ежедневном использовании |
 | CHANGELOG.md | Что изменилось между версиями |
 | CLAUDE.md | Как работать по плану в сессиях |
+| CONTRIBUTING.md | Как оформлять код, тесты, ветки и коммиты |
 
 ### Производительность
 
@@ -1210,3 +1211,4 @@
 | 2026-10-10 | По запросу пользователя подэтап 17.6 переработан в «умный момент»: детектор занятости, планировщик напоминаний с умной отсрочкой и нарастанием, лимиты частоты, эскалация без вторжения, обучение по реакциям, API и тесты планировщика. Добавлены решение 20 и критерий готовности этапа 17; обновлены глоссарий, README и ARCHITECTURE |
 | 2026-10-10 | Пользователь создал репозиторий GitHub IichiKohuro/DiskApp (вопрос 7 закрыт) и дал подпись автора. Локальная ветка `main` поставлена поверх начального коммита GitHub, LICENSE взят оттуда (правообладатель Iichi Kohuro), коммит `06eb56a` отправлен в `origin/main` |
 | 2026-10-10 | Подэтап 0.3 завершён: `DiskApp.slnx`, `Directory.Build.props`, `Directory.Packages.props`, 7 проектов `src/`, 5 проектов `tests/`, архитектурный и дымовые тесты, пустое окно десктопа. Отклонения от списка пакетов: тесты переведены на Microsoft.Testing.Platform (`global.json`), coverlet.collector → Microsoft.Testing.Extensions.CodeCoverage 18.12.0 + TrxReport 2.5.1; добавлены AvaloniaUI.DiagnosticsSupport 2.2.3 (Debug) и Avalonia.Headless 12.1.4 вместо Avalonia.Headless.XUnit (несовместим с xunit v3 4.0.2); Avalonia.Themes.Fluent и NetArchTest.Rules не понадобились. Решение 12 уточнено. В `.editorconfig` `insert_final_newline = true` для `.cs`; в `tests/.editorconfig` снято требование суффикса `Async` для тестов. Текущая позиция — подэтап 0.4 |
+| 2026-10-10 | Подэтап 0.4 завершён: `.editorconfig` ужесточён (IDE0005 и модификаторы доступа — ошибки сборки, `_camelCase` для статических полей, исправлен `type_parameters`), `GenerateDocumentationFile` в `Directory.Build.props`, новый проект `tests/DiskApp.Testing` с фикстурами `TemporaryDirectory` и `TemporaryDatabase` (шестой проект в `tests/`), CONTRIBUTING.md со ссылками из README, CLAUDE.md и PLAN. Хвосты 0.1 закрыты (подпись git, PATH). Текущая позиция — подэтап 0.5 |

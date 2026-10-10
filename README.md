@@ -285,7 +285,7 @@ sequenceDiagram
 
 ```
 DiskApp/
-├─ README.md, PLAN.md, CHANGELOG.md, LICENSE, CLAUDE.md
+├─ README.md, PLAN.md, CHANGELOG.md, CONTRIBUTING.md, LICENSE, CLAUDE.md
 ├─ DiskApp.slnx
 ├─ global.json, Directory.Build.props, Directory.Packages.props, .editorconfig
 ├─ src/
@@ -303,6 +303,7 @@ DiskApp/
 │  ├─ DiskApp.Infrastructure.Tests/
 │  ├─ DiskApp.Server.Tests/
 │  ├─ DiskApp.UI.Tests/
+│  ├─ DiskApp.Testing/          общие фикстуры тестов
 │  └─ DiskApp.Benchmarks/
 ├─ docs/                       ARCHITECTURE.md, ADR/, USER_GUIDE.md, QA_CHECKLIST.md, FEEDBACK.md
 ├─ assets/                     иконки, скриншоты
@@ -383,6 +384,7 @@ dotnet test
 
 ## Разработка
 
+- Соглашения — ветки, коммиты, стиль кода, шаблон теста, фикстуры: [CONTRIBUTING.md](CONTRIBUTING.md).
 - Ветка `main` всегда собирается и проходит тесты. Работа ведётся в ветках `feat/…`, `fix/…`, коммиты в формате Conventional Commits.
 - Один подэтап плана = одна законченная единица работы: код, тесты, документация, отметка в [PLAN.md](PLAN.md).
 - Архитектурные решения фиксируются в `docs/ADR/`. Пользовательская документация — `docs/USER_GUIDE.md`.
