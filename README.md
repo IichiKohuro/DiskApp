@@ -308,12 +308,14 @@ DiskApp/
 │  └─ DiskApp.Browser/         (v2.x)
 ├─ tests/
 │  ├─ DiskApp.Core.Tests/
+│  ├─ DiskApp.Desktop.Tests/
 │  ├─ DiskApp.Infrastructure.Tests/
 │  ├─ DiskApp.Server.Tests/
 │  ├─ DiskApp.UI.Tests/
 │  ├─ DiskApp.Testing/          общие фикстуры тестов
 │  └─ DiskApp.Benchmarks/
 ├─ docs/                       ARCHITECTURE.md, ADR/, USER_GUIDE.md, QA_CHECKLIST.md, FEEDBACK.md
+├─ spikes/                     спайки этапа 0.6 с результатами замеров
 ├─ assets/                     иконки, скриншоты
 └─ .github/workflows/          ci.yml, release.yml
 ```

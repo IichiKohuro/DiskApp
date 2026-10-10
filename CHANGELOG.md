@@ -18,6 +18,8 @@
 - `tests/DiskApp.Testing`: фикстуры `TemporaryDirectory` и `TemporaryDatabase` с гарантированной очисткой; подключаются ко всем тестовым проектам автоматически.
 - Прототип интерфейса на макетных данных (этапы 6–7 вытянуты вперёд): главное окно в стиле Windows 11 (`FAAppWindow`, Mica, `NavigationView`, страницы «Главная», «Поиск», «Настройки» и заглушки разделов с описанием этапа), окно быстрого поиска (без рамки, Acrylic, скруглённые углы, подсветка совпадений, клавиатура, `Ctrl+1…9`), трей с меню, глобальная горячая клавиша `Ctrl+Alt+Space` с уведомлением о конфликте, аргументы запуска `--minimized`, `--show`, `--settings`, `--search`, `--portable`, журнал Serilog в `%LocalAppData%DiskAppogs`.
 - `DiskApp.UI`: `ISearchService` с макетом `SampleSearchService`, `IThemeService`, `IAppCommands`, `StartupArguments`, контрол `HighlightTextBlock`, дизайн-токены и стили; 99 новых тестов (ViewModel, форматирование, пути, подсветка, headless-представления).
+- Один экземпляр: `Mutex` и именованный канал, повторный запуск передаёт аргументы первому экземпляру; метки времени старта и показа окна поиска в журнале; файловый sink Serilog в режиме `shared`.
+- Спайки S3 (Kestrel в процессе) и S4 (FTS5 trigram, 1 млн записей) в `spikes/` с результатами; ADR 0002–0005; тестовый проект `tests/DiskApp.Desktop.Tests`.
 
 ### Changed
 
