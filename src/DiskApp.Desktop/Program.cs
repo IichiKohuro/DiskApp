@@ -7,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using DiskApp.Desktop.Shell;
 using DiskApp.Desktop.SingleInstance;
 using DiskApp.Desktop.Startup;
+using DiskApp.Infrastructure;
 using DiskApp.UI;
 using DiskApp.UI.Services;
 
