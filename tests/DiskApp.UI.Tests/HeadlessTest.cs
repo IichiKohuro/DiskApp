@@ -17,4 +17,13 @@ internal static class HeadlessTest
         var session = HeadlessUnitTestSession.GetOrStartForAssembly(typeof(TestAppBuilder).Assembly);
         return session.Dispatch(test, TestContext.Current.CancellationToken);
     }
+
+    /// <summary>
+    /// Выполняет асинхронный <paramref name="test"/> на UI-потоке; продолжения после <c>await</c> остаются на нём.
+    /// </summary>
+    public static Task RunAsync(Func<Task> test)
+    {
+        var session = HeadlessUnitTestSession.GetOrStartForAssembly(typeof(TestAppBuilder).Assembly);
+        return session.Dispatch(test, TestContext.Current.CancellationToken);
+    }
 }

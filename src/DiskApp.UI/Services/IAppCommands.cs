@@ -1,0 +1,17 @@
+namespace DiskApp.UI.Services;
+
+/// <summary>
+/// Команды оболочки, которые интерфейс вызывает, но не реализует: показать окно, перейти на страницу.
+/// На десктопе их выполняет <c>DesktopShell</c> (трей, окна, хоткеи); на других платформах — своя оболочка.
+/// </summary>
+public interface IAppCommands
+{
+    /// <summary>Показывает окно быстрого поиска и ставит фокус в поле ввода.</summary>
+    void ShowQuickSearch();
+
+    /// <summary>Показывает главное окно и выводит его на передний план.</summary>
+    void ShowMainWindow();
+
+    /// <summary>Открывает страницу главного окна по ключу (<see cref="ViewModels.PageKeys"/>).</summary>
+    void NavigateTo(string pageKey);
+}

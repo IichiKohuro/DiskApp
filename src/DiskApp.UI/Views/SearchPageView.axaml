@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="using:DiskApp.UI.Views"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="DiskApp.UI.Views.SearchPageView"
+             x:DataType="vm:QuickSearchViewModel"
+             Design.DataContext="{x:Static vm:DesignData.QuickSearch}">
+    <!-- Страница «Поиск» главного окна: то же содержимое, что во всплывающем окне, в карточке. -->
+    <Grid Margin="{StaticResource PagePadding}" RowDefinitions="Auto,*" MaxWidth="{StaticResource PageMaxWidth}">
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+            <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="Поиск" />
+            <TextBlock Classes="secondary" Text="То же окно, что по Ctrl + Alt + Space, только внутри главного окна: запрос сохраняется между ними." />
+        </StackPanel>
+        <Border Grid.Row="1" Classes="card" Padding="12">
+            <views:QuickSearchView x:Name="Search" />
+        </Border>
+    </Grid>
+</UserControl>

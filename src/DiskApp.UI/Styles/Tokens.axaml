@@ -1,0 +1,23 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Дизайн-токены DiskApp (PLAN.md, этап 6.1).
+         Отступы: шкала 4/8/12/16/24. Радиусы: 4 у контролов, 8 у карточек и окон. Типографика — темы TextBlock
+         из FluentAvalonia (Caption, Body, BodyStrong, Subtitle, Title, TitleLarge). Длительности анимаций: 150 мс
+         появление, 250 мс переходы страниц — задаются в разметке через PageTransition и Transitions. -->
+
+    <x:Double x:Key="SpacingXs">4</x:Double>
+    <x:Double x:Key="SpacingS">8</x:Double>
+    <x:Double x:Key="SpacingM">12</x:Double>
+    <x:Double x:Key="SpacingL">16</x:Double>
+    <x:Double x:Key="SpacingXl">24</x:Double>
+
+    <Thickness x:Key="PagePadding">28,20,28,28</Thickness>
+    <Thickness x:Key="CardPadding">16</Thickness>
+
+    <CornerRadius x:Key="CardCornerRadius">8</CornerRadius>
+    <CornerRadius x:Key="ItemCornerRadius">4</CornerRadius>
+
+    <x:Double x:Key="QuickSearchWidth">720</x:Double>
+    <x:Double x:Key="QuickSearchHeight">500</x:Double>
+    <x:Double x:Key="PageMaxWidth">1100</x:Double>
+</ResourceDictionary>

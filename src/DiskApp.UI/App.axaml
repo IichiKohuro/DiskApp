@@ -1,11 +1,40 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             xmlns:views="using:DiskApp.UI.Views"
              x:Class="DiskApp.UI.App"
              RequestedThemeVariant="Default">
-    <!-- RequestedThemeVariant="Default" следует системной светлой или тёмной теме. -->
+    <!-- RequestedThemeVariant="Default" следует системной светлой или тёмной теме; настройки меняют его через IThemeService. -->
 
     <Application.Styles>
-        <sty:FluentAvaloniaTheme PreferSystemTheme="True" />
+        <!-- Тема Windows 11: системная светлая/тёмная, акцентный цвет пользователя, системный шрифт (Segoe UI Variable). -->
+        <sty:FluentAvaloniaTheme PreferSystemTheme="True" PreferUserAccentColor="True" />
+        <StyleInclude Source="avares://DiskApp.UI/Styles/AppStyles.axaml" />
     </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://DiskApp.UI/Styles/Tokens.axaml" />
+                <ResourceInclude Source="avares://DiskApp.UI/Styles/Templates.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <!-- Соответствие ViewModel → View для страниц главного окна (явное, без рефлексии). -->
+    <Application.DataTemplates>
+        <DataTemplate DataType="vm:HomeViewModel">
+            <views:HomeView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:QuickSearchViewModel">
+            <views:SearchPageView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:SettingsViewModel">
+            <views:SettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:PlaceholderPageViewModel">
+            <views:PlaceholderPageView />
+        </DataTemplate>
+    </Application.DataTemplates>
 </Application>

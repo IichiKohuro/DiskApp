@@ -1,0 +1,132 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="900"
+             x:Class="DiskApp.UI.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel"
+             Design.DataContext="{x:Static vm:DesignData.Settings}">
+    <!-- Настройки в стиле «Параметров» Windows 11: SettingsExpander с переключателями справа. Тема работает сразу,
+         остальное — вид будущих настроек (этапы 6.5, 6.6, 9). -->
+    <ScrollViewer>
+        <StackPanel Margin="{StaticResource PagePadding}" Spacing="4" MaxWidth="{StaticResource PageMaxWidth}">
+            <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="Настройки" Margin="0,0,0,8" />
+
+            <TextBlock Classes="section" Text="Внешний вид" />
+            <ui:FASettingsExpander Header="Тема" Description="Светлая, тёмная или как в системе — применяется сразу">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="DarkTheme" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" MinWidth="170" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Эффекты" Description="Mica в главном окне и Acrylic в окне поиска">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="ColorBackground" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding UseBackdropEffects, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Акцентный цвет системы" Description="Кнопки, выделение и подсветка совпадений в цвете Windows">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="ColorFill" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding UseSystemAccent, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+
+            <TextBlock Classes="section" Text="Быстрый поиск" />
+            <ui:FASettingsExpander Header="Горячая клавиша" Description="Показать или скрыть окно быстрого поиска из любого приложения">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Keyboard" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <Border Classes="chip" Padding="10,4">
+                        <TextBlock Text="{Binding SearchHotkeyText}" FontSize="13" />
+                    </Border>
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Разбор входящих" Description="Открыть сессию разбора «Загрузок»">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Download" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <Border Classes="chip" Padding="10,4">
+                        <TextBlock Text="{Binding InboxHotkeyText}" FontSize="13" />
+                    </Border>
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Показывать на мониторе с курсором" Description="Иначе — на мониторе с активным окном">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="DockLeft" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding ShowOnCursorScreen, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+
+            <TextBlock Classes="section" Text="Индекс" />
+            <ui:FASettingsExpander Header="Корни"
+                                   Description="Папки и диски, по которым идёт поиск"
+                                   IsExpanded="True"
+                                   ItemsSource="{Binding Roots}">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Folder" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <Button Content="Добавить…" />
+                </ui:FASettingsExpander.Footer>
+                <ui:FASettingsExpander.ItemTemplate>
+                    <DataTemplate DataType="x:String">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <ic:SymbolIcon Symbol="Folder" FontSize="18" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ui:FASettingsExpander.ItemTemplate>
+            </ui:FASettingsExpander>
+
+            <TextBlock Classes="section" Text="Поведение" />
+            <ui:FASettingsExpander Header="Запускать вместе с Windows" Description="Свёрнутым в трей, чтобы хоткей работал сразу после входа">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Go" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding StartWithWindows, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Закрывать главное окно в трей" Description="Крестик прячет окно; выход — из меню трея">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="BackToWindow" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding CloseToTray, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Напоминать о разборе входящих" Description="{Binding ReminderText}">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Alert" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding RemindAboutInbox, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+
+            <TextBlock Classes="section" Text="О программе" />
+            <ui:FASettingsExpander Header="DiskApp" Description="{Binding VersionText}">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Help" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <HyperlinkButton Content="Репозиторий на GitHub" NavigateUri="{Binding RepositoryUri}" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

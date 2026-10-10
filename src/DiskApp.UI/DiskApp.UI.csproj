@@ -19,4 +19,12 @@
     <PackageReference Include="FluentIcons.Avalonia" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="DiskApp.UI.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="460"
+             x:Class="DiskApp.UI.Views.QuickSearchView"
+             x:DataType="vm:QuickSearchViewModel"
+             Design.DataContext="{x:Static vm:DesignData.QuickSearch}">
+    <!-- Содержимое быстрого поиска: поле ввода, заголовок секции, список результатов или «ничего не найдено»,
+         строка состояния. Клавиши обрабатываются в code-behind на этапе туннелирования, чтобы стрелки
+         управляли списком, а фокус оставался в поле ввода. -->
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <TextBox Grid.Row="0"
+                 x:Name="QueryBox"
+                 Classes="search"
+                 Text="{Binding Query, Mode=TwoWay}"
+                 PlaceholderText="Найти файл или папку…">
+            <TextBox.InnerLeftContent>
+                <ic:SymbolIcon Symbol="Search"
+                               FontSize="20"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            </TextBox.InnerLeftContent>
+        </TextBox>
+
+        <TextBlock Grid.Row="1"
+                   Classes="section"
+                   Margin="6,10,0,2"
+                   Text="{Binding SectionHeader}"
+                   IsVisible="{Binding HasSectionHeader}" />
+
+        <Panel Grid.Row="2" Margin="0,4,0,0">
+            <ListBox x:Name="ResultsList"
+                     Classes="results"
+                     ItemsSource="{Binding Results}"
+                     SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
+                     ItemTemplate="{StaticResource FileHitTemplate}"
+                     SelectionMode="Single"
+                     IsVisible="{Binding ShowResults}" />
+            <StackPanel IsVisible="{Binding ShowEmptyState}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+                <ic:SymbolIcon Symbol="DocumentSearch"
+                               FontSize="40"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                <TextBlock Classes="secondary" Text="Ничего не найдено" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Panel>
+
+        <DockPanel Grid.Row="3" Margin="6,8,6,0">
+            <TextBlock DockPanel.Dock="Right"
+                       Classes="tertiary"
+                       FontSize="12"
+                       Margin="12,0,0,0"
+                       Text="↑↓ выбрать · Enter открыть · Esc закрыть" />
+            <TextBlock Classes="secondary"
+                       FontSize="12"
+                       TextTrimming="CharacterEllipsis"
+                       Text="{Binding StatusText}" />
+        </DockPanel>
+    </Grid>
+</UserControl>

@@ -2,12 +2,58 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="DiskApp.UI.Views.MainView">
-    <!-- Каркас этапа 0.3: пустое содержимое главного окна. Оболочка с NavigationView появится в этапе 8.1. -->
-    <TextBlock x:Name="PlaceholderText"
-               Text="DiskApp"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               Theme="{StaticResource TitleTextBlockStyle}" />
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             x:Class="DiskApp.UI.Views.MainView"
+             x:DataType="vm:MainViewModel"
+             Design.DataContext="{x:Static vm:DesignData.Main}">
+    <!-- Оболочка главного окна: NavigationView слева со страницами из MainViewModel, InfoBar для уведомлений,
+         содержимое страницы с плавным переходом. Страницы подбираются по DataTemplates из App.axaml. -->
+    <ui:FANavigationView x:Name="Navigation"
+                         PaneDisplayMode="Left"
+                         OpenPaneLength="236"
+                         CompactModeThresholdWidth="640"
+                         ExpandedModeThresholdWidth="960"
+                         IsBackButtonVisible="False"
+                         IsSettingsVisible="False"
+                         IsPaneToggleButtonVisible="True"
+                         MenuItemsSource="{Binding Pages}"
+                         FooterMenuItemsSource="{Binding FooterPages}"
+                         SelectedItem="{Binding SelectedPage, Mode=TwoWay}">
+        <ui:FANavigationView.MenuItemTemplate>
+            <DataTemplate DataType="vm:PageViewModel">
+                <ui:FANavigationViewItem Content="{Binding Title}">
+                    <ui:FANavigationViewItem.IconSource>
+                        <ui:FASymbolIconSource Symbol="{Binding Icon}" />
+                    </ui:FANavigationViewItem.IconSource>
+                    <ui:FANavigationViewItem.InfoBadge>
+                        <ui:FAInfoBadge Value="{Binding BadgeValue}" IsVisible="{Binding HasBadge}" />
+                    </ui:FANavigationViewItem.InfoBadge>
+                </ui:FANavigationViewItem>
+            </DataTemplate>
+        </ui:FANavigationView.MenuItemTemplate>
+
+        <ui:FANavigationView.PaneFooter>
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="16,8,16,8">
+                <Ellipse Width="8" Height="8" VerticalAlignment="Center" Fill="{DynamicResource SystemFillColorSuccessBrush}" />
+                <TextBlock Classes="secondary" FontSize="12" VerticalAlignment="Center" Text="{Binding IndexStatusShort}" />
+            </StackPanel>
+        </ui:FANavigationView.PaneFooter>
+
+        <Grid RowDefinitions="Auto,*">
+            <ui:FAInfoBar Grid.Row="0"
+                          Margin="28,8,28,0"
+                          IsOpen="{Binding IsNoticeOpen, Mode=TwoWay}"
+                          Title="{Binding NoticeTitle}"
+                          Message="{Binding NoticeMessage}"
+                          Severity="{Binding NoticeSeverity}"
+                          IsClosable="True" />
+            <TransitioningContentControl Grid.Row="1" Content="{Binding SelectedPage}">
+                <TransitioningContentControl.PageTransition>
+                    <CrossFade Duration="0:0:0.2" />
+                </TransitioningContentControl.PageTransition>
+            </TransitioningContentControl>
+        </Grid>
+    </ui:FANavigationView>
 </UserControl>
