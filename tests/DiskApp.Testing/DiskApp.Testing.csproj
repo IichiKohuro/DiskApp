@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Общие помощники тестов: фикстуры временных папок и баз SQLite с гарантированной очисткой (PLAN.md, этап 0.4).
+       Библиотека, а не тестовый проект: без xunit, в dotnet test не попадает. Все тестовые проекты получают
+       ссылку на неё и глобальный using DiskApp.Testing автоматически из tests/Directory.Build.targets. -->
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+
+</Project>

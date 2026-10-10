@@ -18,4 +18,10 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- Фикстуры из DiskApp.Testing (временные папки и базы) доступны каждому тестовому проекту без явной ссылки. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)DiskApp.Testing/DiskApp.Testing.csproj" />
+    <Using Include="DiskApp.Testing" />
+  </ItemGroup>
+
 </Project>
