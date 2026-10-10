@@ -55,8 +55,8 @@
 
 ### Текущая позиция
 
-> **Этап 1 → подэтап 1.1 «Модель домена (`DiskApp.Core`)».**
-> 2026-10-10: этап 0 закрыт целиком — окружение, каркас, CI, спайки S1–S4 с ADR 0002–0006, защита ветки `main`, документация (README с разделом «Статус» и замерами, ARCHITECTURE со схемой запуска, цепочкой хоткея, составом оболочки и итогами спайков). Сверх плана готов прототип интерфейса этапов 6–7 на макетных данных. 143 теста зелёные, CI зелёный. Дальше по порядку: 1.1 модель домена → 1.2 интерфейсы инфраструктуры → 1.3 SQLite-хранилище.
+> **Этап 2 → подэтап 2.1 «Сканер».**
+> 2026-10-10: этап 1 закрыт — домен, пути, модель запросов, интерфейсы и шина событий в `DiskApp.Core`; схема V001 с FTS5, мигратор, единственный писатель, восстановление, репозитории, `AppPaths` и JSON-хранилище настроек в `DiskApp.Infrastructure`. Покрытие `Core` 89 % строк, бенчмарки в бюджете (вставка 100 тыс. — 4,07 с, переименование 50 тыс. — 184 мс), 370 тестов зелёные. Хранилище ещё не подключено к интерфейсу: это сделает этап 5 через API. Дальше: 2.1 сканер → 2.2 конвейер записи → 2.3 наблюдатель.
 
 ### Протокол сессии
 
@@ -237,51 +237,51 @@
 
 ### Этап 1 — Ядро: домен и хранилище
 
-**Статус:** ⬜ · **Объём:** M · **Версия:** v0.2 · **Зависит от:** 0
+**Статус:** ✅ 2026-10-10 · **Объём:** M · **Версия:** v0.2 · **Зависит от:** 0
 
 **Цель.** Модель предметной области, интерфейсы инфраструктуры и работающее SQLite-хранилище с миграциями, одним писателем и тестами.
 
 #### 1.1 Модель домена (`DiskApp.Core`)
 
-- [ ] `Root`: Id, Path, Label, IsEnabled, IncludeHidden, IncludeSystem, MaxDepth, LastScanUtc, Status (Online / Offline / Scanning / Paused / Error), ErrorMessage
-- [ ] `FileEntry`: Id, RootId, ParentId?, Name, Extension (нижний регистр, без точки), IsDirectory, Size, CreatedUtc, ModifiedUtc, Attributes, RelPath, FullPath (вычисляемый), Kind
-- [ ] `FileKind`: Image, Video, Audio, Document, Spreadsheet, Presentation, Pdf, Archive, Code, Executable, Shortcut, Folder, Other; таблица расширение → вид с возможностью переопределения в настройках
-- [ ] `Tag` (Id, Name, Color), `Favorite` (EntryId, Order, PinnedUtc), `UsageStat` (EntryId, OpenCount, LastOpenedUtc), `Collection` (Id, Name, Kind: Manual | SavedQuery, Query?), `ExclusionRule` (Pattern, Kind: Glob | Hidden | System | Size | Depth)
-- [ ] `SearchQuery` (термы, фразы, фильтры, отрицания, сортировка, лимит, курсор), `SearchHit` (Entry, Score, диапазоны подсветки имени и пути, причина ранга для отладки), `SearchPage`
-- [ ] Ошибки домена через `Result<T>`/коды, без исключений в горячих путях
-- [ ] Нормализация путей: регистр буквы диска, разделители, завершающий слэш, префикс `\\?\` для длинных путей, UNC; сравнение путей без учёта регистра на Windows
-- [ ] Юнит-тесты: классификация расширений, валидация корня (абсолютный путь, вложенность корней — предупреждение), нормализация путей, построение `FullPath`
+- [x] `Root`: Id, Path, Label, IsEnabled, IncludeHidden, IncludeSystem, MaxDepth, LastScanUtc, Status (Online / Offline / Scanning / Paused / Error), ErrorMessage — записи `Domain/Root.cs`, `RootStatus`
+- [x] `FileEntry`: Id, RootId, ParentId?, Name, Extension (нижний регистр, без точки), IsDirectory, Size, CreatedUtc, ModifiedUtc, Attributes, RelPath, FullPath (вычисляемый), Kind — `FileEntry.Create` выводит имя, расширение и вид из относительного пути; `GetFullPath(root)` склеивает с корнем; `Depth`, флаги скрытого, системного, reparse point
+- [x] `FileKind`: Image, Video, Audio, Document, Spreadsheet, Presentation, Pdf, Archive, Code, Executable, Shortcut, Folder, Other; таблица расширение → вид с возможностью переопределения в настройках — `FileKindMap.Default` (≈200 расширений, `FrozenDictionary`) и `With(overrides)`
+- [x] `Tag` (Id, Name, Color), `Favorite` (EntryId, Order, PinnedUtc), `UsageStat` (EntryId, OpenCount, LastOpenedUtc, `Frecency(now, halfLife)`), `Collection` (Id, Name, Kind: Manual | SavedQuery, Query?), `ExclusionRule` (Kind: Glob | Hidden | System | Size | Depth, Pattern; фабрики и `Defaults`)
+- [x] `SearchQuery` (термы, фразы, фильтры, отрицания, сортировка, лимит, курсор), `SearchHit` (Entry, Score, диапазоны подсветки имени и пути, причина ранга для отладки), `SearchPage` — `Search/`; ключ фильтра `is:` назван `Attribute`, `in:` — `Folder` (CA1716)
+- [x] Ошибки домена через `Result<T>`/коды, без исключений в горячих путях — `Results/Result`, `Result<T>` (структуры, `default` считается ошибкой), `DomainError(Code, Message)`
+- [x] Нормализация путей: регистр буквы диска, разделители, завершающий слэш, префикс `\\?\` для длинных путей, UNC; сравнение путей без учёта регистра на Windows — `Paths/PathNormalizer` со стилями `Windows` и `Posix` (явно, не из ОС: тесты одинаковы на любой платформе), `Combine`, `TryGetRelativePath`, `IsNestedIn`, `ToExtendedLength`
+- [x] Юнит-тесты: классификация расширений, валидация корня (абсолютный путь, вложенность корней — предупреждение), нормализация путей, построение `FullPath` — 138 тестов в `tests/DiskApp.Core.Tests` (`Paths`, `Domain`, `Results`, `Search`)
 
 #### 1.2 Интерфейсы инфраструктуры (`DiskApp.Core`)
 
-- [ ] Репозитории: `IFileIndexRepository` (bulk upsert, delete subtree, rename subtree, children, by id / by path, counts), `IRootRepository`, `IUsageRepository`, `IFavoriteRepository`, `ITagRepository`, `ICollectionRepository`, `IQueryHistoryRepository`
-- [ ] `ISettingsStore<T>` с уведомлением об изменениях; `IClock`; `IAppPaths`; `IFileSystem` (System.IO.Abstractions); `IFileSystemWatcherFactory`
-- [ ] `IPlatformShell`: Open, OpenWith, RevealInExplorer, ShowProperties, MoveToRecycleBin, RunAsAdmin, CopyPathsToClipboard, CopyFilesToClipboard
-- [ ] `IIconProvider`: иконка по расширению, иконка конкретного файла, миниатюра заданного размера
-- [ ] `IIndexEventBus`: EntriesChanged (пакет), IndexProgress, RootStatusChanged, OperationProgress, OperationCompleted — внутренняя шина, из которой сервер транслирует события в SignalR
+- [x] Репозитории: `IFileIndexRepository` (bulk upsert с `UpsertResult`, delete subtree, rename subtree, sweep, children, by id / by path / many, stats, count), `IRootRepository`, `IUsageRepository`, `IFavoriteRepository`, `ITagRepository`, `ICollectionRepository`, `IQueryHistoryRepository` — `Repositories/`
+- [x] `ISettingsStore<T>` с уведомлением об изменениях (`Subscribe`); `IClock` + `SystemClock`; `IAppPaths`; `IFileSystem` и `IFileSystemWatcherFactory` — из System.IO.Abstractions как есть, свои интерфейсы не дублируются
+- [x] `IPlatformShell`: Open, OpenWith, RevealInExplorer, ShowProperties, MoveToRecycleBin, RunAsAdmin, CopyPathsToClipboard, CopyFilesToClipboard — возвращают `Result`
+- [x] `IIconProvider`: иконка по расширению, иконка конкретного файла, миниатюра заданного размера — `RasterImage` (PNG, размеры)
+- [x] `IIndexEventBus`: EntriesChanged (пакет), IndexProgress, RootStatusChanged, OperationProgress, OperationCompleted — записи событий в `Events/`, реализация в памяти `IndexEventBus` (неизменяемые списки подписчиков, изоляция ошибок обработчиков, 14 тестов)
 
 #### 1.3 SQLite: схема и миграции (`DiskApp.Infrastructure`)
 
-- [ ] Фабрика подключений: путь из `IAppPaths`; PRAGMA при открытии: `journal_mode=WAL`, `synchronous=NORMAL`, `temp_store=MEMORY`, `cache_size=-65536`, `mmap_size=268435456`, `foreign_keys=ON`, `busy_timeout=5000`
-- [ ] Миграции: таблица `schema_version`; скрипты `V001__init.sql`, … как встроенные ресурсы; применение по порядку в транзакции при старте; тест апгрейда от V001 до текущей
-- [ ] Схема V001: `roots`; `entries` с `UNIQUE(root_id, rel_path)` и индексами `(root_id, parent_id)`, `name COLLATE NOCASE`, `ext`, `modified_utc`, `size`, `kind`; `entries_fts` (FTS5, `tokenize='trigram'`, external content на `entries`, триггеры синхронизации); `usage`; `favorites`; `tags`; `entry_tags`; `collections`; `collection_items`; `query_history`; `meta`; `scan_log`
-- [ ] Один писатель: `SqliteWriteQueue` на `Channel` — все записи проходят через него; чтение через пул соединений
-- [ ] Проверка `PRAGMA quick_check` при старте; восстановление: переименовать повреждённый файл в `index.corrupt-<дата>.db`, создать новый, пометить корни на полное сканирование, уведомить
-- [ ] `VACUUM`/`PRAGMA optimize` по расписанию при простое
+- [x] Фабрика подключений: путь из `IAppPaths` (через `SqliteDatabase(path)`); PRAGMA при открытии: `journal_mode=WAL`, `synchronous=NORMAL`, `temp_store=MEMORY`, `cache_size=-65536`, `mmap_size=268435456`, `foreign_keys=ON`, `busy_timeout=5000` — `SqliteConnectionFactory`, тест проверяет каждую PRAGMA
+- [x] Миграции: таблица `schema_version`; скрипты `V001__init.sql`, … как встроенные ресурсы; применение по порядку в транзакции при старте; тест апгрейда от V001 до текущей — `SqliteMigrator` (имена `V###__name.sql`, версии подряд с 1)
+- [x] Схема V001: `roots`; `entries` с `UNIQUE(root_id, rel_path)` и индексами `(root_id, parent_id)`, `name_folded` (вместо `name COLLATE NOCASE`, ADR-0005), `ext`, `modified_utc`, `size`, `kind`, `(root_id, scan_id)`; `entries_fts` (FTS5 только по имени, `tokenize='trigram'`, external content на `entries`, триггеры синхронизации); `usage`; `favorites`; `tags` (с `name_folded`); `entry_tags`; `collections`; `collection_items`; `query_history`; `meta`; `scan_log`. Даты — текст ISO 8601 UTC (`SqliteTime`), Dapper настроен на `snake_case` и этот формат
+- [x] Один писатель: `SqliteWriter` (имя `SqliteWriteQueue` отклонил анализатор CA1711) на `Channel` с выделенным потоком и одним соединением — все записи проходят через него; чтение через пул соединений; тест подтверждает чтение снимка в WAL во время открытой транзакции писателя
+- [x] Проверка `PRAGMA quick_check` при старте; восстановление: повреждённый файл переименовывается в `index.corrupt-<дата>.db`, создаётся новый, итог `DatabaseInitialization.WasRecovered` для уведомления и полного сканирования (само сканирование — этап 2)
+- [x] `VACUUM`/`PRAGMA optimize` — методы `SqliteDatabase.OptimizeAsync` и `VacuumAsync` через писателя; расписание при простое — этап 10
 
 #### 1.4 Репозитории (`DiskApp.Infrastructure`)
 
-- [ ] `SqliteFileIndexRepository`: upsert пакетами (подготовленные команды, транзакция на пакет), `DeleteSubtree(rootId, relPathPrefix)`, `RenameSubtree(rootId, oldPrefix, newPrefix)` одним `UPDATE`, `MarkSweep(rootId, scanId)`, `GetChildren(parentId, sort, page)`, `GetByPath`, `GetStats(rootId)`
-- [ ] Остальные репозитории; `UsageRepository.RecordOpen` с инкрементом и datetime, расчёт decay на стороне запроса
-- [ ] Интеграционные тесты на временном файле БД (фикстура с удалением): CRUD, уникальность, каскады, rename subtree, mark-sweep, параллельные чтения во время записи, `quick_check` после нагрузки
-- [ ] Микробенчмарки: вставка 100 тыс. записей ≤ 5 с; rename subtree на 50 тыс. записей ≤ 200 мс
+- [x] `SqliteFileIndexRepository`: upsert пакетами (три подготовленных запроса на строку — пометить неизменённую, вставить, обновить; транзакция на пакет; родитель подзапросом по `rel_path`), `DeleteSubtreeAsync` и `RenameSubtreeAsync` диапазоном по `rel_path` (узел отдельным `UPDATE` с именем, расширением, видом и родителем, потомки одним `UPDATE` префикса), `SweepAsync(rootId, scanId)`, `GetChildrenAsync(parentId, sort, page)` (папки первыми), `GetByPathAsync`, `GetStatsAsync(rootId)`; число удалённых считается отдельным `COUNT`, потому что каскад по `parent_id` опережает `DELETE`
+- [x] Остальные репозитории (корни, статистика с `ON CONFLICT DO UPDATE`, избранное с порядком, теги с `name_folded`, коллекции с элементами, история запросов с подсказками без учёта регистра); decay считается в `UsageStat.Frecency`
+- [x] Интеграционные тесты на временном файле БД (фикстура `IndexTestContext` поверх `TemporaryDirectory`): CRUD, уникальность, каскады, rename subtree, mark-sweep, чтение во время записи, `quick_check` после 20 тыс. записей — 33 теста
+- [x] Микробенчмарки `tests/DiskApp.Benchmarks/Sqlite/FileIndexBenchmarks`: вставка 100 тыс. записей 4,07 с (≤ 5 с), rename subtree на 50 тыс. записей 184 мс (≤ 200 мс); результаты в ARCHITECTURE, раздел 16
 
 #### 1.5 Настройки и пути
 
-- [ ] `AppPaths`: `%LocalAppData%\DiskApp` или `.\data` при наличии файла `portable` рядом с exe либо флага `--portable`; создание `logs`, `cache`, `cache\icons`, `cache\thumbs`
-- [ ] `settings.json` через System.Text.Json source generation; версия схемы настроек и миграция; атомарная запись (временный файл + переименование); уведомления об изменениях
-- [ ] Значения по умолчанию: хоткей, тема, фон, исключения, лимиты поиска, поведение трея
-- [ ] Тесты: чтение/запись, миграция старой версии, повреждённый файл → резервная копия и значения по умолчанию
+- [x] `AppPaths` (`DiskApp.Infrastructure`, реализует `IAppPaths`; заменил внутренний `AppPaths` десктопа): `%LocalAppData%\DiskApp` или `.\data` при наличии файла `portable` рядом с exe либо флага `--portable`; создание `logs`, `cache\icons`, `cache\thumbs`, `backups`
+- [x] `settings.json` через System.Text.Json source generation (`AppSettingsJsonContext`); версия схемы и миграции «с версии N» над `JsonObject` до чтения; атомарная запись (`settings.json.tmp` + `File.Move` с заменой); уведомления об изменениях (`Subscribe`) — `JsonSettingsStore<T>`, `AppSettingsStore`. Свойства настроек объявлены с `set`: генератор затирает значения по умолчанию у отсутствующих `init`-полей (проверено экспериментом)
+- [x] Значения по умолчанию: хоткей `Ctrl+Alt+D`, тема вслед за системой, фон Mica, исключения `ExclusionRule.Defaults`, лимиты поиска (страница 50, кандидатов 5 000), поведение трея (старт свёрнутым, закрытие в трей) — `AppSettings.Default` в `DiskApp.Core.Settings`
+- [x] Тесты: чтение/запись, миграция старой версии, повреждённый файл → `settings.corrupt-<дата>.json` и значения по умолчанию, подписки, формат JSON, `AppPaths` в обоих режимах — 12 тестов
 
 **Критерии готовности этапа 1**
 
@@ -1222,3 +1222,4 @@
 | 2026-10-10 | Подэтап 0.6 завершён: S1 и S2 закрыты прототипом и кодом (одиночный экземпляр `Mutex` + именованный канал, метки старта `StartupTimer`, `shared` sink Serilog; `tests/DiskApp.Desktop.Tests` — седьмой проект в `tests/`), S3 и S4 — проектами в `spikes/` (закоммичены вне решения для воспроизводимости, анализаторы отключены), S5 отложен до 2.3. ADR 0002–0005. Решение 4 уточнено (FTS только по имени, подстрока с 3 символов, 1–2 — префикс по `name_folded`, без `LIKE` для кириллицы, без `bm25`), решение 7 — message-only окно; бюджет БД 600 → 250 МБ. Замеры: трей 917 мс, окно поиска 82/1 мс, Kestrel 138 мс и +17 МБ, FTS по имени 161 МБ и 129 тыс. строк/с. Текущая позиция — подэтап 0.7 |
 | 2026-10-10 | Решение 15 изменено по просьбе пользователя: сочетание быстрого поиска `Ctrl+Alt+D` с запасными `Ctrl+Alt+F` и `Ctrl+Alt+Space` (ADR-0006, вопрос 14 закрыт); оболочка регистрирует первое свободное и показывает действующее в настройках (`HotkeyStatus`). Имя сборки из `scripts/publish.ps1`: `diskapp_v{версия}_{стадия}[_singlefile].exe`, стадия (alpha/beta/rc/release) попадает в версию как суффикс SemVer |
 | 2026-10-10 | Подэтап 0.7 завершён, этап 0 закрыт: README получил раздел «Статус» с таблицей замеров против бюджетов, бейджи и цифры спайков; ARCHITECTURE — схему запуска по коду, цепочку хоткея, состав оболочки, итоги спайков и замеры с бюджетами. Защита ветки `main` включена (`gh` авторизован на машине пользователя). Критерии готовности этапа 0 выполнены: SDK и Git работают, build/test/format зелёные локально и в CI, S1–S4 закрыты ADR. Текущая позиция — этап 1, подэтап 1.1 |
+| 2026-10-10 | Этап 1 завершён (1.1–1.5). Отклонения от формулировок плана: `SqliteWriteQueue` → `SqliteWriter`, `Collection` оставлен с подавлением CA1711, `Error` → `DomainError` (CA1716); ключи фильтров `is:`/`in:` в модели названы `Attribute`/`Folder`; индекс `name COLLATE NOCASE` заменён на `name_folded` по ADR-0005; `IFileSystemWatcherFactory` взят из System.IO.Abstractions; свойства настроек с `set`, а не `init` (генератор System.Text.Json затирает значения по умолчанию у отсутствующих полей). Критерии готовности: покрытие `Core` 89 % строк, бенчмарки в бюджете (4,07 с и 184 мс), ER-схема в ARCHITECTURE дополнена `name_folded`, `created_utc`, `error_message`. Внутренний `AppPaths` десктопа заменён на `DiskApp.Infrastructure.AppPaths`. Тестов 370. Текущая позиция — этап 2, подэтап 2.1 |

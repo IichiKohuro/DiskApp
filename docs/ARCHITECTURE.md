@@ -53,7 +53,7 @@ flowchart LR
 | Headless | `DiskApp.Server.Host` или `DiskApp.Desktop --headless` | По настройке | Как в удалённом | 4 (опц.), 13 |
 | Удалённый | Тот же сервер с включённым доступом по сети | Выбранные интерфейсы LAN, фиксированный порт, HTTPS | Токены сопряжённых устройств, права на устройство | 13 |
 
-Состояние после этапа 0: в коде живут `DiskApp.Desktop` (оболочка, окна, Win32) и `DiskApp.UI` (страницы на макете `ISearchService`); `Core`, `Infrastructure`, `Contracts`, `Server` и `Client` — пустые проекты с архитектурными и дымовыми тестами. Спайки S3 и S4 подтвердили, что сервер внутри процесса и FTS5 укладываются в бюджеты (раздел 16), поэтому схема выше остаётся целевой без изменений.
+Состояние после этапа 1: `DiskApp.Core` содержит домен, интерфейсы инфраструктуры, шину событий и модель настроек; `DiskApp.Infrastructure` — SQLite (схема, миграции, писатель, репозитории), пути и JSON-хранилище настроек; `DiskApp.Desktop` (оболочка, окна, Win32) и `DiskApp.UI` (страницы на макете `ISearchService`) работают с этапа 0. `Contracts`, `Server` и `Client` — пустые проекты с архитектурными и дымовыми тестами; сканер (этап 2) и поиск (этап 3) ещё не связывают их. Спайки S3 и S4 подтвердили, что сервер внутри процесса и FTS5 укладываются в бюджеты (раздел 16), поэтому схема выше остаётся целевой без изменений.
 
 ## 2. Проекты и зависимости
 
@@ -151,19 +151,25 @@ flowchart LR
 | Обычный | `%LocalAppData%\DiskApp\` |
 | Портативный (файл `portable` рядом с exe или флаг `--portable`) | `.\data\` рядом с exe |
 
-Внутри: `index.db` (+ `-wal`, `-shm`), `settings.json`, `backups\`, `cache\icons\`, `cache\thumbs\`, `logs\`.
+Внутри: `index.db` (+ `-wal`, `-shm`), `settings.json`, `backups\`, `cache\icons\`, `cache\thumbs\`, `logs\`. Пути считает `AppPaths` (`DiskApp.Infrastructure`, реализация `IAppPaths`): режим выбирается по файлу `portable` рядом с exe или аргументу `--portable`, папки журналов, кэша и резервных копий создаются при разрешении путей.
 
 ### Настройки
 
-`settings.json` сериализуется через System.Text.Json с source generation. Файл содержит версию схемы настроек; при повышении версии выполняется миграция, при повреждении файл откладывается в `settings.corrupt-<дата>.json` и берутся значения по умолчанию. Запись атомарная: временный файл и переименование. Изменения публикуются подписчикам (аналог `IOptionsMonitor`) и в SignalR (`OnSettingsChanged`).
+Этап 1.5. Модель — запись `AppSettings` в `DiskApp.Core.Settings` (горячие клавиши, внешний вид, индексация с правилами исключений, поиск, трей) с константой версии схемы. Хранилище — `JsonSettingsStore<T>` (`ISettingsStore<T>`) поверх System.Text.Json с source generation (`AppSettingsJsonContext`: camelCase, перечисления строками, отступы для правки руками). При чтении файл разбирается в `JsonObject`, по полю `schemaVersion` применяются миграции «с версии N» (словарь правок JSON), после чего версия поднимается до текущей и файл перезаписывается; отсутствующий файл даёт значения по умолчанию без записи; повреждённый откладывается в `settings.corrupt-<дата>.json`, берутся значения по умолчанию, итог возвращается в `SettingsLoadResult`. Запись атомарная: `settings.json.tmp` со сбросом на диск и `File.Move` с заменой. Подписчики `Subscribe` получают каждое сохранение; трансляция в SignalR (`OnSettingsChanged`) — этап 4.
+
+Свойства настроек объявлены с `set`, а не `init`: генератор System.Text.Json строит объект инициализатором и затирает значения по умолчанию у полей, которых нет в файле. Договорённость: экземпляр из хранилища не меняется на месте, изменение — копия через `with` и `SaveAsync`.
 
 ### SQLite
 
-Параметры подключения: `journal_mode=WAL`, `synchronous=NORMAL`, `temp_store=MEMORY`, `cache_size=-65536` (64 МБ), `mmap_size=256 МБ`, `foreign_keys=ON`, `busy_timeout=5000`. Один писатель — `SqliteWriteQueue` поверх `Channel`, все изменения идут через него пакетами в транзакциях; чтение — из пула соединений параллельно. При старте `PRAGMA quick_check`; при сбое файл переименовывается, создаётся новый, корни помечаются на пересканирование, пользователю предлагается последняя проверенная резервная копия (этап 16.1).
+Этап 1.3. `SqliteConnectionFactory` открывает соединения из пула Microsoft.Data.Sqlite и на каждом применяет PRAGMA: `journal_mode=WAL`, `synchronous=NORMAL`, `temp_store=MEMORY`, `cache_size=-65536` (64 МБ), `mmap_size=256 МБ`, `foreign_keys=ON`, `busy_timeout=5000`. Один писатель — `SqliteWriter`: выделенный поток с одним постоянным соединением читает задания из `Channel`; задание — синхронный делегат, его исключение возвращается вызывающему и не останавливает очередь. Чтение — из пула соединений параллельно, в WAL читатель видит снимок и не ждёт писателя (проверено тестом). `SqliteDatabase` при старте делает `PRAGMA quick_check`; повреждённый файл (или не-база) переименовывается в `index.corrupt-<дата>.db`, создаётся новый, итог `DatabaseInitialization.WasRecovered` сообщает оболочке, что индекс надо построить заново; предложение резервной копии — этап 16.1. Обслуживание: `OptimizeAsync` (`PRAGMA optimize` и усечение WAL), `VacuumAsync`; расписание при простое — этап 10.
 
-Миграции — SQL-скрипты `V001__init.sql`, `V002__…` во встроенных ресурсах `DiskApp.Infrastructure`, применяются по порядку в транзакции, версия хранится в `schema_version`.
+Даты хранятся текстом ISO 8601 в UTC с семью знаками долей секунды (`SqliteTime`), поэтому порядок строк совпадает с хронологическим; Dapper настроен на `snake_case` → `PascalCase` и этот формат дат (`DapperConfiguration`).
 
-### Схема (этапы 1, 3, 8; таблицы этапов 16 и 17 отмечены)
+Миграции — SQL-скрипты `V001__init.sql`, `V002__…` во встроенных ресурсах `DiskApp.Infrastructure` (`Sqlite/Migrations`), `SqliteMigrator` применяет недостающие по порядку, каждую в своей транзакции вместе с записью в `schema_version`; тест проверяет апгрейд с первой версии до текущей.
+
+Репозитории (этап 1.4, `Sqlite/Repositories`) реализуют интерфейсы `DiskApp.Core.Repositories`: чтение в отдельном соединении на пуле потоков, запись через `SqliteWriter`. `SqliteFileIndexRepository.UpsertAsync` — три подготовленных запроса на строку в одной транзакции: пометить неизменённую строку текущим `scan_id` (совпали размер, время, атрибуты, имя), вставить новую (`ON CONFLICT DO NOTHING`), иначе обновить; родитель определяется подзапросом по `rel_path` родительской папки, поэтому папки в пакете идут раньше детей. Поддеревья удаляются и переименовываются диапазоном `rel_path >= 'путь\' AND rel_path < 'путь]'` по индексу `UNIQUE(root_id, rel_path)`; число удалённых считается отдельным `COUNT` в той же транзакции, потому что каскад по `parent_id` удаляет детей раньше, чем до них доходит `DELETE`.
+
+### Схема (V001 реализована в этапе 1.3; таблицы этапов 16 и 17 отмечены и появятся позже)
 
 ```mermaid
 erDiagram
@@ -188,13 +194,16 @@ erDiagram
         integer include_system
         integer max_depth
         text last_scan_utc
-        text status
+        integer status
+        text error_message
+        text created_utc
     }
     entries {
         integer id PK
         integer root_id FK
         integer parent_id FK
         text name
+        text name_folded
         text ext
         integer is_dir
         integer size
@@ -218,6 +227,7 @@ erDiagram
     tags {
         integer id PK
         text name
+        text name_folded
         text color
     }
     entry_tags {
@@ -268,9 +278,9 @@ erDiagram
     }
 ```
 
-Вне диаграммы: виртуальная таблица `entries_fts` (FTS5, `tokenize='trigram'`, external content на `entries`, синхронизируется триггерами), `query_history`, `meta`, `scan_log`, `schema_version`, а также таблицы правил разбора `triage_rules` (этап 17.5), резервных копий `backups` и заданий `backup_jobs` (этап 16).
+Вне диаграммы: виртуальная таблица `entries_fts` (FTS5 только по `name`, `tokenize='trigram'`, external content на `entries`, синхронизируется триггерами на вставку, удаление и изменение имени), `query_history` (запрос, счётчик, время), `meta`, `scan_log`, `schema_version`, а также таблицы правил разбора `triage_rules` (этап 17.5), резервных копий `backups` и заданий `backup_jobs` (этап 16).
 
-Индексы на `entries`: `UNIQUE(root_id, rel_path)`, `(root_id, parent_id)`, `name_folded` (имя в нижнем регистре по правилам .NET — `COLLATE NOCASE` не сворачивает кириллицу, ADR-0005), `ext`, `modified_utc`, `size`, `kind`.
+Индексы на `entries`: `UNIQUE(root_id, rel_path)`, `(root_id, parent_id)`, `name_folded` (имя в нижнем регистре по правилам .NET — `COLLATE NOCASE` не сворачивает кириллицу, ADR-0005), `ext`, `modified_utc`, `size`, `kind`, `(root_id, scan_id)` для mark-and-sweep. Внешние ключи с `ON DELETE CASCADE`: удаление корня убирает его записи, статистику, избранное, привязки тегов и элементы коллекций; `parent_id` каскадирует на поддерево как страховка от сирот.
 
 ## 5. Индексация
 
@@ -472,3 +482,5 @@ CI — GitHub Actions на `windows-latest` (`.github/workflows/ci.yml`): SDK п
 | 2026-10-10 | то же, спайк S4 | Размер БД на 1 млн записей, FTS по имени | ≤ 250 МБ | 161 МБ |
 | 2026-10-10 | то же, спайк S4 | Поиск от 3 символов, trigram `MATCH` (`COUNT`) | < 50 мс | 0,6–5 мс при 9–35 тыс. совпадений; с `ORDER BY rank` 22–34 мс, на очень частой триграмме 532 мс — поэтому ранг свой |
 | 2026-10-10 | то же, спайк S4 | Поиск по 2 символам (полный скан `LIKE`) | < 50 мс | 140–390 мс — вне бюджета, заменён префиксом по `name_folded` (ADR-0005) |
+| 2026-10-10 | то же, Intel Core Ultra 7 155H, BenchmarkDotNet 0.15.8, Release, `tests/DiskApp.Benchmarks` | `SqliteFileIndexRepository.UpsertAsync`: 100 тыс. записей пакетами по 5 тыс. (этап 1.4) | ≤ 5 с | 4,07 с (24,6 тыс. строк/с; три запроса на строку плюс подзапрос родителя), 358 МБ выделений |
+| 2026-10-10 | то же | `RenameSubtreeAsync`: поддерево на 50 тыс. записей (этап 1.4) | ≤ 200 мс | 184 мс — в бюджете с небольшим запасом; основная стоимость — перестроение индекса `rel_path` |
