@@ -48,6 +48,12 @@ public interface IDiskAppApi
     /// <summary>Пересобрать индекс.</summary>
     Task RebuildIndexAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>Приостановить всю индексацию.</summary>
+    Task<IndexStatusDto> PauseIndexingAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Возобновить индексацию.</summary>
+    Task<IndexStatusDto> ResumeIndexingAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Поиск.</summary>
     Task<SearchResponse> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default);
 

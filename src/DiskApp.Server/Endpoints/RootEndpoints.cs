@@ -66,6 +66,16 @@ internal static class RootEndpoints
             .WithSummary("Состояние индексации")
             .WithDescription("Общее состояние для иконки трея и состояние каждого корня с ходом выполняемой задачи.");
 
+        index.MapPost(ApiRoutes.V1.IndexPause, PauseAll)
+            .WithName("PauseIndexing")
+            .WithSummary("Приостановить всю индексацию")
+            .WithDescription("Задачи замирают между папками, события наблюдателей копятся. Пункт трея «Пауза».");
+
+        index.MapPost(ApiRoutes.V1.IndexResume, ResumeAll)
+            .WithName("ResumeIndexing")
+            .WithSummary("Возобновить индексацию")
+            .WithDescription("Корни, приостановленные по отдельности, остаются на паузе.");
+
         index.MapPost(ApiRoutes.V1.IndexRebuild, RebuildAsync)
             .WithName("RebuildIndex")
             .WithSummary("Пересобрать индекс")
@@ -199,6 +209,18 @@ internal static class RootEndpoints
         => indexer.ResumeRoot(id) ? TypedResults.NoContent() : ApiProblems.NotFound($"Корень {id} не подключён к индексации.");
 
     private static Ok<IndexStatusDto> GetStatus(IndexerService indexer) => TypedResults.Ok(indexer.ToIndexStatusDto());
+
+    private static Ok<IndexStatusDto> PauseAll(IndexerService indexer)
+    {
+        indexer.PauseAll();
+        return TypedResults.Ok(indexer.ToIndexStatusDto());
+    }
+
+    private static Ok<IndexStatusDto> ResumeAll(IndexerService indexer)
+    {
+        indexer.ResumeAll();
+        return TypedResults.Ok(indexer.ToIndexStatusDto());
+    }
 
     private static async Task<Accepted> RebuildAsync(IndexerService indexer, CancellationToken cancellationToken)
     {

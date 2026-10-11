@@ -38,6 +38,12 @@ public static class ApiRoutes
         /// <summary>Пересобрать весь индекс.</summary>
         public const string IndexRebuild = Prefix + "/index/rebuild";
 
+        /// <summary>Приостановить всю индексацию.</summary>
+        public const string IndexPause = Prefix + "/index/pause";
+
+        /// <summary>Возобновить индексацию.</summary>
+        public const string IndexResume = Prefix + "/index/resume";
+
         /// <summary>Поиск: <c>GET</c> с параметрами или <c>POST</c> с телом.</summary>
         public const string Search = Prefix + "/search";
 

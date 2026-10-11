@@ -64,6 +64,12 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
     public Task RebuildIndexAsync(CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Post, ApiRoutes.V1.IndexRebuild, cancellationToken);
 
     /// <inheritdoc />
+    public Task<IndexStatusDto> PauseIndexingAsync(CancellationToken cancellationToken = default) => PostForAsync(ApiRoutes.V1.IndexPause, Json.IndexStatusDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IndexStatusDto> ResumeIndexingAsync(CancellationToken cancellationToken = default) => PostForAsync(ApiRoutes.V1.IndexResume, Json.IndexStatusDto, cancellationToken);
+
+    /// <inheritdoc />
     public Task<SearchResponse> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -326,6 +332,12 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
     private async Task<T> GetAsync<T>(string uri, JsonTypeInfo<T> type, CancellationToken cancellationToken)
     {
         using var response = await _http.GetAsync(Relative(uri), HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        return await ReadAsync(response, type, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<T> PostForAsync<T>(string uri, JsonTypeInfo<T> type, CancellationToken cancellationToken)
+    {
+        using var response = await _http.PostAsync(Relative(uri), null, cancellationToken).ConfigureAwait(false);
         return await ReadAsync(response, type, cancellationToken).ConfigureAwait(false);
     }
 
