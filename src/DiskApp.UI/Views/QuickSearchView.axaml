@@ -216,6 +216,19 @@
                 <TextBlock Classes="tertiary" FontSize="12" Text="Введите ?, чтобы увидеть фильтры и клавиши" HorizontalAlignment="Center" />
             </StackPanel>
 
+            <!-- Файлы тащат в окно: куда их бросить -->
+            <Border VerticalAlignment="Bottom"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,12"
+                    Padding="14,8"
+                    CornerRadius="8"
+                    Background="{DynamicResource AccentFillColorDefaultBrush}"
+                    IsHitTestVisible="False"
+                    IsVisible="{Binding ShowDropHint}">
+                <TextBlock Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
+                           Text="Бросьте файлы на папку в списке — они скопируются туда" />
+            </Border>
+
             <!-- Подсказка синтаксиса по запросу «?» -->
             <ScrollViewer IsVisible="{Binding ShowHelp}">
                 <ItemsControl ItemsSource="{x:Static input:SearchHelp.Items}">

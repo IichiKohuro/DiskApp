@@ -1,9 +1,12 @@
 using System.ComponentModel;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 
 using DiskApp.UI.Input;
 using DiskApp.UI.Models;
@@ -17,7 +20,10 @@ namespace DiskApp.UI.Views;
 /// </summary>
 public partial class QuickSearchView : UserControl
 {
+    private const double DragThreshold = 4;
+
     private QuickSearchViewModel? _subscribed;
+    private (PointerPressedEventArgs Args, Point Origin, SearchHit Hit)? _pressed;
 
     /// <summary>
     /// Создаёт представление и подключает обработку клавиш, двойного щелчка и контекстного меню.
@@ -32,6 +38,18 @@ public partial class QuickSearchView : UserControl
         {
             menu.Closed += (_, _) => FocusQueryKeepingText();
         }
+
+        // Перетаскивание из результатов: строка выбирается на нажатии, перетаскивание начинается после сдвига.
+        ResultsList.AddHandler(PointerPressedEvent, OnRowPointerPressed, RoutingStrategies.Bubble, handledEventsToo: true);
+        ResultsList.AddHandler(PointerMovedEvent, OnRowPointerMoved, RoutingStrategies.Bubble, handledEventsToo: true);
+        ResultsList.AddHandler(PointerReleasedEvent, (_, _) => _pressed = null, RoutingStrategies.Bubble, handledEventsToo: true);
+
+        // Файлы извне: на папку в результатах.
+        DragDrop.SetAllowDrop(this, true);
+        AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
+        AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AddHandler(DragDrop.DropEvent, OnDrop);
     }
 
     private QuickSearchViewModel? ViewModel => DataContext as QuickSearchViewModel;
@@ -179,6 +197,121 @@ public partial class QuickSearchView : UserControl
     {
         QueryBox.Focus();
         QueryBox.CaretIndex = QueryBox.Text?.Length ?? 0;
+    }
+
+    private static SearchHit? HitAt(object? source)
+        => (source as Visual)?.FindAncestorOfType<ListBoxItem>(includeSelf: true)?.DataContext as SearchHit;
+
+    private void OnRowPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _pressed = e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && HitAt(e.Source) is { } hit
+            ? (e, e.GetPosition(this), hit)
+            : null;
+    }
+
+    private void OnRowPointerMoved(object? sender, PointerEventArgs e) => _ = StartDragAsync(e);
+
+    private async Task StartDragAsync(PointerEventArgs e)
+    {
+        if (_pressed is not { } pressed || !e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        var offset = e.GetPosition(this) - pressed.Origin;
+        if (Math.Abs(offset.X) < DragThreshold && Math.Abs(offset.Y) < DragThreshold)
+        {
+            return;
+        }
+
+        _pressed = null;
+        if (TopLevel.GetTopLevel(this)?.StorageProvider is not { } storage || pressed.Hit.Entry.IsOffline)
+        {
+            return;
+        }
+
+        try
+        {
+            var path = pressed.Hit.Entry.FullPath;
+            IStorageItem? item = pressed.Hit.Entry.Kind == FileKind.Folder
+                ? await storage.TryGetFolderFromPathAsync(path)
+                : await storage.TryGetFileFromPathAsync(path);
+            if (item is null)
+            {
+                return;
+            }
+
+            var data = new DataTransfer();
+            data.Add(DataTransferItem.CreateFile(item));
+            var effect = await DragDrop.DoDragDropAsync(pressed.Args, data, QuickSearchViewModel.DragEffectsFor(e.KeyModifiers));
+
+            // Файл перенесли в другое место: список перечитывается, чтобы строка не указывала в пустоту.
+            if (effect == DragDropEffects.Move && ViewModel is { } viewModel)
+            {
+                await viewModel.ActivateAsync();
+            }
+        }
+        catch (Exception exception)
+        {
+            // Обработчик событий: исключение отсюда уронило бы приложение — сообщаем и продолжаем.
+            ViewModel?.ReportError("Не удалось перетащить", exception);
+        }
+    }
+
+    private void OnDragEnter(object? sender, DragEventArgs e)
+    {
+        if (ViewModel is { } viewModel && e.DataTransfer.Contains(DataFormat.File) && _pressed is null)
+        {
+            viewModel.ShowDropHint = true;
+        }
+    }
+
+    private void OnDragLeave(object? sender, DragEventArgs e)
+    {
+        if (ViewModel is { } viewModel)
+        {
+            viewModel.ShowDropHint = false;
+        }
+    }
+
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+        var target = HitAt(e.Source);
+        e.DragEffects = e.DataTransfer.Contains(DataFormat.File) && QuickSearchViewModel.CanDropInto(target)
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        if (e.DragEffects != DragDropEffects.None && ViewModel is { } viewModel)
+        {
+            // Подсветка цели: строка-папка под курсором становится выбранной.
+            viewModel.SelectedRow = target;
+        }
+    }
+
+    private void OnDrop(object? sender, DragEventArgs e) => _ = AcceptDropAsync(e);
+
+    private async Task AcceptDropAsync(DragEventArgs e)
+    {
+        if (ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        viewModel.ShowDropHint = false;
+        if (HitAt(e.Source) is not { } target || !QuickSearchViewModel.CanDropInto(target) || e.DataTransfer.TryGetFiles() is not { } items)
+        {
+            return;
+        }
+
+        try
+        {
+            var files = items.OfType<IStorageFile>().Select(static file => file.TryGetLocalPath()).OfType<string>().ToArray();
+            var folders = items.OfType<IStorageFolder>().Count();
+            await viewModel.CopyIntoAsync(target, files, folders);
+        }
+        catch (Exception exception)
+        {
+            viewModel.ReportError("Не удалось принять файлы", exception);
+        }
     }
 
     // Контейнеры переиспользуются при прокрутке: класс заголовка ставится и снимается каждый раз.

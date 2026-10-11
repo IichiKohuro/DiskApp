@@ -70,6 +70,14 @@ public sealed class SampleFileActions : IFileActions
         return entry with { IsFavorite = favorite };
     }
 
+    /// <inheritdoc />
+    public async Task<int> CopyIntoAsync(IReadOnlyList<string> files, FileEntry folder, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(files);
+        await RecordAsync("CopyInto", folder, " ← " + string.Join("; ", files));
+        return files.Count;
+    }
+
     private Task RecordAsync(string action, FileEntry entry, string suffix = "")
     {
         ArgumentNullException.ThrowIfNull(entry);

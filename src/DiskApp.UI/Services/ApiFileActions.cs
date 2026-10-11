@@ -96,6 +96,29 @@ public sealed class ApiFileActions(IDiskAppApi api, IClipboardService clipboard)
         return entry with { IsFavorite = favorite };
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Файлы идут загрузкой через API, а не операцией копирования: источник обычно вне корней («Загрузки», рабочий стол),
+    /// а операции сервера принимают только пути внутри корней.
+    /// </remarks>
+    public async Task<int> CopyIntoAsync(IReadOnlyList<string> files, FileEntry folder, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(files);
+        ArgumentNullException.ThrowIfNull(folder);
+
+        var uploads = files
+            .Where(File.Exists)
+            .Select(static path => new UploadFile(Path.GetFileName(path), () => File.OpenRead(path), new FileInfo(path).Length))
+            .ToArray();
+        if (uploads.Length == 0)
+        {
+            return 0;
+        }
+
+        var response = await _api.UploadAsync(folder.FullPath, uploads, ConflictPolicy.KeepBoth, progress: null, cancellationToken).ConfigureAwait(false);
+        return response.Saved.Count;
+    }
+
     private static long Id(FileEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);

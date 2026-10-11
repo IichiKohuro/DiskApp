@@ -317,6 +317,15 @@ public sealed partial class QuickSearchViewModel
     /// <summary>Закрывает уведомление.</summary>
     public void CloseNotice() => IsNoticeOpen = false;
 
+    /// <summary>
+    /// Показывает ошибку действия, начатого представлением (перетаскивание).
+    /// </summary>
+    public void ReportError(string title, Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        ShowNotice(title, exception.Message, FAInfoBarSeverity.Error);
+    }
+
     private async Task RenameAsync(FileEntry entry, string newName)
     {
         if (PathText.ValidateFileName(newName.Trim()) is { } error)

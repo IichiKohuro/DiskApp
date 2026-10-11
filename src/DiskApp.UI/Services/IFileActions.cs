@@ -37,6 +37,12 @@ public interface IFileActions
 
     /// <summary>Добавить в избранное (закрепить) или убрать оттуда. Возвращает обновлённую запись.</summary>
     Task<FileEntry> SetFavoriteAsync(FileEntry entry, bool favorite, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Скопировать файлы с диска в папку из результатов (перетаскивание в окно поиска); при совпадении имён сохраняются
+    /// оба файла. Возвращает, сколько файлов сохранено.
+    /// </summary>
+    Task<int> CopyIntoAsync(IReadOnlyList<string> files, FileEntry folder, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
