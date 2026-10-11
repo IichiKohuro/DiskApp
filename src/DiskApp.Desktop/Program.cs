@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 
+using DiskApp.Client;
 using DiskApp.Desktop.Shell;
 using DiskApp.Desktop.SingleInstance;
 using DiskApp.Desktop.Startup;
@@ -118,6 +119,9 @@ internal static class Program
         {
             services.AddSerilog(Log.Logger);
             services.AddSingleton(Log.Logger);
+
+            // Клиент API для окон: адрес сервера внутри процесса появится после его старта.
+            services.AddDiskAppClient();
             services.AddSingleton(lifetime);
             services.AddSingleton(names);
             services.AddDiskAppUi();
@@ -130,14 +134,17 @@ internal static class Program
 
     private static async Task StartServerAsync(DiskAppServerHost host)
     {
+        var endpoint = host.Services.GetRequiredService<InProcessServerEndpointProvider>();
         try
         {
             await host.StartAsync().ConfigureAwait(false);
+            endpoint.SetEndpoint(new ServerEndpoint(host.BaseAddress!));
             Log.Information("Сервер слушает {Address}: готов через {StartupMs} мс после старта процесса", host.BaseAddress, StartupTimer.Milliseconds);
         }
         catch (Exception exception)
         {
-            // Без сервера интерфейс работает на макетных данных; причина — в журнале.
+            // Без сервера интерфейс работает на макетных данных; причина — в журнале, запросы клиента получат ошибку.
+            endpoint.Fail(exception);
             Log.Error(exception, "Сервер не запустился");
         }
     }

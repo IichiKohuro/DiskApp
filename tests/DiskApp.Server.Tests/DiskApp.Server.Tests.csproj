@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DiskApp.Server\DiskApp.Server.csproj" />
+    <ProjectReference Include="..\..\src\DiskApp.Client\DiskApp.Client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
