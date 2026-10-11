@@ -61,6 +61,23 @@
         <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="8" Margin="8,0,0,0">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Top" Theme="{StaticResource BodyStrongTextBlockStyle}" Margin="6,2,6,8" Text="{Binding FilesTitle}" />
+                <!-- Папки, где тег — авто-тег (этап 19): их файлы уже в списке; кнопка открывает папку в «Обзоре» -->
+                <WrapPanel DockPanel.Dock="Top" Margin="6,0,6,8" ItemSpacing="4" LineSpacing="4" IsVisible="{Binding HasAutoTagFolders}">
+                    <TextBlock Classes="secondary" FontSize="12" VerticalAlignment="Center" Margin="0,0,4,0" Text="{loc:Str Tags.AutoTagOfFolders}" />
+                    <ItemsControl ItemsSource="{Binding AutoTagFolders}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel ItemSpacing="4" LineSpacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AutoTagFolder">
+                                <Button Classes="tool" Content="{Binding Name}" ToolTip.Tip="{Binding Path}" AutomationProperties.Name="{Binding Path}"
+                                        Command="{Binding $parent[UserControl].((vm:TagsViewModel)DataContext).OpenAutoTagFolderCommand}" CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </WrapPanel>
                 <ListBox x:Name="FilesList" AutomationProperties.Name="{loc:Str A11y.TaggedFiles}"
                          Classes="results"
                          ItemsSource="{Binding Files}"

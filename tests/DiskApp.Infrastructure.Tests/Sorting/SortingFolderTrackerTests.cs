@@ -1,7 +1,9 @@
 using DiskApp.Core.Abstractions;
+using DiskApp.Core.Domain;
 using DiskApp.Core.Events;
 using DiskApp.Core.Operations;
 using DiskApp.Core.Paths;
+using DiskApp.Core.Repositories;
 using DiskApp.Core.Settings;
 using DiskApp.Core.Sorting;
 
@@ -111,6 +113,30 @@ public sealed class SortingFolderTrackerTests : IAsyncDisposable
         sorting.MainInbox.ShouldBe(Path.Combine(archive, "Загрузки"));
     }
 
+    [Fact]
+    public async Task RenamedFolderEvent_MovesAutoTagsOfFolderAndSubfolders()
+    {
+        // Arrange: авто-теги (этап 19) стоят на папке и её подпапке, у соседней «Работа 2» — свои
+        var old = _root.CreateDirectory("Работа");
+        var renamed = _root.Resolve("Работа 2026");
+        var sibling = _root.CreateDirectory("Работа 2");
+        var folderTags = new MemoryFolderTags(
+            new FolderTags(old, [new Tag(1, "ТЗ", null)]),
+            new FolderTags(Path.Combine(old, "417"), [new Tag(2, "Мост", null)]),
+            new FolderTags(sibling, [new Tag(3, "Другое", null)]));
+        var moved = 0;
+        using var tracker = new SortingFolderTracker(_events, Operations(), _store, PathNormalizer.Current, folderTags: folderTags, folderTagsMoved: () => moved++);
+
+        // Act
+        _events.Publish(new EntryRenamedEvent(1, old, renamed, IsDirectory: true));
+        await tracker.WhenIdleAsync().WaitAsync(Wait, TestContext.Current.CancellationToken);
+
+        // Assert
+        folderTags.Paths.ShouldBe([renamed, Path.Combine(renamed, "417"), sibling], ignoreOrder: true);
+        moved.ShouldBe(1, "кэш поиска сбрасывается после переноса путей");
+        _store.SaveCount.ShouldBe(0, "рабочих папок нет — настройки не перезаписываются");
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_operations is not null)
@@ -146,6 +172,30 @@ public sealed class SortingFolderTrackerTests : IAsyncDisposable
             public void Dispose()
             {
             }
+        }
+    }
+
+    private sealed class MemoryFolderTags(params FolderTags[] folders) : IFolderTagRepository
+    {
+        private readonly List<FolderTags> _folders = [.. folders];
+
+        public IReadOnlyList<string> Paths => [.. _folders.Select(static folder => folder.Path)];
+
+        public Task<IReadOnlyList<FolderTags>> GetAllAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<FolderTags>>([.. _folders]);
+
+        public Task SetAsync(string path, IReadOnlyList<long> tagIds, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException();
+
+        public Task MovePathsAsync(IReadOnlyList<(string From, string To)> changes, CancellationToken cancellationToken = default)
+        {
+            foreach (var (from, to) in changes)
+            {
+                var index = _folders.FindIndex(folder => folder.Path == from);
+                _folders[index] = _folders[index] with { Path = to };
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -22,8 +22,8 @@ public enum WorkFolderCardResult
 
 /// <summary>
 /// Карточка рабочей папки (PLAN.md, этап 17.2): подпись, номер — он же клавиша 1–9 на странице «Разбор», — и сама папка.
-/// Папку, переименованную или перенесённую так, что DiskApp её потерял, здесь можно выбрать заново. Авто-теги (этап 19)
-/// и шаблоны имён (17.5) появятся в этой же карточке.
+/// Папку, переименованную или перенесённую так, что DiskApp её потерял, здесь можно выбрать заново. Здесь же авто-теги
+/// папки (этап 19); шаблоны имён (17.5) появятся в этой же карточке.
 /// </summary>
 public sealed partial class WorkFolderCardViewModel : ObservableObject
 {
@@ -37,11 +37,13 @@ public sealed partial class WorkFolderCardViewModel : ObservableObject
     /// <param name="count">Сколько всего рабочих папок.</param>
     /// <param name="isMissing">Папка не найдена в индексе.</param>
     /// <param name="dialogs">Диалоги: выбор другой папки.</param>
-    public WorkFolderCardViewModel(SortingFolderInfo folder, int position, int count, bool isMissing, IDialogService? dialogs = null)
+    /// <param name="autoTags">Поле авто-тегов; <c>null</c> — их не удалось прочитать, и поле не показывается.</param>
+    public WorkFolderCardViewModel(SortingFolderInfo folder, int position, int count, bool isMissing, IDialogService? dialogs = null, AutoTagsEditorViewModel? autoTags = null)
     {
         ArgumentNullException.ThrowIfNull(folder);
 
         _dialogs = dialogs;
+        AutoTags = autoTags;
         Path = folder.Path;
         Label = folder.Label ?? string.Empty;
         IsMissing = isMissing;
@@ -64,6 +66,12 @@ public sealed partial class WorkFolderCardViewModel : ObservableObject
     /// <summary>Папка не найдена: переименована, перенесена или удалена.</summary>
     [ObservableProperty]
     public partial bool IsMissing { get; set; }
+
+    /// <summary>Авто-теги папки; <c>null</c> — поле скрыто.</summary>
+    public AutoTagsEditorViewModel? AutoTags { get; }
+
+    /// <summary>Поле авто-тегов показывается.</summary>
+    public bool HasAutoTags => AutoTags is not null;
 
     /// <summary>Места в списке: первые девять — с клавишей.</summary>
     public IReadOnlyList<SettingOption<int>> Positions { get; }

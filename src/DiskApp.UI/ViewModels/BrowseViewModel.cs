@@ -226,7 +226,7 @@ public sealed partial class BrowseViewModel : PageViewModel
 
     /// <summary>Текущая папка.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanGoUp))]
+    [NotifyPropertyChangedFor(nameof(CanGoUp), nameof(CanEditAutoTags))]
     public partial string? CurrentPath { get; set; }
 
     /// <summary>Текст адресной строки.</summary>
@@ -340,6 +340,7 @@ public sealed partial class BrowseViewModel : PageViewModel
         SelectedDetails = selection.Count == 1 ? new FileDetails(selection[0].Entry) : null;
         UpdateStatus();
         OnPropertyChanged(nameof(Selection));
+        OnPropertyChanged(nameof(CanEditAutoTags));
     }
 
     /// <summary>Перейти по адресной строке.</summary>
@@ -517,6 +518,10 @@ public sealed partial class BrowseViewModel : PageViewModel
     /// <summary>Теги можно менять.</summary>
     public bool CanEditTags => TagEditor is not null;
 
+    /// <summary>«Авто-теги папки…» доступны: выбрана одна папка или ничего — тогда для открытой.</summary>
+    public bool CanEditAutoTags => TagEditor is not null
+        && (_selection.Count == 1 ? _selection[0].Entry.Kind == FileKind.Folder : _selection.Count == 0 && CurrentPath is not null);
+
     /// <summary>
     /// Закрепить выбранное или открепить (<c>Ctrl+D</c>, PLAN.md, этап 8.7): если среди выбранного есть незакреплённое —
     /// закрепляется всё, иначе всё открепляется.
@@ -560,6 +565,29 @@ public sealed partial class BrowseViewModel : PageViewModel
         if (await TryAsync(async () => updated = await TagEditor.EditAsync(entries), L.T("Browse.CouldNotChangeTags")) && updated is { Count: > 0 })
         {
             _notices?.Show(L.T("Browse.TagsSaved"), updated.Count == 1 ? $"«{updated[0].Name}»" : Formatting.Count(updated.Count, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")), FAInfoBarSeverity.Success);
+            await RefreshAsync();
+        }
+    }
+
+    /// <summary>
+    /// «Авто-теги папки…» (PLAN.md, этап 19): теги, которые получает всё внутри выбранной папки, а если ничего не выбрано —
+    /// внутри открытой.
+    /// </summary>
+    [RelayCommand]
+    private async Task EditAutoTagsAsync()
+    {
+        var folder = _selection.Count == 1 && _selection[0].Entry.Kind == FileKind.Folder
+            ? _selection[0].Entry.FullPath
+            : _selection.Count == 0 ? CurrentPath : null;
+        if (folder is null || TagEditor is null)
+        {
+            return;
+        }
+
+        var changed = false;
+        if (await TryAsync(async () => changed = await TagEditor.EditAutoTagsAsync(folder), L.T("Browse.CouldNotChangeTags")) && changed)
+        {
+            _notices?.Show(L.T("Browse.AutoTagsSaved"), $"«{PathText.FileName(folder)}»", FAInfoBarSeverity.Success);
             await RefreshAsync();
         }
     }

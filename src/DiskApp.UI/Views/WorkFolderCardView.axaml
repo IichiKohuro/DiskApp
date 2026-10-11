@@ -5,11 +5,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:DiskApp.UI.ViewModels"
+             xmlns:v="using:DiskApp.UI.Views"
              mc:Ignorable="d" d:DesignWidth="440" d:DesignHeight="300"
              x:Class="DiskApp.UI.Views.WorkFolderCardView"
              x:DataType="vm:WorkFolderCardViewModel">
-    <!-- Карточка рабочей папки (PLAN.md, этап 17.2): подпись, номер-клавиша и папка; кнопки — у диалога -->
-    <StackPanel Spacing="14" MinWidth="420">
+    <!-- Карточка рабочей папки (PLAN.md, этап 17.2): подпись, номер-клавиша, авто-теги (этап 19) и папка; кнопки — у диалога -->
+    <StackPanel Spacing="14" MinWidth="420" MaxWidth="460">
         <StackPanel Spacing="4">
             <TextBlock Text="{loc:Str Sorting.CardLabel}" />
             <TextBox AutomationProperties.Name="{loc:Str Sorting.CardLabel}" Text="{Binding Label, Mode=TwoWay}" PlaceholderText="{Binding FolderName}" />
@@ -18,6 +19,10 @@
         <StackPanel Spacing="4">
             <TextBlock Text="{loc:Str Sorting.CardPosition}" />
             <ComboBox AutomationProperties.Name="{loc:Str Sorting.CardPosition}" ItemsSource="{Binding Positions}" SelectedItem="{Binding SelectedPosition, Mode=TwoWay}" MinWidth="220" />
+        </StackPanel>
+        <StackPanel Spacing="4" IsVisible="{Binding HasAutoTags}">
+            <TextBlock Text="{loc:Str AutoTags.Title}" />
+            <v:AutoTagsEditorView DataContext="{Binding AutoTags}" />
         </StackPanel>
         <StackPanel Spacing="4">
             <TextBlock Text="{loc:Str Sorting.CardFolder}" />

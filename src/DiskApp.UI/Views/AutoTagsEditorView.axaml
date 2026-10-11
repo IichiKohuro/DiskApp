@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="using:DiskApp.UI.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:m="using:DiskApp.UI.Models"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="140"
+             x:Class="DiskApp.UI.Views.AutoTagsEditorView"
+             x:DataType="vm:AutoTagsEditorViewModel">
+    <!-- Поле «Авто-теги» (PLAN.md, этап 19): чипы с крестиком, поле ввода и подсказки из библиотеки тегов.
+         Enter в поле добавляет тег, а не закрывает диалог. -->
+    <StackPanel Spacing="6">
+        <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding HasTags}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:TagLabel">
+                    <Border Classes="tag" Margin="0,0,6,6">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Ellipse Width="7" Height="7" VerticalAlignment="Center" Fill="{Binding Color, Converter={x:Static c:TagConverters.Brush}}" />
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                            <Button Classes="tool" Padding="2" MinWidth="0" MinHeight="0"
+                                    AutomationProperties.Name="{loc:Str AutoTags.Remove}" ToolTip.Tip="{loc:Str AutoTags.Remove}"
+                                    Command="{Binding $parent[UserControl].((vm:AutoTagsEditorViewModel)DataContext).RemoveCommand}" CommandParameter="{Binding}">
+                                <ic:SymbolIcon Symbol="Dismiss" FontSize="10" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox x:Name="TagBox" MaxLength="64" AutomationProperties.Name="{loc:Str AutoTags.Title}" PlaceholderText="{loc:Str AutoTags.Watermark}" Text="{Binding Text, Mode=TwoWay}" />
+            <Button Grid.Column="1" Content="{loc:Str TagPicker.Add}" Command="{Binding AddCommand}" CommandParameter="{x:Null}" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Suggestions}" IsVisible="{Binding !!Suggestions.Count}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Button Classes="tool" Margin="0,0,4,4" Content="{Binding}"
+                            Command="{Binding $parent[UserControl].((vm:AutoTagsEditorViewModel)DataContext).AddCommand}" CommandParameter="{Binding}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" MaxWidth="420" HorizontalAlignment="Left" Text="{Binding InheritedText}" IsVisible="{Binding HasInherited}" />
+        <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" MaxWidth="420" HorizontalAlignment="Left" Text="{loc:Str AutoTags.Hint}" />
+    </StackPanel>
+</UserControl>

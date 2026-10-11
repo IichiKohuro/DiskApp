@@ -42,6 +42,12 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     /// </summary>
     public TimeSpan CountTimeout { get; init; } = TimeSpan.FromMilliseconds(20);
 
+    /// <summary>
+    /// До скольких кандидатов источника тега их сортируют целиком при выдаче «новые сверху» (этап 19); больше — обход
+    /// индекса времени изменения: при таком числе совпадений он быстро набирает страницу.
+    /// </summary>
+    private const long SortedSourceLimit = 150_000;
+
     /// <inheritdoc />
     public Task<CandidateBatch> FindAsync(SearchPlan plan, CandidateQuery query, CancellationToken cancellationToken = default)
     {
@@ -292,7 +298,7 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         };
 
         var source = plan.Source != CandidateSource.Filters ? Source(plan)
-            : newestFirst ? "entries AS e INDEXED BY ix_entries_modified"
+            : newestFirst && !(conditions.SortSourceByTime && conditions.ScopeJoinSource is not null) ? "entries AS e INDEXED BY ix_entries_modified"
             : conditions.ScopeJoinSource ?? Source(plan);
         return $"SELECT {Columns} FROM {source} {Joins} WHERE {Where(plan, conditions)} {order} LIMIT $limit";
     }
@@ -547,21 +553,29 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             conditions.Clauses.Add($"NOT ({AttributeClause(attribute)})");
         }
 
+        // Тег у записи — свой или авто-тег папки выше (этап 19): «tag:x» — любой из двух, «-tag:x» — ни одного.
         for (var i = 0; i < plan.IncludeTags.Count; i++)
         {
             conditions.Parameters[$"$it{i}"] = plan.IncludeTags[i];
-            conditions.Clauses.Add($"EXISTS (SELECT 1 FROM entry_tags AS et JOIN tags AS t ON t.id = et.tag_id WHERE et.entry_id = e.id AND t.name_folded = $it{i})");
+            conditions.Clauses.Add(TagClause(connection, plan.IncludeTags[i], $"$it{i}", $"diskapp_autotag_it{i}", i == 0 ? conditions : null));
         }
 
         for (var i = 0; i < plan.ExcludeTags.Count; i++)
         {
             conditions.Parameters[$"$et{i}"] = plan.ExcludeTags[i];
-            conditions.Clauses.Add($"NOT EXISTS (SELECT 1 FROM entry_tags AS et JOIN tags AS t ON t.id = et.tag_id WHERE et.entry_id = e.id AND t.name_folded = $et{i})");
+            conditions.Clauses.Add($"NOT {TagClause(connection, plan.ExcludeTags[i], $"$et{i}", $"diskapp_autotag_et{i}")}");
         }
 
         if (plan.Favorite is { } favorite)
         {
             conditions.Clauses.Add(favorite ? "EXISTS (SELECT 1 FROM favorites AS f2 WHERE f2.entry_id = e.id)" : "NOT EXISTS (SELECT 1 FROM favorites AS f2 WHERE f2.entry_id = e.id)");
+        }
+
+        // Тег — единственное условие: совпадения плотные, обход индекса времени изменения быстро набирает страницу. Есть
+        // ещё условия (ext:, размер…) — совпадения редки, и дешевле отсортировать немногих кандидатов тега.
+        if (conditions.TagSourceEstimateSql is { } estimate && conditions.Clauses.Count > 1)
+        {
+            conditions.SortSourceByTime = Scalar(connection, estimate, conditions.Parameters, CancellationToken.None) <= SortedSourceLimit;
         }
 
         return conditions;
@@ -713,6 +727,129 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         return "(" + string.Join(" OR ", alternatives) + ")";
     }
 
+    /// <summary>
+    /// Условие «у записи есть тег»: свой тег (<c>entry_tags</c>) или авто-тег папки выше (<c>folder_tags</c>, этап 19). Папки с
+    /// авто-тегом переводятся в корень и относительный путь; проверка строки — сама папка или диапазон её потомков бинарным
+    /// поиском в памяти, как у фильтра <c>in:</c>. Папка вне добавленных корней не действует, пока корень не вернётся.
+    /// </summary>
+    /// <param name="connection">Соединение запроса: на нём регистрируется функция проверки.</param>
+    /// <param name="foldedTag">Имя тега в нижнем регистре.</param>
+    /// <param name="parameter">Параметр с именем тега.</param>
+    /// <param name="function">Имя функции проверки строки.</param>
+    /// <param name="sourceFor">
+    /// Условия, которым можно задать источник кандидатов для запроса только из фильтров: записи с тегом и диапазоны папок по
+    /// индексу путей вместо обхода всех записей. <c>null</c> — только условие.
+    /// </param>
+    private string TagClause(SqliteConnection connection, string foldedTag, string parameter, string function, Conditions? sourceFor = null)
+    {
+        var own = $"EXISTS (SELECT 1 FROM entry_tags AS et JOIN tags AS t ON t.id = et.tag_id WHERE et.entry_id = e.id AND t.name_folded = {parameter})";
+        var ownSource = $"SELECT et.entry_id AS id FROM entry_tags AS et JOIN tags AS t ON t.id = et.tag_id WHERE t.name_folded = {parameter}";
+        var folders = new List<string>();
+        using (var command = Command(
+            connection,
+            "SELECT ft.path FROM folder_tags AS ft JOIN tags AS t ON t.id = ft.tag_id WHERE t.name_folded = $tag",
+            new Dictionary<string, object?> { ["$tag"] = foldedTag }))
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                folders.Add(reader.GetString(0));
+            }
+        }
+
+        if (folders.Count == 0)
+        {
+            OfferSource(sourceFor, $"({ownSource}) AS c CROSS JOIN entries AS e ON e.id = c.id", $"SELECT COUNT(*) FROM ({ownSource})");
+            return own;
+        }
+
+        var roots = new List<(long Id, string Path)>();
+        using (var command = Command(connection, "SELECT id, path FROM roots", new Dictionary<string, object?>()))
+        using (var reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                roots.Add((reader.GetInt64(0), reader.GetString(1)));
+            }
+        }
+
+        var separator = _paths.Separator;
+        var exact = new HashSet<(long RootId, string RelPath)>();
+        var wholeRoots = new HashSet<long>();
+        var ranges = new List<(long RootId, string From, string To)>();
+        foreach (var folder in folders)
+        {
+            var root = roots
+                .Where(candidate => _paths.Comparer.Equals(candidate.Path, folder) || _paths.IsNestedIn(folder, candidate.Path))
+                .OrderByDescending(static candidate => candidate.Path.Length)
+                .FirstOrDefault();
+            if (root.Path is null || !_paths.TryGetRelativePath(root.Path, folder, out var relative))
+            {
+                continue;
+            }
+
+            if (relative.Length == 0)
+            {
+                wholeRoots.Add(root.Id);
+                continue;
+            }
+
+            // Сама папка — точным совпадением: диапазон «417»…«417]» захватил бы и соседнюю «417 ТЗ».
+            exact.Add((root.Id, relative));
+            ranges.Add((root.Id, relative + separator, relative + (char)(separator + 1)));
+        }
+
+        if (exact.Count == 0 && wholeRoots.Count == 0)
+        {
+            OfferSource(sourceFor, $"({ownSource}) AS c CROSS JOIN entries AS e ON e.id = c.id", $"SELECT COUNT(*) FROM ({ownSource})");
+            return own;
+        }
+
+        var disjoint = Disjoint(ranges);
+        var set = new ScopeSet(disjoint);
+        connection.CreateFunction(
+            function,
+            (long rootId, string relPath) => wholeRoots.Contains(rootId) || exact.Contains((rootId, relPath)) || set.Contains(rootId, relPath),
+            isDeterministic: true);
+
+        // Запрос только из фильтров берёт кандидатов не обходом всех записей, а объединением: свои теги, сами папки и
+        // диапазоны их потомков по индексу путей. Части не пересекаются (свои теги внутри папок и папки внутри диапазонов
+        // отброшены), поэтому UNION ALL — поток без устранения повторов, LIMIT останавливает его рано. С авто-тегом целого
+        // корня обход и так почти полный — источник не нужен.
+        if (sourceFor is { ScopeJoinSource: null } && wholeRoots.Count == 0)
+        {
+            var rangeTable = $"diskapp_tagr_{function}";
+            var exactTable = $"diskapp_tagx_{function}";
+            FillScopeTable(connection, rangeTable, disjoint);
+            FillScopeTable(connection, exactTable, [.. exact.Where(folder => !set.Contains(folder.RootId, folder.RelPath)).Select(static folder => (folder.RootId, folder.RelPath, folder.RelPath))]);
+            var ownOutside = $"SELECT et.entry_id AS id FROM entry_tags AS et JOIN tags AS t ON t.id = et.tag_id JOIN entries AS o ON o.id = et.entry_id WHERE t.name_folded = {parameter} AND NOT {function}(o.root_id, o.rel_path)";
+            var inRanges = $"SELECT r.id FROM temp.{rangeTable} AS s CROSS JOIN entries AS r ON r.root_id = s.root_id AND r.rel_path >= s.from_ AND r.rel_path < s.to_";
+            var folderRows = $"SELECT x.id FROM temp.{exactTable} AS s CROSS JOIN entries AS x ON x.root_id = s.root_id AND x.rel_path = s.from_";
+            OfferSource(
+                sourceFor,
+                $"({ownOutside} UNION ALL {inRanges} UNION ALL {folderRows}) AS c CROSS JOIN entries AS e ON e.id = c.id",
+                $"SELECT (SELECT COUNT(*) FROM ({ownSource})) + (SELECT COUNT(*) FROM ({inRanges})) + (SELECT COUNT(*) FROM ({folderRows}))");
+        }
+
+        return $"({own} OR {function}(e.root_id, e.rel_path))";
+    }
+
+    /// <summary>
+    /// Источник кандидатов от тега, если его не задал фильтр <c>in:</c>. Кандидатов немного — при выдаче «новые сверху» их
+    /// сортируют, а не обходят индекс времени изменения: редкий тег вместе с <c>ext:</c> иначе заставил бы пройти почти
+    /// всю таблицу ради первой страницы.
+    /// </summary>
+    private static void OfferSource(Conditions? conditions, string source, string estimateSql)
+    {
+        if (conditions is not { ScopeJoinSource: null })
+        {
+            return;
+        }
+
+        conditions.ScopeJoinSource = source;
+        conditions.TagSourceEstimateSql = estimateSql;
+    }
+
     private static List<(long RootId, string From, string To)> Disjoint(List<(long RootId, string From, string To)> ranges)
     {
         // Диапазоны потомков папок либо не пересекаются, либо вложены: после сортировки вложенный идёт сразу за внешним.
@@ -810,8 +947,17 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         /// <summary>Значения параметров.</summary>
         public Dictionary<string, object?> Parameters { get; } = new(StringComparer.Ordinal);
 
-        /// <summary>Источник «диапазоны папок ⋈ записи» для запросов только из фильтров с <c>in:</c>; иначе <c>null</c>.</summary>
+        /// <summary>
+        /// Источник кандидатов для запросов только из фильтров: «диапазоны папок ⋈ записи» у <c>in:</c>, записи с тегом и папки с
+        /// авто-тегом у <c>tag:</c>; иначе <c>null</c> — обход всех записей.
+        /// </summary>
         public string? ScopeJoinSource { get; set; }
+
+        /// <summary>Кандидатов источника немного: выдачу «новые сверху» сортировать, а не обходить индекс времени изменения.</summary>
+        public bool SortSourceByTime { get; set; }
+
+        /// <summary>Запрос, оценивающий число кандидатов источника тега; <c>null</c> — источник не от тега.</summary>
+        public string? TagSourceEstimateSql { get; set; }
 
         /// <inheritdoc />
         public override string ToString()

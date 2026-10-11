@@ -18,6 +18,9 @@ public interface IAppCommands
     /// <summary>Сценарий «Добавить»: спросить место и положить туда файлы (PLAN.md, этап 8.5).</summary>
     Task AddFilesAsync(IReadOnlyList<string> paths);
 
+    /// <summary>Показывает главное окно с папкой на странице «Обзор» (этап 19: «Перейти к папке» у авто-тега).</summary>
+    void BrowseFolder(string path);
+
     /// <summary>Пройти мастер первого запуска заново и снова показать обучающие подсказки (PLAN.md, этап 9.3).</summary>
     void StartOnboarding();
 }

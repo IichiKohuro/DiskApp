@@ -2,6 +2,7 @@ using DiskApp.Core.Abstractions;
 using DiskApp.Core.Events;
 using DiskApp.Core.Operations;
 using DiskApp.Core.Paths;
+using DiskApp.Core.Repositories;
 using DiskApp.Core.Settings;
 
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,8 @@ public sealed class SortingFolderTracker : IDisposable
 
     private readonly FileOperationService _operations;
     private readonly ISettingsStore<AppSettings> _settings;
+    private readonly IFolderTagRepository? _folderTags;
+    private readonly Action? _folderTagsMoved;
     private readonly PathNormalizer _paths;
     private readonly ILogger _logger;
     private readonly IDisposable _renames;
@@ -35,18 +38,29 @@ public sealed class SortingFolderTracker : IDisposable
     /// <summary>
     /// Создаёт службу и подписывается на события индекса и очереди операций.
     /// </summary>
+    /// <param name="events">События индекса: переименования.</param>
+    /// <param name="operations">Очередь операций: переносы через DiskApp.</param>
+    /// <param name="settings">Настройки с папками разбора.</param>
+    /// <param name="paths">Правила сравнения путей.</param>
+    /// <param name="logger">Журнал.</param>
+    /// <param name="folderTags">Авто-теги папок (этап 19); <c>null</c> — пути авто-тегов не отслеживаются.</param>
+    /// <param name="folderTagsMoved">Вызывается, когда пути авто-тегов поменялись: сбросить кэш поиска.</param>
     public SortingFolderTracker(
         IIndexEventBus events,
         FileOperationService operations,
         ISettingsStore<AppSettings> settings,
         PathNormalizer paths,
-        ILogger<SortingFolderTracker>? logger = null)
+        ILogger<SortingFolderTracker>? logger = null,
+        IFolderTagRepository? folderTags = null,
+        Action? folderTagsMoved = null)
     {
         ArgumentNullException.ThrowIfNull(events);
         _operations = operations ?? throw new ArgumentNullException(nameof(operations));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _paths = paths ?? throw new ArgumentNullException(nameof(paths));
         _logger = logger ?? NullLogger<SortingFolderTracker>.Instance;
+        _folderTags = folderTags;
+        _folderTagsMoved = folderTagsMoved;
         _renames = events.Subscribe<EntryRenamedEvent>(OnRenamed);
         _completed = events.Subscribe<OperationCompletedEvent>(OnOperationCompleted);
     }
@@ -60,38 +74,43 @@ public sealed class SortingFolderTracker : IDisposable
         ArgumentNullException.ThrowIfNull(sorting);
         ArgumentNullException.ThrowIfNull(paths);
 
-        if (!paths.TryNormalize(oldPath, out var from) || !paths.TryNormalize(newPath, out var to) || paths.Comparer.Equals(from, to))
-        {
-            return sorting;
-        }
-
-        string? Map(string? path)
-        {
-            if (path is null || !paths.TryNormalize(path, out var normalized))
-            {
-                return path;
-            }
-
-            if (paths.Comparer.Equals(normalized, from))
-            {
-                return to;
-            }
-
-            return paths.IsNestedIn(normalized, from) && paths.TryGetRelativePath(from, normalized, out var relative)
-                ? paths.Combine(to, relative)
-                : path;
-        }
-
         IReadOnlyList<SortingFolder> MapAll(IReadOnlyList<SortingFolder> folders)
-            => [.. folders.Select(folder => Map(folder.Path) is { } mapped && !ReferenceEquals(mapped, folder.Path) ? folder with { Path = mapped } : folder)];
+            => [.. folders.Select(folder => MapPath(folder.Path, oldPath, newPath, paths) is { } mapped && !ReferenceEquals(mapped, folder.Path) ? folder with { Path = mapped } : folder)];
 
         var remapped = sorting with
         {
             Inboxes = MapAll(sorting.Inboxes),
             WorkFolders = MapAll(sorting.WorkFolders),
-            MainInbox = Map(sorting.MainInbox),
+            MainInbox = MapPath(sorting.MainInbox, oldPath, newPath, paths),
         };
         return remapped.Equals(sorting) ? sorting : remapped;
+    }
+
+    /// <summary>
+    /// Путь <paramref name="path"/> после переименования <paramref name="oldPath"/> в <paramref name="newPath"/>: та же папка
+    /// получает новый путь, вложенная — новый путь с прежним хвостом; остальные возвращаются как были (тот же экземпляр).
+    /// </summary>
+    public static string? MapPath(string? path, string oldPath, string newPath, PathNormalizer paths)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+
+        if (path is null
+            || !paths.TryNormalize(oldPath, out var from)
+            || !paths.TryNormalize(newPath, out var to)
+            || paths.Comparer.Equals(from, to)
+            || !paths.TryNormalize(path, out var normalized))
+        {
+            return path;
+        }
+
+        if (paths.Comparer.Equals(normalized, from))
+        {
+            return to;
+        }
+
+        return paths.IsNestedIn(normalized, from) && paths.TryGetRelativePath(from, normalized, out var relative)
+            ? paths.Combine(to, relative)
+            : path;
     }
 
     /// <summary>Завершается, когда все начатые обновления настроек записаны (тесты).</summary>
@@ -144,15 +163,33 @@ public sealed class SortingFolderTracker : IDisposable
         {
             var current = _settings.Current;
             var sorting = moves.Aggregate(current.Sorting, (settings, move) => Remap(settings, move.From, move.To, _paths));
-            if (ReferenceEquals(sorting, current.Sorting))
+            if (!ReferenceEquals(sorting, current.Sorting))
             {
-                return;
+                await _settings.SaveAsync(current with { Sorting = sorting }).ConfigureAwait(false);
+                LogUpdated(_logger, moves.Count, null);
             }
 
-            await _settings.SaveAsync(current with { Sorting = sorting }).ConfigureAwait(false);
-            LogUpdated(_logger, moves.Count, null);
+            // Авто-теги (этап 19) хранятся по пути папки и переезжают вместе с ней.
+            if (_folderTags is not null)
+            {
+                var changes = new List<(string From, string To)>();
+                foreach (var folder in await _folderTags.GetAllAsync().ConfigureAwait(false))
+                {
+                    var mapped = moves.Aggregate(folder.Path, (path, move) => MapPath(path, move.From, move.To, _paths)!);
+                    if (!ReferenceEquals(mapped, folder.Path))
+                    {
+                        changes.Add((folder.Path, mapped));
+                    }
+                }
+
+                if (changes.Count > 0)
+                {
+                    await _folderTags.MovePathsAsync(changes).ConfigureAwait(false);
+                    _folderTagsMoved?.Invoke();
+                }
+            }
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or System.Data.Common.DbException)
         {
             LogFailed(_logger, exception);
         }

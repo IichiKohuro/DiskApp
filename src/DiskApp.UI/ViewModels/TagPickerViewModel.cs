@@ -41,6 +41,14 @@ public sealed partial class TagChoice : ObservableObject
 }
 
 /// <summary>
+/// Авто-теги одной папки у файлов диалога тегов (PLAN.md, этап 19): видны, но снимаются у папки.
+/// </summary>
+/// <param name="Folder">Полный путь папки.</param>
+/// <param name="FolderName">Имя папки для подписи.</param>
+/// <param name="Tags">Теги, которые файлы получают от неё.</param>
+public sealed record InheritedTagGroup(string Folder, string FolderName, IReadOnlyList<TagLabel> Tags);
+
+/// <summary>
 /// Диалог тегов (PLAN.md, этап 8.7): отметить теги одному или нескольким файлам, создать новый тег с цветом из палитры.
 /// Тег, отмеченный у части файлов, остаётся как был, пока его не переключат.
 /// </summary>
@@ -59,6 +67,10 @@ public sealed partial class TagPickerViewModel : ViewModelBase
         Entries = entries;
         _library = library;
         TargetText = entries.Count == 1 ? L.F("TagPicker.TagsFor", entries[0].Name) : L.T("TagPicker.TagsFor2") + Formatting.Count(entries.Count, L.T("TagPicker.File.One"), L.T("TagPicker.File.Few"), L.T("TagPicker.File.Many"));
+        Inherited = [.. entries.SelectMany(static entry => entry.InheritedTags)
+            .Where(static tag => tag.Folder is not null)
+            .GroupBy(static tag => tag.Folder!, StringComparer.OrdinalIgnoreCase)
+            .Select(static group => new InheritedTagGroup(group.Key, PathText.FileName(group.Key), [.. group.DistinctBy(static tag => tag.Name, StringComparer.OrdinalIgnoreCase)]))];
     }
 
     /// <summary>Файлы, которым назначаются теги.</summary>
@@ -66,6 +78,18 @@ public sealed partial class TagPickerViewModel : ViewModelBase
 
     /// <summary>Заголовок: для чего теги.</summary>
     public string TargetText { get; }
+
+    /// <summary>Авто-теги папок у файлов: по папке, ближайшая первой.</summary>
+    public IReadOnlyList<InheritedTagGroup> Inherited { get; }
+
+    /// <summary>У файлов есть авто-теги папок.</summary>
+    public bool HasInherited => Inherited.Count > 0;
+
+    /// <summary>Папка, к которой попросили перейти, чтобы снять авто-тег; <c>null</c> — не просили.</summary>
+    public string? RequestedFolder { get; private set; }
+
+    /// <summary>Диалог просит закрыться без сохранения: пользователь переходит к папке.</summary>
+    public event EventHandler? CloseRequested;
 
     /// <summary>Все теги с отметками.</summary>
     public ObservableCollection<TagChoice> Choices { get; } = [];
@@ -143,6 +167,17 @@ public sealed partial class TagPickerViewModel : ViewModelBase
         }
 
         return updated;
+    }
+
+    /// <summary>Перейти к папке, от которой файлы получают авто-тег: снять его можно только там.</summary>
+    [RelayCommand]
+    private void GoToFolder(string? folder)
+    {
+        if (folder is { Length: > 0 })
+        {
+            RequestedFolder = folder;
+            CloseRequested?.Invoke(this, EventArgs.Empty);
+        }
     }
 
     private bool CanAddTag() => NewTagName.Trim().Length > 0;

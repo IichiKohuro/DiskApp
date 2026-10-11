@@ -3144,4 +3144,61 @@
   <data name="Sorting.CardRemove" xml:space="preserve">
     <value>Убрать</value>
   </data>
+  <data name="AutoTags.DialogTitle" xml:space="preserve">
+    <value>Авто-теги папки «{0}»</value>
+  </data>
+  <data name="AutoTags.Hint" xml:space="preserve">
+    <value>По этим тегам находится всё внутри папки и её подпапок — и то, что появится позже. Сами файлы не меняются.</value>
+  </data>
+  <data name="AutoTags.InheritedFromAbove" xml:space="preserve">
+    <value>Уже получает от папок выше: {0}</value>
+  </data>
+  <data name="AutoTags.Remove" xml:space="preserve">
+    <value>Убрать авто-тег</value>
+  </data>
+  <data name="AutoTags.SaveFailed" xml:space="preserve">
+    <value>Не удалось сохранить авто-теги: {0}</value>
+  </data>
+  <data name="AutoTags.TagOfFolder" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="AutoTags.Title" xml:space="preserve">
+    <value>Авто-теги</value>
+  </data>
+  <data name="AutoTags.Watermark" xml:space="preserve">
+    <value>Тег для всего в папке</value>
+  </data>
+  <data name="Browse.AutoTagsEllipsis" xml:space="preserve">
+    <value>Авто-теги папки…</value>
+  </data>
+  <data name="Browse.AutoTagsSaved" xml:space="preserve">
+    <value>Авто-теги сохранены</value>
+  </data>
+  <data name="Sorting.DestinationAutoTags" xml:space="preserve">
+    <value>Получат авто-теги: {0}</value>
+  </data>
+  <data name="Sorting.KeepAutoTags" xml:space="preserve">
+    <value>Оставить</value>
+  </data>
+  <data name="Sorting.RemoveAutoTags" xml:space="preserve">
+    <value>Снять</value>
+  </data>
+  <data name="Sorting.RemoveAutoTagsMessage" xml:space="preserve">
+    <value>У папки «{0}» есть авто-теги: {1}. Снять их? Если оставить, файлы в папке и дальше находятся по ним.</value>
+  </data>
+  <data name="Sorting.RemoveAutoTagsTitle" xml:space="preserve">
+    <value>Снять авто-теги?</value>
+  </data>
+  <data name="TagPicker.GoToFolder" xml:space="preserve">
+    <value>Перейти к папке</value>
+  </data>
+  <data name="TagPicker.InheritedTitle" xml:space="preserve">
+    <value>Авто-теги папок — снимаются у самой папки:</value>
+  </data>
+  <data name="Tags.AutoTagOfFolders" xml:space="preserve">
+    <value>Авто-тег папок:</value>
+  </data>
+  <data name="Tags.InheritedFrom" xml:space="preserve">
+    <value>Авто-тег папки {0}</value>
+  </data>
 </root>

@@ -173,6 +173,12 @@ public interface IDiskAppApi
     /// <summary>Изменить тег.</summary>
     Task<TagDto> UpdateTagAsync(long id, TagRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Авто-теги всех папок (этап 19).</summary>
+    Task<IReadOnlyList<FolderTagsDto>> GetAutoTagsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Заменить авто-теги папки; пустой список снимает все.</summary>
+    Task<FolderTagsDto> SetAutoTagsAsync(SetFolderTagsRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Удалить тег.</summary>
     Task DeleteTagAsync(long id, CancellationToken cancellationToken = default);
 

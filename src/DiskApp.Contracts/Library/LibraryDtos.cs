@@ -89,3 +89,35 @@ public sealed record FavoritesOrderRequest
     /// <summary>Записи избранного в новом порядке.</summary>
     public IReadOnlyList<long> EntryIds { get; set; } = [];
 }
+
+/// <summary>
+/// Авто-тег, который запись наследует от папки выше (PLAN.md, этап 19).
+/// </summary>
+/// <param name="Id">Идентификатор тега.</param>
+/// <param name="Name">Имя.</param>
+/// <param name="Color">Цвет <c>#RRGGBB</c>.</param>
+/// <param name="Folder">Полный путь папки, чей это авто-тег.</param>
+public sealed record InheritedTagDto(long Id, string Name, string? Color, string Folder);
+
+/// <summary>
+/// Авто-теги папки (PLAN.md, этап 19): <c>GET /api/v1/auto-tags</c> — все папки с ними.
+/// </summary>
+/// <param name="Path">Полный путь папки.</param>
+/// <param name="Tags">Теги по имени.</param>
+public sealed record FolderTagsDto(string Path, IReadOnlyList<TagDto> Tags);
+
+/// <summary>
+/// Авто-теги папки: <c>PUT /api/v1/auto-tags</c> заменяет их; пустой список снимает все. Теги по имени, недостающие
+/// создаются. Папка — внутри добавленных корней.
+/// </summary>
+public sealed record SetFolderTagsRequest
+{
+    /// <summary>Наибольшее число авто-тегов у папки.</summary>
+    public const int MaxTags = 20;
+
+    /// <summary>Полный путь папки.</summary>
+    public string Path { get; set; } = string.Empty;
+
+    /// <summary>Имена тегов.</summary>
+    public IReadOnlyList<string> Tags { get; set; } = [];
+}

@@ -553,6 +553,15 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _services.GetRequiredService<MainViewModel>().NavigateTo(pageKey);
     }
 
+    /// <inheritdoc />
+    public void BrowseFolder(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+
+        NavigateTo(PageKeys.Browse);
+        _ = _services.GetRequiredService<BrowseViewModel>().NavigateAsync(path);
+    }
+
     /// <summary>
     /// Выход из меню трея: если идут файловые операции и в настройках включено подтверждение, сначала спрашивает.
     /// </summary>
@@ -695,8 +704,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         if (startup.BrowsePath is { Length: > 0 } browsePath)
         {
-            NavigateTo(PageKeys.Browse);
-            _ = _services.GetRequiredService<BrowseViewModel>().NavigateAsync(browsePath);
+            BrowseFolder(browsePath);
         }
 
         if (startup.ShowSearch)

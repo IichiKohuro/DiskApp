@@ -269,6 +269,14 @@
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
     </Style>
 
+    <!-- Авто-тег папки (этап 19): контур вместо подложки — видно, что тег не свой и снимается у папки -->
+    <Style Selector="Border.tag.inherited">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="5,0,6,0" />
+    </Style>
+
     <!-- Цветная точка тега в списках страниц «Теги» и «Коллекции» -->
     <Style Selector="Ellipse.swatch">
         <Setter Property="Width" Value="12" />

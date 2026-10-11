@@ -143,6 +143,33 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
             CloseButtonText = L.T("Common.CancelButton"),
             DefaultButton = FAContentDialogButton.Primary,
         };
+
+        // «Перейти к папке» у авто-тега: диалог закрывается без сохранения, папку открывает вызывающий.
+        void OnCloseRequested(object? sender, EventArgs e) => box.Hide();
+        dialog.CloseRequested += OnCloseRequested;
+        try
+        {
+            return await box.ShowAsync(mainWindow()) == FAContentDialogResult.Primary && dialog.RequestedFolder is null;
+        }
+        finally
+        {
+            dialog.CloseRequested -= OnCloseRequested;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ShowAutoTagsAsync(string title, DiskApp.UI.ViewModels.AutoTagsEditorViewModel editor)
+    {
+        ArgumentNullException.ThrowIfNull(editor);
+
+        var box = new FAContentDialog
+        {
+            Title = L.F("AutoTags.DialogTitle", title),
+            Content = new DiskApp.UI.Views.AutoTagsEditorView { DataContext = editor, Width = 420 },
+            PrimaryButtonText = L.T("Common.Save"),
+            CloseButtonText = L.T("Common.CancelButton"),
+            DefaultButton = FAContentDialogButton.Primary,
+        };
         return await box.ShowAsync(mainWindow()) == FAContentDialogResult.Primary;
     }
 

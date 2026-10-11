@@ -14,6 +14,7 @@ public sealed class SampleLibraryService : ILibraryService
     private readonly List<long> _favorites;
     private readonly List<CollectionInfo> _collections;
     private readonly Dictionary<long, List<long>> _items = [];
+    private readonly Dictionary<string, List<long>> _folderTags = new(StringComparer.OrdinalIgnoreCase);
     private long _nextId = 1_000;
 
     /// <summary>Создаёт сервис на образцах «сейчас».</summary>
@@ -120,6 +121,11 @@ public sealed class SampleLibraryService : ILibraryService
         {
             var tag = _tags.Single(candidate => candidate.Id == id);
             _tags.Remove(tag);
+            foreach (var ids in _folderTags.Values)
+            {
+                ids.Remove(id);
+            }
+
             for (var i = 0; i < _entries.Count; i++)
             {
                 if (_entries[i].Tags.Contains(tag.Name))
@@ -149,6 +155,48 @@ public sealed class SampleLibraryService : ILibraryService
             }
 
             return Task.FromResult(updated);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<FolderTagsInfo>> GetAutoTagsAsync(CancellationToken cancellationToken = default)
+    {
+        lock (_gate)
+        {
+            return Task.FromResult<IReadOnlyList<FolderTagsInfo>>([.. _folderTags.Select(pair => FolderTags(pair.Key, pair.Value))]);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<FolderTagsInfo> SetAutoTagsAsync(string path, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(tags);
+        lock (_gate)
+        {
+            var ids = new List<long>();
+            foreach (var name in tags.Select(static name => name.Trim()).Where(static name => name.Length > 0))
+            {
+                var tag = _tags.Find(candidate => string.Equals(candidate.Name, name, StringComparison.OrdinalIgnoreCase));
+                if (tag is null)
+                {
+                    tag = new TagInfo(++_nextId, name, TagPalette.Next(_tags.Select(static existing => existing.Color)));
+                    _tags.Add(tag);
+                }
+
+                if (!ids.Contains(tag.Id))
+                {
+                    ids.Add(tag.Id);
+                }
+            }
+
+            _folderTags.Remove(path);
+            if (ids.Count > 0)
+            {
+                _folderTags[path] = ids;
+            }
+
+            return Task.FromResult(FolderTags(path, ids));
         }
     }
 
@@ -265,6 +313,9 @@ public sealed class SampleLibraryService : ILibraryService
     }
 
     private FileEntry? Find(long id) => _entries.Find(entry => entry.Id == id);
+
+    private FolderTagsInfo FolderTags(string path, List<long> ids)
+        => new(path, [.. ids.Select(id => _tags.Find(tag => tag.Id == id)).OfType<TagInfo>()]);
 
     private Dictionary<string, string> Colors(IEnumerable<string> names)
         => names.Select(name => _tags.Find(tag => string.Equals(tag.Name, name, StringComparison.Ordinal))).OfType<TagInfo>()

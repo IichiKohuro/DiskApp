@@ -272,6 +272,14 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
         => SendAsync(HttpMethod.Put, ApiRoutes.V1.Tag(id), request, Json.TagRequest, Json.TagDto, cancellationToken);
 
     /// <inheritdoc />
+    public Task<IReadOnlyList<FolderTagsDto>> GetAutoTagsAsync(CancellationToken cancellationToken = default)
+        => GetAsync(ApiRoutes.V1.AutoTags, Json.IReadOnlyListFolderTagsDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<FolderTagsDto> SetAutoTagsAsync(SetFolderTagsRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Put, ApiRoutes.V1.AutoTags, request, Json.SetFolderTagsRequest, Json.FolderTagsDto, cancellationToken);
+
+    /// <inheritdoc />
     public Task DeleteTagAsync(long id, CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Delete, ApiRoutes.V1.Tag(id), cancellationToken);
 
     /// <inheritdoc />

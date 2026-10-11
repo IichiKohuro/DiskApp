@@ -54,7 +54,21 @@ public sealed class ApiLibraryService(IDiskAppApi api) : ILibraryService
 
         var updated = await _api.SetEntryTagsAsync(entry.Id, tagIds, cancellationToken).ConfigureAwait(false);
         var mapped = ApiSearchService.ToEntry(updated, entry.Root, entry.IsOffline);
-        return entry with { Tags = mapped.Tags, TagColors = mapped.TagColors };
+        return entry with { Tags = mapped.Tags, TagColors = mapped.TagColors, InheritedTags = mapped.InheritedTags };
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<FolderTagsInfo>> GetAutoTagsAsync(CancellationToken cancellationToken = default)
+        => [.. (await _api.GetAutoTagsAsync(cancellationToken).ConfigureAwait(false)).Select(ToFolderTags)];
+
+    /// <inheritdoc />
+    public async Task<FolderTagsInfo> SetAutoTagsAsync(string path, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        ArgumentNullException.ThrowIfNull(tags);
+
+        var saved = await _api.SetAutoTagsAsync(new SetFolderTagsRequest { Path = path, Tags = tags }, cancellationToken).ConfigureAwait(false);
+        return ToFolderTags(saved);
     }
 
     /// <inheritdoc />
@@ -112,6 +126,8 @@ public sealed class ApiLibraryService(IDiskAppApi api) : ILibraryService
     private sealed record RootLabel(string Label, bool IsOffline);
 
     private static TagInfo ToTag(TagDto dto) => new(dto.Id, dto.Name, dto.Color);
+
+    private static FolderTagsInfo ToFolderTags(FolderTagsDto dto) => new(dto.Path, [.. dto.Tags.Select(ToTag)]);
 
     private static CollectionInfo ToCollection(CollectionDto dto)
         => new(dto.Id, dto.Name, dto.Kind == ContractCollectionKind.SavedQuery ? CollectionType.SavedQuery : CollectionType.Manual, dto.Query);

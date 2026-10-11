@@ -1,3 +1,6 @@
+using DiskApp.UI.Localization;
+using DiskApp.UI.Text;
+
 namespace DiskApp.UI.Models;
 
 /// <summary>Тег пользователя (PLAN.md, этап 8.7).</summary>
@@ -13,7 +16,41 @@ public sealed record TagInfo(long Id, string Name, string? Color)
 /// <summary>Тег у записи: имя и цвет для чипа.</summary>
 /// <param name="Name">Имя.</param>
 /// <param name="Color">Цвет <c>#RRGGBB</c> или <c>null</c> — нейтральный чип.</param>
-public sealed record TagLabel(string Name, string? Color);
+/// <param name="Folder">
+/// Папка, от которой тег достался записи (авто-тег, PLAN.md, этап 19); <c>null</c> — тег поставлен самой записи.
+/// </param>
+public sealed record TagLabel(string Name, string? Color, string? Folder = null)
+{
+    /// <summary>Тег унаследован от папки: чип рисуется контуром, снять его можно только у папки.</summary>
+    public bool IsInherited => Folder is not null;
+
+    /// <summary>Подсказка к чипу авто-тега; у своего тега — <c>null</c>.</summary>
+    public string? Hint => Folder is null ? null : L.F("Tags.InheritedFrom", Folder);
+}
+
+/// <summary>Авто-теги рабочей папки (PLAN.md, этап 19): действуют на всё внутри неё, текущее и новое.</summary>
+/// <param name="Path">Полный путь папки.</param>
+/// <param name="Tags">Теги.</param>
+public sealed record FolderTagsInfo(string Path, IReadOnlyList<TagInfo> Tags)
+{
+    /// <summary>
+    /// Авто-теги, которые получает путь от папок с авто-тегами: ближайшая папка первой, каждый тег один раз.
+    /// </summary>
+    /// <param name="folders">Все папки с авто-тегами.</param>
+    /// <param name="path">Файл или папка.</param>
+    public static IReadOnlyList<TagLabel> InheritedAt(IEnumerable<FolderTagsInfo> folders, string path)
+    {
+        ArgumentNullException.ThrowIfNull(folders);
+        ArgumentNullException.ThrowIfNull(path);
+
+        var seen = new HashSet<long>();
+        return [.. folders.Where(folder => PathText.IsSameOrInside(path, folder.Path))
+            .OrderByDescending(static folder => folder.Path.Length)
+            .SelectMany(static folder => folder.Tags.Select(tag => (Tag: tag, folder.Path)))
+            .Where(pair => seen.Add(pair.Tag.Id))
+            .Select(static pair => new TagLabel(pair.Tag.Name, pair.Tag.Color, pair.Path))];
+    }
+}
 
 /// <summary>Вид коллекции.</summary>
 public enum CollectionType

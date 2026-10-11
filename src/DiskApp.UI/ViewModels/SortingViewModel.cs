@@ -208,6 +208,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private readonly List<SortItem> _all = [];
     private IReadOnlyList<SortItem> _selection = [];
     private IReadOnlyList<string> _allTags = [];
+    private IReadOnlyList<TagInfo> _tagInfos = [];
+    private IReadOnlyList<FolderTagsInfo> _autoTags = [];
     private SortingFolders _folders = SortingFolders.Empty;
     private HashSet<string> _missing = new(StringComparer.OrdinalIgnoreCase);
     private readonly Func<DateTimeOffset> _clock;
@@ -295,7 +297,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
     /// <summary>Папка назначения в дереве.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DestinationText))]
+    [NotifyPropertyChangedFor(nameof(DestinationText), nameof(DestinationAutoTagsText), nameof(HasDestinationAutoTags))]
     [NotifyCanExecuteChangedFor(nameof(MoveCommand), nameof(StartNewFolderCommand))]
     public partial SortFolderNode? SelectedFolder { get; set; }
 
@@ -347,6 +349,14 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
     /// <summary>Куда пойдут файлы: «417 › Переписка».</summary>
     public string DestinationText => SelectedFolder is { } folder ? DescribePath(folder) : L.T("Sorting.ChooseDestination");
+
+    /// <summary>Какие авто-теги файлы получат в выбранной папке (этап 19): «получат авто-теги: ТЗ, 417»; пусто — никаких.</summary>
+    public string DestinationAutoTagsText => SelectedFolder is { } folder && FolderTagsInfo.InheritedAt(_autoTags, folder.Path) is { Count: > 0 } inherited
+        ? L.F("Sorting.DestinationAutoTags", string.Join(", ", inherited.Select(static tag => tag.Name)))
+        : string.Empty;
+
+    /// <summary>Папка назначения даёт авто-теги.</summary>
+    public bool HasDestinationAutoTags => DestinationAutoTagsText.Length > 0;
 
     /// <summary>Подпись кнопки переноса.</summary>
     public string MoveText => SelectedCount > 0
@@ -705,14 +715,45 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
-    /// <summary>Убирает рабочую папку из списка; папка и файлы остаются.</summary>
+    /// <summary>
+    /// Убирает рабочую папку из списка; папка и файлы остаются. Если у папки есть авто-теги (этап 19), спрашивает, снять ли
+    /// их: оставленные продолжают действовать — папку можно убрать из «Разбора» только ради порядка клавиш.
+    /// </summary>
     [RelayCommand]
     private async Task RemoveWorkFolderAsync(WorkFolderItem? item)
     {
-        if (item is not null)
+        if (item is null)
         {
-            await SaveAsync(_folders with { WorkFolders = [.. _folders.WorkFolders.Where(candidate => !SamePath(candidate.Path, item.Folder.Path))] }, null);
+            return;
         }
+
+        var path = item.Folder.Path;
+        await SaveAsync(_folders with { WorkFolders = [.. _folders.WorkFolders.Where(candidate => !SamePath(candidate.Path, path))] }, null);
+        if (OwnAutoTags(path) is not { Count: > 0 } autoTags || _dialogs is null)
+        {
+            return;
+        }
+
+        var names = string.Join(", ", autoTags.Select(static tag => tag.Name));
+        if (await _dialogs.ConfirmAsync(L.T("Sorting.RemoveAutoTagsTitle"), L.F("Sorting.RemoveAutoTagsMessage", PathText.FileName(path), names), L.T("Sorting.RemoveAutoTags"), L.T("Sorting.KeepAutoTags")))
+        {
+            await SaveAutoTagsAsync(() => _library.SetAutoTagsAsync(path, []));
+        }
+    }
+
+    /// <summary>Сохраняет авто-теги и перечитывает их; ошибку показывает полосой уведомлений.</summary>
+    private async Task SaveAutoTagsAsync(Func<Task> save)
+    {
+        try
+        {
+            await save();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.T("AutoTags.Title"), L.F("AutoTags.SaveFailed", exception.Message), FAInfoBarSeverity.Error);
+        }
+
+        await LoadTagsAsync();
     }
 
     /// <summary>Сдвигает рабочую папку на одну клавишу раньше.</summary>
@@ -905,14 +946,23 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     {
         try
         {
-            _allTags = [.. (await _library.GetTagsAsync()).Select(static tag => tag.Name)];
+            _tagInfos = await _library.GetTagsAsync();
+            _allTags = [.. _tagInfos.Select(static tag => tag.Name)];
+            _autoTags = await _library.GetAutoTagsAsync() ?? [];
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            // Без подсказок теги всё равно вводятся вручную.
+            // Без подсказок теги всё равно вводятся вручную, а без авто-тегов просто нет строки «получат авто-теги».
             _ = exception;
         }
+
+        OnPropertyChanged(nameof(DestinationAutoTagsText));
+        OnPropertyChanged(nameof(HasDestinationAutoTags));
     }
+
+    /// <summary>Авто-теги папки ровно по этому пути (не унаследованные от папок выше).</summary>
+    private IReadOnlyList<TagInfo> OwnAutoTags(string path)
+        => _autoTags.FirstOrDefault(folder => SamePath(folder.Path, path))?.Tags ?? [];
 
     private void ShowItems()
     {
@@ -1012,7 +1062,19 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             return;
         }
 
-        var card = new WorkFolderCardViewModel(item.Folder, index, list.Count, item.IsMissing, _dialogs);
+        // Авто-теги читаются заново: их могли поменять в «Обзоре». Не прочитались — поле не показывается, чтобы сохранение
+        // карточки не стёрло их.
+        AutoTagsEditorViewModel? autoTags = null;
+        try
+        {
+            autoTags = await AutoTagsEditorViewModel.LoadAsync(_library, item.Folder.Path);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _ = exception;
+        }
+
+        var card = new WorkFolderCardViewModel(item.Folder, index, list.Count, item.IsMissing, _dialogs, autoTags);
         switch (await _dialogs.ShowWorkFolderCardAsync(card))
         {
             case WorkFolderCardResult.Removed:
@@ -1028,7 +1090,22 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
                 list.RemoveAt(index);
                 list.Insert(Math.Clamp(card.SelectedPosition.Value, 0, list.Count), edited);
-                await SaveAsync(_folders with { WorkFolders = list }, SamePath(edited.Path, item.Folder.Path) ? null : edited.Path);
+                var moved = !SamePath(edited.Path, item.Folder.Path);
+                await SaveAsync(_folders with { WorkFolders = list }, moved ? edited.Path : null);
+                if (autoTags is not null && (autoTags.IsChanged || (moved && autoTags.HasTags)))
+                {
+                    // Папку выбрали заново — авто-теги переезжают к ней вместе с карточкой.
+                    await SaveAutoTagsAsync(async () =>
+                    {
+                        if (moved && autoTags.HadTags)
+                        {
+                            await _library.SetAutoTagsAsync(item.Folder.Path, []);
+                        }
+
+                        await autoTags.SaveAsync(_library, edited.Path);
+                    });
+                }
+
                 break;
         }
     }

@@ -285,4 +285,7 @@
   <data name="SortingEndpoints.SourceNotFound" xml:space="preserve">
     <value>File or folder not found: {0}</value>
   </data>
+  <data name="LibraryEndpoints.TooManyAutoTags" xml:space="preserve">
+    <value>A folder has at most {0} auto-tags.</value>
+  </data>
 </root>

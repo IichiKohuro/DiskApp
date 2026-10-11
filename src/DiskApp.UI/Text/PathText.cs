@@ -59,6 +59,24 @@ public static class PathText
     private static bool IsDriveLetter(string text) => text.Length == 2 && text[1] == ':' && char.IsLetter(text[0]);
 
     /// <summary>
+    /// Путь — сама папка или лежит внутри неё на любой глубине. Без учёта регистра, как в Windows; «417 ТЗ» не внутри «417».
+    /// </summary>
+    public static bool IsSameOrInside(string path, string folder)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(folder);
+
+        var inner = path.TrimEnd(Separators);
+        var outer = folder.TrimEnd(Separators);
+        if (outer.Length == 0 || !inner.StartsWith(outer, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return inner.Length == outer.Length || Array.IndexOf(Separators, inner[outer.Length]) >= 0;
+    }
+
+    /// <summary>
     /// Путь с другим именем в той же папке; разделитель — тот же, что в исходном пути.
     /// </summary>
     public static string WithFileName(string path, string newName)

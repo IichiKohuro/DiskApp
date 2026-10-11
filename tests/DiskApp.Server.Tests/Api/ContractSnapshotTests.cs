@@ -102,6 +102,30 @@ public sealed class ContractSnapshotTests
             DiskAppJsonContext.Default.JsonObject);
 
     [Fact]
+    public void AutoTags_MatchSnapshot()
+        => Verify(
+            new JsonObject
+            {
+                ["entry"] = JsonSerializer.SerializeToNode(
+                    Entry with
+                    {
+                        Score = null,
+                        Match = null,
+                        NameHighlights = null,
+                        PathHighlights = null,
+                        InheritedTags = [new InheritedTagDto(9, "ТЗ", "#E74856", @"D:\Документы\417")],
+                    },
+                    DiskAppJsonContext.Default.EntryDto),
+                ["folders"] = JsonSerializer.SerializeToNode<IReadOnlyList<FolderTagsDto>>(
+                    [new FolderTagsDto(@"D:\Документы\417", [new TagDto(9, "ТЗ", "#E74856"), new TagDto(10, "417", null)])],
+                    DiskAppJsonContext.Default.IReadOnlyListFolderTagsDto),
+                ["request"] = JsonSerializer.SerializeToNode(
+                    new SetFolderTagsRequest { Path = @"D:\Документы\417", Tags = ["ТЗ", "417"] },
+                    DiskAppJsonContext.Default.SetFolderTagsRequest),
+            },
+            DiskAppJsonContext.Default.JsonObject);
+
+    [Fact]
     public void DefaultSettings_MatchSnapshot()
         => Verify(AppSettings.Default.ToDto(), DiskAppJsonContext.Default.SettingsDto);
 

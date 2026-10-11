@@ -143,6 +143,9 @@ public static class ApiRoutes
         /// <summary>Теги: список и создание.</summary>
         public const string Tags = Prefix + "/tags";
 
+        /// <summary>Авто-теги папок (этап 19): список и замена.</summary>
+        public const string AutoTags = Prefix + "/auto-tags";
+
         /// <summary>Тег по идентификатору.</summary>
         public const string TagById = Tags + "/{id:long}";
 

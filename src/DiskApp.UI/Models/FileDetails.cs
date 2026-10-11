@@ -45,7 +45,7 @@ public sealed class FileDetails
     public bool HasAvailability => Availability.Length > 0;
 
     /// <summary>Есть ли теги.</summary>
-    public bool HasTags => Entry.Tags.Count > 0;
+    public bool HasTags => Entry.HasAnyTags;
 
     /// <summary>
     /// Название вида файла по-русски.

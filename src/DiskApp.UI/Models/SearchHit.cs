@@ -71,10 +71,10 @@ public sealed class SearchHit
     public bool IsFavorite => Entry.IsFavorite;
 
     /// <summary>У файла есть теги.</summary>
-    public bool HasTags => Entry.Tags.Count > 0;
+    public bool HasTags => Entry.HasAnyTags;
 
     /// <summary>Теги через точку с запятой для подписи.</summary>
-    public string TagsText => string.Join(" · ", Entry.Tags);
+    public string TagsText => string.Join(" · ", Entry.TagLabels.Select(static tag => tag.Name));
 
     /// <summary>Файл сейчас не открыть мгновенно: корень недоступен или содержимое только в облаке.</summary>
     public bool IsUnavailable => Entry.IsOffline || Entry.IsCloudOnly;

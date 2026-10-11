@@ -205,6 +205,7 @@
             <Separator />
             <MenuItem Header="{loc:Str Common.PinOrUnpin}" Command="{Binding TogglePinCommand}" InputGesture="Ctrl+D" />
             <MenuItem Header="{loc:Str Common.TagsEllipsis}" Command="{Binding EditTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditTags}" />
+            <MenuItem Header="{loc:Str Browse.AutoTagsEllipsis}" Command="{Binding EditAutoTagsCommand}" IsVisible="{Binding CanEditAutoTags}" />
             <MenuItem Header="{loc:Str Common.RenameEllipsis}" Command="{Binding RenameCommand}" />
             <MenuItem Header="{loc:Str Browse.MoveToRecycleBin}" Command="{Binding DeleteCommand}" />
             <Separator />

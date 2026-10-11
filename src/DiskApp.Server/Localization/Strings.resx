@@ -285,4 +285,7 @@
   <data name="SortingEndpoints.SourceNotFound" xml:space="preserve">
     <value>Файл или папка не найдены: {0}</value>
   </data>
+  <data name="LibraryEndpoints.TooManyAutoTags" xml:space="preserve">
+    <value>У папки не больше {0} авто-тегов.</value>
+  </data>
 </root>

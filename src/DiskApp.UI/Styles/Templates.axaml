@@ -3,9 +3,9 @@
                     xmlns:m="using:DiskApp.UI.Models"
                     xmlns:c="using:DiskApp.UI.Controls"
                     xmlns:ic="using:FluentIcons.Avalonia">
-    <!-- Чип тега: цветная точка и имя (PLAN.md, этап 8.7) -->
+    <!-- Чип тега: свой — на подложке, авто-тег папки (этап 19) — контуром, с подсказкой, от какой он папки -->
     <DataTemplate x:Key="TagChipTemplate" DataType="m:TagLabel">
-        <Border Classes="tag">
+        <Border Classes="tag" Classes.inherited="{Binding IsInherited}" ToolTip.Tip="{Binding Hint}">
             <StackPanel Orientation="Horizontal" Spacing="4">
                 <Ellipse Width="7" Height="7" VerticalAlignment="Center" Fill="{Binding Color, Converter={x:Static c:TagConverters.Brush}}" />
                 <TextBlock Text="{Binding Name}" />

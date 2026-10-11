@@ -167,6 +167,7 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
             IsFavorite = dto.IsFavorite,
             Tags = dto.Tags?.Select(static tag => tag.Name).ToArray() ?? [],
             TagColors = dto.Tags?.Where(static tag => tag.Color is not null).DistinctBy(static tag => tag.Name).ToDictionary(static tag => tag.Name, static tag => tag.Color!) ?? [],
+            InheritedTags = dto.InheritedTags?.Select(static tag => new TagLabel(tag.Name, tag.Color, tag.Folder)).ToArray() ?? [],
             IconKey = dto.IconKey,
             NameHighlights = dto.NameHighlights?.Select(static range => new HighlightRange(range.Start, range.Length)).ToArray(),
             IsCloudOnly = dto.IsCloudPlaceholder,

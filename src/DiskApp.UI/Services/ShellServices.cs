@@ -77,6 +77,14 @@ public interface IDialogService
     Task<DiskApp.UI.ViewModels.WorkFolderCardResult> ShowWorkFolderCardAsync(DiskApp.UI.ViewModels.WorkFolderCardViewModel card);
 
     /// <summary>
+    /// Диалог «Авто-теги папки…» (PLAN.md, этап 19).
+    /// </summary>
+    /// <param name="title">Заголовок: имя папки.</param>
+    /// <param name="editor">Поле авто-тегов.</param>
+    /// <returns><c>true</c> — нажата «Сохранить».</returns>
+    Task<bool> ShowAutoTagsAsync(string title, DiskApp.UI.ViewModels.AutoTagsEditorViewModel editor);
+
+    /// <summary>
     /// Редактор тега: имя и цвет из палитры (PLAN.md, этап 8.7).
     /// </summary>
     /// <returns>Имя и цвет или <c>null</c>, если отменено.</returns>

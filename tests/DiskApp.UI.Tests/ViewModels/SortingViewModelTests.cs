@@ -19,6 +19,10 @@ public sealed class SortingViewModelTests
 
     private static readonly DateTimeOffset Now = new(2026, 10, 11, 12, 0, 0, TimeSpan.FromHours(3));
 
+    private static readonly string[] CustomerUrgent = ["заказчик", "срочно"];
+
+    private static readonly string[] PhotoOnly = ["фото"];
+
     private readonly SampleSortingSettings _settings = new(new SortingFolders(
         [new SortingFolderInfo(Downloads, "Загрузки"), new SortingFolderInfo(Skype, "Skype")],
         [new SortingFolderInfo(@"D:\Work\TCI2"), new SortingFolderInfo(Work417), new SortingFolderInfo(Soft)]));
@@ -319,6 +323,151 @@ public sealed class SortingViewModelTests
     }
 
     [Fact]
+    public async Task EditWorkFolder_AutoTags_SavedAndNewTagGetsPaletteColor()
+    {
+        // Arrange: у папки авто-тег «фото»; в карточке его убрали, добавили тег из библиотеки и новый
+        AutoTags(new FolderTagsInfo(Work417, [new TagInfo(3, "фото", null)]));
+        var page = await CreateLoadedAsync();
+        IReadOnlyList<string>? initial = null;
+        _dialogs.ShowWorkFolderCardAsync(Arg.Any<WorkFolderCardViewModel>()).Returns(call =>
+        {
+            var editor = call.Arg<WorkFolderCardViewModel>().AutoTags!;
+            initial = editor.Names;
+            editor.RemoveCommand.Execute(editor.Tags[0]);
+            editor.AddCommand.Execute("ЗАКАЗЧИК");
+            editor.Text = "#срочно";
+            editor.AddCommand.Execute(null);
+            return WorkFolderCardResult.Saved;
+        });
+
+        // Act
+        await page.EditWorkFolderCommand.ExecuteAsync(page.WorkFolders[1]);
+
+        // Assert
+        initial.ShouldBe(["фото"]);
+        await _library.Received(1).CreateTagAsync("срочно", Arg.Is<string?>(color => color != null), Arg.Any<CancellationToken>());
+        await _library.Received(1).SetAutoTagsAsync(Work417, Arg.Is<IReadOnlyList<string>>(tags => tags.SequenceEqual(CustomerUrgent)), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task EditWorkFolder_UnchangedAutoTags_AreNotSaved()
+    {
+        // Arrange
+        AutoTags(new FolderTagsInfo(Work417, [new TagInfo(3, "фото", null)]));
+        var page = await CreateLoadedAsync();
+        _dialogs.ShowWorkFolderCardAsync(Arg.Any<WorkFolderCardViewModel>()).Returns(WorkFolderCardResult.Saved);
+
+        // Act
+        await page.EditWorkFolderCommand.ExecuteAsync(page.WorkFolders[1]);
+
+        // Assert
+        await _library.DidNotReceive().SetAutoTagsAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task EditWorkFolder_PickedAgain_AutoTagsMoveToNewPath()
+    {
+        // Arrange
+        AutoTags(new FolderTagsInfo(Work417, [new TagInfo(3, "фото", null)]));
+        _dialogs.PickFolderAsync(Arg.Any<string>()).Returns(@"D:\Work\Архив\417");
+        var page = await CreateLoadedAsync();
+        _dialogs.ShowWorkFolderCardAsync(Arg.Any<WorkFolderCardViewModel>()).Returns(async call =>
+        {
+            await call.Arg<WorkFolderCardViewModel>().PickFolderCommand.ExecuteAsync(null);
+            return WorkFolderCardResult.Saved;
+        });
+
+        // Act
+        await page.EditWorkFolderCommand.ExecuteAsync(page.WorkFolders[1]);
+
+        // Assert
+        await _library.Received(1).SetAutoTagsAsync(Work417, Arg.Is<IReadOnlyList<string>>(tags => tags.Count == 0), Arg.Any<CancellationToken>());
+        await _library.Received(1).SetAutoTagsAsync(@"D:\Work\Архив\417", Arg.Is<IReadOnlyList<string>>(tags => tags.SequenceEqual(PhotoOnly)), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task EditWorkFolder_AutoTagsUnreadable_CardHidesField()
+    {
+        // Arrange: без ответа сервера поле не показывается — сохранение карточки не сотрёт авто-теги
+        _library.GetAutoTagsAsync(Arg.Any<CancellationToken>()).Returns<IReadOnlyList<FolderTagsInfo>>(_ => throw new HttpRequestException("нет связи"));
+        var page = await CreateLoadedAsync();
+        bool? hasAutoTags = null;
+        _dialogs.ShowWorkFolderCardAsync(Arg.Any<WorkFolderCardViewModel>()).Returns(call =>
+        {
+            hasAutoTags = call.Arg<WorkFolderCardViewModel>().HasAutoTags;
+            return WorkFolderCardResult.Saved;
+        });
+
+        // Act
+        await page.EditWorkFolderCommand.ExecuteAsync(page.WorkFolders[1]);
+
+        // Assert
+        hasAutoTags.ShouldBe(false);
+        await _library.DidNotReceive().SetAutoTagsAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RemoveWorkFolder_WithAutoTags_AsksWhetherToRemoveThem(bool remove)
+    {
+        // Arrange
+        AutoTags(new FolderTagsInfo(Work417, [new TagInfo(3, "фото", null), new TagInfo(2, "договор", null)]));
+        var page = await CreateLoadedAsync();
+        string? question = null;
+        _dialogs.ConfirmAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>()).Returns(call =>
+        {
+            question = call.ArgAt<string>(1);
+            return remove;
+        });
+
+        // Act
+        await page.RemoveWorkFolderCommand.ExecuteAsync(page.WorkFolders[1]);
+
+        // Assert: папка убрана из списка в любом случае
+        page.WorkFolders.Select(static item => item.Text).ShouldBe(["1 TCI2", "2 Soft"]);
+        question.ShouldNotBeNull().ShouldContain("фото, договор");
+        await _library.Received(remove ? 1 : 0).SetAutoTagsAsync(Work417, Arg.Is<IReadOnlyList<string>>(tags => tags.Count == 0), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RemoveWorkFolder_WithoutAutoTags_DoesNotAsk()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+
+        // Act
+        await page.RemoveWorkFolderCommand.ExecuteAsync(page.WorkFolders[0]);
+
+        // Assert
+        await _dialogs.DidNotReceive().ConfirmAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>());
+    }
+
+    [Fact]
+    public async Task Destination_ShowsAutoTagsFilesWillGet_NearestFolderFirst()
+    {
+        // Arrange
+        AutoTags(
+            new FolderTagsInfo(Work417, [new TagInfo(3, "фото", null)]),
+            new FolderTagsInfo(Path.Combine(Work417, "Переписка"), [new TagInfo(2, "договор", null)]),
+            new FolderTagsInfo(@"D:\Work\4170", [new TagInfo(1, "заказчик", null)]));
+        var page = await CreateLoadedAsync();
+        var beforeChoice = page.HasDestinationAutoTags;
+        page.SelectWorkFolderByNumberCommand.Execute(2);
+        await page.Tree[0].Loading;
+
+        // Act
+        var atFolder = page.DestinationAutoTagsText;
+        page.SelectedFolder = page.Tree[0].Children.Single(static node => node.Name == "Переписка");
+
+        // Assert: «4170» начинается с «417», но это другая папка
+        beforeChoice.ShouldBeFalse();
+        atFolder.ShouldBe("Получат авто-теги: фото");
+        page.DestinationAutoTagsText.ShouldBe("Получат авто-теги: договор, фото");
+        page.HasDestinationAutoTags.ShouldBeTrue();
+    }
+
+    [Fact]
     public void WorkFolderCard_PositionsTitleAndFolder()
     {
         // Arrange
@@ -450,6 +599,13 @@ public sealed class SortingViewModelTests
 
     private static FileEntry Folder(string folder, string name)
         => new() { FullPath = Path.Combine(folder, name), Kind = FileKind.Folder, Root = "Work", Modified = Now.AddDays(-10) };
+
+    private void AutoTags(params FolderTagsInfo[] folders)
+    {
+        _library.GetAutoTagsAsync(Arg.Any<CancellationToken>()).Returns(folders);
+        _library.SetAutoTagsAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>())
+            .Returns(static call => new FolderTagsInfo(call.ArgAt<string>(0), []));
+    }
 
     private void Listing(string path, params FileEntry[] items)
         => _browse.ListAsync(path, Arg.Any<BrowseSort>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())

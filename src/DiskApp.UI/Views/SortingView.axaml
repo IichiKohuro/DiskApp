@@ -265,6 +265,7 @@
                     <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap">
                         <Run Text="{loc:Str Sorting.To}" /><Run Text=": " /><Run FontWeight="SemiBold" Text="{Binding DestinationText}" />
                     </TextBlock>
+                    <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" Text="{Binding DestinationAutoTagsText}" IsVisible="{Binding HasDestinationAutoTags}" />
                     <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="36"
                             Content="{Binding MoveText}" Command="{Binding MoveCommand}" HotKey="Ctrl+Enter"
                             ToolTip.Tip="{loc:Str Sorting.MoveTip}" />

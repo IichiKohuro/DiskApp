@@ -67,6 +67,12 @@ public sealed record EntryDto
     /// <summary>Теги записи; <c>null</c> — тегов нет.</summary>
     public IReadOnlyList<TagDto>? Tags { get; init; }
 
+    /// <summary>
+    /// Авто-теги папок выше (этап 19): действуют на запись, пока она лежит внутри; <c>null</c> — нет. Свои теги записи сюда не
+    /// попадают, даже если совпадают.
+    /// </summary>
+    public IReadOnlyList<InheritedTagDto>? InheritedTags { get; init; }
+
     /// <summary>Оценка ранжирования (только в поиске).</summary>
     public double? Score { get; init; }
 

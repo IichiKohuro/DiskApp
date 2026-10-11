@@ -93,7 +93,9 @@ public static class ServerServiceCollectionExtensions
             provider.GetRequiredService<FileOperationService>(),
             provider.GetRequiredService<ISettingsStore<AppSettings>>(),
             provider.GetRequiredService<PathNormalizer>(),
-            provider.GetRequiredService<ILogger<SortingFolderTracker>>()));
+            provider.GetRequiredService<ILogger<SortingFolderTracker>>(),
+            provider.GetRequiredService<IFolderTagRepository>(),
+            () => provider.GetRequiredService<SearchService>().InvalidateCaches()));
         services.AddHostedService<SortingFolderTrackerService>();
         services.AddHostedService<ServerStartupService>();
         services.AddHostedService<SearchCacheInvalidator>();
@@ -129,6 +131,7 @@ public static class ServerServiceCollectionExtensions
         services.AddSingleton<IUsageRepository>(static provider => new SqliteUsageRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<IFavoriteRepository>(static provider => new SqliteFavoriteRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<ITagRepository>(static provider => new SqliteTagRepository(provider.GetRequiredService<SqliteDatabase>()));
+        services.AddSingleton<IFolderTagRepository>(static provider => new SqliteFolderTagRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
         services.AddSingleton<ICollectionRepository>(static provider => new SqliteCollectionRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<IClock>()));
         services.AddSingleton<IQueryHistoryRepository>(static provider => new SqliteQueryHistoryRepository(provider.GetRequiredService<SqliteDatabase>()));
     }

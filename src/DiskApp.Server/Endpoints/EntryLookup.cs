@@ -17,7 +17,8 @@ internal sealed class EntryLookup(
     IUsageRepository usage,
     IFavoriteRepository favorites,
     ITagRepository tags,
-    PathNormalizer paths)
+    PathNormalizer paths,
+    IFolderTagRepository folderTags)
 {
     /// <summary>Запись и её корень; <c>null</c>, если записи нет.</summary>
     public async Task<(FileEntry Entry, Root Root)?> FindAsync(long id, CancellationToken cancellationToken)
@@ -63,6 +64,7 @@ internal sealed class EntryLookup(
         var stats = (await usage.GetManyAsync(ids, cancellationToken).ConfigureAwait(false)).ToDictionary(static stat => stat.EntryId);
         var favoriteIds = (await favorites.GetAllAsync(cancellationToken).ConfigureAwait(false)).Select(static favorite => favorite.EntryId).ToHashSet();
         var tagMap = await tags.GetTagsOfEntriesAsync(ids, cancellationToken).ConfigureAwait(false);
+        var inherit = await InheritorAsync(cancellationToken).ConfigureAwait(false);
 
         var result = new List<EntryDto>(list.Count);
         foreach (var entry in list)
@@ -73,7 +75,7 @@ internal sealed class EntryLookup(
             }
 
             var dto = entry.ToDto(rootPath, paths, favoriteIds.Contains(entry.Id), stats.GetValueOrDefault(entry.Id));
-            result.Add(tagMap.TryGetValue(entry.Id, out var entryTags) && entryTags.Count > 0 ? dto with { Tags = ToTags(entryTags) } : dto);
+            result.Add(inherit(tagMap.TryGetValue(entry.Id, out var entryTags) && entryTags.Count > 0 ? dto with { Tags = ToTags(entryTags) } : dto));
         }
 
         return result;
@@ -88,10 +90,41 @@ internal sealed class EntryLookup(
         }
 
         var tagMap = await tags.GetTagsOfEntriesAsync(list.Select(static dto => dto.Id).ToArray(), cancellationToken).ConfigureAwait(false);
-        return tagMap.Count == 0
-            ? list
-            : list.Select(dto => tagMap.TryGetValue(dto.Id, out var entryTags) && entryTags.Count > 0 ? dto with { Tags = ToTags(entryTags) } : dto).ToArray();
+        var inherit = await InheritorAsync(cancellationToken).ConfigureAwait(false);
+        return list.Select(dto => inherit(tagMap.TryGetValue(dto.Id, out var entryTags) && entryTags.Count > 0 ? dto with { Tags = ToTags(entryTags) } : dto)).ToArray();
     }
 
     private static TagDto[] ToTags(IReadOnlyList<Tag> entryTags) => entryTags.Select(static tag => tag.ToDto()).ToArray();
+
+    /// <summary>
+    /// Добавляет к записи авто-теги папок выше (этап 19): ближайшая папка первой, тег, который у записи уже есть свой или
+    /// пришёл от более близкой папки, второй раз не показывается. Папок с авто-тегами десятки — они читаются один раз на ответ.
+    /// </summary>
+    private async Task<Func<EntryDto, EntryDto>> InheritorAsync(CancellationToken cancellationToken)
+    {
+        var folders = (await folderTags.GetAllAsync(cancellationToken).ConfigureAwait(false))
+            .OrderByDescending(static folder => folder.Path.Length)
+            .ToArray();
+        if (folders.Length == 0)
+        {
+            return static dto => dto;
+        }
+
+        return dto =>
+        {
+            HashSet<long> seen = [.. dto.Tags?.Select(static tag => tag.Id) ?? []];
+            var inherited = new List<InheritedTagDto>();
+            foreach (var folder in folders)
+            {
+                if (!paths.Comparer.Equals(dto.FullPath, folder.Path) && !paths.IsNestedIn(dto.FullPath, folder.Path))
+                {
+                    continue;
+                }
+
+                inherited.AddRange(folder.Tags.Where(tag => seen.Add(tag.Id)).Select(tag => new InheritedTagDto(tag.Id, tag.Name, tag.Color, folder.Path)));
+            }
+
+            return inherited.Count == 0 ? dto : dto with { InheritedTags = inherited };
+        };
+    }
 }

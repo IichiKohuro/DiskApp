@@ -12,6 +12,11 @@ using FluentAvalonia.UI.Controls;
 
 namespace DiskApp.UI.ViewModels;
 
+/// <summary>Папка, где тег — авто-тег (PLAN.md, этап 19).</summary>
+/// <param name="Path">Полный путь.</param>
+/// <param name="Name">Имя для кнопки.</param>
+public sealed record AutoTagFolder(string Path, string Name);
+
 /// <summary>
 /// Страница «Теги» (PLAN.md, этап 8.7): список тегов с цветами, создание, переименование, смена цвета и удаление;
 /// файлы выбранного тега — поиском <c>tag:</c>.
@@ -24,20 +29,21 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
     private readonly IDialogService? _dialogs;
     private readonly IInfoBarService? _notices;
     private readonly Func<DateTimeOffset> _clock;
+    private readonly IAppCommands? _commands;
     private int _filesVersion;
 
     /// <summary>
     /// Создаёт страницу приложения.
     /// </summary>
-    public TagsViewModel(ILibraryService library, ISearchService search, IFileActions actions, IDialogService dialogs, IInfoBarService notices, ITagEditor? tagEditor = null)
-        : this(library, search, actions, dialogs, notices, tagEditor, static () => DateTimeOffset.Now)
+    public TagsViewModel(ILibraryService library, ISearchService search, IFileActions actions, IDialogService dialogs, IInfoBarService notices, ITagEditor? tagEditor = null, IAppCommands? commands = null)
+        : this(library, search, actions, dialogs, notices, tagEditor, static () => DateTimeOffset.Now, commands)
     {
     }
 
     /// <summary>
     /// Создаёт страницу с заданными часами (тесты, превью).
     /// </summary>
-    public TagsViewModel(ILibraryService library, ISearchService search, IFileActions actions, IDialogService? dialogs, IInfoBarService? notices, ITagEditor? tagEditor, Func<DateTimeOffset> clock)
+    public TagsViewModel(ILibraryService library, ISearchService search, IFileActions actions, IDialogService? dialogs, IInfoBarService? notices, ITagEditor? tagEditor, Func<DateTimeOffset> clock, IAppCommands? commands = null)
         : base(PageKeys.Tags, "Common.Page.Tags", FASymbol.Tag)
     {
         ArgumentNullException.ThrowIfNull(library);
@@ -52,6 +58,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         _notices = notices;
         TagEditor = tagEditor;
         _clock = clock;
+        _commands = commands;
     }
 
     /// <summary>Диалог тегов файла.</summary>
@@ -71,6 +78,12 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
     [NotifyPropertyChangedFor(nameof(HasSelection), nameof(FilesTitle))]
     [NotifyCanExecuteChangedFor(nameof(EditTagCommand), nameof(DeleteTagCommand))]
     public partial TagInfo? SelectedTag { get; set; }
+
+    /// <summary>Папки, где выбранный тег — авто-тег (этап 19): их файлы входят в список ниже.</summary>
+    public ObservableCollection<AutoTagFolder> AutoTagFolders { get; } = [];
+
+    /// <summary>Выбранный тег — авто-тег хотя бы одной папки.</summary>
+    public bool HasAutoTagFolders => AutoTagFolders.Count > 0;
 
     /// <summary>Выбранный файл.</summary>
     [ObservableProperty]
@@ -163,9 +176,13 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         if (SelectedTag is not { } tag)
         {
             Files.Clear();
+            AutoTagFolders.Clear();
+            OnPropertyChanged(nameof(HasAutoTagFolders));
             FilesText = string.Empty;
             return;
         }
+
+        await LoadAutoTagFoldersAsync(tag, version);
 
         try
         {
@@ -190,6 +207,43 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         {
             Files.Clear();
             FilesText = L.T("Tags.CouldNotFindFiles") + exception.Message;
+        }
+    }
+
+    /// <summary>Папки, где тег — авто-тег; без ответа сервера список просто пуст.</summary>
+    private async Task LoadAutoTagFoldersAsync(TagInfo tag, int version)
+    {
+        IReadOnlyList<FolderTagsInfo> folders = [];
+        try
+        {
+            folders = await _library.GetAutoTagsAsync() ?? [];
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _ = exception;
+        }
+
+        if (version != _filesVersion)
+        {
+            return;
+        }
+
+        AutoTagFolders.Clear();
+        foreach (var folder in folders.Where(folder => folder.Tags.Any(candidate => candidate.Id == tag.Id)).OrderBy(static folder => folder.Path, StringComparer.CurrentCultureIgnoreCase))
+        {
+            AutoTagFolders.Add(new AutoTagFolder(folder.Path, PathText.FileName(folder.Path)));
+        }
+
+        OnPropertyChanged(nameof(HasAutoTagFolders));
+    }
+
+    /// <summary>Открыть папку с авто-тегом в «Обзоре»: там авто-теги меняются и снимаются.</summary>
+    [RelayCommand]
+    private void OpenAutoTagFolder(AutoTagFolder? folder)
+    {
+        if (folder is not null)
+        {
+            _commands?.BrowseFolder(folder.Path);
         }
     }
 

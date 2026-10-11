@@ -28,6 +28,31 @@
         </ScrollViewer>
         <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding IsEmpty}"
                    Text="{loc:Str TagPicker.NoTagsYetTypeAName}" />
+        <!-- Авто-теги папок (этап 19): видны, но снимаются у папки — к ней ведёт кнопка -->
+        <StackPanel Spacing="4" IsVisible="{Binding HasInherited}">
+            <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{loc:Str TagPicker.InheritedTitle}" />
+            <ItemsControl ItemsSource="{Binding Inherited}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:InheritedTagGroup">
+                        <DockPanel Margin="0,2">
+                            <Button DockPanel.Dock="Right" Classes="tool" Margin="8,0,0,0" VerticalAlignment="Top"
+                                    Content="{loc:Str TagPicker.GoToFolder}" ToolTip.Tip="{Binding Folder}"
+                                    AutomationProperties.Name="{loc:Str TagPicker.GoToFolder}"
+                                    Command="{Binding $parent[UserControl].((vm:TagPickerViewModel)DataContext).GoToFolderCommand}" CommandParameter="{Binding Folder}" />
+                            <TextBlock DockPanel.Dock="Left" Classes="tertiary" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"
+                                       MaxWidth="140" TextTrimming="CharacterEllipsis" Text="{Binding FolderName}" />
+                            <ItemsControl ItemsSource="{Binding Tags}" ItemTemplate="{StaticResource TagChipTemplate}" VerticalAlignment="Center">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel ItemSpacing="4" LineSpacing="4" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                        </DockPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <TextBox AutomationProperties.Name="{loc:Str TagPicker.NewTag}" x:Name="NewTagBox" PlaceholderText="{loc:Str TagPicker.NewTag}" Text="{Binding NewTagName, Mode=TwoWay}" />
             <Button Grid.Column="1" Content="{loc:Str TagPicker.Add}" Command="{Binding AddTagCommand}" />

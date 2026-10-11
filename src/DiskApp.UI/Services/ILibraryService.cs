@@ -28,6 +28,14 @@ public interface ILibraryService
     /// <summary>Заменяет набор тегов записи.</summary>
     Task<FileEntry> SetTagsAsync(FileEntry entry, IReadOnlyList<long> tagIds, CancellationToken cancellationToken = default);
 
+    /// <summary>Авто-теги папок (PLAN.md, этап 19).</summary>
+    Task<IReadOnlyList<FolderTagsInfo>> GetAutoTagsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Заменяет авто-теги папки; имена, которых ещё нет, становятся тегами. Пустой список снимает авто-теги папки.
+    /// </summary>
+    Task<FolderTagsInfo> SetAutoTagsAsync(string path, IReadOnlyList<string> tags, CancellationToken cancellationToken = default);
+
     /// <summary>Все коллекции.</summary>
     Task<IReadOnlyList<CollectionInfo>> GetCollectionsAsync(CancellationToken cancellationToken = default);
 

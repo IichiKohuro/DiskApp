@@ -93,8 +93,16 @@ public sealed record FileEntry
     /// <summary>Цвета тегов по имени (<c>#RRGGBB</c>); у тега без цвета записи нет.</summary>
     public IReadOnlyDictionary<string, string> TagColors { get; init; } = NoColors;
 
-    /// <summary>Теги с цветами — для чипов в списках и карточке.</summary>
-    public IReadOnlyList<TagLabel> TagLabels => [.. Tags.Select(name => new TagLabel(name, TagColors.GetValueOrDefault(name)))];
+    /// <summary>
+    /// Авто-теги папок выше (PLAN.md, этап 19): ближайшая папка первой, без тегов, которые у записи уже есть свои.
+    /// </summary>
+    public IReadOnlyList<TagLabel> InheritedTags { get; init; } = [];
+
+    /// <summary>Свои теги, затем унаследованные — для чипов в списках и карточке.</summary>
+    public IReadOnlyList<TagLabel> TagLabels => [.. Tags.Select(name => new TagLabel(name, TagColors.GetValueOrDefault(name))), .. InheritedTags];
+
+    /// <summary>У записи есть свои или унаследованные теги.</summary>
+    public bool HasAnyTags => Tags.Count > 0 || InheritedTags.Count > 0;
 
     /// <summary>Облачная заглушка (OneDrive и т. п.): содержимого на диске нет, открытие его скачает.</summary>
     public bool IsCloudOnly { get; init; }

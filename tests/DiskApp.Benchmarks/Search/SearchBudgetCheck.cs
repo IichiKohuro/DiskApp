@@ -15,7 +15,8 @@ namespace DiskApp.Benchmarks.Search;
 /// Проверка бюджета поиска (PLAN.md, 3.6): синтетическая база на 1 млн записей с фиксированным seed (имена из словаря
 /// на русском и английском, годы, кварталы, номера, расширения, дерево папок, история открытий и избранное),
 /// затем p50 и p95 полного <see cref="SearchService.SearchAsync"/> для запросов из 2, 3 и 5 символов, нескольких слов,
-/// с фильтрами, пустого, только фильтров и с опечаткой. Кэши сервиса сбрасываются перед каждым замером, поэтому
+/// с фильтрами, пустого, только фильтров, с опечаткой и с <c>tag:</c> по авто-тегам папок (этап 19: 40 рабочих папок и целая
+/// область на 5 % записей). Кэши сервиса сбрасываются перед каждым замером, поэтому
 /// уточнение запроса не подыгрывает. Цель — p95 &lt; 50 мс.
 /// Запуск: <c>dotnet run -c Release --project tests/DiskApp.Benchmarks -- search-budget [записей] [путь к базе]</c>;
 /// если база по пути уже есть, она используется повторно.
@@ -41,6 +42,7 @@ internal static class SearchBudgetCheck
         string.Empty, "re", "от", "rep", "отч", "202", "repor", "отчет", "invoi",
         "report 2025", "отчет q3", "rep ext:pdf", "report modified:year", "in:2025 report", "in:2025",
         "type:image vacation", "ext:pdf", "size:>100mb", "reprot", "budget -draft ext:xlsx",
+        "tag:тз", "tag:тз report", "tag:проект ext:pdf", "-tag:проект report",
     ];
 
     public static async Task<int> RunAsync(int count, string? databasePath)
@@ -68,6 +70,7 @@ internal static class SearchBudgetCheck
                 await GenerateAsync(database, roots, entries, count);
             }
 
+            await SeedAutoTagsAsync(database, roots);
             await database.OptimizeAsync();
             var size = new FileInfo(path).Length + (File.Exists(path + "-wal") ? new FileInfo(path + "-wal").Length : 0);
             var stored = await entries.CountAsync();
@@ -144,6 +147,29 @@ internal static class SearchBudgetCheck
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Авто-теги папок (этап 19), как у пользователя: «проект» у 40 рабочих папок, «тз» у целой области (~5 % записей) и у
+    /// пяти папок в других областях. Повторный запуск задаёт те же наборы.
+    /// </summary>
+    private static async Task SeedAutoTagsAsync(SqliteDatabase database, SqliteRootRepository roots)
+    {
+        var tags = new SqliteTagRepository(database);
+        var folderTags = new SqliteFolderTagRepository(database, PathNormalizer.Current);
+        var project = await tags.AddAsync("Проект");
+        var spec = await tags.AddAsync("ТЗ");
+        var root = (await roots.GetAllAsync())[0];
+        var separator = PathNormalizer.Current.Separator;
+        await folderTags.SetAsync($"{root.Path}{separator}area03", [spec.Id]);
+        for (var area = 0; area < 20; area++)
+        {
+            for (var topic = 0; topic < 2; topic++)
+            {
+                var path = $"{root.Path}{separator}area{area:00}{separator}{Words[(area * 25 + topic) % Words.Length]}{topic:00}";
+                await folderTags.SetAsync(path, area is >= 10 and < 15 && topic == 0 ? [project.Id, spec.Id] : [project.Id]);
+            }
+        }
     }
 
     private static double Percentile(List<double> sorted, double fraction)

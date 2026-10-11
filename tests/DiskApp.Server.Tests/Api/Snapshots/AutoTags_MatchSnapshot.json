@@ -1,0 +1,60 @@
+{
+  "entry": {
+    "id": 42,
+    "rootId": 1,
+    "parentId": 7,
+    "name": "Отчёт за 2026.pdf",
+    "fullPath": "D:\\Документы\\Отчёты\\Отчёт за 2026.pdf",
+    "relPath": "Отчёты\\Отчёт за 2026.pdf",
+    "extension": "pdf",
+    "isDirectory": false,
+    "size": 1234567,
+    "createdUtc": "2026-10-01T09:30:00+00:00",
+    "modifiedUtc": "2026-10-10T09:30:00+00:00",
+    "kind": "Pdf",
+    "iconKey": "ext:pdf",
+    "isHidden": false,
+    "isCloudPlaceholder": false,
+    "isFavorite": true,
+    "openCount": 3,
+    "lastOpenedUtc": "2026-10-11T09:30:00+00:00",
+    "tags": [
+      {
+        "id": 5,
+        "name": "работа",
+        "color": "#3366FF"
+      }
+    ],
+    "inheritedTags": [
+      {
+        "id": 9,
+        "name": "ТЗ",
+        "color": "#E74856",
+        "folder": "D:\\Документы\\417"
+      }
+    ]
+  },
+  "folders": [
+    {
+      "path": "D:\\Документы\\417",
+      "tags": [
+        {
+          "id": 9,
+          "name": "ТЗ",
+          "color": "#E74856"
+        },
+        {
+          "id": 10,
+          "name": "417"
+        }
+      ]
+    }
+  ],
+  "request": {
+    "path": "D:\\Документы\\417",
+    "tags": [
+      "ТЗ",
+      "417"
+    ]
+  }
+}

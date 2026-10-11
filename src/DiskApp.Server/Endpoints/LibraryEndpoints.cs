@@ -67,6 +67,12 @@ internal static partial class LibraryEndpoints
             .WithName("DeleteTag")
             .WithSummary("Удалить тег")
             .WithDescription("Тег снимается со всех записей.");
+        tags.MapGet(ApiRoutes.V1.AutoTags, GetAutoTagsAsync).WithName("GetAutoTags").WithSummary("Авто-теги папок");
+        tags.MapPut(ApiRoutes.V1.AutoTags, SetAutoTagsAsync)
+            .WithName("SetAutoTags")
+            .WithSummary("Заменить авто-теги папки")
+            .WithDescription("Тег наследует всё внутри папки на любой глубине — и то, что появится позже; пустой список снимает все. Недостающие теги создаются.")
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         var collections = endpoints.MapGroup(string.Empty).WithTags("Collections");
 
@@ -197,6 +203,59 @@ internal static partial class LibraryEndpoints
         => await tags.DeleteAsync(id, cancellationToken).ConfigureAwait(false)
             ? TypedResults.NoContent()
             : ApiProblems.NotFound(L.F("Library.TagNotFound", id));
+
+    private static async Task<Ok<FolderTagsDto[]>> GetAutoTagsAsync(IFolderTagRepository folderTags, CancellationToken cancellationToken)
+        => TypedResults.Ok((await folderTags.GetAllAsync(cancellationToken).ConfigureAwait(false)).Select(static folder => folder.ToDto()).ToArray());
+
+    /// <summary>
+    /// Авто-теги папки (этап 19): папка — внутри корней и существует, теги по имени (недостающие создаются). Кэш поиска
+    /// сбрасывается: «tag:» должен сразу находить файлы папки.
+    /// </summary>
+    private static async Task<Results<Ok<FolderTagsDto>, ValidationProblem, ProblemHttpResult>> SetAutoTagsAsync(
+        SetFolderTagsRequest request,
+        IFolderTagRepository folderTags,
+        ITagRepository tags,
+        RootGuard guard,
+        Core.Search.SearchService search,
+        Core.Paths.PathNormalizer paths,
+        CancellationToken cancellationToken)
+    {
+        var names = request.Tags.Select(static name => name?.Trim() ?? string.Empty).Where(static name => name.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        if (names.Length > SetFolderTagsRequest.MaxTags)
+        {
+            return ApiProblems.Invalid(nameof(request.Tags), L.F("LibraryEndpoints.TooManyAutoTags", SetFolderTagsRequest.MaxTags));
+        }
+
+        if (names.Any(static name => name.Length > 64))
+        {
+            return ApiProblems.Invalid(nameof(request.Tags), L.T("LibraryEndpoints.ATagNameIs1To"));
+        }
+
+        var (allowed, path, _) = await guard.CheckAsync(request.Path, cancellationToken).ConfigureAwait(false);
+        if (!allowed)
+        {
+            return path is null
+                ? ApiProblems.Invalid(nameof(request.Path), L.F("OperationEndpoints.PathMustBeAbsolute", request.Path))
+                : TypedResults.Problem(L.F("OperationEndpoints.PathIsOutsideTheAddedRoots", path), statusCode: StatusCodes.Status403Forbidden, title: L.T("Operations.AccessDenied"));
+        }
+
+        // Снять авто-теги можно и у пропавшей папки: её перенесли через Проводник, а строки остались.
+        if (names.Length > 0 && !Directory.Exists(path))
+        {
+            return ApiProblems.NotFound(L.F("OperationEndpoints.FolderNotFound", path));
+        }
+
+        var ids = new List<long>(names.Length);
+        foreach (var name in names)
+        {
+            ids.Add((await tags.AddAsync(name, cancellationToken: cancellationToken).ConfigureAwait(false)).Id);
+        }
+
+        await folderTags.SetAsync(path!, ids, cancellationToken).ConfigureAwait(false);
+        search.InvalidateCaches();
+        var saved = (await folderTags.GetAllAsync(cancellationToken).ConfigureAwait(false)).FirstOrDefault(folder => paths.Comparer.Equals(folder.Path, path));
+        return TypedResults.Ok(saved?.ToDto() ?? new FolderTagsDto(path!, []));
+    }
 
     private static ValidationProblem? ValidateTag(TagRequest request)
     {

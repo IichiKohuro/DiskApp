@@ -31,6 +31,7 @@ internal sealed class SearchTestContext : IAsyncDisposable
         Tags = new SqliteTagRepository(database);
         History = new SqliteQueryHistoryRepository(database);
         Index = new SqliteSearchIndex(database);
+        FolderTags = new SqliteFolderTagRepository(database, PathNormalizer.Current);
     }
 
     public TemporaryDirectory Folder { get; }
@@ -56,6 +57,8 @@ internal sealed class SearchTestContext : IAsyncDisposable
     public SqliteQueryHistoryRepository History { get; }
 
     public SqliteSearchIndex Index { get; }
+
+    public SqliteFolderTagRepository FolderTags { get; }
 
     public static async Task<SearchTestContext> CreateAsync()
     {
@@ -132,6 +135,19 @@ internal sealed class SearchTestContext : IAsyncDisposable
     {
         var created = await Tags.AddAsync(tag, null, TestContext.Current.CancellationToken);
         await Tags.AssignAsync((await GetAsync(root, path)).Id, created.Id, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>Ставит папке корня авто-теги (этап 19); пустой относительный путь — сам корень.</summary>
+    public async Task AutoTagAsync(Root root, string folder, params string[] tags)
+    {
+        var ids = new List<long>();
+        foreach (var tag in tags)
+        {
+            ids.Add((await Tags.AddAsync(tag, null, TestContext.Current.CancellationToken)).Id);
+        }
+
+        var path = folder.Length == 0 ? root.Path : Path.Combine(root.Path, folder.Replace('/', PathNormalizer.Current.Separator));
+        await FolderTags.SetAsync(path, ids, TestContext.Current.CancellationToken);
     }
 
     public async ValueTask DisposeAsync()
