@@ -81,6 +81,9 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         ArgumentNullException.ThrowIfNull(args);
 
         var startup = StartupArguments.Parse(args);
+
+        // Иконки в шаблонах строк берутся из общего кэша: элементы шаблонов создаёт Avalonia, а не контейнер.
+        DiskApp.UI.Controls.FileIcon.Cache = _services.GetService<IIconCache>();
         _quickSearch = new QuickSearchWindow { DataContext = _services.GetRequiredService<QuickSearchViewModel>() };
         ApplyMotion(_services.GetRequiredService<ISettingsStore<AppSettings>>().Current);
 

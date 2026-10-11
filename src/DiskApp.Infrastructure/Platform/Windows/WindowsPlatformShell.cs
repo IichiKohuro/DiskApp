@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -20,7 +19,7 @@ namespace DiskApp.Infrastructure.Platform.Windows;
 [SupportedOSPlatform("windows")]
 public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
 {
-    private readonly StaWorker _sta = new();
+    private readonly StaThread _sta = new("DiskApp shell");
 
     /// <inheritdoc />
     public Task<Result> OpenAsync(string path, CancellationToken cancellationToken = default)
@@ -230,52 +229,4 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
         => !File.Exists(path) && !Directory.Exists(path)
             ? Task.FromResult(NotFound(path))
             : _sta.RunAsync(action).WaitAsync(cancellationToken);
-
-    /// <summary>
-    /// Отдельный STA-поток для вызовов оболочки: задания выполняются по одному в порядке постановки.
-    /// </summary>
-    private sealed class StaWorker : IDisposable
-    {
-        private readonly BlockingCollection<Action> _queue = [];
-        private readonly Thread _thread;
-
-        public StaWorker()
-        {
-            _thread = new Thread(Run) { IsBackground = true, Name = "DiskApp shell" };
-            _thread.SetApartmentState(ApartmentState.STA);
-            _thread.Start();
-        }
-
-        public Task<T> RunAsync<T>(Func<T> work)
-        {
-            var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _queue.Add(() =>
-            {
-                try
-                {
-                    completion.TrySetResult(work());
-                }
-                catch (Exception exception)
-                {
-                    completion.TrySetException(exception);
-                }
-            });
-            return completion.Task;
-        }
-
-        public void Dispose()
-        {
-            _queue.CompleteAdding();
-            _thread.Join(TimeSpan.FromSeconds(2));
-            _queue.Dispose();
-        }
-
-        private void Run()
-        {
-            foreach (var work in _queue.GetConsumingEnumerable())
-            {
-                work();
-            }
-        }
-    }
 }

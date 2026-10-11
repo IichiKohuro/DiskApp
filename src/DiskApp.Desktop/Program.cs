@@ -132,6 +132,7 @@ internal static class Program
             services.AddSingleton<ISearchService, ApiSearchService>();
             services.AddSingleton<IFileActions, ApiFileActions>();
             services.AddSingleton<IClipboardService, ShellClipboardService>();
+            services.AddSingleton<IIconCache, ApiIconCache>();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));
@@ -139,10 +140,11 @@ internal static class Program
                 ? new RegistryAutoStartService(executable, paths.IsPortable)
                 : new NullAutoStartService());
 
-            // Настоящие действия оболочки (открыть, Проводник, свойства, корзина) — только здесь, не в тестовых хостах.
+            // Настоящие действия оболочки (открыть, Проводник, свойства, корзина) и иконки Windows — только здесь, не в тестовых хостах.
             if (OperatingSystem.IsWindows())
             {
                 services.AddSingleton<DiskApp.Core.Abstractions.IPlatformShell, DiskApp.Infrastructure.Platform.Windows.WindowsPlatformShell>();
+                services.AddSingleton<DiskApp.Core.Abstractions.IIconProvider, DiskApp.Infrastructure.Platform.Windows.WindowsIconProvider>();
             }
         });
         Log.Information("Контейнер сервера и оболочки собран через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);

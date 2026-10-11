@@ -7,17 +7,17 @@
          теги, размер и дата, звезда избранного и номер для Ctrl+1…9. -->
     <DataTemplate x:Key="FileHitTemplate" DataType="m:SearchHit">
         <Grid ColumnDefinitions="Auto,*,Auto,Auto" MinHeight="40">
-            <Border Grid.Column="0"
-                    Width="34" Height="34"
-                    CornerRadius="6"
-                    VerticalAlignment="Center"
-                    Background="{DynamicResource SubtleFillColorSecondaryBrush}">
-                <ic:SymbolIcon Symbol="{Binding Symbol}"
-                               FontSize="20"
-                               Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
-            </Border>
+            <!-- Иконка Windows или миниатюра с сервера; до загрузки и без неё — заглушка по виду файла на подложке -->
+            <c:FileIcon Grid.Column="0"
+                        Width="34" Height="34"
+                        CornerRadius="6"
+                        VerticalAlignment="Center"
+                        IconSize="24"
+                        PreferThumbnail="True"
+                        Entry="{Binding Entry}"
+                        Symbol="{Binding Symbol}"
+                        FallbackBackground="{DynamicResource SubtleFillColorSecondaryBrush}"
+                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
 
             <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center" Spacing="1">
                 <DockPanel>
