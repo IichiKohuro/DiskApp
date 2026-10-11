@@ -45,13 +45,14 @@ public static class ServerServiceCollectionExtensions
         services.AddSingleton(PathNormalizer.Current);
         services.AddSingleton(FileKindMap.Default);
 
-        // Настройки читаются при первом обращении; повреждённый файл откладывается, работа идёт на значениях по умолчанию.
+        // Настройки читаются при первом обращении; повреждённый файл откладывается, настройки берутся из резервной копии или по умолчанию.
         services.AddSingleton(static provider =>
         {
             var paths = provider.GetRequiredService<IAppPaths>();
             var store = AppSettingsStore.Create(paths.SettingsPath);
             var result = store.Load();
-            if (result.Outcome == SettingsLoadOutcome.Corrupt)
+            provider.GetRequiredService<ServerState>().SetSettings(result);
+            if (result.Outcome is SettingsLoadOutcome.Corrupt or SettingsLoadOutcome.RestoredFromBackup)
             {
                 ServerLog.SettingsRecovered(provider.GetRequiredService<ILogger<ServerState>>(), paths.SettingsPath, result.Outcome.ToString(), result.CorruptFilePath);
             }

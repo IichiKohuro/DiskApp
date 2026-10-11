@@ -1,5 +1,7 @@
 using Dapper;
 
+using DiskApp.Core.Abstractions;
+using DiskApp.Core.Localization;
 using DiskApp.Infrastructure.Sqlite;
 
 namespace DiskApp.Infrastructure.Tests.Sqlite;
@@ -60,6 +62,30 @@ public sealed class SqliteWriterTests
 
         // Assert
         await Should.ThrowAsync<Microsoft.Data.Sqlite.SqliteException>(failing);
+        (await next).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task EnqueueAsync_DatabaseFull_ThrowsDiskFullAndQueueContinues()
+    {
+        // Arrange
+        using var database = new TemporaryDatabase();
+        await using var queue = new SqliteWriter(new SqliteConnectionFactory(database.FilePath));
+        await queue.EnqueueAsync(connection => connection.Execute("CREATE TABLE blobs (data BLOB)"), TestContext.Current.CancellationToken);
+
+        // Act: предел числа страниц ведёт себя как заполненный диск (SQLITE_FULL)
+        var full = queue.EnqueueAsync(connection =>
+        {
+            var pages = connection.ExecuteScalar<long>("PRAGMA page_count");
+            connection.ExecuteScalar<long>($"PRAGMA max_page_count = {pages + 2}");
+            return connection.Execute("INSERT INTO blobs (data) VALUES (zeroblob(1000000))");
+        }, TestContext.Current.CancellationToken);
+        var next = queue.EnqueueAsync(connection => connection.ExecuteScalar<long>("SELECT 1"), TestContext.Current.CancellationToken);
+
+        // Assert
+        var exception = await Should.ThrowAsync<DiskFullException>(full);
+        exception.Message.ShouldBe(L.T("Sqlite.DiskFull"));
+        exception.InnerException.ShouldBeOfType<Microsoft.Data.Sqlite.SqliteException>();
         (await next).ShouldBe(1);
     }
 

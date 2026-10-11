@@ -41,9 +41,14 @@ internal sealed class ServerTestContext : IAsyncDisposable
     public static Task<ServerTestContext> StartAsync(bool withPlatform = true, string environment = "Production")
         => StartAsync(withPlatform, environment, configureServices: null);
 
-    public static async Task<ServerTestContext> StartAsync(bool withPlatform, string environment, Action<IServiceCollection>? configureServices)
+    public static async Task<ServerTestContext> StartAsync(
+        bool withPlatform,
+        string environment,
+        Action<IServiceCollection>? configureServices,
+        Action<TemporaryDirectory>? prepareData = null)
     {
         var data = new TemporaryDirectory("api-data");
+        prepareData?.Invoke(data);
         var files = new TemporaryDirectory("api-files");
         var shell = withPlatform ? new FakeShell(data.CreateDirectory("_trash")) : null;
         var host = DiskAppServerHost.Create(

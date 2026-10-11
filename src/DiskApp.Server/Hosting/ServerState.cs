@@ -1,11 +1,12 @@
 using System.Reflection;
 
+using DiskApp.Infrastructure.Settings;
 using DiskApp.Infrastructure.Sqlite;
 
 namespace DiskApp.Server.Hosting;
 
 /// <summary>
-/// Состояние сервера, общее для endpoints и хоста: версия, время старта, итог открытия базы.
+/// Состояние сервера, общее для endpoints и хоста: версия, время старта, итог открытия базы и чтения настроек.
 /// </summary>
 public sealed class ServerState
 {
@@ -24,6 +25,11 @@ public sealed class ServerState
 
     /// <summary>База открыта.</summary>
     public bool IsDatabaseReady => _database.Task.IsCompletedSuccessfully;
+
+    /// <summary>Итог чтения файла настроек; <c>null</c>, пока настройки не прочитаны.</summary>
+    public SettingsLoadResult? Settings { get; private set; }
+
+    internal void SetSettings(SettingsLoadResult result) => Settings = result;
 
     internal void MarkStarting(DateTimeOffset now) => StartedUtc = now;
 

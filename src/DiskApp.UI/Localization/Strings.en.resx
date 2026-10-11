@@ -1650,6 +1650,18 @@
   <data name="QuickSwitchController.TheKeyIsNotSupportedFor" xml:space="preserve">
     <value>The key {0} is not supported for Quick Switch.</value>
   </data>
+  <data name="Recovery.Database" xml:space="preserve">
+    <value>The index database was damaged and moved to “{0}”; the index is being rebuilt, search will be complete after the scan.</value>
+  </data>
+  <data name="Recovery.SettingsDefaults" xml:space="preserve">
+    <value>The settings file was damaged and moved to “{0}”; default settings are in effect.</value>
+  </data>
+  <data name="Recovery.SettingsFromBackup" xml:space="preserve">
+    <value>The settings file was damaged and moved to “{0}”; settings were restored from the backup, recent changes may be lost.</value>
+  </data>
+  <data name="Recovery.Title" xml:space="preserve">
+    <value>Data recovered after damage</value>
+  </data>
   <data name="RegistryAutoStart.ThePortableCopyRunsFromIf" xml:space="preserve">
     <value>The portable copy runs from “{0}”: if you move the folder, turn autostart on again.</value>
   </data>

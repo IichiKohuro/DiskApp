@@ -1,5 +1,8 @@
 using System.Threading.Channels;
 
+using DiskApp.Core.Abstractions;
+using DiskApp.Core.Localization;
+
 using Microsoft.Data.Sqlite;
 
 namespace DiskApp.Infrastructure.Sqlite;
@@ -182,6 +185,9 @@ public sealed class SqliteWriter : IDisposable, IAsyncDisposable
 
     private sealed class WriteJob<T>(Func<SqliteConnection, T> work, CancellationToken cancellationToken) : IWriteJob
     {
+        // Код ошибки SQLite «база или диск заполнены».
+        private const int SqliteFull = 13;
+
         private readonly TaskCompletionSource<T> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public Task<T> Task => _completion.Task;
@@ -201,6 +207,11 @@ public sealed class SqliteWriter : IDisposable, IAsyncDisposable
             catch (OperationCanceledException exception) when (exception.CancellationToken == cancellationToken)
             {
                 _completion.TrySetCanceled(cancellationToken);
+            }
+            catch (SqliteException exception) when (exception.SqliteErrorCode == SqliteFull)
+            {
+                // Нет места на диске с базой (этап 10.3): понятная причина вместо «database or disk is full».
+                _completion.TrySetException(new DiskFullException(L.T("Sqlite.DiskFull"), exception));
             }
             catch (Exception exception)
             {

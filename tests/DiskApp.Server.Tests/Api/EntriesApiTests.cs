@@ -71,6 +71,27 @@ public sealed class EntriesApiTests
     }
 
     [Fact]
+    public async Task CloudPlaceholder_IndexedButContentAndThumbnailNotRead()
+    {
+        // Arrange: признак «вне сети» — тот же, что у файлов OneDrive «только в облаке»; чтение скачало бы файл
+        await using var context = await ServerTestContext.StartAsync();
+        var path = context.Files.CreateFile("cloud video.mp4", "not downloaded");
+        File.SetAttributes(path, FileAttributes.Offline);
+        await context.AddRootAsync();
+
+        // Act
+        var entry = (await context.GetAsync(ApiRoutes.V1.Search + "?q=cloud", DiskAppJsonContext.Default.SearchResponse)).Items.ShouldHaveSingleItem();
+        using var content = await context.Client.GetAsync(new Uri(ApiRoutes.V1.Entry(entry.Id) + "/content", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var thumbnail = await context.Client.GetAsync(new Uri(ApiRoutes.V1.Entry(entry.Id) + "/thumbnail", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Assert
+        entry.IsCloudPlaceholder.ShouldBeTrue();
+        content.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await content.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldContain("entry.cloud_placeholder");
+        thumbnail.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Open_RecordsUsageAndCallsShell()
     {
         // Arrange

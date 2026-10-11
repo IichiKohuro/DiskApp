@@ -24,4 +24,7 @@ internal static partial class ServerLog
 
     [LoggerMessage(EventId = 4006, Level = LogLevel.Warning, Message = "HTTP {Method} {Path} → {StatusCode} за {ElapsedMs:F1} мс")]
     public static partial void RequestFailed(ILogger logger, string method, string path, int statusCode, double elapsedMs);
+
+    [LoggerMessage(EventId = 4007, Level = LogLevel.Information, Message = "Компьютер проснулся или пользователь вернулся в сеанс: корни индекса будут проверены")]
+    public static partial void SystemResumed(ILogger logger);
 }

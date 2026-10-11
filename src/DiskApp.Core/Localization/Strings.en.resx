@@ -111,6 +111,12 @@
   <data name="FilterBuilder.RootNotFound" xml:space="preserve">
     <value>Root “{0}” not found.</value>
   </data>
+  <data name="Indexer.AfterResume" xml:space="preserve">
+    <value>after resume or session reconnect</value>
+  </data>
+  <data name="Indexer.DiskFull" xml:space="preserve">
+    <value>Not enough space on the disk with the index database. Free up space and indexing will resume at the next reconciliation.</value>
+  </data>
   <data name="Indexer.FileOperation" xml:space="preserve">
     <value>File operation</value>
   </data>
@@ -188,6 +194,9 @@
   </data>
   <data name="ScanPipeline.TheRootIsUnavailableTheIndex" xml:space="preserve">
     <value>The root is unavailable: the index is kept unchanged.</value>
+  </data>
+  <data name="Sqlite.DiskFull" xml:space="preserve">
+    <value>The disk with the index database is out of space</value>
   </data>
   <data name="WindowsPlatformShell.FileExplorerDidNotOpen0x" xml:space="preserve">
     <value>File Explorer did not open (0x{0:X8}).</value>

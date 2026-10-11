@@ -12,6 +12,9 @@ namespace DiskApp.Contracts.App;
 /// <param name="DataDirectory">Папка данных.</param>
 /// <param name="IsPortable">Портативный режим.</param>
 /// <param name="StartedUtc">Когда запущен сервер.</param>
+/// <param name="CorruptDatabasePath">База была повреждена при старте и отложена сюда, индекс строится заново; иначе <c>null</c>.</param>
+/// <param name="CorruptSettingsPath">Файл настроек был повреждён при старте и отложен сюда; иначе <c>null</c>.</param>
+/// <param name="SettingsRestoredFromBackup">Повреждённые настройки восстановлены из резервной копии, а не сброшены.</param>
 public sealed record AppInfoDto(
     string Name,
     string Version,
@@ -19,7 +22,10 @@ public sealed record AppInfoDto(
     string OperatingSystem,
     string DataDirectory,
     bool IsPortable,
-    DateTimeOffset StartedUtc);
+    DateTimeOffset StartedUtc,
+    string? CorruptDatabasePath = null,
+    string? CorruptSettingsPath = null,
+    bool SettingsRestoredFromBackup = false);
 
 /// <summary>
 /// Настройки приложения: <c>GET /api/v1/settings</c> и событие <c>OnSettingsChanged</c>.

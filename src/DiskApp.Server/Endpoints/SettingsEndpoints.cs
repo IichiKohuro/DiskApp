@@ -7,6 +7,7 @@ using DiskApp.Contracts;
 using DiskApp.Contracts.App;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Settings;
+using DiskApp.Infrastructure.Settings;
 using DiskApp.Server.Hosting;
 using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
@@ -97,15 +98,23 @@ internal static partial class SettingsEndpoints
         return TypedResults.Ok(updated.ToDto());
     }
 
-    private static Ok<AppInfoDto> GetAppInfo(ServerState state, IAppPaths paths)
-        => TypedResults.Ok(new AppInfoDto(
+    private static Ok<AppInfoDto> GetAppInfo(ServerState state, IAppPaths paths, ISettingsStore<AppSettings> store)
+    {
+        // Хранилище читает файл настроек при первом обращении: после него итог чтения уже известен.
+        _ = store.Current;
+        var settings = state.Settings;
+        return TypedResults.Ok(new AppInfoDto(
             "DiskApp",
             state.Version,
             RuntimeInformation.FrameworkDescription,
             RuntimeInformation.OSDescription,
             paths.DataDirectory,
             paths.IsPortable,
-            state.StartedUtc));
+            state.StartedUtc,
+            state.IsDatabaseReady ? state.Database.Result.CorruptFilePath : null,
+            settings?.CorruptFilePath,
+            settings?.Outcome == SettingsLoadOutcome.RestoredFromBackup));
+    }
 
     /// <summary>
     /// JSON Merge Patch с возвратом значений по умолчанию для <c>null</c>; имена сопоставляются без учёта регистра.

@@ -52,4 +52,7 @@ internal static partial class IndexerLog
 
     [LoggerMessage(EventId = 2011, Level = LogLevel.Warning, Message = "Запись в журнал сканирования не удалась")]
     public static partial void ScanLogFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 2012, Level = LogLevel.Information, Message = "Сетевой корень {RootPath} не ответил за {TimeoutSeconds} с: считается недоступным")]
+    public static partial void ProbeTimedOut(ILogger logger, string rootPath, double timeoutSeconds);
 }

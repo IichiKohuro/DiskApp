@@ -144,6 +144,31 @@ public sealed class SettingsApiTests
         info.DataDirectory.ShouldBe(context.Data.FullPath);
         info.Runtime.ShouldStartWith(".NET");
         info.IsPortable.ShouldBeFalse();
+        info.CorruptDatabasePath.ShouldBeNull();
+        info.CorruptSettingsPath.ShouldBeNull();
+        info.SettingsRestoredFromBackup.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AppInfo_CorruptSettingsWithBackup_ReportsRestoreFromBackup()
+    {
+        // Arrange: основной файл оборван, резервная копия цела
+        await using var context = await ServerTestContext.StartAsync(withPlatform: true, "Production", configureServices: null, prepareData: data =>
+        {
+            data.CreateFile("settings.json", "{ \"schemaVersion\": 1, \"search\": {");
+            data.CreateFile("settings.json.bak", """{ "schemaVersion": 1, "search": { "pageSize": 75 } }""");
+        });
+
+        // Act
+        var info = await context.GetAsync(ApiRoutes.V1.AppInfo, DiskAppJsonContext.Default.AppInfoDto);
+        var settings = await context.GetAsync(ApiRoutes.V1.Settings, DiskAppJsonContext.Default.SettingsDto);
+
+        // Assert
+        info.CorruptSettingsPath.ShouldNotBeNull();
+        Path.GetFileName(info.CorruptSettingsPath).ShouldStartWith("settings.corrupt-");
+        info.SettingsRestoredFromBackup.ShouldBeTrue();
+        info.CorruptDatabasePath.ShouldBeNull();
+        settings.Search.PageSize.ShouldBe(75);
     }
 
     [Fact]

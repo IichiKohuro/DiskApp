@@ -111,6 +111,12 @@
   <data name="FilterBuilder.RootNotFound" xml:space="preserve">
     <value>Корень «{0}» не найден.</value>
   </data>
+  <data name="Indexer.AfterResume" xml:space="preserve">
+    <value>после пробуждения или возврата в сеанс</value>
+  </data>
+  <data name="Indexer.DiskFull" xml:space="preserve">
+    <value>Не хватает места на диске с базой индекса. Освободите место — индексация продолжится при следующей сверке.</value>
+  </data>
   <data name="Indexer.FileOperation" xml:space="preserve">
     <value>Файловая операция</value>
   </data>
@@ -188,6 +194,9 @@
   </data>
   <data name="ScanPipeline.TheRootIsUnavailableTheIndex" xml:space="preserve">
     <value>Корень недоступен: индекс сохранён без изменений.</value>
+  </data>
+  <data name="Sqlite.DiskFull" xml:space="preserve">
+    <value>На диске с базой индекса закончилось место</value>
   </data>
   <data name="WindowsPlatformShell.FileExplorerDidNotOpen0x" xml:space="preserve">
     <value>Проводник не открылся (0x{0:X8}).</value>

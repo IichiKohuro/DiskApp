@@ -9,7 +9,7 @@ namespace DiskApp.Infrastructure.Tests.Settings;
 
 /// <summary>
 /// Файл настроек: значения по умолчанию без файла, запись и чтение, атомарность, миграция старой версии,
-/// карантин повреждённого файла, уведомления подписчиков.
+/// карантин повреждённого файла и восстановление из резервной копии, уведомления подписчиков.
 /// </summary>
 public sealed class JsonSettingsStoreTests
 {
@@ -125,6 +125,7 @@ public sealed class JsonSettingsStoreTests
     [InlineData("{ not json at all")]
     [InlineData("[1, 2, 3]")]
     [InlineData("""{ "schemaVersion": 1, "search": { "pageSize": "много" } }""")]
+    [InlineData("""{ "schemaVersion": "два" }""")]
     public void Load_CorruptFile_QuarantinesAndUsesDefaults(string content)
     {
         // Arrange
@@ -143,6 +144,73 @@ public sealed class JsonSettingsStoreTests
         File.ReadAllText(result.CorruptFilePath).ShouldBe(content);
         File.Exists(path).ShouldBeFalse();
         store.Current.ShouldBe(AppSettings.Default);
+    }
+
+    [Fact]
+    public async Task SaveAsync_Twice_KeepsPreviousVersionAsBackup()
+    {
+        // Arrange
+        using var folder = new TemporaryDirectory();
+        var store = AppSettingsStore.Create(folder.Resolve("settings.json"));
+        store.Load();
+        var first = AppSettings.Default with { Hotkeys = new HotkeySettings { QuickSearch = "Ctrl+Alt+F" } };
+        var second = AppSettings.Default with { Hotkeys = new HotkeySettings { QuickSearch = "Ctrl+Alt+G" } };
+
+        // Act
+        await store.SaveAsync(first, TestContext.Current.CancellationToken);
+        var backupAfterFirst = File.Exists(store.BackupPath);
+        await store.SaveAsync(second, TestContext.Current.CancellationToken);
+
+        // Assert
+        backupAfterFirst.ShouldBeFalse("до первой записи копировать нечего");
+        var backup = JsonNode.Parse(File.ReadAllText(store.BackupPath))!.AsObject();
+        backup["hotkeys"]!["quickSearch"]!.GetValue<string>().ShouldBe("Ctrl+Alt+F");
+        Directory.GetFiles(folder.FullPath).Order(StringComparer.Ordinal).ShouldBe([store.Path, store.BackupPath]);
+    }
+
+    [Fact]
+    public async Task Load_CorruptFileWithBackup_RestoresFromBackupAndRewritesFile()
+    {
+        // Arrange
+        using var folder = new TemporaryDirectory();
+        var path = folder.Resolve("settings.json");
+        var writer = AppSettingsStore.Create(path);
+        writer.Load();
+        var saved = AppSettings.Default with { Hotkeys = new HotkeySettings { QuickSearch = "Ctrl+Alt+F" } };
+        await writer.SaveAsync(saved, TestContext.Current.CancellationToken);
+        await writer.SaveAsync(saved with { Tray = new TraySettings { StartMinimized = false } }, TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(path, "{ обрыв записи", TestContext.Current.CancellationToken);
+        var store = AppSettingsStore.Create(path);
+
+        // Act
+        var result = store.Load();
+
+        // Assert
+        result.Outcome.ShouldBe(SettingsLoadOutcome.RestoredFromBackup);
+        result.CorruptFilePath.ShouldNotBeNull();
+        result.Error.ShouldNotBeNullOrEmpty();
+        File.ReadAllText(result.CorruptFilePath).ShouldBe("{ обрыв записи");
+        store.Current.ShouldBe(saved);
+        AppSettingsStore.Create(path).Load().Outcome.ShouldBe(SettingsLoadOutcome.Loaded);
+        File.Exists(store.BackupPath).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Load_CorruptFileAndBackup_UsesDefaults()
+    {
+        // Arrange
+        using var folder = new TemporaryDirectory();
+        var path = folder.CreateFile("settings.json", "{ испорчен");
+        await File.WriteAllTextAsync(path + ".bak", "[]", TestContext.Current.CancellationToken);
+        var store = AppSettingsStore.Create(path);
+
+        // Act
+        var result = store.Load();
+
+        // Assert
+        result.Outcome.ShouldBe(SettingsLoadOutcome.Corrupt);
+        store.Current.ShouldBe(AppSettings.Default);
+        File.Exists(path).ShouldBeFalse();
     }
 
     [Fact]

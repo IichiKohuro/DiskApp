@@ -20,6 +20,7 @@ using DiskApp.Desktop.Startup;
 using DiskApp.Desktop.Windows;
 using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
+using DiskApp.UI.Text;
 using DiskApp.UI.ViewModels;
 
 using FluentAvalonia.UI.Controls;
@@ -138,6 +139,8 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             {
                 _ = StartOnboardingAsync();
             }
+
+            _ = ShowRecoveryNoticeAsync();
 
             if (CrashHandler.TakeMarker(_services.GetRequiredService<IAppPaths>().DataDirectory) is { } crash)
             {
@@ -378,6 +381,27 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         };
         ShowMainWindow();
         _log.Information("Открыт мастер первого запуска");
+    }
+
+    // База или настройки были повреждены при старте (этап 10.3): пользователь узнаёт, что индекс строится заново
+    // или настройки взяты из резервной копии, а не обнаруживает это сам.
+    private async Task ShowRecoveryNoticeAsync()
+    {
+        try
+        {
+            var info = await _services.GetRequiredService<ISettingsService>().GetAppInfoAsync();
+            if (RecoveryNotice.From(info) is { } notice)
+            {
+                _log.Warning("Восстановление при старте: база {CorruptDatabase}, настройки {CorruptSettings}, из копии {FromBackup}",
+                    info.CorruptDatabasePath, info.CorruptSettingsPath, info.SettingsRestoredFromBackup);
+                Dispatcher.UIThread.Post(() => _services.GetRequiredService<IInfoBarService>().Show(notice.Title, notice.Message, FAInfoBarSeverity.Warning),
+                    DispatcherPriority.Background);
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _log.Warning(exception, "Сведения о восстановлении при старте не получены");
+        }
     }
 
     private async Task ShowWhatsNewAsync()
@@ -699,6 +723,18 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             status.Message = L.F("DesktopShell.CouldNotCreateTheWindowThat", exception.Message);
             _log.Warning(exception, "Окно сообщений для горячей клавиши не создано");
             return;
+        }
+
+        if (_services.GetService<DesktopResumeSource>() is { } resume)
+        {
+            _messageWindow.SessionReconnected += (_, _) =>
+            {
+                _log.Information("Пользователь вернулся в сеанс");
+                if (OperatingSystem.IsWindows())
+                {
+                    resume.RaiseSessionReconnected();
+                }
+            };
         }
 
         var settings = _services.GetRequiredService<ISettingsStore<AppSettings>>();

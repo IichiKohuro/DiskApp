@@ -10,8 +10,9 @@ namespace DiskApp.Infrastructure.Settings;
 
 /// <summary>
 /// Настройки в JSON-файле (PLAN.md, этап 1.5): чтение при старте с миграцией по версии схемы, повреждённый файл
-/// откладывается в <c>settings.corrupt-&lt;дата&gt;.json</c> и берутся значения по умолчанию; запись атомарная
-/// через временный файл и переименование; подписчики узнают о каждом сохранении.
+/// откладывается в <c>settings.corrupt-&lt;дата&gt;.json</c>, настройки восстанавливаются из резервной копии
+/// <c>settings.json.bak</c> или берутся значения по умолчанию; запись атомарная через временный файл и замену;
+/// подписчики узнают о каждом сохранении.
 /// </summary>
 /// <typeparam name="T">Тип настроек с полем <c>schemaVersion</c>.</typeparam>
 public sealed class JsonSettingsStore<T> : ISettingsStore<T>
@@ -57,13 +58,17 @@ public sealed class JsonSettingsStore<T> : ISettingsStore<T>
     /// <summary>Путь к файлу.</summary>
     public string Path { get; }
 
+    /// <summary>Резервная копия: предыдущая исправная версия файла, из неё восстанавливается повреждённый.</summary>
+    public string BackupPath => Path + ".bak";
+
     /// <inheritdoc />
     /// <exception cref="InvalidOperationException">Файл ещё не прочитан: вызовите <see cref="Load"/>.</exception>
     public T Current => _current ?? throw new InvalidOperationException("Настройки не загружены: вызовите Load.");
 
     /// <summary>
     /// Читает файл. Отсутствующий файл даёт значения по умолчанию без записи на диск;
-    /// старая версия мигрируется и сохраняется; повреждённый файл откладывается.
+    /// старая версия мигрируется и сохраняется; повреждённый файл откладывается, а настройки восстанавливаются
+    /// из резервной копии <see cref="BackupPath"/>, если она цела.
     /// </summary>
     public SettingsLoadResult Load()
     {
@@ -73,53 +78,30 @@ public sealed class JsonSettingsStore<T> : ISettingsStore<T>
             return new SettingsLoadResult(SettingsLoadOutcome.Defaults, null, 0);
         }
 
-        JsonObject document;
-        try
+        var read = Read(Path);
+        if (read.Settings is { } settings)
         {
-            using var stream = File.OpenRead(Path);
-            document = JsonNode.Parse(stream) as JsonObject ?? throw new JsonException(L.T("JsonSettingsStore.TheRootOfTheSettingsFile"));
-        }
-        catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
-        {
-            var corruptPath = Quarantine();
-            _current = _defaults();
-            return new SettingsLoadResult(SettingsLoadOutcome.Corrupt, corruptPath, 0, exception.Message);
-        }
-
-        var version = document[SchemaVersionProperty]?.GetValue<int>() ?? 0;
-        var migrated = false;
-        while (version < _currentSchemaVersion)
-        {
-            if (_migrations.TryGetValue(version, out var migrate))
+            _current = settings;
+            if (read.Migrated)
             {
-                migrate(document);
+                Write(settings);
+                return new SettingsLoadResult(SettingsLoadOutcome.Migrated, null, read.Version);
             }
 
-            version++;
-            document[SchemaVersionProperty] = version;
-            migrated = true;
+            return new SettingsLoadResult(SettingsLoadOutcome.Loaded, null, read.Version);
         }
 
-        T settings;
-        try
+        var corruptPath = Quarantine();
+        if (File.Exists(BackupPath) && Read(BackupPath) is { Settings: { } restored } backup)
         {
-            settings = document.Deserialize(_typeInfo) ?? throw new JsonException(L.T("JsonSettingsStore.TheSettingsFileIsEmpty"));
-        }
-        catch (JsonException exception)
-        {
-            var corruptPath = Quarantine();
-            _current = _defaults();
-            return new SettingsLoadResult(SettingsLoadOutcome.Corrupt, corruptPath, 0, exception.Message);
+            // Основной файл возвращается из копии; сама копия остаётся как есть.
+            _current = restored;
+            Write(restored);
+            return new SettingsLoadResult(SettingsLoadOutcome.RestoredFromBackup, corruptPath, backup.Version, read.Error);
         }
 
-        _current = settings;
-        if (migrated)
-        {
-            Write(settings);
-            return new SettingsLoadResult(SettingsLoadOutcome.Migrated, null, version);
-        }
-
-        return new SettingsLoadResult(SettingsLoadOutcome.Loaded, null, version);
+        _current = _defaults();
+        return new SettingsLoadResult(SettingsLoadOutcome.Corrupt, corruptPath, 0, read.Error);
     }
 
     /// <inheritdoc />
@@ -150,6 +132,44 @@ public sealed class JsonSettingsStore<T> : ISettingsStore<T>
         return subscription;
     }
 
+    private ReadResult Read(string file)
+    {
+        JsonObject document;
+        try
+        {
+            using var stream = File.OpenRead(file);
+            document = JsonNode.Parse(stream) as JsonObject ?? throw new JsonException(L.T("JsonSettingsStore.TheRootOfTheSettingsFile"));
+        }
+        catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
+        {
+            return new ReadResult(null, 0, false, exception.Message);
+        }
+
+        try
+        {
+            var version = document[SchemaVersionProperty]?.GetValue<int>() ?? 0;
+            var migrated = false;
+            while (version < _currentSchemaVersion)
+            {
+                if (_migrations.TryGetValue(version, out var migrate))
+                {
+                    migrate(document);
+                }
+
+                version++;
+                document[SchemaVersionProperty] = version;
+                migrated = true;
+            }
+
+            var settings = document.Deserialize(_typeInfo) ?? throw new JsonException(L.T("JsonSettingsStore.TheSettingsFileIsEmpty"));
+            return new ReadResult(settings, version, migrated, null);
+        }
+        catch (Exception exception) when (exception is JsonException or InvalidOperationException or FormatException)
+        {
+            return new ReadResult(null, 0, false, exception.Message);
+        }
+    }
+
     private void Write(T settings)
     {
         var directory = System.IO.Path.GetDirectoryName(Path)!;
@@ -160,6 +180,24 @@ public sealed class JsonSettingsStore<T> : ISettingsStore<T>
         {
             JsonSerializer.Serialize(stream, settings, _typeInfo);
             stream.Flush(flushToDisk: true);
+        }
+
+        if (File.Exists(Path))
+        {
+            try
+            {
+                // Прежняя версия, прочитанная или записанная без ошибок, становится резервной копией (этап 10.3).
+                File.Replace(temporary, Path, BackupPath, ignoreMetadataErrors: true);
+                return;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+            {
+                // Файловая система без замены файла (часть сетевых и FAT): копия, затем переименование.
+                if (File.Exists(Path))
+                {
+                    File.Copy(Path, BackupPath, overwrite: true);
+                }
+            }
         }
 
         File.Move(temporary, Path, overwrite: true);
@@ -203,6 +241,8 @@ public sealed class JsonSettingsStore<T> : ISettingsStore<T>
         }
     }
 
+    private readonly record struct ReadResult(T? Settings, int Version, bool Migrated, string? Error);
+
     private sealed class Subscription(JsonSettingsStore<T> store, Action<T> handler) : IDisposable
     {
         private int _disposed;
@@ -244,4 +284,7 @@ public enum SettingsLoadOutcome
 
     /// <summary>Файл повреждён, отложен, действуют значения по умолчанию.</summary>
     Corrupt,
+
+    /// <summary>Файл повреждён и отложен, настройки восстановлены из резервной копии.</summary>
+    RestoredFromBackup,
 }

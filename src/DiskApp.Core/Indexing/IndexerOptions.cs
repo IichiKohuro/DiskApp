@@ -32,6 +32,12 @@ public sealed record IndexerOptions
     /// <summary>Как часто проверять, не появился ли недоступный корень.</summary>
     public TimeSpan OfflinePollInterval { get; init; } = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// Сколько ждать ответа сетевого корня при проверке доступности: недоступная сетевая папка отвечает только
+    /// по таймауту SMB, до минуты. Дольше — корень считается недоступным.
+    /// </summary>
+    public TimeSpan NetworkProbeTimeout { get; init; } = TimeSpan.FromSeconds(5);
+
     /// <summary>Шаг планировщика: проверки недоступных корней и плановых сверок.</summary>
     public TimeSpan SchedulerTick { get; init; } = TimeSpan.FromSeconds(15);
 

@@ -23,7 +23,11 @@ internal sealed class ServerStartupService(
     IClock clock,
     ILogger<ServerStartupService> logger) : IHostedService
 {
+    // После пробуждения сетевым и USB-дискам нужно время, чтобы вернуться: проверка корней чуть откладывается.
+    private static readonly TimeSpan ResumeSettleDelay = TimeSpan.FromSeconds(10);
+
     private IndexerService? _indexer;
+    private IDisposable? _resumeSubscription;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -53,17 +57,39 @@ internal sealed class ServerStartupService(
             _indexer = services.GetRequiredService<IndexerService>();
             await _indexer.StartAsync(cancellationToken).ConfigureAwait(false);
             ServerLog.IndexerStarted(logger, stopwatch.ElapsedMilliseconds);
+
+            if (services.GetService<ISystemResumeSource>() is { } resume)
+            {
+                var indexer = _indexer;
+                _resumeSubscription = resume.Subscribe(() => _ = OnSystemResumedAsync(indexer));
+            }
         }
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
+        _resumeSubscription?.Dispose();
+
         // Операции останавливаются первыми: они сообщают индексатору о затронутых папках.
         await services.GetRequiredService<FileOperationService>().DisposeAsync().ConfigureAwait(false);
         if (_indexer is { } indexer)
         {
             await indexer.DisposeAsync().ConfigureAwait(false);
             ServerLog.IndexerStopped(logger);
+        }
+    }
+
+    private async Task OnSystemResumedAsync(IndexerService indexer)
+    {
+        try
+        {
+            ServerLog.SystemResumed(logger);
+            await Task.Delay(ResumeSettleDelay).ConfigureAwait(false);
+            indexer.OnSystemResumed();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Приложение закрывается.
         }
     }
 }

@@ -1650,6 +1650,18 @@
   <data name="QuickSwitchController.TheKeyIsNotSupportedFor" xml:space="preserve">
     <value>Клавиша {0} не поддерживается для Quick Switch.</value>
   </data>
+  <data name="Recovery.Database" xml:space="preserve">
+    <value>База индекса была повреждена и отложена в «{0}»; индекс строится заново, поиск станет полным после сканирования.</value>
+  </data>
+  <data name="Recovery.SettingsDefaults" xml:space="preserve">
+    <value>Файл настроек был повреждён и отложен в «{0}»; действуют настройки по умолчанию.</value>
+  </data>
+  <data name="Recovery.SettingsFromBackup" xml:space="preserve">
+    <value>Файл настроек был повреждён и отложен в «{0}»; настройки восстановлены из резервной копии, последние изменения могли потеряться.</value>
+  </data>
+  <data name="Recovery.Title" xml:space="preserve">
+    <value>Данные восстановлены после повреждения</value>
+  </data>
   <data name="RegistryAutoStart.ThePortableCopyRunsFromIf" xml:space="preserve">
     <value>Портативная копия запускается из «{0}»: если папку перенести, автозапуск нужно включить заново.</value>
   </data>

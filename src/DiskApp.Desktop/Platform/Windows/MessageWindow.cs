@@ -9,7 +9,8 @@ namespace DiskApp.Desktop.Platform.Windows;
 
 /// <summary>
 /// Невидимое окно, которое только принимает сообщения Windows (<c>HWND_MESSAGE</c>). Нужно для
-/// <c>RegisterHotKey</c>: <c>WM_HOTKEY</c> приходит в его оконную процедуру через цикл сообщений Avalonia.
+/// <c>RegisterHotKey</c>: <c>WM_HOTKEY</c> приходит в его оконную процедуру через цикл сообщений Avalonia;
+/// туда же приходит <c>WM_WTSSESSION_CHANGE</c> о возврате в сеанс.
 /// Создавать на UI-потоке: сообщения доставляются потоку, создавшему окно.
 /// </summary>
 [SupportedOSPlatform("windows")]
@@ -22,6 +23,7 @@ internal sealed unsafe class MessageWindow : IDisposable
     private static ushort _classAtom;
 
     private nint _handle;
+    private bool _sessionNotifications;
 
     /// <summary>
     /// Регистрирует класс окна (один раз на процесс) и создаёт окно сообщений.
@@ -39,10 +41,16 @@ internal sealed unsafe class MessageWindow : IDisposable
         }
 
         Windows[_handle] = this;
+
+        // Возврат в сеанс (этап 10.3): без подписки окно просто не узнает о нём, остальное работает.
+        _sessionNotifications = NativeMethods.WTSRegisterSessionNotification(_handle, NativeMethods.NotifyForThisSession);
     }
 
     /// <summary>Нажата горячая клавиша; аргумент — идентификатор из <c>RegisterHotKey</c>.</summary>
     public event EventHandler<int>? HotkeyPressed;
+
+    /// <summary>Пользователь вернулся в сеанс: после переключения пользователей или через удалённый рабочий стол.</summary>
+    public event EventHandler? SessionReconnected;
 
     /// <summary>Дескриптор окна.</summary>
     public nint Handle => _handle;
@@ -53,6 +61,12 @@ internal sealed unsafe class MessageWindow : IDisposable
         if (_handle == 0)
         {
             return;
+        }
+
+        if (_sessionNotifications)
+        {
+            NativeMethods.WTSUnRegisterSessionNotification(_handle);
+            _sessionNotifications = false;
         }
 
         Windows.TryRemove(_handle, out _);
@@ -103,6 +117,22 @@ internal sealed unsafe class MessageWindow : IDisposable
             {
                 // Исключение нельзя выпускать в неуправляемый код: процесс упадёт без журнала.
                 Log.Error(exception, "Ошибка обработчика горячей клавиши {Id}", (int)wParam);
+            }
+
+            return 0;
+        }
+
+        if (message == NativeMethods.WmWtsSessionChange
+            && (int)wParam is NativeMethods.WtsConsoleConnect or NativeMethods.WtsRemoteConnect
+            && Windows.TryGetValue(window, out var session))
+        {
+            try
+            {
+                session.SessionReconnected?.Invoke(session, EventArgs.Empty);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Ошибка обработчика возврата в сеанс");
             }
 
             return 0;

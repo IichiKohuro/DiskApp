@@ -237,6 +237,34 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
     public bool ReconcileRoot(long rootId, string relPath = "") => Enqueue(new IndexTask(rootId, IndexTaskKind.Reconcile, relPath, L.T("Indexer.ReconciliationOnRequest")));
 
     /// <summary>
+    /// Компьютер проснулся или пользователь вернулся в сеанс (PLAN.md, этап 10.3). Недоступный корень уходит в офлайн,
+    /// офлайн-корень проверяется сразу, не дожидаясь опроса. Съёмный или сетевой корень могли изменить на другом
+    /// компьютере, пока этот спал: он получает новый наблюдатель и сверку. Локальный диск не менялся — сверки нет.
+    /// </summary>
+    public void OnSystemResumed()
+    {
+        RootSession[] sessions;
+        lock (_gate)
+        {
+            sessions = [.. _sessions.Values.Where(static session => !session.Detached)];
+        }
+
+        foreach (var session in sessions)
+        {
+            if (session.Status == RootStatus.Offline)
+            {
+                // Офлайн-корень проверяется на ближайшем такте планировщика, не дожидаясь обычного интервала опроса.
+                session.LastAvailabilityCheck = DateTimeOffset.MinValue;
+                continue;
+            }
+
+            var rootId = session.Root.Id;
+            var restartWatcher = session.IsNetwork || session.IsRemovable;
+            _ = Task.Run(() => CheckAvailabilityInBackgroundAsync(rootId, L.T("Indexer.AfterResume"), restartWatcher));
+        }
+    }
+
+    /// <summary>
     /// Папки изменились снаружи индексатора (файловая операция): каждая сверяется в самом глубоком корне, который её содержит.
     /// Пути вне корней пропускаются.
     /// </summary>
@@ -410,6 +438,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             DiskKey = drive.DiskKey,
             Parallelism = _options.MaxScanParallelism > 0 ? _options.MaxScanParallelism : drive.RecommendedParallelism,
             IsNetwork = drive.Media == DriveMedia.Network,
+            IsRemovable = drive.Media == DriveMedia.Removable,
             Status = root.Status,
         };
 
@@ -418,7 +447,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             _sessions[root.Id] = session;
         }
 
-        if (!_lister.DirectoryExists(root.Path))
+        if (!await RootExistsAsync(session).ConfigureAwait(false))
         {
             await GoOfflineAsync(session, L.T("Indexer.TheRootIsUnavailableAtStartup")).ConfigureAwait(false);
             return;
@@ -527,14 +556,27 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
                 Enqueue(new IndexTask(request.RootId, IndexTaskKind.Reconcile, request.RelPath, request.Reason));
                 break;
             case RootRequestKind.CheckAvailability:
-                _ = Task.Run(() => CheckAvailabilityAsync(request.RootId, request.Reason));
+                _ = Task.Run(() => CheckAvailabilityInBackgroundAsync(request.RootId, request.Reason));
                 break;
             default:
                 break;
         }
     }
 
-    private async Task CheckAvailabilityAsync(long rootId, string reason)
+    // Проверка в фоне: остановка индексатора прерывает её молча, без ненаблюдаемого исключения задачи.
+    private async Task CheckAvailabilityInBackgroundAsync(long rootId, string reason, bool restartWatcher = true)
+    {
+        try
+        {
+            await CheckAvailabilityAsync(rootId, reason, restartWatcher).ConfigureAwait(false);
+        }
+        catch (Exception exception) when ((exception is OperationCanceledException or ObjectDisposedException) && Volatile.Read(ref _disposed) != 0)
+        {
+            // Индексатор остановлен.
+        }
+    }
+
+    private async Task CheckAvailabilityAsync(long rootId, string reason, bool restartWatcher)
     {
         RootSession? session;
         lock (_gate)
@@ -547,9 +589,14 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             return;
         }
 
-        if (!_lister.DirectoryExists(session.Root.Path))
+        if (!await RootExistsAsync(session).ConfigureAwait(false))
         {
             await GoOfflineAsync(session, reason).ConfigureAwait(false);
+            return;
+        }
+
+        if (!restartWatcher)
+        {
             return;
         }
 
@@ -562,6 +609,34 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
         StartWatcher(session);
         Enqueue(new IndexTask(rootId, IndexTaskKind.Reconcile, string.Empty, L.T("Indexer.WatcherRestarted") + reason));
+    }
+
+    // Проверка доступности корня (этап 10.3). Недоступная сетевая папка отвечает только по таймауту SMB, а планировщик
+    // общий для всех корней: ждём не дольше NetworkProbeTimeout. Зависшая проверка не дублируется — следующая ждёт её же.
+    private async Task<bool> RootExistsAsync(RootSession session)
+    {
+        if (!session.IsNetwork)
+        {
+            return _lister.DirectoryExists(session.Root.Path);
+        }
+
+        var probe = session.Probe;
+        if (probe is null || probe.IsCompleted)
+        {
+            var path = session.Root.Path;
+            probe = Task.Run(() => _lister.DirectoryExists(path));
+            session.Probe = probe;
+        }
+
+        try
+        {
+            return await probe.WaitAsync(_options.NetworkProbeTimeout, _stop.Token).ConfigureAwait(false);
+        }
+        catch (TimeoutException)
+        {
+            IndexerLog.ProbeTimedOut(_logger, session.Root.Path, _options.NetworkProbeTimeout.TotalSeconds);
+            return false;
+        }
     }
 
     private bool Enqueue(IndexTask task)
@@ -691,8 +766,9 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
         {
             IndexerLog.TaskFailed(_logger, exception, session.Root.Path);
             session.RunningKind = null;
-            await SetStatusAsync(session, RootStatus.Error, exception.Message).ConfigureAwait(false);
-            await TryLogAsync(session.Root.Id, ScanLogLevel.Error, task.RelPath, exception.Message).ConfigureAwait(false);
+            var reason = exception is DiskFullException ? L.T("Indexer.DiskFull") : exception.Message;
+            await SetStatusAsync(session, RootStatus.Error, reason).ConfigureAwait(false);
+            await TryLogAsync(session.Root.Id, ScanLogLevel.Error, task.RelPath, reason).ConfigureAwait(false);
         }
         finally
         {
@@ -751,7 +827,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
                     if (now - session.LastAvailabilityCheck >= _options.OfflinePollInterval)
                     {
                         session.LastAvailabilityCheck = now;
-                        if (_lister.DirectoryExists(session.Root.Path))
+                        if (await RootExistsAsync(session).ConfigureAwait(false))
                         {
                             IndexerLog.RootBackOnline(_logger, session.Root.Path);
                             await BringOnlineAsync(session, initial: false).ConfigureAwait(false);
@@ -834,6 +910,8 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
         public bool IsNetwork { get; init; }
 
+        public bool IsRemovable { get; init; }
+
         public RootStatus Status { get; set; }
 
         public string? Message { get; set; }
@@ -845,6 +923,8 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
         public RootChangeProcessor? Processor { get; set; }
 
         public DateTimeOffset LastAvailabilityCheck { get; set; }
+
+        public Task<bool>? Probe { get; set; }
 
         public bool Detached { get; set; }
     }

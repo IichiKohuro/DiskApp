@@ -138,6 +138,26 @@ internal static unsafe partial class NativeMethods
     [LibraryImport("user32.dll")]
     public static partial nint DefWindowProcW(nint window, uint message, nint wParam, nint lParam);
 
+    /// <summary>Сообщение о смене состояния сеанса (<c>WM_WTSSESSION_CHANGE</c>).</summary>
+    public const uint WmWtsSessionChange = 0x02B1;
+
+    /// <summary>К сеансу снова подключена консоль: возврат после переключения пользователей.</summary>
+    public const int WtsConsoleConnect = 0x1;
+
+    /// <summary>К сеансу подключился удалённый рабочий стол.</summary>
+    public const int WtsRemoteConnect = 0x3;
+
+    /// <summary>Уведомления только о своём сеансе (<c>NOTIFY_FOR_THIS_SESSION</c>).</summary>
+    public const uint NotifyForThisSession = 0;
+
+    [LibraryImport("wtsapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool WTSRegisterSessionNotification(nint window, uint flags);
+
+    [LibraryImport("wtsapi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool WTSUnRegisterSessionNotification(nint window);
+
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetCursorPos(out Point point);
