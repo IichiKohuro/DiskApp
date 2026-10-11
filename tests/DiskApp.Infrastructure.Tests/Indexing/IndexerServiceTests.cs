@@ -172,6 +172,39 @@ public sealed class IndexerServiceTests
     }
 
     [Fact]
+    public async Task PauseRoot_AfterInitialScan_HoldsRootTasksUntilResume()
+    {
+        // Arrange
+        await using var context = await IndexingTestContext.CreateAsync();
+        TestTree.Generate(context.Files, files: 20, folders: 2, depth: 1);
+        await using var indexer = CreateIndexer(context);
+        await indexer.StartAsync(TestContext.Current.CancellationToken);
+        await indexer.WhenIdleAsync(TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+        // Act
+        indexer.PauseRoot(context.Root.Id).ShouldBeTrue();
+        context.Files.CreateFile("added-while-paused.txt", "p");
+        indexer.RescanRoot(context.Root.Id).ShouldBeTrue();
+        await Task.Delay(600, TestContext.Current.CancellationToken);
+        var whilePaused = indexer.GetStatuses().ShouldHaveSingleItem();
+        var indexedWhilePaused = await context.Entries.GetByPathAsync(context.Root.Id, "added-while-paused.txt", TestContext.Current.CancellationToken);
+        indexer.PauseAll();
+        indexer.ResumeAll();
+        var afterResumeAll = indexer.GetStatuses().ShouldHaveSingleItem();
+        indexer.ResumeRoot(context.Root.Id).ShouldBeTrue();
+        await indexer.WhenIdleAsync(TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+        // Assert
+        whilePaused.Status.ShouldBe(RootStatus.Paused);
+        whilePaused.IsQueued.ShouldBeTrue();
+        indexedWhilePaused.ShouldBeNull();
+        afterResumeAll.Status.ShouldBe(RootStatus.Paused, "общее возобновление не снимает паузу корня");
+        context.AssertIndexMatchesDisk();
+        await WaitUntilAsync(() => indexer.GetStatuses()[0].Status == RootStatus.Online);
+        indexer.PauseRoot(999).ShouldBeFalse("неизвестный корень");
+    }
+
+    [Fact]
     public async Task RescanAndRebuild_AfterInitialScan_IndexStaysComplete()
     {
         // Arrange

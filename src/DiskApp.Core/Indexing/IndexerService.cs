@@ -40,6 +40,7 @@ public sealed class IndexerService : IAsyncDisposable
     private readonly IndexTaskBacklog _queue;
     private readonly HashSet<string> _busyDisks = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<long> _busyRoots = [];
+    private readonly HashSet<long> _pausedRoots = [];
     private readonly List<Task> _running = [];
     private readonly SemaphoreSlim _wake = new(0);
     private readonly CancellationTokenSource _stop = new();
@@ -156,13 +157,13 @@ public sealed class IndexerService : IAsyncDisposable
         IndexerLog.Paused(_logger);
     }
 
-    /// <summary>Возобновляет индексацию.</summary>
+    /// <summary>Возобновляет индексацию; корни, приостановленные по отдельности, остаются на паузе.</summary>
     public void ResumeAll()
     {
         _pause.Resume();
         foreach (var session in Sessions())
         {
-            if (session.Status == RootStatus.Paused)
+            if (session.Status == RootStatus.Paused && !session.Pause.IsPausedHere)
             {
                 _ = SetStatusAsync(session, session.RunningKind is null ? RootStatus.Online : RootStatus.Scanning, null);
             }
@@ -170,6 +171,62 @@ public sealed class IndexerService : IAsyncDisposable
 
         _wake.Release();
         IndexerLog.Resumed(_logger);
+    }
+
+    /// <summary>
+    /// Приостанавливает индексацию одного корня: его задачи замирают и не запускаются, события наблюдателя копятся.
+    /// Пауза держится до <see cref="ResumeRoot"/> или перезапуска приложения.
+    /// </summary>
+    /// <returns><c>false</c>, если корень не подключён.</returns>
+    public bool PauseRoot(long rootId)
+    {
+        RootSession? session;
+        lock (_gate)
+        {
+            _pausedRoots.Add(rootId);
+            _sessions.TryGetValue(rootId, out session);
+        }
+
+        if (session is null)
+        {
+            return false;
+        }
+
+        session.Pause.Pause();
+        if (session.Status is RootStatus.Online or RootStatus.Scanning)
+        {
+            _ = SetStatusAsync(session, RootStatus.Paused, null);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Возобновляет индексацию корня, приостановленного <see cref="PauseRoot"/>.
+    /// </summary>
+    /// <returns><c>false</c>, если корень не подключён.</returns>
+    public bool ResumeRoot(long rootId)
+    {
+        RootSession? session;
+        lock (_gate)
+        {
+            _pausedRoots.Remove(rootId);
+            _sessions.TryGetValue(rootId, out session);
+        }
+
+        if (session is null)
+        {
+            return false;
+        }
+
+        session.Pause.Resume();
+        if (session.Status == RootStatus.Paused && !_pause.IsPaused)
+        {
+            _ = SetStatusAsync(session, session.RunningKind is null ? RootStatus.Online : RootStatus.Scanning, null);
+        }
+
+        _wake.Release();
+        return true;
     }
 
     /// <summary>Ставит полное сканирование корня.</summary>
@@ -281,6 +338,8 @@ public sealed class IndexerService : IAsyncDisposable
             {
                 await processor.DisposeAsync().ConfigureAwait(false);
             }
+
+            session.Cancellation.Dispose();
         }
 
         _wake.Dispose();
@@ -318,6 +377,8 @@ public sealed class IndexerService : IAsyncDisposable
         var drive = _drives.Describe(root.Path);
         var session = new RootSession(root, new RootIndexState(_factory.Paths), ExclusionMatcher.Create(_options.Exclusions, root, _factory.Paths))
         {
+            Pause = CreateRootPause(root.Id),
+            Cancellation = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token),
             DiskKey = drive.DiskKey,
             Parallelism = _options.MaxScanParallelism > 0 ? _options.MaxScanParallelism : drive.RecommendedParallelism,
             IsNetwork = drive.Media == DriveMedia.Network,
@@ -346,18 +407,41 @@ public sealed class IndexerService : IAsyncDisposable
             _queue.RemoveRoot(session.Root.Id);
         }
 
+        // Выполняющаяся задача корня отменяется и дожидается: после отключения корень можно удалять из базы.
         session.Detached = true;
+        await session.Cancellation.CancelAsync().ConfigureAwait(false);
+        if (session.Running is { } running)
+        {
+            await SwallowAsync(running).ConfigureAwait(false);
+        }
+
         if (session.Processor is { } processor)
         {
             session.Processor = null;
             await processor.DisposeAsync().ConfigureAwait(false);
         }
+
+        session.Cancellation.Dispose();
+    }
+
+    private PauseTokenSource CreateRootPause(long rootId)
+    {
+        var pause = new PauseTokenSource(_pause);
+        lock (_gate)
+        {
+            if (_pausedRoots.Contains(rootId))
+            {
+                pause.Pause();
+            }
+        }
+
+        return pause;
     }
 
     private async Task BringOnlineAsync(RootSession session, bool initial)
     {
         StartWatcher(session);
-        await SetStatusAsync(session, _pause.IsPaused ? RootStatus.Paused : RootStatus.Online, null).ConfigureAwait(false);
+        await SetStatusAsync(session, session.Pause.IsPaused ? RootStatus.Paused : RootStatus.Online, null).ConfigureAwait(false);
 
         var needsFullScan = session.Root.LastScanUtc is null || (initial && _options.ForceFullScan);
         Enqueue(needsFullScan
@@ -382,7 +466,7 @@ public sealed class IndexerService : IAsyncDisposable
                 session.State,
                 new Watching.ChangeCoalescer(_factory.Paths, _options.WatcherQuiet, _options.WatcherMaxDelay),
                 _clock,
-                _pause.Token,
+                session.Pause.Token,
                 OnRootRequest);
             processor.Start();
             session.Processor = processor;
@@ -482,11 +566,11 @@ public sealed class IndexerService : IAsyncDisposable
         while (!cancellationToken.IsCancellationRequested)
         {
             await _wake.WaitAsync(cancellationToken).ConfigureAwait(false);
-            StartReadyTasks(cancellationToken);
+            StartReadyTasks();
         }
     }
 
-    private void StartReadyTasks(CancellationToken cancellationToken)
+    private void StartReadyTasks()
     {
         lock (_gate)
         {
@@ -502,9 +586,21 @@ public sealed class IndexerService : IAsyncDisposable
                 _busyDisks.Add(session.DiskKey);
                 _busyRoots.Add(task.RootId);
                 session.RunningKind = task.Kind;
+                // Задача ждёт, пока ссылка на неё не записана: иначе лямбда могла прочитать ещё пустую переменную,
+                // задача не удаляла бы себя из _running, и сигнал простоя не приходил.
+                var registered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                var sessionToken = session.Cancellation.Token;
                 Task running = null!;
-                running = Task.Run(() => RunTaskAsync(session, task, running, cancellationToken), CancellationToken.None);
+                running = Task.Run(
+                    async () =>
+                    {
+                        await registered.Task.ConfigureAwait(false);
+                        await RunTaskAsync(session, task, running, sessionToken).ConfigureAwait(false);
+                    },
+                    CancellationToken.None);
+                session.Running = running;
                 _running.Add(running);
+                registered.SetResult();
             }
 
             if (_queue.Count == 0 && _running.Count == 0)
@@ -516,16 +612,15 @@ public sealed class IndexerService : IAsyncDisposable
 
     private bool CanRun(IndexTask task)
         => _sessions.TryGetValue(task.RootId, out var session)
+            && !session.Pause.IsPausedHere
             && !_busyRoots.Contains(task.RootId)
             && !_busyDisks.Contains(session.DiskKey);
 
     private async Task RunTaskAsync(RootSession session, IndexTask task, Task self, CancellationToken cancellationToken)
     {
-        // Гарантирует, что ссылка на эту задачу уже записана в _running до первой точки ожидания.
-        await Task.Yield();
         try
         {
-            await SetStatusAsync(session, _pause.IsPaused ? RootStatus.Paused : RootStatus.Scanning, null).ConfigureAwait(false);
+            await SetStatusAsync(session, session.Pause.IsPaused ? RootStatus.Paused : RootStatus.Scanning, null).ConfigureAwait(false);
             var request = new ScanRequest
             {
                 Root = session.Root,
@@ -539,7 +634,7 @@ public sealed class IndexerService : IAsyncDisposable
             IndexerLog.TaskStarted(_logger, session.Root.Path, task.RelPath, task.Kind, task.Reason);
             var outcome = task.Kind == IndexTaskKind.FullScan
                 ? await RunFullScanAsync(session, request, cancellationToken).ConfigureAwait(false)
-                : await _reconcile.RunAsync(request, _pause.Token, cancellationToken).ConfigureAwait(false);
+                : await _reconcile.RunAsync(request, session.Pause.Token, cancellationToken).ConfigureAwait(false);
 
             IndexerLog.TaskCompleted(_logger, session.Root.Path, task.RelPath, outcome.Status, outcome.Found, outcome.Written.Inserted, outcome.Written.Updated, outcome.Removed, outcome.ErrorCount, (long)outcome.Elapsed.TotalMilliseconds);
 
@@ -557,7 +652,7 @@ public sealed class IndexerService : IAsyncDisposable
                 }
 
                 session.RunningKind = null;
-                await SetStatusAsync(session, _pause.IsPaused ? RootStatus.Paused : RootStatus.Online, null).ConfigureAwait(false);
+                await SetStatusAsync(session, session.Pause.IsPaused ? RootStatus.Paused : RootStatus.Online, null).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -576,12 +671,18 @@ public sealed class IndexerService : IAsyncDisposable
             lock (_gate)
             {
                 session.RunningKind = null;
+                if (ReferenceEquals(session.Running, self))
+                {
+                    session.Running = null;
+                }
+
                 _busyDisks.Remove(session.DiskKey);
                 _busyRoots.Remove(session.Root.Id);
                 _running.Remove(self);
             }
 
-            if (!cancellationToken.IsCancellationRequested)
+            // Отмена задачи отключённого корня не мешает запускать задачи остальных корней.
+            if (!_stop.IsCancellationRequested)
             {
                 _wake.Release();
             }
@@ -592,7 +693,7 @@ public sealed class IndexerService : IAsyncDisposable
     {
         try
         {
-            return await _pipeline.RunAsync(request, _pause.Token, session.State.BeginScan, cancellationToken).ConfigureAwait(false);
+            return await _pipeline.RunAsync(request, session.Pause.Token, session.State.BeginScan, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -692,6 +793,12 @@ public sealed class IndexerService : IAsyncDisposable
         public RootIndexState State { get; } = state;
 
         public ExclusionMatcher Matcher { get; } = matcher;
+
+        public PauseTokenSource Pause { get; init; } = new();
+
+        public CancellationTokenSource Cancellation { get; init; } = new();
+
+        public Task? Running { get; set; }
 
         public string DiskKey { get; init; } = string.Empty;
 

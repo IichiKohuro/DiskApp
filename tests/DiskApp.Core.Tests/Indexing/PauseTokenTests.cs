@@ -68,6 +68,33 @@ public sealed class PauseTokenTests
     }
 
     [Fact]
+    public async Task ChildSource_PausedByParentOrItself_ResumesWhenBothResume()
+    {
+        // Arrange
+        var parent = new PauseTokenSource();
+        var child = new PauseTokenSource(parent);
+
+        // Act
+        parent.Pause();
+        var pausedByParent = child.IsPaused;
+        var pausedHere = child.IsPausedHere;
+        child.Pause();
+        var waiter = child.Token.WaitWhilePausedAsync(TestContext.Current.CancellationToken);
+        parent.Resume();
+        await Task.Delay(50, TestContext.Current.CancellationToken);
+        var completedAfterParent = waiter.IsCompleted;
+        child.Resume();
+        await waiter.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // Assert
+        pausedByParent.ShouldBeTrue();
+        pausedHere.ShouldBeFalse();
+        completedAfterParent.ShouldBeFalse("пауза самого источника ещё действует");
+        child.IsPaused.ShouldBeFalse();
+        parent.IsPaused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Equality_SameSource_Equal()
     {
         // Arrange

@@ -3,14 +3,28 @@ namespace DiskApp.Core.Indexing;
 /// <summary>
 /// Пауза и возобновление долгих задач индексации (PLAN.md, этап 2.1). В отличие от отмены, пауза обратима:
 /// задача доходит до ближайшей точки проверки (между папками) и ждёт <see cref="Resume"/>.
+/// Источник может подчиняться родителю (пауза корня под общей паузой): тогда он на паузе, если на паузе он сам или родитель.
 /// </summary>
 public sealed class PauseTokenSource
 {
     private readonly Lock _gate = new();
+    private readonly PauseTokenSource? _parent;
     private TaskCompletionSource? _resumed;
 
-    /// <summary>Пауза включена.</summary>
-    public bool IsPaused
+    /// <summary>
+    /// Создаёт источник паузы.
+    /// </summary>
+    /// <param name="parent">Родитель: его пауза действует и на этот источник.</param>
+    public PauseTokenSource(PauseTokenSource? parent = null)
+    {
+        _parent = parent;
+    }
+
+    /// <summary>Пауза включена здесь или у родителя.</summary>
+    public bool IsPaused => IsPausedHere || (_parent?.IsPaused ?? false);
+
+    /// <summary>Пауза включена именно у этого источника.</summary>
+    public bool IsPausedHere
     {
         get
         {
@@ -55,10 +69,19 @@ public sealed class PauseTokenSource
     /// </summary>
     internal Task WhenResumed()
     {
+        Task own;
         lock (_gate)
         {
-            return _resumed?.Task ?? Task.CompletedTask;
+            own = _resumed?.Task ?? Task.CompletedTask;
         }
+
+        if (_parent is null)
+        {
+            return own;
+        }
+
+        var parent = _parent.WhenResumed();
+        return own.IsCompleted ? parent : parent.IsCompleted ? own : Task.WhenAll(own, parent);
     }
 }
 
