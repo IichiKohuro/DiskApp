@@ -40,6 +40,16 @@ public partial class MainWindow : FAAppWindow
     /// </summary>
     public bool AllowClose { get; set; }
 
+    /// <summary>
+    /// Внешний вид из настроек (PLAN.md, этап 9.1): фон окна, масштаб содержимого, компактные списки.
+    /// </summary>
+    public void ApplyAppearance(DiskApp.Core.Settings.BackdropMode backdrop, double scale, bool compact)
+    {
+        Backdrop.Apply(this, backdrop);
+        Scaler.LayoutTransform = Math.Abs(scale - 1.0) < 0.01 ? null : new Avalonia.Media.ScaleTransform(scale, scale);
+        Root.Classes.Set("compact", compact);
+    }
+
     /// <summary>Крестик прячет окно в трей (настройка «Закрывать главное окно в трей»); по умолчанию — да.</summary>
     public Func<bool>? CloseToTray { get; set; }
 

@@ -82,6 +82,9 @@ public interface IDialogService
 
     /// <summary>Выбор текстового файла для чтения списка; <c>null</c> — отменено.</summary>
     Task<string?> PickOpenFileAsync(string title);
+
+    /// <summary>Выбор папки (PLAN.md, этап 9.1: корни индекса, «Входящие»); <c>null</c> — отменено.</summary>
+    Task<string?> PickFolderAsync(string title);
 }
 
 /// <summary>

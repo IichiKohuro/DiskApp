@@ -102,6 +102,31 @@ public sealed class ShellIntegrationTests : IDisposable
         File.Exists(service.SendToShortcut).ShouldBeFalse();
     }
 
+    [Fact]
+    public void DesktopShortcut_EnableDisable_CreatesShortcutWithShowArgument()
+    {
+        SkipUnlessWindows();
+
+        // Arrange: ярлык должен указывать на существующий файл; рабочий стол — временная папка теста.
+        var executable = Environment.ProcessPath!;
+        var desktop = Path.Combine(_sendTo, "Desktop");
+        var service = new ShellIntegrationService(executable, portable: true, _classes, _sendTo, desktop);
+
+        // Act
+        var before = service.IsEnabled(ShellIntegrationFeature.DesktopShortcut);
+        service.SetEnabled(ShellIntegrationFeature.DesktopShortcut, true);
+        var created = File.Exists(service.DesktopShortcut);
+        var enabled = service.IsEnabled(ShellIntegrationFeature.DesktopShortcut);
+        service.SetEnabled(ShellIntegrationFeature.DesktopShortcut, false);
+
+        // Assert
+        before.ShouldBeFalse();
+        created.ShouldBeTrue();
+        service.DesktopShortcut.ShouldStartWith(desktop);
+        enabled.ShouldBeTrue();
+        File.Exists(service.DesktopShortcut).ShouldBeFalse();
+    }
+
     public void Dispose()
     {
         if (OperatingSystem.IsWindows())

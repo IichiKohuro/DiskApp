@@ -215,7 +215,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
             var suggestions = LoadSuggestionsAsync(raw, token);
             if (query.Length == 0)
             {
-                var sections = await _search.GetSuggestionsAsync(token);
+                IReadOnlyList<ResultSection> sections = Display.ShowSuggestions ? await _search.GetSuggestionsAsync(token) : [];
                 var status = await _search.GetIndexStatusAsync(token);
                 token.ThrowIfCancellationRequested();
                 _status = status;
@@ -423,7 +423,12 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
             foreach (var entry in entries)
             {
-                var hit = new SearchHit(entry, highlight, Results.Count < NumberedResults ? Results.Count + 1 : 0, now);
+                var hit = new SearchHit(entry, highlight, Results.Count < NumberedResults ? Results.Count + 1 : 0, now)
+                {
+                    ShowPath = Display.ShowPath,
+                    ShowSize = Display.ShowSize,
+                    ShowDate = Display.ShowDate,
+                };
                 Results.Add(hit);
                 Rows.Add(hit);
             }

@@ -35,17 +35,19 @@ internal sealed class ShellIntegrationService : IShellIntegrationService
     private readonly bool _portable;
     private readonly string _classesKeyPath;
     private readonly string _sendToFolder;
+    private readonly string _desktopFolder;
 
     /// <summary>
-    /// Создаёт службу; тесты передают свой ключ классов и папку «Отправить», чтобы не трогать настоящие.
+    /// Создаёт службу; тесты передают свой ключ классов и папки «Отправить» и рабочего стола, чтобы не трогать настоящие.
     /// </summary>
-    public ShellIntegrationService(string executable, bool portable, string classesKeyPath = ClassesKeyPath, string? sendToFolder = null)
+    public ShellIntegrationService(string executable, bool portable, string classesKeyPath = ClassesKeyPath, string? sendToFolder = null, string? desktopFolder = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(executable);
         _executable = Path.GetFullPath(executable);
         _portable = portable;
         _classesKeyPath = classesKeyPath;
         _sendToFolder = sendToFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.SendTo);
+        _desktopFolder = desktopFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
     }
 
     /// <inheritdoc />
@@ -54,10 +56,14 @@ internal sealed class ShellIntegrationService : IShellIntegrationService
     /// <summary>Путь ярлыка в «Отправить».</summary>
     public string SendToShortcut => Path.Combine(_sendToFolder, "DiskApp.lnk");
 
+    /// <summary>Путь ярлыка на рабочем столе.</summary>
+    public string DesktopShortcut => Path.Combine(_desktopFolder, "DiskApp.lnk");
+
     /// <inheritdoc />
     public bool IsEnabled(ShellIntegrationFeature feature) => feature switch
     {
-        ShellIntegrationFeature.SendTo => File.Exists(SendToShortcut) && ShortcutTarget(SendToShortcut) is { } target && SameExecutable(target),
+        ShellIntegrationFeature.SendTo => PointsHere(SendToShortcut),
+        ShellIntegrationFeature.DesktopShortcut => PointsHere(DesktopShortcut),
         ShellIntegrationFeature.ContextMenu => CommandPointsHere(AddVerb + @"\command"),
         _ => CommandPointsHere(ProtocolCommand),
     };
@@ -70,7 +76,10 @@ internal sealed class ShellIntegrationService : IShellIntegrationService
             switch (feature)
             {
                 case ShellIntegrationFeature.SendTo:
-                    SetSendTo(enabled);
+                    SetShortcut(SendToShortcut, "--import", "Положить файлы в выбранную папку DiskApp", enabled);
+                    break;
+                case ShellIntegrationFeature.DesktopShortcut:
+                    SetShortcut(DesktopShortcut, "--show", "Поиск и разбор файлов", enabled);
                     break;
                 case ShellIntegrationFeature.ContextMenu:
                     SetContextMenu(enabled);
@@ -172,27 +181,32 @@ internal sealed class ShellIntegrationService : IShellIntegrationService
         command.SetValue(null, Command("\"%1\""));
     }
 
-    private void SetSendTo(bool enabled)
+    private bool PointsHere(string shortcut) => File.Exists(shortcut) && ShortcutTarget(shortcut) is { } target && SameExecutable(target);
+
+    /// <summary>
+    /// Создаёт ярлык на эту копию или удаляет его; чужой ярлык с тем же именем (другая копия DiskApp) не удаляется.
+    /// </summary>
+    private void SetShortcut(string shortcut, string arguments, string description, bool enabled)
     {
         if (!enabled)
         {
-            if (File.Exists(SendToShortcut) && ShortcutTarget(SendToShortcut) is { } target && SameExecutable(target))
+            if (PointsHere(shortcut))
             {
-                File.Delete(SendToShortcut);
+                File.Delete(shortcut);
             }
 
             return;
         }
 
-        Directory.CreateDirectory(_sendToFolder);
+        Directory.CreateDirectory(Path.GetDirectoryName(shortcut)!);
         var link = (IShellLinkW)new ShellLink();
         try
         {
             link.SetPath(_executable);
-            link.SetArguments((_portable ? "--portable " : string.Empty) + "--import");
-            link.SetDescription("Положить файлы в выбранную папку DiskApp");
+            link.SetArguments((_portable ? "--portable " : string.Empty) + arguments);
+            link.SetDescription(description);
             link.SetIconLocation(_executable, 0);
-            ((IPersistFile)link).Save(SendToShortcut, fRemember: true);
+            ((IPersistFile)link).Save(shortcut, fRemember: true);
         }
         finally
         {

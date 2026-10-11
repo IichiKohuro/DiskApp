@@ -25,6 +25,7 @@ internal sealed class QuickSwitchController : IQuickSwitchSettings, IDisposable
     private MessageWindow? _window;
     private Action? _pressed;
     private GlobalHotkey? _hotkey;
+    private Hotkey? _registered;
 
     /// <summary>
     /// Создаёт контроллер; горячая клавиша появляется после <see cref="Attach"/>.
@@ -98,6 +99,38 @@ internal sealed class QuickSwitchController : IQuickSwitchSettings, IDisposable
     /// <inheritdoc />
     public void Dispose() => Unregister();
 
+    /// <summary>
+    /// Приводит регистрацию к настройкам после их изменения (страница настроек, API, правка файла): включает, выключает или
+    /// перерегистрирует сочетание. Занятое сочетание только пишется в журнал.
+    /// </summary>
+    public void Reconfigure()
+    {
+        if (_window is null)
+        {
+            return;
+        }
+
+        var wanted = IsEnabled ? Configured() : null;
+        if (_hotkey is not null && wanted != _registered)
+        {
+            Unregister();
+        }
+
+        if (wanted is null || _hotkey is not null)
+        {
+            return;
+        }
+
+        try
+        {
+            Register();
+        }
+        catch (InvalidOperationException exception)
+        {
+            _log.Warning("Quick Switch: {Reason}", exception.Message);
+        }
+    }
+
     private Hotkey Configured()
         => Hotkey.TryParse(_settings.Current.Hotkeys.QuickSwitch, out var hotkey) ? hotkey : Hotkey.DefaultQuickSwitch;
 
@@ -128,6 +161,7 @@ internal sealed class QuickSwitchController : IQuickSwitchSettings, IDisposable
         }
 
         _hotkey.Pressed += (_, _) => _pressed?.Invoke();
+        _registered = hotkey;
         _log.Information("Quick Switch: сочетание {Hotkey} зарегистрировано", hotkey.DisplayText);
     }
 
@@ -135,6 +169,7 @@ internal sealed class QuickSwitchController : IQuickSwitchSettings, IDisposable
     {
         _hotkey?.Dispose();
         _hotkey = null;
+        _registered = null;
     }
 
     private async Task SaveAsync(AppSettings updated)

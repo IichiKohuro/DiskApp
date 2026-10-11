@@ -478,7 +478,12 @@ public sealed partial class QuickSearchViewModel
         }
 
         var selected = SelectedIndex;
-        var replacement = new SearchHit(entry, hit.Highlight, hit.Number, _clock());
+        var replacement = new SearchHit(entry, hit.Highlight, hit.Number, _clock())
+        {
+            ShowPath = hit.ShowPath,
+            ShowSize = hit.ShowSize,
+            ShowDate = hit.ShowDate,
+        };
         Results[index] = replacement;
         Rows[row] = replacement;
         SelectedIndex = selected;

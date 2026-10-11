@@ -38,6 +38,27 @@ public partial class QuickSearchWindow : Window
     /// </summary>
     public bool AllowClose { get; set; }
 
+    private const double BaseWidth = 720;
+    private const double BaseHeight = 500;
+
+    /// <summary>Прятать окно при потере фокуса (настройка окна поиска, этап 9.1); по умолчанию — да.</summary>
+    public bool HideOnDeactivate { get; set; } = true;
+
+    /// <summary>
+    /// Внешний вид из настроек (PLAN.md, этап 9.1): Acrylic или сплошной фон, масштаб окна и содержимого, компактные списки.
+    /// </summary>
+    public void ApplyAppearance(DiskApp.Core.Settings.BackdropMode backdrop, double scale, bool compact)
+    {
+        TransparencyLevelHint = backdrop == DiskApp.Core.Settings.BackdropMode.Solid
+            ? [WindowTransparencyLevel.None]
+            : [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Blur, WindowTransparencyLevel.None];
+        var unit = Math.Abs(scale - 1.0) < 0.01;
+        Scaler.LayoutTransform = unit ? null : new Avalonia.Media.ScaleTransform(scale, scale);
+        Width = Math.Round(BaseWidth * scale);
+        Height = Math.Round(BaseHeight * scale);
+        Root.Classes.Set("compact", compact);
+    }
+
     /// <summary>
     /// Без анимации появления: настройка «уменьшить движение» в приложении или выключенные эффекты анимации Windows.
     /// </summary>
@@ -204,7 +225,13 @@ public partial class QuickSearchWindow : Window
         Acrylic.IsVisible = level.Equals(WindowTransparencyLevel.AcrylicBlur) || level.Equals(WindowTransparencyLevel.Blur);
     }
 
-    private void OnDeactivated(object? sender, EventArgs e) => Hide();
+    private void OnDeactivated(object? sender, EventArgs e)
+    {
+        if (HideOnDeactivate)
+        {
+            Hide();
+        }
+    }
 
     private void OnCloseRequested(object? sender, EventArgs e) => Hide();
 

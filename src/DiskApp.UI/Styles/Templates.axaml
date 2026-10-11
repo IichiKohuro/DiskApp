@@ -16,7 +16,7 @@
     <!-- Строка файла в списках результатов, недавних и коллекций: иконка по виду, имя с подсветкой, папка,
          теги, размер и дата, звезда избранного и номер для Ctrl+1…9. -->
     <DataTemplate x:Key="FileHitTemplate" DataType="m:SearchHit">
-        <Grid ColumnDefinitions="Auto,*,Auto,Auto" MinHeight="40">
+        <Grid Classes="hit" ColumnDefinitions="Auto,*,Auto,Auto">
             <!-- Иконка Windows или миниатюра с сервера; до загрузки и без неё — заглушка по виду файла на подложке -->
             <c:FileIcon Grid.Column="0"
                         Width="34" Height="34"
@@ -57,7 +57,8 @@
                     <TextBlock Classes="secondary"
                                FontSize="12"
                                Text="{Binding DirectoryText}"
-                               TextTrimming="CharacterEllipsis" />
+                               TextTrimming="CharacterEllipsis"
+                               IsVisible="{Binding ShowPath}" />
                     <ItemsControl ItemsSource="{Binding Entry.TagLabels}"
                                   ItemTemplate="{StaticResource TagChipTemplate}"
                                   VerticalAlignment="Center"
@@ -72,8 +73,8 @@
             </StackPanel>
 
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1" MinWidth="72">
-                <TextBlock Classes="secondary" FontSize="12" HorizontalAlignment="Right" Text="{Binding SizeText}" />
-                <TextBlock Classes="tertiary" FontSize="12" HorizontalAlignment="Right" Text="{Binding ModifiedText}" />
+                <TextBlock Classes="secondary" FontSize="12" HorizontalAlignment="Right" Text="{Binding SizeText}" IsVisible="{Binding ShowSize}" />
+                <TextBlock Classes="tertiary" FontSize="12" HorizontalAlignment="Right" Text="{Binding ModifiedText}" IsVisible="{Binding ShowDate}" />
             </StackPanel>
 
             <Border Grid.Column="3"

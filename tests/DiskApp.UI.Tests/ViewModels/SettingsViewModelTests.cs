@@ -9,14 +9,16 @@ namespace DiskApp.UI.Tests.ViewModels;
 public sealed class SettingsViewModelTests
 {
     [Fact]
-    public void Constructor_WithCurrentTheme_SelectsMatchingOption()
+    public void Constructor_WithSavedTheme_SelectsItWithoutReapplying()
     {
-        // Arrange
+        // Arrange: оболочка уже применила сохранённую тёмную тему.
         var themes = Substitute.For<IThemeService>();
         themes.Current.Returns(AppTheme.Dark);
+        var saved = SampleSettingsService.Defaults();
+        saved.Appearance.Theme = DiskApp.Contracts.App.ThemeMode.Dark;
 
         // Act
-        var viewModel = new SettingsViewModel(themes, new SampleSearchService(), new HotkeyStatus());
+        var viewModel = new SettingsViewModel(themes, new SampleSearchService(), new HotkeyStatus(), settings: new SampleSettingsService(saved));
 
         // Assert
         viewModel.SelectedTheme.Theme.ShouldBe(AppTheme.Dark);

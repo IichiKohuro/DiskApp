@@ -34,7 +34,9 @@
                 BorderThickness="1"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 Padding="12">
-            <views:QuickSearchView x:Name="SearchView" />
+            <LayoutTransformControl x:Name="Scaler">
+                <views:QuickSearchView x:Name="SearchView" />
+            </LayoutTransformControl>
         </Border>
     </Panel>
 </Window>

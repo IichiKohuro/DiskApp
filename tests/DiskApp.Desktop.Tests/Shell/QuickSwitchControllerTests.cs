@@ -89,6 +89,35 @@ public sealed class QuickSwitchControllerTests
         holder.SetEnabled(false);
     }
 
+    [Fact]
+    public async Task Reconfigure_SettingsChangedElsewhere_FollowsFlagAndHotkey()
+    {
+        SkipUnlessWindows();
+
+        // Arrange
+        var store = new MemorySettingsStore(RareHotkey);
+        using var controller = new QuickSwitchController(store, new LoggerConfiguration().CreateLogger());
+        using var window = new MessageWindow();
+        controller.Attach(window, static () => { });
+
+        // Act: флаг включили через API или файл настроек — контроллер узнаёт об этом по Reconfigure.
+        await store.SaveAsync(store.Current with { Experimental = new ExperimentalSettings { QuickSwitch = true } }, TestContext.Current.CancellationToken);
+        controller.Reconfigure();
+        var registered = controller.IsRegistered;
+        await store.SaveAsync(store.Current with { Hotkeys = store.Current.Hotkeys with { QuickSwitch = "Ctrl+Alt+Shift+F23" } }, TestContext.Current.CancellationToken);
+        controller.Reconfigure();
+        var text = controller.HotkeyText;
+        var stillRegistered = controller.IsRegistered;
+        await store.SaveAsync(store.Current with { Experimental = new ExperimentalSettings { QuickSwitch = false } }, TestContext.Current.CancellationToken);
+        controller.Reconfigure();
+
+        // Assert
+        registered.ShouldBeTrue();
+        text.ShouldBe("Ctrl + Alt + Shift + F23");
+        stillRegistered.ShouldBeTrue("новое сочетание зарегистрировано вместо старого");
+        controller.IsRegistered.ShouldBeFalse();
+    }
+
     private static void SkipUnlessWindows()
     {
         if (!OperatingSystem.IsWindows())

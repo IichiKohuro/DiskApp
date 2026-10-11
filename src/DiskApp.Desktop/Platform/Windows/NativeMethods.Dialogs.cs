@@ -59,6 +59,27 @@ internal static unsafe partial class NativeMethods
     [LibraryImport("user32.dll", SetLastError = true)]
     public static partial nint SendMessageTimeoutW(nint window, uint message, nint wParam, nint lParam, uint flags, uint timeout, out nint result);
 
+    /// <summary>Прямоугольник окна в пикселях экрана (<c>RECT</c>).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Rect
+    {
+        /// <summary>Левая граница.</summary>
+        public int Left;
+
+        /// <summary>Верхняя граница.</summary>
+        public int Top;
+
+        /// <summary>Правая граница.</summary>
+        public int Right;
+
+        /// <summary>Нижняя граница.</summary>
+        public int Bottom;
+    }
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetWindowRect(nint window, out Rect rect);
+
     /// <summary>Имя класса окна или пустая строка.</summary>
     public static string GetClassName(nint window)
     {

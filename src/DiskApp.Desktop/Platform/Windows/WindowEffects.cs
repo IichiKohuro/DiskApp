@@ -34,4 +34,13 @@ internal static class WindowEffects
     /// </summary>
     public static PixelPoint? GetCursorPosition()
         => NativeMethods.GetCursorPos(out var point) ? new PixelPoint(point.X, point.Y) : null;
+
+    /// <summary>Центр активного окна в пикселях экрана или <c>null</c>.</summary>
+    public static PixelPoint? GetForegroundWindowCenter()
+    {
+        var window = NativeMethods.GetForegroundWindow();
+        return window != 0 && NativeMethods.GetWindowRect(window, out var rect) && rect.Right > rect.Left
+            ? new PixelPoint((rect.Left + rect.Right) / 2, (rect.Top + rect.Bottom) / 2)
+            : null;
+    }
 }

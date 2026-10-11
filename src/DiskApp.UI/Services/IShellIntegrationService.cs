@@ -11,6 +11,9 @@ public enum ShellIntegrationFeature
 
     /// <summary>Ссылки <c>diskapp://</c>.</summary>
     Protocol,
+
+    /// <summary>Ярлык DiskApp на рабочем столе (PLAN.md, этап 9.1).</summary>
+    DesktopShortcut,
 }
 
 /// <summary>

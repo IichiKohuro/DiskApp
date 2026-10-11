@@ -24,4 +24,10 @@ public interface IRootsService
 
     /// <summary>Возобновляет индексацию корня.</summary>
     Task ResumeAsync(long rootId, CancellationToken cancellationToken = default);
+
+    /// <summary>Убирает корень из индекса; файлы на диске не трогаются.</summary>
+    Task RemoveAsync(long rootId, CancellationToken cancellationToken = default);
+
+    /// <summary>Меняет параметры корня: подпись, скрытые и системные, глубину; индекс пересобирается сервером.</summary>
+    Task<RootInfo> UpdateAsync(RootInfo root, CancellationToken cancellationToken = default);
 }

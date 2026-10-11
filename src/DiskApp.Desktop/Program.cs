@@ -27,6 +27,11 @@ internal static class Program
     private static readonly TimeSpan ServerStopTimeout = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan ServerSlowStartNotice = TimeSpan.FromSeconds(10);
 
+    /// <summary>
+    /// Уровень журнала: до чтения настроек — подробный, затем из настройки <c>diagnostics.logLevel</c> без перезапуска.
+    /// </summary>
+    public static Serilog.Core.LoggingLevelSwitch LogLevel { get; } = new(LogEventLevel.Debug);
+
     // Код инициализации. До запуска Avalonia нельзя использовать её API, сторонние библиотеки
     // и код, зависящий от SynchronizationContext: платформа ещё не готова.
     [STAThread]
@@ -139,6 +144,7 @@ internal static class Program
             services.AddSingleton<IAddPreferences, SettingsAddPreferences>();
             services.AddSingleton<IAddFilesService, AddFilesService>();
             services.AddSingleton<ILibraryService, ApiLibraryService>();
+            services.AddSingleton<ISettingsService, ApiSettingsService>();
             services.AddSingleton<ITagEditor, TagEditor>();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
@@ -212,7 +218,7 @@ internal static class Program
 
     private static Serilog.Core.Logger CreateLogger(AppPaths paths)
         => new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.ControlledBy(LogLevel)
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
             .Enrich.FromLogContext()
             .WriteTo.File(

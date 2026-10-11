@@ -47,6 +47,24 @@ public sealed class ApiRootsService(IDiskAppApi api) : IRootsService
     /// <inheritdoc />
     public Task ResumeAsync(long rootId, CancellationToken cancellationToken = default) => _api.ResumeRootAsync(rootId, cancellationToken);
 
+    /// <inheritdoc />
+    public Task RemoveAsync(long rootId, CancellationToken cancellationToken = default) => _api.DeleteRootAsync(rootId, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<RootInfo> UpdateAsync(RootInfo root, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        var request = new UpdateRootRequest
+        {
+            Label = root.Label,
+            IsEnabled = root.State != RootState.Disabled,
+            IncludeHidden = root.IncludeHidden,
+            IncludeSystem = root.IncludeSystem,
+            MaxDepth = root.MaxDepth,
+        };
+        return ToInfo(await _api.UpdateRootAsync(root.Id, request, cancellationToken).ConfigureAwait(false), null);
+    }
+
     /// <summary>
     /// Корень API в модель интерфейса.
     /// </summary>
@@ -70,6 +88,9 @@ public sealed class ApiRootsService(IDiskAppApi api) : IRootsService
             Message = root.ErrorMessage ?? status?.Message,
             LastScan = root.LastScanUtc,
             Scanned = status?.Progress?.Scanned,
+            IncludeHidden = root.IncludeHidden,
+            IncludeSystem = root.IncludeSystem,
+            MaxDepth = root.MaxDepth,
         };
     }
 }

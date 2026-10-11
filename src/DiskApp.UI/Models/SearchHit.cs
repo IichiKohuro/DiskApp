@@ -54,6 +54,15 @@ public sealed class SearchHit
     /// <summary>Папка с сокращённой серединой, чтобы влезала в строку.</summary>
     public string DirectoryText { get; }
 
+    /// <summary>Показывать папку в строке (настройка окна поиска, PLAN.md, этап 9.1).</summary>
+    public bool ShowPath { get; init; } = true;
+
+    /// <summary>Показывать размер в строке.</summary>
+    public bool ShowSize { get; init; } = true;
+
+    /// <summary>Показывать дату изменения в строке.</summary>
+    public bool ShowDate { get; init; } = true;
+
     /// <summary>Иконка по виду файла.</summary>
     public Symbol Symbol { get; }
 

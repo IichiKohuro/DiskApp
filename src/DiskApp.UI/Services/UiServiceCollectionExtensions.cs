@@ -23,6 +23,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<IBrowseService, SampleBrowseService>();
         services.AddSingleton<IOperationsService, SampleOperationsService>();
         services.AddSingleton<ILibraryService, SampleLibraryService>();
+        services.AddSingleton<ISettingsService, SampleSettingsService>();
         services.AddSingleton<IThemeService, AppThemeService>();
         services.AddSingleton<HotkeyStatus>();
         services.AddSingleton<IDispatcher, AvaloniaDispatcher>();

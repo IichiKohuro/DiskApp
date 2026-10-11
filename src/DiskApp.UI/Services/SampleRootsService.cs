@@ -68,6 +68,31 @@ public sealed class SampleRootsService : IRootsService
     /// <inheritdoc />
     public Task ResumeAsync(long rootId, CancellationToken cancellationToken = default) => Record("resume", rootId, RootState.Online);
 
+    /// <inheritdoc />
+    public Task RemoveAsync(long rootId, CancellationToken cancellationToken = default)
+    {
+        lock (_gate)
+        {
+            Calls.Add($"remove:{rootId}");
+            _roots.RemoveAll(root => root.Id == rootId);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<RootInfo> UpdateAsync(RootInfo root, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(root);
+        lock (_gate)
+        {
+            Calls.Add($"update:{root.Id}");
+            var index = _roots.FindIndex(candidate => candidate.Id == root.Id);
+            _roots[index] = root;
+            return Task.FromResult(root);
+        }
+    }
+
     private Task Record(string action, long rootId, RootState state)
     {
         lock (_gate)

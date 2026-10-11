@@ -24,13 +24,15 @@ public sealed record ThemeOption(AppTheme Theme, string Name)
 /// Страница настроек в стиле «Параметров» Windows 11. Тема применяется сразу; остальные переключатели пока
 /// только показывают будущие настройки — их сохранение и действие появятся в этапах 6.5, 6.6 и 9.
 /// </summary>
-public sealed partial class SettingsViewModel : PageViewModel
+public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
 {
     private readonly IThemeService _themes;
     private readonly ISearchService _search;
     private readonly IAutoStartService _autoStart;
     private readonly IShellIntegrationService _integration;
     private readonly IQuickSwitchSettings _quickSwitch;
+    private readonly IDialogService? _dialogs;
+    private readonly IInfoBarService? _notices;
 
     /// <summary>
     /// Создаёт страницу и запускает загрузку корней индекса (<see cref="Initialization"/>).
@@ -41,13 +43,23 @@ public sealed partial class SettingsViewModel : PageViewModel
         HotkeyStatus hotkeys,
         IAutoStartService? autoStart = null,
         IShellIntegrationService? integration = null,
-        IQuickSwitchSettings? quickSwitch = null)
+        IQuickSwitchSettings? quickSwitch = null,
+        ISettingsService? settings = null,
+        IDialogService? dialogs = null,
+        IInfoBarService? notices = null,
+        IRootsService? roots = null)
         : base(PageKeys.Settings, "Настройки", FASymbol.Settings)
     {
         ArgumentNullException.ThrowIfNull(themes);
         ArgumentNullException.ThrowIfNull(search);
         ArgumentNullException.ThrowIfNull(hotkeys);
 
+        // Пока страница заполняется значениями по умолчанию, ничего не сохраняется: настоящие значения придут из LoadSettingsAsync.
+        _loading = true;
+        _settings = settings ?? new SampleSettingsService();
+        _dialogs = dialogs;
+        _notices = notices;
+        _roots = roots ?? new SampleRootsService();
         _themes = themes;
         _search = search;
         _autoStart = autoStart ?? new NullAutoStartService();
@@ -56,6 +68,7 @@ public sealed partial class SettingsViewModel : PageViewModel
         SendToEnabled = _integration.IsEnabled(ShellIntegrationFeature.SendTo);
         ContextMenuEnabled = _integration.IsEnabled(ShellIntegrationFeature.ContextMenu);
         ProtocolEnabled = _integration.IsEnabled(ShellIntegrationFeature.Protocol);
+        DesktopShortcutEnabled = _integration.IsEnabled(ShellIntegrationFeature.DesktopShortcut);
         _quickSwitch = quickSwitch ?? new NullQuickSwitchSettings();
         IsQuickSwitchSupported = _quickSwitch.IsSupported;
         QuickSwitchEnabled = _quickSwitch.IsEnabled;
@@ -73,7 +86,6 @@ public sealed partial class SettingsViewModel : PageViewModel
 
         UseSystemAccent = true;
         UseBackdropEffects = true;
-        ShowOnCursorScreen = true;
         IsAutoStartSupported = _autoStart.IsSupported;
         StartWithWindows = _autoStart.IsEnabled;
         AutoStartNote = _autoStart.Warning;
@@ -81,11 +93,46 @@ public sealed partial class SettingsViewModel : PageViewModel
         RemindAboutInbox = true;
 
         VersionText = $"Версия {ReadVersion()} · альфа";
-        Initialization = RefreshAsync();
+        Categories =
+        [
+            new SettingsCategory("appearance", "Внешний вид", FASymbol.ColorBackground),
+            new SettingsCategory("quick", "Быстрый поиск", FASymbol.Keyboard),
+            new SettingsCategory("search", "Поиск", FASymbol.Find),
+            new SettingsCategory("index", "Индекс", FASymbol.Folder),
+            new SettingsCategory("behavior", "Поведение", FASymbol.Settings),
+            new SettingsCategory("integrations", "Интеграции", FASymbol.Link),
+            new SettingsCategory("inbox", "Входящие", FASymbol.Download),
+            new SettingsCategory("data", "Данные", FASymbol.Library),
+            new SettingsCategory("about", "О программе", FASymbol.Help),
+        ];
+        SelectedCategory = Categories[0];
+        _loading = false;
+        Initialization = InitializeAsync();
     }
 
-    /// <summary>Завершается, когда корни индекса загружены.</summary>
+    /// <summary>Завершается, когда загружены корни индекса и настройки.</summary>
     public Task Initialization { get; }
+
+    /// <summary>Разделы настроек слева, как в «Параметрах» Windows.</summary>
+    public IReadOnlyList<SettingsCategory> Categories { get; }
+
+    /// <summary>Открытый раздел.</summary>
+    [ObservableProperty]
+    public partial SettingsCategory SelectedCategory { get; set; }
+
+    /// <summary>Вход на страницу: значения перечитываются — их могли поменять в другом окне или в файле настроек.</summary>
+    public void OnNavigatedTo() => _ = InitializeAsync();
+
+    /// <inheritdoc />
+    public void OnNavigatedFrom()
+    {
+    }
+
+    private async Task InitializeAsync()
+    {
+        await RefreshAsync();
+        await LoadSettingsAsync();
+    }
 
     /// <summary>Доступные темы.</summary>
     public IReadOnlyList<ThemeOption> Themes { get; }
@@ -101,10 +148,6 @@ public sealed partial class SettingsViewModel : PageViewModel
     /// <summary>Эффекты Mica и Acrylic.</summary>
     [ObservableProperty]
     public partial bool UseBackdropEffects { get; set; }
-
-    /// <summary>Показывать окно поиска на мониторе с курсором.</summary>
-    [ObservableProperty]
-    public partial bool ShowOnCursorScreen { get; set; }
 
     /// <summary>Запускать вместе с Windows.</summary>
     [ObservableProperty]
@@ -152,11 +195,13 @@ public sealed partial class SettingsViewModel : PageViewModel
     /// </summary>
     public async Task RefreshAsync()
     {
-        var status = await _search.GetIndexStatusAsync(CancellationToken.None);
-        Roots.Clear();
-        foreach (var root in status.Roots)
+        try
         {
-            Roots.Add(root);
+            await LoadRootsAsync();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            SettingsNote = "Не удалось загрузить корни: " + exception.Message;
         }
     }
 
@@ -188,6 +233,12 @@ public sealed partial class SettingsViewModel : PageViewModel
     partial void OnContextMenuEnabledChanged(bool value) => ApplyIntegration(ShellIntegrationFeature.ContextMenu, value, enabled => ContextMenuEnabled = enabled);
 
     partial void OnProtocolEnabledChanged(bool value) => ApplyIntegration(ShellIntegrationFeature.Protocol, value, enabled => ProtocolEnabled = enabled);
+
+    /// <summary>Ярлык на рабочем столе.</summary>
+    [ObservableProperty]
+    public partial bool DesktopShortcutEnabled { get; set; }
+
+    partial void OnDesktopShortcutEnabledChanged(bool value) => ApplyIntegration(ShellIntegrationFeature.DesktopShortcut, value, enabled => DesktopShortcutEnabled = enabled);
 
     /// <summary>Quick Switch поддерживается.</summary>
     public bool IsQuickSwitchSupported { get; }
@@ -259,11 +310,13 @@ public sealed partial class SettingsViewModel : PageViewModel
 
     partial void OnSelectedThemeChanged(ThemeOption value)
     {
-        // Начальный выбор в конструкторе совпадает с текущей темой — не дёргаем приложение без нужды.
-        if (value.Theme != _themes.Current)
+        // Начальный выбор и загрузка настроек не применяют тему: её применяет оболочка по сохранённой настройке.
+        if (!_loading && value.Theme != _themes.Current)
         {
             _themes.Apply(value.Theme);
         }
+
+        Save("appearance", "theme", value.Theme.ToString());
     }
 
     private static string ReadVersion()

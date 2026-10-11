@@ -47,6 +47,15 @@ public sealed record RootInfo
 
     /// <summary>Сколько записей просмотрено в идущем сканировании.</summary>
     public long? Scanned { get; init; }
+
+    /// <summary>Индексировать скрытые файлы и папки.</summary>
+    public bool IncludeHidden { get; init; }
+
+    /// <summary>Индексировать системные файлы и папки.</summary>
+    public bool IncludeSystem { get; init; }
+
+    /// <summary>Наибольшая глубина обхода; <c>null</c> — без предела.</summary>
+    public int? MaxDepth { get; init; }
 }
 
 /// <summary>

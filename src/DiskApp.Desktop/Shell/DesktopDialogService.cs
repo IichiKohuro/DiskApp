@@ -213,6 +213,13 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
 
+    /// <inheritdoc />
+    public async Task<string?> PickFolderAsync(string title)
+    {
+        var folders = await mainWindow().StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = title, AllowMultiple = false });
+        return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
+    }
+
     private static TextBlock Describe(string label, long size, DateTimeOffset modified)
         => new() { Text = $"{label}: {DiskApp.UI.Text.Formatting.Size(size)}, изменён {modified.ToLocalTime():dd.MM.yyyy HH:mm}" };
 }

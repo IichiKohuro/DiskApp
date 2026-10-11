@@ -92,7 +92,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         // Иконки в шаблонах строк берутся из общего кэша: элементы шаблонов создаёт Avalonia, а не контейнер.
         DiskApp.UI.Controls.FileIcon.Cache = _services.GetService<IIconCache>();
         _quickSearch = new QuickSearchWindow { DataContext = _services.GetRequiredService<QuickSearchViewModel>() };
-        ApplyMotion(_services.GetRequiredService<ISettingsStore<AppSettings>>().Current);
+        ApplySettings(_services.GetRequiredService<ISettingsStore<AppSettings>>().Current);
 
         RegisterHotkey();
         CreateTray();
@@ -133,7 +133,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         // Индекс мог измениться, пока окно было скрыто: подборка и результаты перечитываются при каждом показе.
         _ = _services.GetRequiredService<QuickSearchViewModel>().ActivateAsync();
-        _quickSearch.ShowAt(CursorPosition());
+        _quickSearch.ShowAt(PopupAnchor());
     }
 
     /// <inheritdoc />
@@ -258,7 +258,24 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         _tray = null;
     }
 
-    private static PixelPoint? CursorPosition() => OperatingSystem.IsWindows() ? WindowEffects.GetCursorPosition() : null;
+    /// <summary>
+    /// Точка, по которой выбирается монитор окна поиска (настройка «Монитор», этап 9.1): курсор, центр активного окна или
+    /// центр основного монитора.
+    /// </summary>
+    private PixelPoint? PopupAnchor()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return null;
+        }
+
+        return _services.GetRequiredService<ISettingsStore<AppSettings>>().Current.Popup.Monitor switch
+        {
+            PopupMonitor.ActiveWindow => WindowEffects.GetForegroundWindowCenter() ?? WindowEffects.GetCursorPosition(),
+            PopupMonitor.Primary => _quickSearch?.Screens.Primary?.Bounds.Center ?? WindowEffects.GetCursorPosition(),
+            _ => WindowEffects.GetCursorPosition(),
+        };
+    }
 
     /// <summary>
     /// Применяет аргументы: при первом запуске главное окно показывается, если не просили <c>--minimized</c>;
@@ -278,8 +295,10 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
             _ = AddRootsAsync(addPaths);
         }
 
+        // --minimized приходит от автозапуска; настройка «Запускаться свёрнутым» решает, оставаться ли только в трее.
+        var minimized = startup.Minimized && _services.GetRequiredService<ISettingsStore<AppSettings>>().Current.Tray.StartMinimized;
         var showMain = initialLaunch
-            ? !startup.Minimized || startup.Show || startup.OpenSettings || startup.Page is not null
+            ? !minimized || startup.Show || startup.OpenSettings || startup.Page is not null
             : startup.Show || startup.OpenSettings || startup.Page is not null || (!startup.Minimized && !startup.ShowSearch);
 
         if (showMain)
@@ -393,7 +412,13 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         _services.GetService<QuickSwitchController>()?.Attach(_messageWindow, OnQuickSwitchPressed);
         _settingsSubscription = settings.Subscribe(changed => Dispatcher.UIThread.Post(() =>
         {
-            ApplyMotion(changed);
+            ApplySettings(changed);
+            _ = _services.GetRequiredService<SettingsViewModel>().LoadSettingsAsync();
+            if (OperatingSystem.IsWindows())
+            {
+                _services.GetService<QuickSwitchController>()?.Reconfigure();
+            }
+
             if (OperatingSystem.IsWindows() && !_exiting && !string.Equals(changed.Hotkeys.QuickSearch, _registeredSetting, StringComparison.Ordinal))
             {
                 RegisterQuickSearchHotkey(changed.Hotkeys.QuickSearch);
@@ -648,7 +673,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     private void ToggleQuickSearch()
     {
         LeaveFolderPick();
-        _quickSearch?.Toggle(CursorPosition());
+        _quickSearch?.Toggle(PopupAnchor());
     }
 
     /// <summary>
@@ -752,6 +777,8 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         var window = new MainWindow { DataContext = viewModel };
         _lifetime.MainWindow = window;
         RestorePlacement(window);
+        var appearance = _services.GetRequiredService<ISettingsStore<AppSettings>>().Current.Appearance;
+        window.ApplyAppearance(appearance.Backdrop, Math.Clamp(appearance.FontScale, 0.9, 1.5), appearance.Compact);
 
         window.Opened += (_, _) => _log.Information("Главное окно открыто через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
         window.Closing += (_, _) => SavePlacement(window);
@@ -783,17 +810,66 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     }
 
     /// <summary>
-    /// «Уменьшить движение»: настройка приложения или выключенные эффекты анимации Windows.
+    /// Применяет настройки без перезапуска (PLAN.md, этап 9.1): «уменьшить движение» (настройка или выключенные эффекты
+    /// анимации Windows), тема, акцент, фон, масштаб и компактность окон, поведение окна поиска, уровень журнала.
     /// </summary>
-    private void ApplyMotion(AppSettings settings)
+    private void ApplySettings(AppSettings settings)
     {
         var reduce = settings.Appearance.ReduceMotion || (OperatingSystem.IsWindows() && !NativeMethods.AnimationsEnabled());
+        var appearance = settings.Appearance;
+        var scale = Math.Clamp(appearance.FontScale, 0.9, 1.5);
         if (_quickSearch is not null)
         {
             _quickSearch.ReduceMotion = reduce;
+            _quickSearch.HideOnDeactivate = settings.Popup.HideOnDeactivate;
+            _quickSearch.ApplyAppearance(appearance.Backdrop, scale, appearance.Compact);
         }
 
+        _mainWindow?.ApplyAppearance(appearance.Backdrop, scale, appearance.Compact);
         _services.GetRequiredService<MainViewModel>().ReduceMotion = reduce;
+        _services.GetRequiredService<QuickSearchViewModel>().Display = new SearchDisplay(
+            settings.Popup.ShowPath, settings.Popup.ShowSize, settings.Popup.ShowDate, settings.Search.ShowSuggestionsOnEmpty);
+
+        var theme = appearance.Theme switch
+        {
+            Core.Settings.ThemeMode.Light => AppTheme.Light,
+            Core.Settings.ThemeMode.Dark => AppTheme.Dark,
+            _ => AppTheme.System,
+        };
+        var themes = _services.GetRequiredService<IThemeService>();
+        if (themes.Current != theme)
+        {
+            themes.Apply(theme);
+        }
+
+        ApplyAccent(appearance);
+        Program.LogLevel.MinimumLevel = settings.Diagnostics.LogLevel switch
+        {
+            "Debug" => Serilog.Events.LogEventLevel.Debug,
+            "Warning" => Serilog.Events.LogEventLevel.Warning,
+            "Error" => Serilog.Events.LogEventLevel.Error,
+            _ => Serilog.Events.LogEventLevel.Information,
+        };
+    }
+
+    /// <summary>Акцент: цвет Windows или свой из настроек (по умолчанию синий Windows).</summary>
+    private static void ApplyAccent(AppearanceSettings appearance)
+    {
+        if (Application.Current?.Styles.OfType<FluentAvalonia.Styling.FluentAvaloniaTheme>().FirstOrDefault() is not { } theme)
+        {
+            return;
+        }
+
+        var custom = !appearance.UseSystemAccent && Avalonia.Media.Color.TryParse(appearance.AccentColor ?? "#0078D4", out var color)
+            ? color
+            : (Avalonia.Media.Color?)null;
+        if (theme.PreferUserAccentColor == appearance.UseSystemAccent && theme.CustomAccentColor == custom)
+        {
+            return;
+        }
+
+        theme.PreferUserAccentColor = appearance.UseSystemAccent;
+        theme.CustomAccentColor = custom;
     }
 
     private WindowPlacementStore Placements()

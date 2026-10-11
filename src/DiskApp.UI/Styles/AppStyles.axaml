@@ -197,6 +197,31 @@
         <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
     </Style>
 
+    <!-- Строка файла: обычная высота и компактный режим (настройка «Компактные списки», этап 9.1) -->
+    <Style Selector="Grid.hit">
+        <Setter Property="MinHeight" Value="40" />
+    </Style>
+    <Style Selector=":is(Control).compact Grid.hit">
+        <Setter Property="MinHeight" Value="30" />
+    </Style>
+    <Style Selector=":is(Control).compact ListBox.results ListBoxItem">
+        <Setter Property="Padding" Value="8,1" />
+    </Style>
+
+    <!-- Разделы страницы настроек -->
+    <Style Selector="ListBox.settings-nav">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.swatch">
+        <Setter Property="Padding" Value="3" />
+        <Setter Property="Margin" Value="2" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="CornerRadius" Value="15" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
     <!-- Чип тега: точка цвета тега и имя (этап 8.7) -->
     <Style Selector="Border.tag">
         <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />

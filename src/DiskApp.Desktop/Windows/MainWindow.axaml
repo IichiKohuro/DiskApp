@@ -17,7 +17,7 @@
          заголовка, Mica включает Backdrop.ApplyMica в code-behind. Верхняя полоса — перетаскиваемый заголовок:
          элементы без проверки попадания (иконка, название) тянут окно, поле поиска принимает ввод.
          Поиск в заголовке (Ctrl+E): Enter открывает страницу «Поиск» с введённым текстом. -->
-    <Grid RowDefinitions="Auto,*">
+    <Grid x:Name="Root" RowDefinitions="Auto,*">
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto,*" Height="40">
             <StackPanel Grid.Column="0"
                         Orientation="Horizontal"
@@ -49,6 +49,9 @@
                 </TextBox.KeyBindings>
             </TextBox>
         </Grid>
-        <views:MainView Grid.Row="1" />
+        <!-- Масштаб интерфейса (настройка «Масштаб», этап 9.1) -->
+        <LayoutTransformControl x:Name="Scaler" Grid.Row="1">
+            <views:MainView />
+        </LayoutTransformControl>
     </Grid>
 </wnd:FAAppWindow>
