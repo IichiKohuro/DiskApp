@@ -849,6 +849,42 @@
   <data name="DetailsPane.ShowInFolder" xml:space="preserve">
     <value>Show in folder</value>
   </data>
+  <data name="Error.ArchiveFailed" xml:space="preserve">
+    <value>The archive was not collected: {0}</value>
+  </data>
+  <data name="Error.ArchiveReady" xml:space="preserve">
+    <value>The archive is ready: {0}. It holds the log with file names, settings without secrets, the version and system details.</value>
+  </data>
+  <data name="Error.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Error.Collecting" xml:space="preserve">
+    <value>Collecting the archive…</value>
+  </data>
+  <data name="Error.CreateArchive" xml:space="preserve">
+    <value>Collect diagnostic archive</value>
+  </data>
+  <data name="Error.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Error.Message" xml:space="preserve">
+    <value>DiskApp keeps running; the error is in the log. If it happens again, collect a diagnostic archive and attach it to your problem report.</value>
+  </data>
+  <data name="Error.More" xml:space="preserve">
+    <value>More errors since then: {0}</value>
+  </data>
+  <data name="Error.OpenLogs" xml:space="preserve">
+    <value>Open log</value>
+  </data>
+  <data name="Error.PreviousCrashMessage" xml:space="preserve">
+    <value>The cause is in the log. Collect a diagnostic archive and attach it to your problem report — it helps fix the problem.</value>
+  </data>
+  <data name="Error.PreviousCrashTitle" xml:space="preserve">
+    <value>DiskApp crashed last time</value>
+  </data>
+  <data name="Error.Title" xml:space="preserve">
+    <value>Something went wrong</value>
+  </data>
   <data name="ExclusionItem.DeeperThanLevels" xml:space="preserve">
     <value>Deeper than {0} levels</value>
   </data>
@@ -1046,6 +1082,36 @@
   </data>
   <data name="IndexStatus.Root.One" xml:space="preserve">
     <value>root</value>
+  </data>
+  <data name="Logs.All" xml:space="preserve">
+    <value>All entries</value>
+  </data>
+  <data name="Logs.Description" xml:space="preserve">
+    <value>The latest entries of the current log file; warnings and errors are highlighted. Log detail is set in the Data section.</value>
+  </data>
+  <data name="Logs.Empty" xml:space="preserve">
+    <value>The log is empty</value>
+  </data>
+  <data name="Logs.ErrorsOnly" xml:space="preserve">
+    <value>Errors only</value>
+  </data>
+  <data name="Logs.InfoAndAbove" xml:space="preserve">
+    <value>Information and above</value>
+  </data>
+  <data name="Logs.Level" xml:space="preserve">
+    <value>Entry level</value>
+  </data>
+  <data name="Logs.NotRead" xml:space="preserve">
+    <value>The log was not read: </value>
+  </data>
+  <data name="Logs.Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Logs.Shown" xml:space="preserve">
+    <value>{0} of the last {1} entries shown</value>
+  </data>
+  <data name="Logs.WarningsAndAbove" xml:space="preserve">
+    <value>Warnings and errors</value>
   </data>
   <data name="Main.Details" xml:space="preserve">
     <value>Details</value>
@@ -1641,6 +1707,30 @@
   <data name="RootSettingsItem.Unavailable" xml:space="preserve">
     <value>Unavailable</value>
   </data>
+  <data name="SafeMode.BackupAt" xml:space="preserve">
+    <value>Previous settings: {0}</value>
+  </data>
+  <data name="SafeMode.Message" xml:space="preserve">
+    <value>Indexing and Quick Switch do not start; search uses the existing index. If DiskApp crashed because of settings, reset them.</value>
+  </data>
+  <data name="SafeMode.Reset" xml:space="preserve">
+    <value>Reset settings</value>
+  </data>
+  <data name="SafeMode.ResetDone" xml:space="preserve">
+    <value>Settings reset</value>
+  </data>
+  <data name="SafeMode.ResetFailed" xml:space="preserve">
+    <value>Settings were not reset</value>
+  </data>
+  <data name="SafeMode.ResetMessage" xml:space="preserve">
+    <value>All settings return to their defaults; the previous file is kept next to it. Indexed folders, tags and collections stay as they are.</value>
+  </data>
+  <data name="SafeMode.ResetTitle" xml:space="preserve">
+    <value>Reset settings?</value>
+  </data>
+  <data name="SafeMode.Title" xml:space="preserve">
+    <value>Safe mode</value>
+  </data>
   <data name="SampleBrowse.PathIsOutsideTheAddedRoots" xml:space="preserve">
     <value>Path “{0}” is outside the added roots.</value>
   </data>
@@ -1803,6 +1893,12 @@
   <data name="Settings.Appearance" xml:space="preserve">
     <value>Appearance</value>
   </data>
+  <data name="Settings.ArchiveNotCollected" xml:space="preserve">
+    <value>The archive was not collected: </value>
+  </data>
+  <data name="Settings.ArchiveReady" xml:space="preserve">
+    <value>Diagnostic archive collected</value>
+  </data>
   <data name="Settings.AsInWindows" xml:space="preserve">
     <value>As in Windows</value>
   </data>
@@ -1862,6 +1958,9 @@
   </data>
   <data name="Settings.CloseTheMainWindowToThe" xml:space="preserve">
     <value>Close the main window to the tray</value>
+  </data>
+  <data name="Settings.Collect" xml:space="preserve">
+    <value>Collect</value>
   </data>
   <data name="Settings.CompactLists" xml:space="preserve">
     <value>Compact lists</value>
@@ -1934,6 +2033,12 @@
   </data>
   <data name="Settings.DetailedDebug" xml:space="preserve">
     <value>Detailed (Debug)</value>
+  </data>
+  <data name="Settings.DiagnosticArchive" xml:space="preserve">
+    <value>Diagnostic archive</value>
+  </data>
+  <data name="Settings.DiagnosticArchiveDescription" xml:space="preserve">
+    <value>The log, settings without secrets, the version and system details in one file — attach it to your problem report</value>
   </data>
   <data name="Settings.DiskReconciliation" xml:space="preserve">
     <value>Disk reconciliation</value>
@@ -2076,6 +2181,9 @@
   <data name="Settings.Log" xml:space="preserve">
     <value>Log</value>
   </data>
+  <data name="Settings.Logs" xml:space="preserve">
+    <value>Log</value>
+  </data>
   <data name="Settings.LowerResultRowsMoreFilesFit" xml:space="preserve">
     <value>Lower result rows — more files fit on the screen</value>
   </data>
@@ -2214,6 +2322,15 @@
   <data name="Settings.Rescan2" xml:space="preserve">
     <value>Rescan</value>
   </data>
+  <data name="Settings.ResetEllipsis" xml:space="preserve">
+    <value>Reset…</value>
+  </data>
+  <data name="Settings.ResetSettings" xml:space="preserve">
+    <value>Reset settings</value>
+  </data>
+  <data name="Settings.ResetSettingsDescription" xml:space="preserve">
+    <value>All settings back to their defaults; the previous file is kept next to it</value>
+  </data>
   <data name="Settings.ResultOrder" xml:space="preserve">
     <value>Result order</value>
   </data>
@@ -2273,6 +2390,9 @@
   </data>
   <data name="Settings.SettingsLoaded" xml:space="preserve">
     <value>Settings loaded</value>
+  </data>
+  <data name="Settings.SettingsNotReset" xml:space="preserve">
+    <value>Settings were not reset: </value>
   </data>
   <data name="Settings.SettingsSaved" xml:space="preserve">
     <value>Settings saved</value>

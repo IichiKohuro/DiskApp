@@ -69,6 +69,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     private QuickSearchWindow? _quickSearch;
     private bool _exiting;
     private bool _whatsNewPending;
+    private bool _safeMode;
+    private ErrorWindow? _errorWindow;
+    private ErrorReportViewModel? _errorReport;
 
     /// <summary>
     /// Создаёт оболочку; окна, трей и приём аргументов появляются в <see cref="Start"/>.
@@ -98,6 +101,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         DiskApp.UI.Localization.Localizer.Instance.SetLanguage(_services.GetRequiredService<ISettingsStore<AppSettings>>().Current.Appearance.Language);
 
         var startup = StartupArguments.Parse(args);
+        _safeMode = startup.SafeMode;
 
         // Иконки в шаблонах строк берутся из общего кэша: элементы шаблонов создаёт Avalonia, а не контейнер.
         DiskApp.UI.Controls.FileIcon.Cache = _services.GetService<IIconCache>();
@@ -123,7 +127,20 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         ApplyArguments(startup, initialLaunch: true);
         if (!startup.Exit)
         {
-            _ = StartOnboardingAsync();
+            if (_safeMode)
+            {
+                ShowSafeModeNotice();
+            }
+            else
+            {
+                _ = StartOnboardingAsync();
+            }
+
+            if (CrashHandler.TakeMarker(_services.GetRequiredService<IAppPaths>().DataDirectory) is { } crash)
+            {
+                _log.Warning("Прошлый сеанс завершился аварийно");
+                Dispatcher.UIThread.Post(() => ShowErrorReport(crash, previousCrash: true), DispatcherPriority.Background);
+            }
         }
 
         _log.Information("Оболочка запущена через {StartupMs} мс: хоткей {HotkeyState}, аргументы {Arguments}",
@@ -252,6 +269,70 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             _log.Warning(exception, "Не удалось проверить, пройден ли мастер первого запуска");
+        }
+    }
+
+    /// <summary>
+    /// Окно «Что-то пошло не так» для необработанной ошибки (этап 9.5); пока оно открыто, новые ошибки только увеличивают
+    /// счётчик в нём.
+    /// </summary>
+    public void ReportError(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        ShowErrorReport(exception.ToString(), previousCrash: false);
+    }
+
+    private void ShowErrorReport(string details, bool previousCrash)
+    {
+        if (_errorReport is { } open && _errorWindow is { } shown)
+        {
+            open.AddError(details);
+            shown.Activate();
+            return;
+        }
+
+        var report = new ErrorReportViewModel(_services.GetRequiredService<IAppMaintenance>(), details, previousCrash);
+        var window = new ErrorWindow(report);
+        window.Closed += (_, _) =>
+        {
+            _errorWindow = null;
+            _errorReport = null;
+        };
+        _errorReport = report;
+        _errorWindow = window;
+        window.Show();
+        window.Activate();
+    }
+
+    // Безопасный режим (этап 9.5): полоса предупреждения с действием «Сбросить настройки».
+    private void ShowSafeModeNotice() => _services.GetRequiredService<IInfoBarService>().Show(
+        L.T("SafeMode.Title"),
+        L.T("SafeMode.Message"),
+        FAInfoBarSeverity.Warning,
+        L.T("SafeMode.Reset"),
+        () => _ = ResetSettingsAsync());
+
+    private async Task ResetSettingsAsync()
+    {
+        try
+        {
+            var confirmed = await _services.GetRequiredService<IDialogService>().ConfirmAsync(
+                L.T("SafeMode.ResetTitle"), L.T("SafeMode.ResetMessage"), L.T("SafeMode.Reset"));
+            if (!confirmed)
+            {
+                return;
+            }
+
+            var backup = await _services.GetRequiredService<IAppMaintenance>().ResetSettingsAsync();
+            _services.GetRequiredService<IInfoBarService>().Show(
+                L.T("SafeMode.ResetDone"),
+                backup is null ? string.Empty : L.F("SafeMode.BackupAt", backup),
+                FAInfoBarSeverity.Success);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _log.Error(exception, "Настройки не сброшены");
+            _services.GetRequiredService<IInfoBarService>().Show(L.T("SafeMode.ResetFailed"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -619,12 +700,15 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         var settings = _services.GetRequiredService<ISettingsStore<AppSettings>>();
         RegisterQuickSearchHotkey(settings.Current.Hotkeys.QuickSearch);
-        _services.GetService<QuickSwitchController>()?.Attach(_messageWindow, OnQuickSwitchPressed);
+        if (!_safeMode)
+        {
+            _services.GetService<QuickSwitchController>()?.Attach(_messageWindow, OnQuickSwitchPressed);
+        }
         _settingsSubscription = settings.Subscribe(changed => Dispatcher.UIThread.Post(() =>
         {
             ApplySettings(changed);
             _ = _services.GetRequiredService<SettingsViewModel>().LoadSettingsAsync();
-            if (OperatingSystem.IsWindows())
+            if (OperatingSystem.IsWindows() && !_safeMode)
             {
                 _services.GetService<QuickSwitchController>()?.Reconfigure();
             }

@@ -40,6 +40,7 @@ internal static class Program
     {
         var paths = AppPaths.Resolve(args);
         Log.Logger = CreateLogger(paths);
+        CrashHandler.Install(paths.DataDirectory);
 
         try
         {
@@ -70,7 +71,14 @@ internal static class Program
             };
 
             // Общий контейнер сервера и оболочки собирается в фоне, пока поднимается Avalonia: на критическом пути трея его нет.
-            var hostCreation = Task.Run(() => CreateServerHost(paths, lifetime, names));
+            // Безопасный режим (этап 9.5): индексатор не запускается, поиск работает по готовому индексу.
+            var safeMode = StartupArguments.Parse(args).SafeMode;
+            if (safeMode)
+            {
+                Log.Warning("Безопасный режим: без автоиндексации и интеграций");
+            }
+
+            var hostCreation = Task.Run(() => CreateServerHost(paths, lifetime, names, safeMode));
             BuildAvaloniaApp().SetupWithLifetime(lifetime);
             Log.Information("Avalonia готова через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
 
@@ -78,6 +86,7 @@ internal static class Program
             try
             {
                 var shell = host.Services.GetRequiredService<DesktopShell>();
+                CrashHandler.InstallUi(shell.ReportError);
                 shell.Start(args);
 
                 // База, индексатор и Kestrel запускаются после трея, в фоне.
@@ -95,6 +104,7 @@ internal static class Program
         catch (Exception exception)
         {
             Log.Fatal(exception, "DiskApp аварийно завершён");
+            CrashHandler.WriteMarker(paths.DataDirectory, exception, DateTimeOffset.Now);
             throw;
         }
         finally
@@ -113,11 +123,12 @@ internal static class Program
             .WithInterFont()
             .LogToTrace();
 
-    private static DiskAppServerHost CreateServerHost(AppPaths paths, IClassicDesktopStyleApplicationLifetime lifetime, InstanceNames names)
+    private static DiskAppServerHost CreateServerHost(AppPaths paths, IClassicDesktopStyleApplicationLifetime lifetime, InstanceNames names, bool safeMode)
     {
         var options = new DiskAppServerOptions
         {
             Paths = paths,
+            StartIndexer = !safeMode,
 #if DEBUG
             EnvironmentName = "Development",
 #endif
@@ -156,7 +167,8 @@ internal static class Program
                 provider.GetRequiredService<DiskApp.Core.Abstractions.IAppPaths>(),
                 provider.GetRequiredService<IDiskAppApi>(),
                 provider.GetRequiredService<Serilog.ILogger>(),
-                provider.GetService<IIconCache>()));
+                provider.GetService<IIconCache>(),
+                provider.GetRequiredService<DiskApp.Core.Abstractions.ISettingsStore<DiskApp.Core.Settings.AppSettings>>()));
             services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));
             services.AddSingleton<IAutoStartService>(_ => OperatingSystem.IsWindows() && Environment.ProcessPath is { } executable
                 ? new RegistryAutoStartService(executable, paths.IsPortable)
@@ -228,7 +240,13 @@ internal static class Program
     private static Serilog.Core.Logger CreateLogger(AppPaths paths)
         => new LoggerConfiguration()
             .MinimumLevel.ControlledBy(LogLevel)
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+
+            // Запросы клиента к серверу внутри процесса, их повторы и обработка в Kestrel давали по десятку строк на запрос
+            // и вытесняли из журнала события самого приложения (страница журнала, этап 9.5): от них — только предупреждения.
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+            .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Warning)
+            .MinimumLevel.Override("Polly", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .WriteTo.File(
                 Path.Combine(paths.LogsDirectory, "diskapp-.log"),

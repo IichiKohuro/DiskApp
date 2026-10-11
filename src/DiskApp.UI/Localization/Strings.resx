@@ -849,6 +849,42 @@
   <data name="DetailsPane.ShowInFolder" xml:space="preserve">
     <value>Показать в папке</value>
   </data>
+  <data name="Error.ArchiveFailed" xml:space="preserve">
+    <value>Архив не собран: {0}</value>
+  </data>
+  <data name="Error.ArchiveReady" xml:space="preserve">
+    <value>Архив готов: {0}. В нём журнал с именами файлов, настройки без секретов, версия и сведения о системе.</value>
+  </data>
+  <data name="Error.Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Error.Collecting" xml:space="preserve">
+    <value>Собираю архив…</value>
+  </data>
+  <data name="Error.CreateArchive" xml:space="preserve">
+    <value>Собрать диагностический архив</value>
+  </data>
+  <data name="Error.Details" xml:space="preserve">
+    <value>Подробности</value>
+  </data>
+  <data name="Error.Message" xml:space="preserve">
+    <value>DiskApp продолжит работу, ошибка записана в журнал. Если она повторяется, соберите диагностический архив и приложите его к сообщению о проблеме.</value>
+  </data>
+  <data name="Error.More" xml:space="preserve">
+    <value>Ещё ошибок с тех пор: {0}</value>
+  </data>
+  <data name="Error.OpenLogs" xml:space="preserve">
+    <value>Открыть журнал</value>
+  </data>
+  <data name="Error.PreviousCrashMessage" xml:space="preserve">
+    <value>Причина записана в журнал. Соберите диагностический архив и приложите его к сообщению о проблеме — это поможет её исправить.</value>
+  </data>
+  <data name="Error.PreviousCrashTitle" xml:space="preserve">
+    <value>DiskApp аварийно завершился в прошлый раз</value>
+  </data>
+  <data name="Error.Title" xml:space="preserve">
+    <value>Что-то пошло не так</value>
+  </data>
   <data name="ExclusionItem.DeeperThanLevels" xml:space="preserve">
     <value>Глубже {0} уровней</value>
   </data>
@@ -1046,6 +1082,36 @@
   </data>
   <data name="IndexStatus.Root.One" xml:space="preserve">
     <value>корне</value>
+  </data>
+  <data name="Logs.All" xml:space="preserve">
+    <value>Все записи</value>
+  </data>
+  <data name="Logs.Description" xml:space="preserve">
+    <value>Последние записи текущего файла журнала; предупреждения и ошибки выделены цветом. Подробность журнала — в разделе «Данные».</value>
+  </data>
+  <data name="Logs.Empty" xml:space="preserve">
+    <value>Журнал пуст</value>
+  </data>
+  <data name="Logs.ErrorsOnly" xml:space="preserve">
+    <value>Только ошибки</value>
+  </data>
+  <data name="Logs.InfoAndAbove" xml:space="preserve">
+    <value>Сведения и важнее</value>
+  </data>
+  <data name="Logs.Level" xml:space="preserve">
+    <value>Уровень записей</value>
+  </data>
+  <data name="Logs.NotRead" xml:space="preserve">
+    <value>Журнал не прочитан: </value>
+  </data>
+  <data name="Logs.Refresh" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="Logs.Shown" xml:space="preserve">
+    <value>Показано записей: {0} из {1} последних</value>
+  </data>
+  <data name="Logs.WarningsAndAbove" xml:space="preserve">
+    <value>Предупреждения и ошибки</value>
   </data>
   <data name="Main.Details" xml:space="preserve">
     <value>Подробнее</value>
@@ -1641,6 +1707,30 @@
   <data name="RootSettingsItem.Unavailable" xml:space="preserve">
     <value>Недоступен</value>
   </data>
+  <data name="SafeMode.BackupAt" xml:space="preserve">
+    <value>Прежние настройки: {0}</value>
+  </data>
+  <data name="SafeMode.Message" xml:space="preserve">
+    <value>Индексация и Quick Switch не запускаются, поиск работает по готовому индексу. Если DiskApp падал из-за настроек, сбросьте их.</value>
+  </data>
+  <data name="SafeMode.Reset" xml:space="preserve">
+    <value>Сбросить настройки</value>
+  </data>
+  <data name="SafeMode.ResetDone" xml:space="preserve">
+    <value>Настройки сброшены</value>
+  </data>
+  <data name="SafeMode.ResetFailed" xml:space="preserve">
+    <value>Настройки не сброшены</value>
+  </data>
+  <data name="SafeMode.ResetMessage" xml:space="preserve">
+    <value>Все настройки вернутся к значениям по умолчанию; прежний файл сохранится рядом. Папки в индексе, теги и коллекции не изменятся.</value>
+  </data>
+  <data name="SafeMode.ResetTitle" xml:space="preserve">
+    <value>Сбросить настройки?</value>
+  </data>
+  <data name="SafeMode.Title" xml:space="preserve">
+    <value>Безопасный режим</value>
+  </data>
   <data name="SampleBrowse.PathIsOutsideTheAddedRoots" xml:space="preserve">
     <value>Путь «{0}» вне добавленных корней.</value>
   </data>
@@ -1803,6 +1893,12 @@
   <data name="Settings.Appearance" xml:space="preserve">
     <value>Внешний вид</value>
   </data>
+  <data name="Settings.ArchiveNotCollected" xml:space="preserve">
+    <value>Архив не собран: </value>
+  </data>
+  <data name="Settings.ArchiveReady" xml:space="preserve">
+    <value>Диагностический архив собран</value>
+  </data>
   <data name="Settings.AsInWindows" xml:space="preserve">
     <value>Как в системе</value>
   </data>
@@ -1862,6 +1958,9 @@
   </data>
   <data name="Settings.CloseTheMainWindowToThe" xml:space="preserve">
     <value>Закрывать главное окно в трей</value>
+  </data>
+  <data name="Settings.Collect" xml:space="preserve">
+    <value>Собрать</value>
   </data>
   <data name="Settings.CompactLists" xml:space="preserve">
     <value>Компактные списки</value>
@@ -1934,6 +2033,12 @@
   </data>
   <data name="Settings.DetailedDebug" xml:space="preserve">
     <value>Подробно (Debug)</value>
+  </data>
+  <data name="Settings.DiagnosticArchive" xml:space="preserve">
+    <value>Диагностический архив</value>
+  </data>
+  <data name="Settings.DiagnosticArchiveDescription" xml:space="preserve">
+    <value>Журнал, настройки без секретов, версия и сведения о системе одним файлом — приложите его к сообщению о проблеме</value>
   </data>
   <data name="Settings.DiskReconciliation" xml:space="preserve">
     <value>Сверка с диском</value>
@@ -2076,6 +2181,9 @@
   <data name="Settings.Log" xml:space="preserve">
     <value>Журнал</value>
   </data>
+  <data name="Settings.Logs" xml:space="preserve">
+    <value>Журнал</value>
+  </data>
   <data name="Settings.LowerResultRowsMoreFilesFit" xml:space="preserve">
     <value>Строки результатов ниже — на экране помещается больше файлов</value>
   </data>
@@ -2214,6 +2322,15 @@
   <data name="Settings.Rescan2" xml:space="preserve">
     <value>Пересканировать</value>
   </data>
+  <data name="Settings.ResetEllipsis" xml:space="preserve">
+    <value>Сбросить…</value>
+  </data>
+  <data name="Settings.ResetSettings" xml:space="preserve">
+    <value>Сброс настроек</value>
+  </data>
+  <data name="Settings.ResetSettingsDescription" xml:space="preserve">
+    <value>Все настройки — к значениям по умолчанию; прежний файл сохранится рядом</value>
+  </data>
   <data name="Settings.ResultOrder" xml:space="preserve">
     <value>Порядок результатов</value>
   </data>
@@ -2273,6 +2390,9 @@
   </data>
   <data name="Settings.SettingsLoaded" xml:space="preserve">
     <value>Настройки загружены</value>
+  </data>
+  <data name="Settings.SettingsNotReset" xml:space="preserve">
+    <value>Настройки не сброшены: </value>
   </data>
   <data name="Settings.SettingsSaved" xml:space="preserve">
     <value>Настройки сохранены</value>

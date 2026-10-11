@@ -7,6 +7,7 @@
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:DiskApp.UI.ViewModels"
              xmlns:svc="using:DiskApp.UI.Services"
+             xmlns:text="using:DiskApp.UI.Text"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="900"
              x:Class="DiskApp.UI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel"
@@ -461,9 +462,47 @@
                             </WrapPanel>
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.DiagnosticArchive}" Description="{loc:Str Settings.DiagnosticArchiveDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Send" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <Button Content="{loc:Str Settings.Collect}" Command="{Binding CreateDiagnosticArchiveCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.ResetSettings}" Description="{loc:Str Settings.ResetSettingsDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Undo" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <Button Content="{loc:Str Settings.ResetEllipsis}" Command="{Binding ResetSettingsCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
                     <ui:FASettingsExpander Header="{loc:Str Settings.Backups}" Description="{loc:Str Settings.ScheduleStorageLocationsAndRestoreWill}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Sync" /></ui:FASettingsExpander.IconSource>
                     </ui:FASettingsExpander>
+                </StackPanel>
+
+                <!-- Журнал (этап 9.5): хвост текущего файла журнала с фильтром по уровню -->
+                <StackPanel Spacing="8" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=logs}">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Logs}" />
+                    <TextBlock Classes="secondary" TextWrapping="Wrap" Text="{loc:Str Logs.Description}" />
+                    <WrapPanel ItemSpacing="8" LineSpacing="8">
+                        <ComboBox AutomationProperties.Name="{loc:Str Logs.Level}" MinWidth="220" ItemsSource="{Binding LogFilters}" SelectedItem="{Binding SelectedLogFilter, Mode=TwoWay}" />
+                        <Button Content="{loc:Str Logs.Refresh}" Command="{Binding RefreshLogsCommand}" />
+                        <Button Content="{loc:Str Settings.OpenFolder}" Command="{Binding OpenLogsFolderCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                        <Button Content="{loc:Str Error.CreateArchive}" Command="{Binding CreateDiagnosticArchiveCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                    </WrapPanel>
+                    <TextBlock Classes="tertiary" FontSize="12" Text="{Binding LogsText}" />
+                    <Border Classes="card" Padding="4">
+                        <ListBox AutomationProperties.Name="{loc:Str Settings.Logs}" Height="460" Background="Transparent" ItemsSource="{Binding LogLines}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="text:LogLine">
+                                    <TextBlock Classes="code-log"
+                                               Classes.warning="{Binding IsWarning}"
+                                               Classes.error="{Binding IsError}"
+                                               TextWrapping="Wrap"
+                                               Text="{Binding Text}" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
                 </StackPanel>
 
                 <!-- О программе -->

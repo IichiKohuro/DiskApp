@@ -110,9 +110,11 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
             new SettingsCategory("integrations", L.T("Settings.Integrations"), FASymbol.Link),
             new SettingsCategory("inbox", L.T("Settings.Inbox"), FASymbol.Download),
             new SettingsCategory("data", L.T("Settings.Data"), FASymbol.Library),
+            new SettingsCategory(LogsCategory, L.T("Settings.Logs"), FASymbol.List),
             new SettingsCategory("about", L.T("Settings.About"), FASymbol.Help),
         ];
         SelectedCategory = Categories[0];
+        SelectedLogFilter = LogFilters[1];
         _loading = false;
         Initialization = InitializeAsync();
     }

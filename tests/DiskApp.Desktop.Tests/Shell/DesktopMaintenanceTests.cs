@@ -80,5 +80,73 @@ public sealed class DesktopMaintenanceTests : IDisposable
         await api.Received(1).RebuildIndexAsync(Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task ReadLogTail_LargeOpenLog_ReturnsLastWholeLines()
+    {
+        // Arrange
+        var lines = Enumerable.Range(1, 40_000).Select(static number => $"10:00:00.000 [INF] Строка {number}").ToList();
+        _data.CreateFile(Path.Combine("logs", "diskapp-20261010.log"), "старый");
+        File.SetLastWriteTimeUtc(_data.Resolve(Path.Combine("logs", "diskapp-20261010.log")), DateTime.UtcNow.AddDays(-1));
+        var current = _data.CreateFile(Path.Combine("logs", "diskapp-20261011.log"), string.Join("\r\n", lines) + "\r\n");
+        await using var writer = new FileStream(current, FileMode.Append, FileAccess.Write, FileShare.ReadWrite | FileShare.Delete);
+        var maintenance = new DesktopMaintenance(_paths, Substitute.For<IDiskAppApi>(), new LoggerConfiguration().CreateLogger());
+
+        // Act
+        var tail = await maintenance.ReadLogTailAsync(3);
+
+        // Assert
+        tail.ShouldBe(["10:00:00.000 [INF] Строка 39998", "10:00:00.000 [INF] Строка 39999", "10:00:00.000 [INF] Строка 40000"]);
+    }
+
+    [Fact]
+    public async Task ReadLogTail_NoLogs_Empty()
+    {
+        // Arrange
+        var maintenance = new DesktopMaintenance(_paths, Substitute.For<IDiskAppApi>(), new LoggerConfiguration().CreateLogger());
+
+        // Act
+        var tail = await maintenance.ReadLogTailAsync(10);
+
+        // Assert
+        tail.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ResetSettings_KeepsCopyAndSavesDefaults()
+    {
+        // Arrange
+        var settingsPath = _data.CreateFile("settings.json", """{"appearance":{"theme":"Dark"}}""");
+        _paths.SettingsPath.Returns(settingsPath);
+        var store = Substitute.For<ISettingsStore<DiskApp.Core.Settings.AppSettings>>();
+        var maintenance = new DesktopMaintenance(_paths, Substitute.For<IDiskAppApi>(), new LoggerConfiguration().CreateLogger(), settings: store);
+
+        // Act
+        var backup = await maintenance.ResetSettingsAsync();
+
+        // Assert
+        backup.ShouldNotBeNull();
+        (await File.ReadAllTextAsync(backup, TestContext.Current.CancellationToken)).ShouldContain("Dark");
+        await store.Received(1).SaveAsync(Arg.Is<DiskApp.Core.Settings.AppSettings>(settings => settings.Appearance.Theme == DiskApp.Core.Settings.ThemeMode.System), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreateDiagnosticArchive_WritesZipIntoDataFolder()
+    {
+        // Arrange
+        _data.CreateFile(Path.Combine("logs", "diskapp.log"), "10:00:00.000 [INF] Привет");
+        _paths.SettingsPath.Returns(_data.Resolve("settings.json"));
+        var maintenance = new DesktopMaintenance(_paths, Substitute.For<IDiskAppApi>(), new LoggerConfiguration().CreateLogger());
+
+        // Act
+        var path = await maintenance.CreateDiagnosticArchiveAsync();
+
+        // Assert
+        path.ShouldStartWith(_data.Resolve("diagnostics"));
+        using var zip = System.IO.Compression.ZipFile.OpenRead(path);
+        zip.Entries.Select(static entry => entry.FullName).ShouldBe(["environment.txt", "logs/diskapp.log"]);
+        using var reader = new StreamReader(zip.GetEntry("environment.txt")!.Open());
+        reader.ReadToEnd().ShouldContain("Версия DiskApp: " + AppVersion.Current);
+    }
+
     public void Dispose() => _data.Dispose();
 }

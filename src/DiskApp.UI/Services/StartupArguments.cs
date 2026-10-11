@@ -14,6 +14,7 @@ namespace DiskApp.UI.Services;
 /// <param name="Page">Открыть раздел главного окна по ключу (<c>--page browse</c>); <c>null</c> — не открывать.</param>
 /// <param name="Import">Файлы и папки, которые положить в выбранное место (<c>--import &lt;пути…&gt;</c>: «Отправить» и меню Проводника); <c>null</c> — нет.</param>
 /// <param name="BrowsePath">Папка, которую открыть в «Обзоре» (<c>--path &lt;папка&gt;</c>: «Открыть в DiskApp» в Проводнике); <c>null</c> — нет.</param>
+/// <param name="SafeMode">Безопасный режим (<c>--safe-mode</c>, этап 9.5): без автоиндексации и интеграций, с предложением сбросить настройки.</param>
 public sealed record StartupArguments(
     bool Minimized,
     bool Show,
@@ -24,7 +25,8 @@ public sealed record StartupArguments(
     IReadOnlyList<string>? AddPaths = null,
     string? Page = null,
     IReadOnlyList<string>? Import = null,
-    string? BrowsePath = null)
+    string? BrowsePath = null,
+    bool SafeMode = false)
 {
     /// <summary>Схема ссылок DiskApp: <c>diskapp://search?q=…</c>, <c>diskapp://open?path=…</c>.</summary>
     public const string UriScheme = "diskapp";
@@ -52,6 +54,7 @@ public sealed record StartupArguments(
         string? page = null;
         List<string>? import = null;
         string? browsePath = null;
+        var safeMode = false;
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -125,6 +128,9 @@ public sealed record StartupArguments(
                     }
 
                     break;
+                case "--safe-mode":
+                    safeMode = true;
+                    break;
                 case "--search":
                     if (inlineValue is not null)
                     {
@@ -150,7 +156,7 @@ public sealed record StartupArguments(
             }
         }
 
-        return new StartupArguments(minimized, show, settings, search, portable, exit, add is { Count: > 0 } ? add : null, page?.Trim().ToLowerInvariant(), import is { Count: > 0 } ? import : null, browsePath?.Trim().TrimEnd('"'));
+        return new StartupArguments(minimized, show, settings, search, portable, exit, add is { Count: > 0 } ? add : null, page?.Trim().ToLowerInvariant(), import is { Count: > 0 } ? import : null, browsePath?.Trim().TrimEnd('"'), safeMode);
     }
 
     private static bool IsAppUri(string argument) => argument.StartsWith(UriScheme + ":", StringComparison.OrdinalIgnoreCase);

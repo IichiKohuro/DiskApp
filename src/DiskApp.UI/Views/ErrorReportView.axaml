@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="560" d:DesignHeight="420"
+             x:Class="DiskApp.UI.Views.ErrorReportView"
+             x:DataType="vm:ErrorReportViewModel">
+    <!-- «Что-то пошло не так» (PLAN.md, этап 9.5): ошибка записана в журнал, работа продолжается; диагностический архив
+         собирается одной кнопкой. -->
+    <DockPanel Margin="24,20">
+        <WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Right" ItemSpacing="8" LineSpacing="8" Margin="0,16,0,0">
+            <Button Classes="accent" Content="{loc:Str Error.CreateArchive}" Command="{Binding CreateArchiveCommand}" />
+            <Button Content="{loc:Str Error.OpenLogs}" Command="{Binding OpenLogsCommand}" />
+            <Button Content="{loc:Str Error.Close}" Command="{Binding CloseCommand}" />
+        </WrapPanel>
+
+        <StackPanel Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <ic:SymbolIcon Symbol="ErrorCircle" FontSize="28" Foreground="{DynamicResource SystemFillColorCriticalBrush}" VerticalAlignment="Center" />
+                <TextBlock Theme="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Title}" />
+            </StackPanel>
+            <TextBlock TextWrapping="Wrap" Text="{Binding Message}" />
+            <TextBlock Classes="secondary" FontSize="12" Text="{Binding MoreText}" IsVisible="{Binding HasMore}" />
+            <Expander Header="{loc:Str Error.Details}" HorizontalAlignment="Stretch">
+                <TextBox AutomationProperties.Name="{loc:Str Error.Details}"
+                         Text="{Binding Details}"
+                         IsReadOnly="True"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         MaxHeight="220"
+                         FontFamily="Cascadia Mono, Consolas, monospace"
+                         FontSize="12" />
+            </Expander>
+            <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{Binding ArchiveText}" IsVisible="{Binding HasArchiveText}" />
+        </StackPanel>
+    </DockPanel>
+</UserControl>

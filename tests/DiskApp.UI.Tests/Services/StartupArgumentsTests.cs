@@ -34,6 +34,18 @@ public sealed class StartupArgumentsTests
     }
 
     [Fact]
+    public void Parse_SafeMode_SetsFlag()
+    {
+        // Act
+        var parsed = StartupArguments.Parse(["--safe-mode", "--show"]);
+
+        // Assert
+        parsed.SafeMode.ShouldBeTrue();
+        parsed.Show.ShouldBeTrue();
+        StartupArguments.Parse([]).SafeMode.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Parse_Exit_SetsExitFlag()
     {
         // Act

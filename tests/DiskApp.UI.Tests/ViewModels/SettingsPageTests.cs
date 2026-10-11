@@ -230,7 +230,7 @@ public sealed class SettingsPageTests
         var page = Create(new SampleSettingsService());
 
         // Assert
-        page.Categories.Select(static category => category.Key).ShouldBe(["appearance", "quick", "search", "index", "behavior", "integrations", "inbox", "data", "about"]);
+        page.Categories.Select(static category => category.Key).ShouldBe(["appearance", "quick", "search", "index", "behavior", "integrations", "inbox", "data", "logs", "about"]);
         page.SelectedCategory.Key.ShouldBe("appearance");
         page.KeyMap.ShouldContain(new KeyMapEntry("Ctrl+D", "Закрепить или открепить"));
         page.KeyMap.ShouldContain(new KeyMapEntry("Ctrl+T", "Теги"));

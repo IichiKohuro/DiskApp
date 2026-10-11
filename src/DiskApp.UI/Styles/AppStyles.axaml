@@ -110,6 +110,18 @@
         <Setter Property="VerticalAlignment" Value="Stretch" />
     </Style>
 
+    <!-- Строка журнала (этап 9.5): моноширинный шрифт, предупреждения и ошибки цветом состояния -->
+    <Style Selector="TextBlock.code-log">
+        <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="TextBlock.code-log.warning">
+        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
+    </Style>
+    <Style Selector="TextBlock.code-log.error">
+        <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+    </Style>
+
     <!-- Пример синтаксиса в подсказке «?» -->
     <Style Selector="TextBlock.code">
         <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace" />

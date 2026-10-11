@@ -41,6 +41,23 @@ public interface IAppMaintenance
 
     /// <summary>Пересобирает индекс всех корней заново.</summary>
     Task RebuildIndexAsync();
+
+    /// <summary>
+    /// Собирает диагностический архив (PLAN.md, этап 9.5): последние файлы журнала, настройки без секретов, версия и
+    /// окружение.
+    /// </summary>
+    /// <returns>Путь к архиву.</returns>
+    Task<string> CreateDiagnosticArchiveAsync();
+
+    /// <summary>Последние строки текущего файла журнала (страница журнала, этап 9.5).</summary>
+    Task<IReadOnlyList<string>> ReadLogTailAsync(int maxLines);
+
+    /// <summary>
+    /// Сбрасывает настройки к значениям по умолчанию; прежний файл сохраняется рядом (этап 9.5). Корни, теги и коллекции
+    /// хранятся в базе и не меняются.
+    /// </summary>
+    /// <returns>Путь к копии прежних настроек или <c>null</c>, если файла не было.</returns>
+    Task<string?> ResetSettingsAsync();
 }
 
 /// <summary>
@@ -76,6 +93,15 @@ public sealed class NullAppMaintenance : IAppMaintenance
 
     /// <inheritdoc />
     public Task RebuildIndexAsync() => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public Task<string> CreateDiagnosticArchiveAsync() => Task.FromException<string>(new NotSupportedException());
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<string>> ReadLogTailAsync(int maxLines) => Task.FromResult<IReadOnlyList<string>>([]);
+
+    /// <inheritdoc />
+    public Task<string?> ResetSettingsAsync() => Task.FromResult<string?>(null);
 }
 
 /// <summary>Чьё сочетание проверяется.</summary>
