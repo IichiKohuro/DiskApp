@@ -468,8 +468,12 @@
                             <TextBox AutomationProperties.Name="{loc:Str Settings.FileNameFromTheClipboard}" Text="{Binding ClipboardNameTemplate, Mode=TwoWay}" MinWidth="240" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="{loc:Str Settings.SortingCollectionFolders}" Description="{loc:Str Settings.RemindersDoNotDisturbAutoSorting}">
-                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Alert" /></ui:FASettingsExpander.IconSource>
+                    <!-- Рабочие папки (этап 17.2): настраиваются в карточке на странице «Разбор» -->
+                    <ui:FASettingsExpander Header="{loc:Str Settings.WorkFolders}" Description="{loc:Str Settings.WorkFoldersDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Folder" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <Button Content="{loc:Str Settings.OpenSorting}" Command="{Binding OpenSortingCommand}" />
+                        </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
                 </StackPanel>
 

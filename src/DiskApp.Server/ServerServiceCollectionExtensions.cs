@@ -88,6 +88,13 @@ public static class ServerServiceCollectionExtensions
             provider.GetRequiredService<ITagRepository>(),
             provider.GetRequiredService<PathNormalizer>(),
             provider.GetRequiredService<ILogger<SortingService>>()));
+        services.AddSingleton(static provider => new SortingFolderTracker(
+            provider.GetRequiredService<IIndexEventBus>(),
+            provider.GetRequiredService<FileOperationService>(),
+            provider.GetRequiredService<ISettingsStore<AppSettings>>(),
+            provider.GetRequiredService<PathNormalizer>(),
+            provider.GetRequiredService<ILogger<SortingFolderTracker>>()));
+        services.AddHostedService<SortingFolderTrackerService>();
         services.AddHostedService<ServerStartupService>();
         services.AddHostedService<SearchCacheInvalidator>();
         services.AddProblemDetails();

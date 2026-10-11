@@ -86,10 +86,14 @@ public sealed record NamePreset(string Title, string Template)
 /// <summary>Рабочая папка с клавишей 1–9.</summary>
 /// <param name="Number">Номер клавиши; 0 — без клавиши (десятая и дальше).</param>
 /// <param name="Folder">Папка.</param>
-public sealed record WorkFolderItem(int Number, SortingFolderInfo Folder)
+/// <param name="IsMissing">Папки нет в индексе: переименована, перенесена или удалена (этап 17.2).</param>
+public sealed record WorkFolderItem(int Number, SortingFolderInfo Folder, bool IsMissing = false)
 {
     /// <summary>Подпись кнопки: «2 417».</summary>
     public string Text => Number > 0 ? $"{Number} {Folder.Title}" : Folder.Title;
+
+    /// <summary>Подсказка: путь, а если папки нет в индексе — что с ней делать (этап 17.2).</summary>
+    public string Tip => IsMissing ? L.F("Sorting.WorkFolderMissing", Folder.Path) : Folder.Path;
 
     /// <inheritdoc />
     public override string ToString() => Text;
@@ -205,6 +209,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private IReadOnlyList<SortItem> _selection = [];
     private IReadOnlyList<string> _allTags = [];
     private SortingFolders _folders = SortingFolders.Empty;
+    private HashSet<string> _missing = new(StringComparer.OrdinalIgnoreCase);
     private readonly Func<DateTimeOffset> _clock;
     private CancellationTokenSource? _folderSearch;
     private bool _nameTemplateLoaded;
@@ -377,6 +382,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             ShowWorkFolders();
             await LoadInboxesAsync();
             await LoadTagsAsync();
+            await CheckWorkFoldersAsync();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -802,7 +808,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         WorkFolders.Clear();
         for (var i = 0; i < _folders.WorkFolders.Count; i++)
         {
-            WorkFolders.Add(new WorkFolderItem(i < 9 ? i + 1 : 0, _folders.WorkFolders[i]));
+            WorkFolders.Add(new WorkFolderItem(i < 9 ? i + 1 : 0, _folders.WorkFolders[i], _missing.Contains(_folders.WorkFolders[i].Path)));
         }
 
         HasNoWorkFolders = WorkFolders.Count == 0;
@@ -979,6 +985,72 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         SelectedWorkFolder = WorkFolders.FirstOrDefault(item => SamePath(item.Folder.Path, path));
     }
 
+    /// <summary>
+    /// Карточка рабочей папки (этап 17.2): подпись, номер-клавиша и сама папка — потерянную можно выбрать заново.
+    /// </summary>
+    [RelayCommand]
+    private async Task EditWorkFolderAsync(WorkFolderItem? item)
+    {
+        if (item is null || _dialogs is null)
+        {
+            return;
+        }
+
+        var list = _folders.WorkFolders.ToList();
+        var index = list.FindIndex(folder => SamePath(folder.Path, item.Folder.Path));
+        if (index < 0)
+        {
+            return;
+        }
+
+        var card = new WorkFolderCardViewModel(item.Folder, index, list.Count, item.IsMissing, _dialogs);
+        switch (await _dialogs.ShowWorkFolderCardAsync(card))
+        {
+            case WorkFolderCardResult.Removed:
+                await RemoveWorkFolderAsync(item);
+                break;
+            case WorkFolderCardResult.Saved:
+                var edited = card.ToFolder();
+                if (list.Where((_, position) => position != index).Any(folder => SamePath(folder.Path, edited.Path)))
+                {
+                    _notices?.Show(L.T("Sorting.Title"), L.F("Sorting.WorkFolderDuplicate", edited.Path), FAInfoBarSeverity.Warning);
+                    return;
+                }
+
+                list.RemoveAt(index);
+                list.Insert(Math.Clamp(card.SelectedPosition.Value, 0, list.Count), edited);
+                await SaveAsync(_folders with { WorkFolders = list }, SamePath(edited.Path, item.Folder.Path) ? null : edited.Path);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Отмечает рабочие папки, которых нет в индексе (этап 17.2): переименованную в Проводнике сервер переносит сам, а
+    /// перенесённую в другое место или удалённую — нет, и пользователь видит это на чипе и в карточке.
+    /// </summary>
+    private async Task CheckWorkFoldersAsync()
+    {
+        var missing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (_folders.WorkFolders.Count > 0)
+        {
+            try
+            {
+                missing.UnionWith((await _library.ResolveAsync([.. _folders.WorkFolders.Select(static folder => folder.Path)])).Missing);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // Без ответа сервера пометок нет: лучше не пугать «не найдена» зря.
+                return;
+            }
+        }
+
+        if (!missing.SetEquals(_missing))
+        {
+            _missing = missing;
+            ShowWorkFolders();
+        }
+    }
+
     private async Task ShiftWorkFolderAsync(WorkFolderItem? item, int offset)
     {
         if (item is null)
@@ -1011,6 +1083,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             _folders = folders;
             ShowWorkFolders();
             await LoadInboxesAsync();
+            await CheckWorkFoldersAsync();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {

@@ -72,6 +72,11 @@ public interface IDialogService
     Task<bool> ShowTagPickerAsync(DiskApp.UI.ViewModels.TagPickerViewModel dialog);
 
     /// <summary>
+    /// Карточка рабочей папки (PLAN.md, этап 17.2): «Сохранить», «Убрать из рабочих папок» или «Отмена».
+    /// </summary>
+    Task<DiskApp.UI.ViewModels.WorkFolderCardResult> ShowWorkFolderCardAsync(DiskApp.UI.ViewModels.WorkFolderCardViewModel card);
+
+    /// <summary>
     /// Редактор тега: имя и цвет из палитры (PLAN.md, этап 8.7).
     /// </summary>
     /// <returns>Имя и цвет или <c>null</c>, если отменено.</returns>

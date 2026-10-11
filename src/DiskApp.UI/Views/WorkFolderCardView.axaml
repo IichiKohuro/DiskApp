@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="440" d:DesignHeight="300"
+             x:Class="DiskApp.UI.Views.WorkFolderCardView"
+             x:DataType="vm:WorkFolderCardViewModel">
+    <!-- Карточка рабочей папки (PLAN.md, этап 17.2): подпись, номер-клавиша и папка; кнопки — у диалога -->
+    <StackPanel Spacing="14" MinWidth="420">
+        <StackPanel Spacing="4">
+            <TextBlock Text="{loc:Str Sorting.CardLabel}" />
+            <TextBox AutomationProperties.Name="{loc:Str Sorting.CardLabel}" Text="{Binding Label, Mode=TwoWay}" PlaceholderText="{Binding FolderName}" />
+            <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" Text="{loc:Str Sorting.CardLabelHint}" />
+        </StackPanel>
+        <StackPanel Spacing="4">
+            <TextBlock Text="{loc:Str Sorting.CardPosition}" />
+            <ComboBox AutomationProperties.Name="{loc:Str Sorting.CardPosition}" ItemsSource="{Binding Positions}" SelectedItem="{Binding SelectedPosition, Mode=TwoWay}" MinWidth="220" />
+        </StackPanel>
+        <StackPanel Spacing="4">
+            <TextBlock Text="{loc:Str Sorting.CardFolder}" />
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Top" Content="{loc:Str Sorting.CardChangeFolder}" Command="{Binding PickFolderCommand}" />
+                <SelectableTextBlock Text="{Binding Path}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            </DockPanel>
+            <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsMissing}">
+                <ic:SymbolIcon Symbol="Warning" FontSize="14" Foreground="{DynamicResource SystemFillColorCautionBrush}" VerticalAlignment="Top" />
+                <TextBlock TextWrapping="Wrap" MaxWidth="380" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="{loc:Str Sorting.CardMissing}" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

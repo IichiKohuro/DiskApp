@@ -66,7 +66,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
             return;
         }
 
-        if (await entries.GetByPathAsync(root.Id, oldRelPath, cancellationToken).ConfigureAwait(false) is null)
+        if (await entries.GetByPathAsync(root.Id, oldRelPath, cancellationToken).ConfigureAwait(false) is not { } renamed)
         {
             return;
         }
@@ -88,6 +88,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
         result.Renamed += await entries.RenameSubtreeAsync(root.Id, oldRelPath, newRelPath, cancellationToken).ConfigureAwait(false);
         folders.Add(factory.Parent(oldRelPath));
         folders.Add(newParent);
+        events.Publish(new EntryRenamedEvent(root.Id, factory.Paths.Combine(root.Path, oldRelPath), factory.Paths.Combine(root.Path, newRelPath), renamed.IsDirectory));
     }
 
     private async Task ApplyPathsAsync(

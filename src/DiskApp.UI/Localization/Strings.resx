@@ -2298,9 +2298,6 @@
   <data name="Settings.Releases" xml:space="preserve">
     <value>Релизы</value>
   </data>
-  <data name="Settings.RemindersDoNotDisturbAutoSorting" xml:space="preserve">
-    <value>Напоминания, «не беспокоить», правила автосортировки и журнал решений появятся вместе с разбором входящих (этап 17)</value>
-  </data>
   <data name="Settings.Remove" xml:space="preserve">
     <value>Убрать</value>
   </data>
@@ -2426,9 +2423,6 @@
   </data>
   <data name="Settings.SizeOfTextAndControlsIn" xml:space="preserve">
     <value>Размер текста и элементов главного окна и окна поиска</value>
-  </data>
-  <data name="Settings.SortingCollectionFolders" xml:space="preserve">
-    <value>Разбор папок-накопителей</value>
   </data>
   <data name="Settings.StartMinimized" xml:space="preserve">
     <value>Запускаться свёрнутым</value>
@@ -3107,5 +3101,47 @@
   </data>
   <data name="Sorting.MakeMainInbox" xml:space="preserve">
     <value>Сделать основной</value>
+  </data>
+  <data name="Settings.WorkFolders" xml:space="preserve">
+    <value>Рабочие папки</value>
+  </data>
+  <data name="Settings.WorkFoldersDescription" xml:space="preserve">
+    <value>Куда раскладываются файлы из накопителей. Подпись, номер и папка — в карточке: правый щелчок по рабочей папке на странице «Разбор» → «Настроить…».</value>
+  </data>
+  <data name="Sorting.CardChangeFolder" xml:space="preserve">
+    <value>Сменить папку…</value>
+  </data>
+  <data name="Sorting.CardFolder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="Sorting.CardLabel" xml:space="preserve">
+    <value>Подпись</value>
+  </data>
+  <data name="Sorting.CardLabelHint" xml:space="preserve">
+    <value>Так папка называется на кнопке и в подсказках; пусто — имя папки.</value>
+  </data>
+  <data name="Sorting.CardMissing" xml:space="preserve">
+    <value>Папка не найдена — её переименовали, перенесли или удалили. Выберите, где она теперь.</value>
+  </data>
+  <data name="Sorting.CardPosition" xml:space="preserve">
+    <value>Номер</value>
+  </data>
+  <data name="Sorting.CardPositionKey" xml:space="preserve">
+    <value>{0} — клавиша {0}</value>
+  </data>
+  <data name="Sorting.CardPositionNoKey" xml:space="preserve">
+    <value>{0} — без клавиши</value>
+  </data>
+  <data name="Sorting.EditWorkFolder" xml:space="preserve">
+    <value>Настроить…</value>
+  </data>
+  <data name="Sorting.WorkFolderDuplicate" xml:space="preserve">
+    <value>Папка {0} уже есть среди рабочих.</value>
+  </data>
+  <data name="Sorting.WorkFolderMissing" xml:space="preserve">
+    <value>Папка не найдена: {0}. Её переименовали, перенесли или удалили — выберите её заново в карточке («Настроить…»).</value>
+  </data>
+  <data name="Sorting.CardRemove" xml:space="preserve">
+    <value>Убрать</value>
   </data>
 </root>

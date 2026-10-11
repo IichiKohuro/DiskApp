@@ -217,6 +217,100 @@ public sealed class SortingViewModelTests
     }
 
     [Fact]
+    public async Task MissingWorkFolder_IsMarkedFromIndex()
+    {
+        // Arrange: папки 417 нет в индексе — её переименовали или перенесли (этап 17.2)
+        _library.ResolveAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>()).Returns(new ResolveResult([], [Work417]));
+
+        // Act
+        var page = await CreateLoadedAsync();
+
+        // Assert
+        var missing = page.WorkFolders.Single(static item => item.Folder.Path == Work417);
+        missing.IsMissing.ShouldBeTrue();
+        missing.Tip.ShouldContain("не найдена");
+        page.WorkFolders.Where(static item => item.Folder.Path != Work417).ShouldAllBe(static item => !item.IsMissing);
+    }
+
+    [Fact]
+    public async Task EditWorkFolder_SavesLabelAndNumber()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+        _dialogs.ShowWorkFolderCardAsync(Arg.Any<WorkFolderCardViewModel>()).Returns(static call =>
+        {
+            var card = call.Arg<WorkFolderCardViewModel>();
+            card.Label = "  Проект 417 ";
+            card.SelectedPosition = card.Positions[0];
+            return WorkFolderCardResult.Saved;
+        });
+
+        // Act
+        await page.EditWorkFolderCommand.ExecuteAsync(page.WorkFolders[1]);
+
+        // Assert
+        page.WorkFolders.Select(static item => item.Text).ShouldBe(["1 Проект 417", "2 TCI2", "3 Soft"]);
+        var saved = (await _settings.GetAsync(TestContext.Current.CancellationToken)).WorkFolders[0];
+        saved.ShouldBe(new SortingFolderInfo(Work417, "Проект 417"));
+    }
+
+    [Fact]
+    public async Task EditWorkFolder_MissingFolderPickedAgain_SavesNewPath()
+    {
+        // Arrange: папку перенесли, в карточке выбрали, где она теперь
+        _library.ResolveAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>()).Returns(new ResolveResult([], [Work417]));
+        _dialogs.PickFolderAsync(Arg.Any<string>()).Returns(@"D:\Work\Архив\417");
+        var page = await CreateLoadedAsync();
+        bool? wasMissing = null;
+        _dialogs.ShowWorkFolderCardAsync(Arg.Any<WorkFolderCardViewModel>()).Returns(async call =>
+        {
+            var card = call.Arg<WorkFolderCardViewModel>();
+            wasMissing = card.IsMissing;
+            await card.PickFolderCommand.ExecuteAsync(null);
+            return WorkFolderCardResult.Saved;
+        });
+
+        // Act
+        await page.EditWorkFolderCommand.ExecuteAsync(page.WorkFolders[1]);
+
+        // Assert
+        wasMissing.ShouldBe(true);
+        (await _settings.GetAsync(TestContext.Current.CancellationToken)).WorkFolders[1].Path.ShouldBe(@"D:\Work\Архив\417");
+        await _roots.DidNotReceive().AddAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task EditWorkFolder_Removed_RemovesFromList()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+        _dialogs.ShowWorkFolderCardAsync(Arg.Any<WorkFolderCardViewModel>()).Returns(WorkFolderCardResult.Removed);
+
+        // Act
+        await page.EditWorkFolderCommand.ExecuteAsync(page.WorkFolders[0]);
+
+        // Assert
+        page.WorkFolders.Select(static item => item.Text).ShouldBe(["1 417", "2 Soft"]);
+    }
+
+    [Fact]
+    public void WorkFolderCard_PositionsTitleAndFolder()
+    {
+        // Arrange
+        var card = new WorkFolderCardViewModel(new SortingFolderInfo(Work417), position: 1, count: 11, isMissing: false);
+
+        // Act
+        card.Label = "   ";
+
+        // Assert
+        card.Positions[0].Text.ShouldBe("1 — клавиша 1");
+        card.Positions[10].Text.ShouldBe("11 — без клавиши");
+        card.SelectedPosition.ShouldBe(card.Positions[1]);
+        card.Title.ShouldBe("417");
+        card.ToFolder().ShouldBe(new SortingFolderInfo(Work417));
+    }
+
+    [Fact]
     public async Task NoInboxes_ShowsHintToAddOne()
     {
         // Arrange

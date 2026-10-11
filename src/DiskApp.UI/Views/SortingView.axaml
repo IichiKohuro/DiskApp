@@ -128,16 +128,22 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:WorkFolderItem">
-                                <TextBlock Text="{Binding Text}" ToolTip.Tip="{Binding Folder.Path}">
-                                    <TextBlock.ContextFlyout>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Background="Transparent" ToolTip.Tip="{Binding Tip}">
+                                    <!-- Папки нет в индексе (этап 17.2): переименована, перенесена или удалена — исправить в карточке -->
+                                    <ic:SymbolIcon Symbol="Warning" FontSize="12" VerticalAlignment="Center" IsVisible="{Binding IsMissing}"
+                                                   Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+                                    <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
+                                    <StackPanel.ContextFlyout>
                                         <MenuFlyout>
+                                            <MenuItem Header="{loc:Str Sorting.EditWorkFolder}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).EditWorkFolderCommand}" CommandParameter="{Binding}" />
+                                            <Separator />
                                             <MenuItem Header="{loc:Str Sorting.Earlier}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).MoveWorkFolderUpCommand}" CommandParameter="{Binding}" />
                                             <MenuItem Header="{loc:Str Sorting.Later}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).MoveWorkFolderDownCommand}" CommandParameter="{Binding}" />
                                             <Separator />
                                             <MenuItem Header="{loc:Str Sorting.RemoveWorkFolder}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).RemoveWorkFolderCommand}" CommandParameter="{Binding}" />
                                         </MenuFlyout>
-                                    </TextBlock.ContextFlyout>
-                                </TextBlock>
+                                    </StackPanel.ContextFlyout>
+                                </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

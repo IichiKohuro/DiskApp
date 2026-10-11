@@ -156,3 +156,13 @@ public enum OperationOutcome
     /// <summary>Отменена пользователем.</summary>
     Cancelled,
 }
+
+/// <summary>
+/// Наблюдатель увидел переименование или перенос внутри корня, и индекс перенёс поддерево (PLAN.md, этап 17.2): по нему
+/// пути накопителей и рабочих папок в настройках следуют за папкой, переименованной в Проводнике.
+/// </summary>
+/// <param name="RootId">Корень.</param>
+/// <param name="OldPath">Полный путь до переименования.</param>
+/// <param name="NewPath">Полный путь после.</param>
+/// <param name="IsDirectory">Переименована папка.</param>
+public sealed record EntryRenamedEvent(long RootId, string OldPath, string NewPath, bool IsDirectory) : IIndexEvent;

@@ -147,6 +147,28 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
     }
 
     /// <inheritdoc />
+    public async Task<DiskApp.UI.ViewModels.WorkFolderCardResult> ShowWorkFolderCardAsync(DiskApp.UI.ViewModels.WorkFolderCardViewModel card)
+    {
+        ArgumentNullException.ThrowIfNull(card);
+
+        var box = new FAContentDialog
+        {
+            Title = card.Title,
+            Content = new DiskApp.UI.Views.WorkFolderCardView { DataContext = card },
+            PrimaryButtonText = L.T("Common.Save"),
+            SecondaryButtonText = L.T("Sorting.CardRemove"),
+            CloseButtonText = L.T("Common.CancelButton"),
+            DefaultButton = FAContentDialogButton.Primary,
+        };
+        return await box.ShowAsync(mainWindow()) switch
+        {
+            FAContentDialogResult.Primary => DiskApp.UI.ViewModels.WorkFolderCardResult.Saved,
+            FAContentDialogResult.Secondary => DiskApp.UI.ViewModels.WorkFolderCardResult.Removed,
+            _ => DiskApp.UI.ViewModels.WorkFolderCardResult.Cancelled,
+        };
+    }
+
+    /// <inheritdoc />
     public async Task<(string Name, string? Color)?> EditTagAsync(string title, string name, string? color, string primaryText)
     {
         var input = new TextBox { Text = name, MinWidth = 320, PlaceholderText = L.T("DesktopDialog.TagName") };

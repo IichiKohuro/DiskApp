@@ -2298,9 +2298,6 @@
   <data name="Settings.Releases" xml:space="preserve">
     <value>Releases</value>
   </data>
-  <data name="Settings.RemindersDoNotDisturbAutoSorting" xml:space="preserve">
-    <value>Reminders, do not disturb, auto-sorting rules and the decision log will come with inbox sorting (stage 17)</value>
-  </data>
   <data name="Settings.Remove" xml:space="preserve">
     <value>Remove</value>
   </data>
@@ -2426,9 +2423,6 @@
   </data>
   <data name="Settings.SizeOfTextAndControlsIn" xml:space="preserve">
     <value>Size of text and controls in the main window and the search window</value>
-  </data>
-  <data name="Settings.SortingCollectionFolders" xml:space="preserve">
-    <value>Sorting collection folders</value>
   </data>
   <data name="Settings.StartMinimized" xml:space="preserve">
     <value>Start minimized</value>
@@ -3107,5 +3101,47 @@
   </data>
   <data name="Sorting.MakeMainInbox" xml:space="preserve">
     <value>Make main</value>
+  </data>
+  <data name="Settings.WorkFolders" xml:space="preserve">
+    <value>Work folders</value>
+  </data>
+  <data name="Settings.WorkFoldersDescription" xml:space="preserve">
+    <value>Where files from collector folders are sorted to. Label, number and folder are in its card: right-click a work folder on the Sorting page → Edit….</value>
+  </data>
+  <data name="Sorting.CardChangeFolder" xml:space="preserve">
+    <value>Change folder…</value>
+  </data>
+  <data name="Sorting.CardFolder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Sorting.CardLabel" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="Sorting.CardLabelHint" xml:space="preserve">
+    <value>The name on the button and in hints; empty — the folder name.</value>
+  </data>
+  <data name="Sorting.CardMissing" xml:space="preserve">
+    <value>Folder not found — it was renamed, moved or deleted. Pick where it is now.</value>
+  </data>
+  <data name="Sorting.CardPosition" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="Sorting.CardPositionKey" xml:space="preserve">
+    <value>{0} — key {0}</value>
+  </data>
+  <data name="Sorting.CardPositionNoKey" xml:space="preserve">
+    <value>{0} — no key</value>
+  </data>
+  <data name="Sorting.EditWorkFolder" xml:space="preserve">
+    <value>Edit…</value>
+  </data>
+  <data name="Sorting.WorkFolderDuplicate" xml:space="preserve">
+    <value>{0} is already a work folder.</value>
+  </data>
+  <data name="Sorting.WorkFolderMissing" xml:space="preserve">
+    <value>Folder not found: {0}. It was renamed, moved or deleted — pick it again in its card (Edit…).</value>
+  </data>
+  <data name="Sorting.CardRemove" xml:space="preserve">
+    <value>Remove</value>
   </data>
 </root>

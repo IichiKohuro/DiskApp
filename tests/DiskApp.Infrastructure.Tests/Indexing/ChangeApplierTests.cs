@@ -1,4 +1,5 @@
 using DiskApp.Core.Domain;
+using DiskApp.Core.Events;
 using DiskApp.Core.Indexing;
 using DiskApp.Core.Indexing.Watching;
 using DiskApp.Core.Paths;
@@ -44,12 +45,16 @@ public sealed class ChangeApplierTests
         await context.FullScanAsync();
         var before = await context.Entries.GetByPathAsync(context.Root.Id, Path.Combine("old", "sub", "file.txt"), TestContext.Current.CancellationToken);
         Directory.Move(context.Files.Resolve("old"), context.Files.Resolve("new"));
+        var renames = new List<EntryRenamedEvent>();
+        using var subscription = context.Events.Subscribe<EntryRenamedEvent>(renames.Add);
 
         // Act
         var result = await ApplyAsync(context, new CoalescedChanges([("old", "new")], ["old", "new"], false));
 
         // Assert
         result.Renamed.ShouldBe(3);
+        renames.ShouldHaveSingleItem().ShouldBe(new EntryRenamedEvent(context.Root.Id, context.Files.Resolve("old"), context.Files.Resolve("new"), IsDirectory: true),
+            "по событию пути папок разбора следуют за переименованием (этап 17.2)");
         var after = await context.Entries.GetByPathAsync(context.Root.Id, Path.Combine("new", "sub", "file.txt"), TestContext.Current.CancellationToken);
         after.ShouldNotBeNull();
         after.Id.ShouldBe(before!.Id);
