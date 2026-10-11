@@ -448,16 +448,18 @@
                 <!-- Входящие -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=inbox}">
                     <TextBlock Classes="section" Text="{loc:Str Settings.Inbox}" />
-                    <ui:FASettingsExpander Header="{loc:Str Settings.InboxFolder}" Description="{loc:Str Settings.WhereAddedItemsGoByDefault}" IsExpanded="True">
+                    <!-- Основная папка-накопитель (этап 18.2): в неё слилась прежняя папка «Входящие» -->
+                    <ui:FASettingsExpander Header="{loc:Str Settings.MainInbox}" Description="{loc:Str Settings.MainInboxDescription}" IsExpanded="{Binding !HasInboxes}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Download" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <WrapPanel ItemSpacing="8" LineSpacing="8">
-                                <Button Content="{loc:Str Settings.Choose}" Command="{Binding PickInboxCommand}" />
-                                <Button Content="{loc:Str Settings.FirstRoot}" Command="{Binding ResetInboxCommand}" />
+                                <ComboBox AutomationProperties.Name="{loc:Str Settings.MainInbox}" ItemsSource="{Binding MainInboxOptions}" SelectedItem="{Binding SelectedMainInbox, Mode=TwoWay}"
+                                          MinWidth="220" IsVisible="{Binding HasInboxes}" />
+                                <Button Content="{loc:Str Settings.OpenSorting}" Command="{Binding OpenSortingCommand}" />
                             </WrapPanel>
                         </ui:FASettingsExpander.Footer>
-                        <ui:FASettingsExpanderItem AutomationProperties.Name="{Binding InboxText}">
-                            <TextBlock TextWrapping="Wrap" Text="{Binding InboxText}" />
+                        <ui:FASettingsExpanderItem AutomationProperties.Name="{loc:Str Settings.NoInboxesYet}" IsVisible="{Binding !HasInboxes}">
+                            <TextBlock TextWrapping="Wrap" Text="{loc:Str Settings.NoInboxesYet}" />
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
                     <ui:FASettingsExpander Header="{loc:Str Settings.FileNameFromTheClipboard}" Description="{loc:Str Settings.CtrlShiftVSavesTextOr}">

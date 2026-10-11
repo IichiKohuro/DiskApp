@@ -69,6 +69,16 @@ public sealed record SortingSettings
     public IReadOnlyList<SortingFolder> WorkFolders { get; set; } = [];
 
     /// <summary>
+    /// Основная папка-накопитель (PLAN.md, этап 18.2, ADR-0011): сюда падают файлы, брошенные в окно Drag&amp;Drop, и то, что
+    /// добавлено без выбора места. <c>null</c> или папка не из списка — первая в списке.
+    /// </summary>
+    public string? MainInbox { get; set; }
+
+    /// <summary>Действующая основная папка-накопитель; <c>null</c>, если накопителей нет.</summary>
+    public string? ResolveMainInbox()
+        => Inboxes.FirstOrDefault(folder => string.Equals(folder.Path, MainInbox, StringComparison.OrdinalIgnoreCase))?.Path ?? (Inboxes.Count > 0 ? Inboxes[0].Path : null);
+
+    /// <summary>
     /// Шаблон имени при переносе: <c>{имя}</c>, <c>{дата}</c>, <c>{время}</c>, <c>{теги}</c>, <c>{папка}</c>, <c>{№}</c>
     /// (или те же по-английски); <c>null</c> — имена не меняются. Расширение сохраняется всегда.
     /// </summary>
@@ -76,7 +86,8 @@ public sealed record SortingSettings
 
     /// <summary>Равенство по содержимому: списки сравниваются поэлементно.</summary>
     public bool Equals(SortingSettings? other)
-        => other is not null && Inboxes.SequenceEqual(other.Inboxes) && WorkFolders.SequenceEqual(other.WorkFolders) && NameTemplate == other.NameTemplate;
+        => other is not null && Inboxes.SequenceEqual(other.Inboxes) && WorkFolders.SequenceEqual(other.WorkFolders) && NameTemplate == other.NameTemplate
+            && string.Equals(MainInbox, other.MainInbox, StringComparison.Ordinal);
 
     /// <inheritdoc />
     public override int GetHashCode()
@@ -88,6 +99,7 @@ public sealed record SortingSettings
         }
 
         hash.Add(NameTemplate);
+        hash.Add(MainInbox);
 
         return hash.ToHashCode();
     }

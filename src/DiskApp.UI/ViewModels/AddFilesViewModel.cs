@@ -127,7 +127,8 @@ public sealed partial class AddFilesViewModel : ViewModelBase
         var targets = new List<AddTarget>();
         if (_preferences.InboxPath is { Length: > 0 } inbox)
         {
-            targets.Add(new AddTarget(L.T("AddFiles.Inbox"), inbox, L.T("AddFiles.DefaultPlace"), Symbol.MailInbox));
+            // Основная папка-накопитель (этап 18.2: «Входящие» слились с ней), пока накопителей нет — прежняя папка «Входящие».
+            targets.Add(new AddTarget(PathText.FileName(inbox), inbox, L.T("AddFiles.MainInbox"), Symbol.MailInbox));
         }
 
         targets.AddRange(_preferences.RecentTargets.Select(static path => new AddTarget(PathText.FileName(path), path, L.T("AddFiles.Recent"), Symbol.History)));

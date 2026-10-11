@@ -75,9 +75,6 @@
   <data name="AddFiles.CouldNotGetTheRoots" xml:space="preserve">
     <value>Could not get the roots</value>
   </data>
-  <data name="AddFiles.DefaultPlace" xml:space="preserve">
-    <value>default place</value>
-  </data>
   <data name="AddFiles.FilesOutsideTheIndexRootsAre" xml:space="preserve">
     <value>Files outside the index roots are copied; the originals stay in place.</value>
   </data>
@@ -89,9 +86,6 @@
   </data>
   <data name="AddFiles.Image" xml:space="preserve">
     <value>image</value>
-  </data>
-  <data name="AddFiles.Inbox" xml:space="preserve">
-    <value>Inbox</value>
   </data>
   <data name="AddFiles.Move" xml:space="preserve">
     <value>Move</value>
@@ -1941,9 +1935,6 @@
   <data name="Settings.CheckingForAndInstallingUpdatesWill" xml:space="preserve">
     <value>Checking for and installing updates will come with the installer (stage 11). For now, download a new version from the releases page.</value>
   </data>
-  <data name="Settings.Choose" xml:space="preserve">
-    <value>Choose…</value>
-  </data>
   <data name="Settings.ChooseAFolderInDiskAppAnd" xml:space="preserve">
     <value>choose a folder in DiskApp and the dialog goes to it</value>
   </data>
@@ -2094,9 +2085,6 @@
   <data name="Settings.Filters" xml:space="preserve">
     <value>Filters</value>
   </data>
-  <data name="Settings.FirstRoot" xml:space="preserve">
-    <value>First root</value>
-  </data>
   <data name="Settings.Folder" xml:space="preserve">
     <value>Folder</value>
   </data>
@@ -2156,9 +2144,6 @@
   </data>
   <data name="Settings.Inbox" xml:space="preserve">
     <value>Inbox</value>
-  </data>
-  <data name="Settings.InboxFolder" xml:space="preserve">
-    <value>Inbox folder</value>
   </data>
   <data name="Settings.Index" xml:space="preserve">
     <value>Index</value>
@@ -2463,9 +2448,6 @@
   <data name="Settings.TheFileHasNoDiskAppSettings" xml:space="preserve">
     <value>The file has no DiskApp settings.</value>
   </data>
-  <data name="Settings.TheFirstIndexRootUntilA" xml:space="preserve">
-    <value>The first index root — until a folder is chosen</value>
-  </data>
   <data name="Settings.TheIndexOfAllRootsWill" xml:space="preserve">
     <value>The index of all roots will be built again. Files are not touched, but until the scan finishes search finds only part of them. Favorites, tags and collections are kept for files found again.</value>
   </data>
@@ -2522,9 +2504,6 @@
   </data>
   <data name="Settings.WhenThereAreFewExactMatches" xml:space="preserve">
     <value>When there are few exact matches, find names with a typo: “reprot” → “report”</value>
-  </data>
-  <data name="Settings.WhereAddedItemsGoByDefault" xml:space="preserve">
-    <value>Where added items go by default: dropping on Home, Send to, clipboard</value>
   </data>
   <data name="Settings.WhereToShowTheQuickSearch" xml:space="preserve">
     <value>Where to show the quick search window</value>
@@ -3034,7 +3013,7 @@
     <value>Drag files here</value>
   </data>
   <data name="Drop.InboxText" xml:space="preserve">
-    <value>They go to the main collector folder</value>
+    <value>They go to “{0}”</value>
   </data>
   <data name="Drop.TrayHint" xml:space="preserve">
     <value>A click on the tray icon now opens this window. Double-click opens the main window; quick search is {0}.</value>
@@ -3056,5 +3035,77 @@
   </data>
   <data name="Settings.DropWindowHotkeyText" xml:space="preserve">
     <value>Show or hide the window to drop files into. A click on the tray icon opens it too.</value>
+  </data>
+  <data name="AddFiles.MainInbox" xml:space="preserve">
+    <value>main collector folder</value>
+  </data>
+  <data name="Drop.AlreadyThere" xml:space="preserve">
+    <value>These files are already in “{0}”</value>
+  </data>
+  <data name="Drop.Cancelled" xml:space="preserve">
+    <value>Cancelled before it finished</value>
+  </data>
+  <data name="Drop.Copying" xml:space="preserve">
+    <value>Copying {0} → {1}…</value>
+  </data>
+  <data name="Drop.CopyTo" xml:space="preserve">
+    <value>Copy to “{0}”</value>
+  </data>
+  <data name="Drop.Done" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="Drop.Failed" xml:space="preserve">
+    <value>Didn't work: {0}</value>
+  </data>
+  <data name="Drop.IntoItself" xml:space="preserve">
+    <value>A folder can't be dropped into itself</value>
+  </data>
+  <data name="Drop.ModifiersHint" xml:space="preserve">
+    <value>Shift moves, Ctrl copies</value>
+  </data>
+  <data name="Drop.MoveTo" xml:space="preserve">
+    <value>Move to “{0}”</value>
+  </data>
+  <data name="Drop.Moving" xml:space="preserve">
+    <value>Moving {0} → {1}…</value>
+  </data>
+  <data name="Drop.NoInboxText" xml:space="preserve">
+    <value>Add one on the Sorting page — dropped files will go there</value>
+  </data>
+  <data name="Drop.NoInboxTitle" xml:space="preserve">
+    <value>No collector folder</value>
+  </data>
+  <data name="Drop.NotAllowed" xml:space="preserve">
+    <value>This can't be dropped here</value>
+  </data>
+  <data name="Drop.OpenSorting" xml:space="preserve">
+    <value>Open Sorting</value>
+  </data>
+  <data name="Drop.Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Drop.Undone" xml:space="preserve">
+    <value>Undone</value>
+  </data>
+  <data name="Drop.Zone" xml:space="preserve">
+    <value>Drop area: put files into the collector folder</value>
+  </data>
+  <data name="Settings.MainInbox" xml:space="preserve">
+    <value>Main collector folder</value>
+  </data>
+  <data name="Settings.MainInboxDescription" xml:space="preserve">
+    <value>Files dropped into the Drag&amp;Drop window and items added without choosing a place go here. Collector folders are added on the Sorting page.</value>
+  </data>
+  <data name="Settings.NoInboxesYet" xml:space="preserve">
+    <value>No collector folders yet — add them on the Sorting page.</value>
+  </data>
+  <data name="Settings.OpenSorting" xml:space="preserve">
+    <value>Open Sorting</value>
+  </data>
+  <data name="Sorting.MainInboxTip" xml:space="preserve">
+    <value>Main collector folder: files from the Drag&amp;Drop window go here</value>
+  </data>
+  <data name="Sorting.MakeMainInbox" xml:space="preserve">
+    <value>Make main</value>
   </data>
 </root>

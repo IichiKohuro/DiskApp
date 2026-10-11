@@ -201,8 +201,9 @@ public sealed partial class FileOperationService : IAsyncDisposable
             }
 
             run.Undone = true;
-            undo = run.Request.Kind is FileOperationKind.CreateFolder or FileOperationKind.CreateFile
-                ? new OperationRun(Guid.NewGuid(), new FileOperationRequest(FileOperationKind.Delete, [run.Created!]), _clock.UtcNow, _stop.Token) { IsUndo = true }
+            // Созданное (папка, файл, копии) уходит в корзину; перенесённое и переименованное возвращается на место.
+            undo = run.Request.Kind is FileOperationKind.CreateFolder or FileOperationKind.CreateFile or FileOperationKind.Copy
+                ? new OperationRun(Guid.NewGuid(), new FileOperationRequest(FileOperationKind.Delete, run.Request.Kind == FileOperationKind.Copy ? [.. run.Copies] : [run.Created!]), _clock.UtcNow, _stop.Token) { IsUndo = true }
                 : new OperationRun(
                     Guid.NewGuid(),
                     new FileOperationRequest(FileOperationKind.Move, run.Moves.Select(static move => move.To).ToArray(), run.Request.Kind == FileOperationKind.Rename ? null : run.Request.Sources.Count > 0 ? _paths.GetParent(run.Request.Sources[0]) : null),
@@ -309,6 +310,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
             && (run.Request.Kind switch
             {
                 FileOperationKind.Rename or FileOperationKind.Move => run.Moves.Count > 0,
+                FileOperationKind.Copy => run.Copies.Count > 0,
                 FileOperationKind.CreateFolder or FileOperationKind.CreateFile => run.Created is not null,
                 _ => false,
             });
@@ -623,31 +625,33 @@ public sealed partial class FileOperationService : IAsyncDisposable
                 context.Affected.Add(_paths.GetParent(source) ?? source);
             }
 
-            await CopyItemAsync(context, source, _paths.Combine(destination, TargetName(run.Request, index)), move, record: move, token).ConfigureAwait(false);
+            var copied = await CopyItemAsync(context, source, _paths.Combine(destination, TargetName(run.Request, index)), move, record: move, token).ConfigureAwait(false);
+            if (!move && copied is not null)
+            {
+                // Для отмены копирования (этап 18.2): созданное целиком — файл или новая папка — уходит в корзину.
+                run.Copies.Add(copied);
+            }
         }
     }
 
     // record — запомнить перенос для отмены: новая папка запоминается целиком, при слиянии с существующей — каждый элемент отдельно.
-    private async Task CopyItemAsync(RunContext context, string source, string target, bool move, bool record, CancellationToken token)
+    // Возвращает созданное целиком (файл или новую папку); null — пропущено, не удалось или слито с существующей папкой.
+    private async Task<string?> CopyItemAsync(RunContext context, string source, string target, bool move, bool record, CancellationToken token)
     {
         try
         {
-            if (_fs.Directory.Exists(source))
-            {
-                await CopyDirectoryAsync(context, source, target, move, record, token).ConfigureAwait(false);
-            }
-            else
-            {
-                await CopyFileAsync(context, source, target, move, record, token).ConfigureAwait(false);
-            }
+            return _fs.Directory.Exists(source)
+                ? await CopyDirectoryAsync(context, source, target, move, record, token).ConfigureAwait(false)
+                : await CopyFileAsync(context, source, target, move, record, token).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             context.Errors.Add($"«{source}»: {exception.Message}");
+            return null;
         }
     }
 
-    private async Task CopyFileAsync(RunContext context, string source, string target, bool move, bool record, CancellationToken token)
+    private async Task<string?> CopyFileAsync(RunContext context, string source, string target, bool move, bool record, CancellationToken token)
     {
         var run = context.Run;
         var size = _fs.FileInfo.New(source).Length;
@@ -656,7 +660,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
         {
             AddProgress(run, items: 1, bytes: size, path: null);
             context.Skipped++;
-            return;
+            return null;
         }
 
         SetCurrent(run, source);
@@ -676,9 +680,11 @@ public sealed partial class FileOperationService : IAsyncDisposable
                 run.Moves.Add((source, resolved));
             }
         }
+
+        return resolved;
     }
 
-    private async Task CopyDirectoryAsync(RunContext context, string source, string target, bool move, bool record, CancellationToken token)
+    private async Task<string?> CopyDirectoryAsync(RunContext context, string source, string target, bool move, bool record, CancellationToken token)
     {
         var run = context.Run;
         var resolved = await ResolveConflictAsync(context, source, target, token).ConfigureAwait(false);
@@ -687,7 +693,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
             var (items, bytes) = Measure(source);
             AddProgress(run, items, bytes, path: null);
             context.Skipped++;
-            return;
+            return null;
         }
 
         var info = _fs.DirectoryInfo.New(source);
@@ -721,6 +727,8 @@ public sealed partial class FileOperationService : IAsyncDisposable
                 run.Moves.Add((source, resolved));
             }
         }
+
+        return fresh ? resolved : null;
     }
 
     private async Task CopyContentAsync(OperationRun run, string source, string target, CancellationToken token)
@@ -1325,6 +1333,9 @@ public sealed partial class FileOperationService : IAsyncDisposable
         public ConflictResolution? ApplyToAll { get; set; }
 
         public List<(string From, string To)> Moves { get; } = [];
+
+        /// <summary>Созданное копированием целиком — для отмены (этап 18.2).</summary>
+        public List<string> Copies { get; } = [];
 
         public string? Created { get; set; }
 

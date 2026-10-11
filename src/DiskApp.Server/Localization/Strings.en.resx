@@ -276,4 +276,13 @@
   <data name="SettingsEndpoints.ValueOfTheWrongType" xml:space="preserve">
     <value>Value of the wrong type: </value>
   </data>
+  <data name="SortingEndpoints.DropOnlyFromThisComputer" xml:space="preserve">
+    <value>Files can be dropped into a collector folder only from this computer.</value>
+  </data>
+  <data name="SortingEndpoints.NotAnInbox" xml:space="preserve">
+    <value>“{0}” is not a collector folder: files from the Drag&amp;Drop window go only to collector folders from settings.</value>
+  </data>
+  <data name="SortingEndpoints.SourceNotFound" xml:space="preserve">
+    <value>File or folder not found: {0}</value>
+  </data>
 </root>

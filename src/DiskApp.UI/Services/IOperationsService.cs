@@ -23,6 +23,9 @@ public interface IOperationsService
     /// <summary>Разбор: переносит из накопителя в рабочую папку с тегами; одинаковые имена — «оставить оба».</summary>
     Task<OperationInfo> SortAsync(SortOperation operation, CancellationToken cancellationToken = default);
 
+    /// <summary>Окно Drag&amp;Drop: бросает файлы в папку-накопитель — перенос или копия; одинаковые имена — «оставить оба».</summary>
+    Task<OperationInfo> DropAsync(DropOperation operation, CancellationToken cancellationToken = default);
+
     /// <summary>Отменяет операцию.</summary>
     Task CancelAsync(Guid id, CancellationToken cancellationToken = default);
 

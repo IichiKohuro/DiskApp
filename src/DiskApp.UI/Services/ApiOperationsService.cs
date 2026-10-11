@@ -75,6 +75,16 @@ public sealed class ApiOperationsService : IOperationsService
     }
 
     /// <inheritdoc />
+    public async Task<OperationInfo> DropAsync(DropOperation operation, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        var request = new DropFilesRequest { Sources = operation.Sources, Destination = operation.Destination, Copy = operation.Copy };
+        var info = Remember(ToInfo(await _api.DropFilesAsync(request, cancellationToken).ConfigureAwait(false)));
+        Updated?.Invoke(this, info);
+        return info;
+    }
+
+    /// <inheritdoc />
     public Task CancelAsync(Guid id, CancellationToken cancellationToken = default) => _api.CancelOperationAsync(id, cancellationToken);
 
     /// <inheritdoc />

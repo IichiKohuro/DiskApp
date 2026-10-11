@@ -38,6 +38,17 @@ public sealed partial class InboxFilter : ObservableObject
     [NotifyPropertyChangedFor(nameof(Text))]
     public partial string? Problem { get; set; }
 
+    /// <summary>Основная папка-накопитель: сюда падают файлы из окна Drag&amp;Drop (этап 18.2).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanMakeMain))]
+    public partial bool IsMain { get; set; }
+
+    /// <summary>Чип настоящего накопителя, а не «Все накопители»: у него есть меню.</summary>
+    public bool IsFolder => Folder is not null;
+
+    /// <summary>Накопитель можно сделать основным.</summary>
+    public bool CanMakeMain => Folder is not null && !IsMain;
+
     /// <summary>Подпись с числом файлов.</summary>
     public string Text => Problem is null ? $"{Title} · {Count}" : $"{Title} · !";
 
@@ -661,13 +672,30 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
+    /// <summary>Делает накопитель основным: сюда падают файлы из окна Drag&amp;Drop (этап 18.2).</summary>
+    [RelayCommand]
+    private async Task MakeMainInboxAsync(InboxFilter? inbox)
+    {
+        if (inbox?.Folder is { } folder && !inbox.IsMain)
+        {
+            await SaveAsync(_folders with { MainInbox = folder.Path }, null);
+        }
+    }
+
     /// <summary>Убирает накопитель из списка; папка и файлы остаются.</summary>
     [RelayCommand]
     private async Task RemoveInboxAsync(InboxFilter? inbox)
     {
         if (inbox?.Folder is { } folder)
         {
-            await SaveAsync(_folders with { Inboxes = [.. _folders.Inboxes.Where(candidate => !SamePath(candidate.Path, folder.Path))] }, null);
+            // Убранная основная папка перестаёт быть основной: ею становится первая из оставшихся.
+            await SaveAsync(
+                _folders with
+                {
+                    Inboxes = [.. _folders.Inboxes.Where(candidate => !SamePath(candidate.Path, folder.Path))],
+                    MainInbox = _folders.MainInbox is { } main && SamePath(folder.Path, main) ? null : _folders.MainInbox,
+                },
+                null);
         }
     }
 
@@ -839,6 +867,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         foreach (var folder in _folders.Inboxes)
         {
             var filter = new InboxFilter(folder, folder.Title);
+            filter.IsMain = _folders.Main == folder;
             Inboxes.Add(filter);
             try
             {

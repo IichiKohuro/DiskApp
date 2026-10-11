@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Collections.ObjectModel;
+using System.Text.Json.Nodes;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -7,6 +8,7 @@ using DiskApp.Contracts.App;
 using DiskApp.UI.Input;
 using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
+using DiskApp.UI.Text;
 
 using RankingPreset = DiskApp.Contracts.Search.RankingPreset;
 
@@ -173,9 +175,6 @@ public sealed partial class SettingsViewModel
         new("Esc", L.T("Settings.ClearTheQueryThenClose")),
     ];
 
-    /// <summary>Куда кладётся добавленное.</summary>
-    public string InboxText => InboxPath.Length > 0 ? InboxPath : L.T("Settings.TheFirstIndexRootUntilA");
-
     /// <summary>Сообщение о несохранённой настройке; пусто — всё сохранено.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSettingsNote))]
@@ -279,10 +278,15 @@ public sealed partial class SettingsViewModel
     [ObservableProperty]
     public partial SettingOption<int> SelectedReconcileInterval { get; set; } = ReconcileOptions[2];
 
-    /// <summary>Папка «Входящие»; пусто — первый корень.</summary>
+    /// <summary>Накопители для выбора основного (этап 18.2): путь и подпись.</summary>
+    public ObservableCollection<SettingOption<string>> MainInboxOptions { get; } = [];
+
+    /// <summary>Основная папка-накопитель: сюда падают файлы из окна Drag&amp;Drop и добавленное без выбора места.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(InboxText))]
-    public partial string InboxPath { get; set; } = string.Empty;
+    public partial SettingOption<string>? SelectedMainInbox { get; set; }
+
+    /// <summary>Накопители есть: можно выбрать основной.</summary>
+    public bool HasInboxes => MainInboxOptions.Count > 0;
 
     /// <summary>Шаблон имени файла из буфера обмена.</summary>
     [ObservableProperty]
@@ -373,7 +377,7 @@ public sealed partial class SettingsViewModel
                 ?? new SettingOption<int>(settings.Indexing.ReconcileIntervalMinutes, L.F("Settings.EveryMin", settings.Indexing.ReconcileIntervalMinutes));
             ApplyExclusions(settings.Indexing.Exclusions);
 
-            InboxPath = settings.Add.InboxPath ?? string.Empty;
+            ApplyInboxes(settings.Sorting);
             ClipboardNameTemplate = settings.Add.ClipboardNameTemplate;
             SelectedLogLevel = LogLevels.FirstOrDefault(option => option.Value == settings.Diagnostics.LogLevel) ?? LogLevels[1];
         }
@@ -494,25 +498,30 @@ public sealed partial class SettingsViewModel
 
     partial void OnSelectedLogLevelChanged(SettingOption<string> value) => Save("diagnostics", "logLevel", value.Value);
 
-    /// <summary>Выбрать папку «Входящие».</summary>
-    [RelayCommand]
-    private async Task PickInboxAsync()
+    partial void OnSelectedMainInboxChanged(SettingOption<string>? value)
     {
-        if (_dialogs is null || await _dialogs.PickFolderAsync(L.T("Settings.InboxFolder")) is not { } folder)
+        // Пока список накопителей перестраивается, ComboBox на миг сбрасывает выбор: это не выбор пользователя.
+        if (value is not null)
         {
-            return;
+            Save("sorting", "mainInbox", value.Value);
         }
-
-        InboxPath = folder;
-        Save("add", "inboxPath", folder);
     }
 
-    /// <summary>«Входящие» — снова первый корень.</summary>
+    /// <summary>Накопители добавляются и убираются на странице «Разбор».</summary>
     [RelayCommand]
-    private void ResetInbox()
+    private void OpenSorting() => _commands?.NavigateTo(PageKeys.Inbox);
+
+    private void ApplyInboxes(SortingSettingsDto sorting)
     {
-        InboxPath = string.Empty;
-        Save("add", "inboxPath", null);
+        MainInboxOptions.Clear();
+        foreach (var inbox in sorting.Inboxes)
+        {
+            MainInboxOptions.Add(new SettingOption<string>(inbox.Path, string.IsNullOrWhiteSpace(inbox.Label) ? PathText.FileName(inbox.Path) : inbox.Label));
+        }
+
+        SelectedMainInbox = MainInboxOptions.FirstOrDefault(option => string.Equals(option.Value, sorting.MainInbox, StringComparison.OrdinalIgnoreCase))
+            ?? MainInboxOptions.FirstOrDefault();
+        OnPropertyChanged(nameof(HasInboxes));
     }
 
     /// <summary>Очистить историю запросов.</summary>

@@ -21,10 +21,18 @@ public sealed record SortingFolderInfo(string Path, string? Label = null)
 /// <param name="Inboxes">Накопители — куда сыплются файлы.</param>
 /// <param name="WorkFolders">Рабочие папки — куда их раскладывают; первые девять — на клавишах 1–9.</param>
 /// <param name="NameTemplate">Запомненный шаблон имени при переносе; <c>null</c> — имена не меняются.</param>
-public sealed record SortingFolders(IReadOnlyList<SortingFolderInfo> Inboxes, IReadOnlyList<SortingFolderInfo> WorkFolders, string? NameTemplate = null)
+/// <param name="MainInbox">Путь основной папки-накопителя (этап 18.2); <c>null</c> — первая в списке.</param>
+public sealed record SortingFolders(IReadOnlyList<SortingFolderInfo> Inboxes, IReadOnlyList<SortingFolderInfo> WorkFolders, string? NameTemplate = null, string? MainInbox = null)
 {
     /// <summary>Ни накопителей, ни рабочих папок.</summary>
     public static SortingFolders Empty { get; } = new([], []);
+
+    /// <summary>
+    /// Действующая основная папка-накопитель: выбранная, если она ещё в списке, иначе первая; <c>null</c> — накопителей нет.
+    /// Сюда падают файлы из окна Drag&amp;Drop.
+    /// </summary>
+    public SortingFolderInfo? Main
+        => Inboxes.FirstOrDefault(folder => string.Equals(folder.Path, MainInbox, StringComparison.OrdinalIgnoreCase)) ?? (Inboxes.Count > 0 ? Inboxes[0] : null);
 }
 
 /// <summary>
@@ -53,7 +61,8 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
         return new SortingFolders(
             [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label))],
             [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label))],
-            settings.Sorting.NameTemplate);
+            settings.Sorting.NameTemplate,
+            settings.Sorting.MainInbox);
     }
 
     /// <inheritdoc />
@@ -67,6 +76,7 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
                 ["inboxes"] = ToJson(folders.Inboxes),
                 ["workFolders"] = ToJson(folders.WorkFolders),
                 ["nameTemplate"] = folders.NameTemplate,
+                ["mainInbox"] = folders.MainInbox,
             },
         };
         return _api.PatchSettingsAsync(patch, cancellationToken);

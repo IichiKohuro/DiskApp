@@ -251,25 +251,49 @@ public sealed class SettingsPageTests
     }
 
     [Fact]
-    public async Task Inbox_PickAndReset()
+    public async Task MainInbox_ListsInboxesFirstByDefaultAndSavesChoice()
     {
-        // Arrange
+        // Arrange: два накопителя, основной не выбран
         var service = new SampleSettingsService();
+        await service.PatchAsync(new System.Text.Json.Nodes.JsonObject
+        {
+            ["sorting"] = new System.Text.Json.Nodes.JsonObject
+            {
+                ["inboxes"] = new System.Text.Json.Nodes.JsonArray(
+                    new System.Text.Json.Nodes.JsonObject { ["path"] = @"D:\Загрузки" },
+                    new System.Text.Json.Nodes.JsonObject { ["path"] = @"D:\Skype Received", ["label"] = "Skype" }),
+            },
+        }, TestContext.Current.CancellationToken);
         var page = Create(service);
         await page.Initialization;
-        _dialogs.PickFolderAsync(Arg.Any<string>()).Returns(@"D:\Входящие");
 
         // Act
-        await page.PickInboxCommand.ExecuteAsync(null);
-        await page.PendingSave;
-        var picked = (await service.GetAsync(TestContext.Current.CancellationToken)).Add.InboxPath;
-        page.ResetInboxCommand.Execute(null);
+        var initial = page.SelectedMainInbox?.Value;
+        page.SelectedMainInbox = page.MainInboxOptions[1];
         await page.PendingSave;
 
         // Assert
-        picked.ShouldBe(@"D:\Входящие");
-        page.InboxText.ShouldStartWith("Первый корень");
-        (await service.GetAsync(TestContext.Current.CancellationToken)).Add.InboxPath.ShouldBeNull();
+        page.HasInboxes.ShouldBeTrue();
+        page.MainInboxOptions.Select(static option => option.Text).ShouldBe(["Загрузки", "Skype"]);
+        initial.ShouldBe(@"D:\Загрузки", "по умолчанию основная — первая в списке");
+        (await service.GetAsync(TestContext.Current.CancellationToken)).Sorting.MainInbox.ShouldBe(@"D:\Skype Received");
+    }
+
+    [Fact]
+    public async Task MainInbox_NoInboxes_OffersSortingPage()
+    {
+        // Arrange
+        var commands = Substitute.For<IAppCommands>();
+        var page = new SettingsViewModel(_themes, new SampleSearchService(), new HotkeyStatus(), settings: new SampleSettingsService(), dialogs: _dialogs, notices: _notices, roots: _roots, commands: commands);
+        await page.Initialization;
+
+        // Act
+        page.OpenSortingCommand.Execute(null);
+
+        // Assert
+        page.HasInboxes.ShouldBeFalse();
+        page.SelectedMainInbox.ShouldBeNull();
+        commands.Received(1).NavigateTo(PageKeys.Inbox);
     }
 
     [Fact]

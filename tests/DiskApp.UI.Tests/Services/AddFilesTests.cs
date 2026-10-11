@@ -36,7 +36,7 @@ public sealed class AddFilesTests : IDisposable
         await dialog.LoadAsync();
 
         // Assert
-        dialog.Targets.Select(static target => target.Hint).Take(2).ShouldBe(["место по умолчанию", "недавнее"]);
+        dialog.Targets.Select(static target => target.Hint).Take(2).ShouldBe(["основная папка-накопитель", "недавнее"]);
         dialog.Targets.ShouldContain(target => target.Hint == "закреплено" && target.Label == "DiskApp");
         dialog.SelectedTarget!.Label.ShouldBe("Входящие");
         dialog.CanAdd.ShouldBeTrue();

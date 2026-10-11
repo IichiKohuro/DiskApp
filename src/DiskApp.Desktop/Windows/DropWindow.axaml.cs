@@ -15,21 +15,38 @@ namespace DiskApp.Desktop.Windows;
 /// <summary>
 /// Окно Drag&amp;Drop (PLAN.md, этап 18, ADR-0011): открывается щелчком по значку в трее или своим хоткеем у панели задач
 /// монитора с курсором. Не прячется при потере фокуса — за файлами пользователь переключается в другое окно; прячется по
-/// <c>Esc</c>, кнопке закрытия, повторному щелчку по значку и хоткею. Создаётся заранее и прогревается, как окно поиска.
+/// <c>Esc</c>, кнопке закрытия, повторному щелчку по значку и хоткею, а после удачного броска — само через несколько секунд,
+/// если пользователь не наводит на него мышь и не несёт новые файлы. Создаётся заранее и прогревается, как окно поиска.
 /// </summary>
 public partial class DropWindow : Window
 {
     private const double BaseWidth = 360;
-    private const double BaseHeight = 240;
+    private const double BaseHeight = 270;
     private const double EdgeMargin = 12;
+    private static readonly TimeSpan AutoHideDelay = TimeSpan.FromSeconds(4);
 
+    private readonly DispatcherTimer _autoHide = new() { Interval = AutoHideDelay };
     private DropWindowViewModel? _viewModel;
     private int _showCount;
+    private bool _autoHidePending;
 
     /// <summary>
     /// Создаёт окно; показывает его оболочка.
     /// </summary>
-    public DropWindow() => InitializeComponent();
+    public DropWindow()
+    {
+        InitializeComponent();
+        _autoHide.Tick += (_, _) =>
+        {
+            StopAutoHide();
+            Hide();
+        };
+
+        // Пока мышь над окном или несут файлы, оно не прячется: пользователь читает итог или бросает ещё.
+        PointerEntered += (_, _) => _autoHide.Stop();
+        PointerExited += (_, _) => RestartAutoHide();
+        View.DragStarted += (_, _) => StopAutoHide();
+    }
 
     /// <summary>Разрешить настоящее закрытие (при выходе из приложения); иначе закрытие прячет окно.</summary>
     public bool AllowClose { get; set; }
@@ -141,6 +158,7 @@ public partial class DropWindow : Window
         if (_viewModel is not null)
         {
             _viewModel.CloseRequested -= OnCloseRequested;
+            _viewModel.Settled -= OnSettled;
         }
 
         _viewModel = DataContext as DropWindowViewModel;
@@ -148,6 +166,7 @@ public partial class DropWindow : Window
         if (_viewModel is not null)
         {
             _viewModel.CloseRequested += OnCloseRequested;
+            _viewModel.Settled += OnSettled;
         }
     }
 
@@ -162,6 +181,7 @@ public partial class DropWindow : Window
         }
         else if (change.Property == IsVisibleProperty && change.GetNewValue<bool>() is false)
         {
+            StopAutoHide();
             _viewModel?.OnHidden();
         }
     }
@@ -179,4 +199,30 @@ public partial class DropWindow : Window
     }
 
     private void OnCloseRequested(object? sender, EventArgs e) => Hide();
+
+    // Удачный бросок: окно уйдёт само через несколько секунд, если мышь не над ним.
+    private void OnSettled(object? sender, EventArgs e)
+    {
+        _autoHidePending = true;
+        if (!IsPointerOver)
+        {
+            _autoHide.Stop();
+            _autoHide.Start();
+        }
+    }
+
+    private void RestartAutoHide()
+    {
+        if (_autoHidePending && IsVisible)
+        {
+            _autoHide.Stop();
+            _autoHide.Start();
+        }
+    }
+
+    private void StopAutoHide()
+    {
+        _autoHidePending = false;
+        _autoHide.Stop();
+    }
 }

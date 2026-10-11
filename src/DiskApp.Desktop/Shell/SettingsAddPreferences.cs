@@ -9,8 +9,11 @@ namespace DiskApp.Desktop.Shell;
 /// </summary>
 internal sealed class SettingsAddPreferences(ISettingsStore<AppSettings> store) : IAddPreferences
 {
-    /// <inheritdoc />
-    public string? InboxPath => store.Current.Add.InboxPath;
+    /// <summary>
+    /// Основная папка-накопитель (этап 18.2: «Входящие» слились с ней); пока накопителей нет — прежняя папка «Входящие»
+    /// из <c>add.inboxPath</c>, если её выбирали.
+    /// </summary>
+    public string? InboxPath => store.Current.Sorting.ResolveMainInbox() ?? store.Current.Add.InboxPath;
 
     /// <inheritdoc />
     public IReadOnlyList<string> RecentTargets => store.Current.Add.RecentTargets;

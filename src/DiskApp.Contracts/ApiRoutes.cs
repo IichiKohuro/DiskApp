@@ -122,6 +122,9 @@ public static class ApiRoutes
         /// <summary>Разбор: перенос из накопителя в рабочую папку с тегами.</summary>
         public const string SortingMove = Prefix + "/sorting/move";
 
+        /// <summary>Окно Drag&amp;Drop: бросок файлов в папку-накопитель.</summary>
+        public const string SortingDrop = Prefix + "/sorting/drop";
+
         /// <summary>Избранное: список (записи) и добавление.</summary>
         public const string Favorites = Prefix + "/favorites";
 

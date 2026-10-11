@@ -57,16 +57,24 @@
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:InboxFilter">
-                                <TextBlock Text="{Binding Text}" ToolTip.Tip="{Binding Problem}">
-                                    <TextBlock.ContextFlyout>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Background="Transparent" ToolTip.Tip="{Binding Problem}">
+                                    <!-- Основная папка-накопитель (этап 18.2): сюда падают файлы из окна Drag&Drop -->
+                                    <ic:SymbolIcon Symbol="Star" FontSize="12" VerticalAlignment="Center" IsVisible="{Binding IsMain}"
+                                                   ToolTip.Tip="{loc:Str Sorting.MainInboxTip}" />
+                                    <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
+                                    <StackPanel.ContextFlyout>
                                         <MenuFlyout>
+                                            <MenuItem Header="{loc:Str Sorting.MakeMainInbox}"
+                                                      Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).MakeMainInboxCommand}"
+                                                      CommandParameter="{Binding}"
+                                                      IsVisible="{Binding CanMakeMain}" />
                                             <MenuItem Header="{loc:Str Sorting.RemoveInbox}"
                                                       Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).RemoveInboxCommand}"
                                                       CommandParameter="{Binding}"
-                                                      IsVisible="{Binding Folder, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                                      IsVisible="{Binding IsFolder}" />
                                         </MenuFlyout>
-                                    </TextBlock.ContextFlyout>
-                                </TextBlock>
+                                    </StackPanel.ContextFlyout>
+                                </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

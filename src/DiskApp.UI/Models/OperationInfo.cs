@@ -162,3 +162,11 @@ public sealed record NewOperation(FileOperationKind Kind, IReadOnlyList<string> 
 /// <param name="Tags">Теги для перенесённого.</param>
 /// <param name="Names">Новые имена по порядку <paramref name="Sources"/>; <c>null</c> — прежние.</param>
 public sealed record SortOperation(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags, IReadOnlyList<string?>? Names = null);
+
+/// <summary>
+/// Бросок файлов в папку-накопитель из окна Drag&amp;Drop (PLAN.md, этап 18.2).
+/// </summary>
+/// <param name="Sources">Что бросили; может лежать вне корней.</param>
+/// <param name="Destination">Папка-накопитель.</param>
+/// <param name="Copy">Копировать; иначе — перенести.</param>
+public sealed record DropOperation(IReadOnlyList<string> Sources, string Destination, bool Copy);

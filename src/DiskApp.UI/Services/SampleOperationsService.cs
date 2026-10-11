@@ -75,6 +75,28 @@ public sealed class SampleOperationsService : IOperationsService
         return Task.FromResult(info);
     }
 
+    /// <summary>Брошенное в накопитель (тесты).</summary>
+    public List<DropOperation> Dropped { get; } = [];
+
+    /// <inheritdoc />
+    public Task<OperationInfo> DropAsync(DropOperation operation, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        Dropped.Add(operation);
+        var info = new OperationInfo
+        {
+            Id = Guid.NewGuid(),
+            Kind = operation.Copy ? FileOperationKind.Copy : FileOperationKind.Move,
+            State = FileOperationState.Completed,
+            Sources = operation.Sources,
+            Destination = operation.Destination,
+            Created = DateTimeOffset.Now,
+            CanUndo = !operation.Copy,
+        };
+        Report(info);
+        return Task.FromResult(info);
+    }
+
     /// <inheritdoc />
     public Task CancelAsync(Guid id, CancellationToken cancellationToken = default)
     {

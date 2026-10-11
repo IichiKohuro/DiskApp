@@ -25,6 +25,14 @@ namespace DiskApp.Core.Sorting;
 public sealed record SortRequest(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags, IReadOnlyList<string?>? Names = null);
 
 /// <summary>
+/// Бросок файлов в папку-накопитель из окна Drag&amp;Drop (PLAN.md, этап 18.2).
+/// </summary>
+/// <param name="Sources">Нормализованные пути брошенных файлов и папок; могут лежать вне корней.</param>
+/// <param name="Destination">Нормализованный путь папки-накопителя.</param>
+/// <param name="Copy">Копировать; иначе — перенести.</param>
+public sealed record DropRequest(IReadOnlyList<string> Sources, string Destination, bool Copy);
+
+/// <summary>
 /// Разбор входящих (PLAN.md, этап 17): перенос из накопителя в рабочую папку одной операцией очереди с конфликтами
 /// по правилу «оставить оба», при необходимости — в новую подпапку. Когда перенос завершился и индекс увидел файлы
 /// на новом месте, они получают прежние теги и новые. Отмена — обычный возврат результата операции.
@@ -128,6 +136,29 @@ public sealed class SortingService : IDisposable
     }
 
     /// <summary>Ждёт, пока элементам операции назначены теги (для тестов и интерфейса).</summary>
+    /// <summary>
+    /// Бросок файлов в папку-накопитель (PLAN.md, этап 18.2, ADR-0011): перенос или копия одной операцией очереди с
+    /// правилом «оставить оба». Перенос идёт как обычный разбор, поэтому прежние теги файлов из корней сохраняются; копия —
+    /// новые файлы без тегов. Проверку путей (источники могут лежать вне корней, назначение — только накопитель) делает
+    /// вызывающий.
+    /// </summary>
+    public Task<Result<FileOperationInfo>> DropAsync(DropRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (!request.Copy)
+        {
+            return MoveAsync(new SortRequest(request.Sources, request.Destination, NewFolder: null, Tags: []), cancellationToken);
+        }
+
+        if (Validate(new SortRequest(request.Sources, request.Destination, NewFolder: null, Tags: [])) is { } error)
+        {
+            return Task.FromResult(Result.Fail<FileOperationInfo>(error));
+        }
+
+        return Task.FromResult(_operations.Enqueue(new FileOperationRequest(FileOperationKind.Copy, request.Sources, request.Destination, Conflicts: ConflictPolicy.KeepBoth)));
+    }
+
     public Task WhenTaggedAsync(Guid operationId) => _tagging.TryGetValue(operationId, out var task) ? task : Task.CompletedTask;
 
     /// <inheritdoc />

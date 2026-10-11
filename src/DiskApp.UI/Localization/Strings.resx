@@ -75,9 +75,6 @@
   <data name="AddFiles.CouldNotGetTheRoots" xml:space="preserve">
     <value>Не удалось получить корни</value>
   </data>
-  <data name="AddFiles.DefaultPlace" xml:space="preserve">
-    <value>место по умолчанию</value>
-  </data>
   <data name="AddFiles.FilesOutsideTheIndexRootsAre" xml:space="preserve">
     <value>Файлы вне корней индекса копируются; исходные остаются на месте.</value>
   </data>
@@ -89,9 +86,6 @@
   </data>
   <data name="AddFiles.Image" xml:space="preserve">
     <value>изображение</value>
-  </data>
-  <data name="AddFiles.Inbox" xml:space="preserve">
-    <value>Входящие</value>
   </data>
   <data name="AddFiles.Move" xml:space="preserve">
     <value>Переместить</value>
@@ -1941,9 +1935,6 @@
   <data name="Settings.CheckingForAndInstallingUpdatesWill" xml:space="preserve">
     <value>Проверка и установка обновлений появятся вместе с установщиком (этап 11). Сейчас новая версия скачивается со страницы релизов.</value>
   </data>
-  <data name="Settings.Choose" xml:space="preserve">
-    <value>Выбрать…</value>
-  </data>
   <data name="Settings.ChooseAFolderInDiskAppAnd" xml:space="preserve">
     <value>выбор папки в DiskApp, и диалог переходит в неё</value>
   </data>
@@ -2094,9 +2085,6 @@
   <data name="Settings.Filters" xml:space="preserve">
     <value>Фильтры</value>
   </data>
-  <data name="Settings.FirstRoot" xml:space="preserve">
-    <value>Первый корень</value>
-  </data>
   <data name="Settings.Folder" xml:space="preserve">
     <value>Папка</value>
   </data>
@@ -2156,9 +2144,6 @@
   </data>
   <data name="Settings.Inbox" xml:space="preserve">
     <value>Входящие</value>
-  </data>
-  <data name="Settings.InboxFolder" xml:space="preserve">
-    <value>Папка «Входящие»</value>
   </data>
   <data name="Settings.Index" xml:space="preserve">
     <value>Индекс</value>
@@ -2463,9 +2448,6 @@
   <data name="Settings.TheFileHasNoDiskAppSettings" xml:space="preserve">
     <value>В файле нет настроек DiskApp.</value>
   </data>
-  <data name="Settings.TheFirstIndexRootUntilA" xml:space="preserve">
-    <value>Первый корень индекса — пока папка не выбрана</value>
-  </data>
   <data name="Settings.TheIndexOfAllRootsWill" xml:space="preserve">
     <value>Индекс всех корней построится заново. Файлы не трогаются, но пока идёт обход, поиск находит не всё. Избранное, теги и коллекции сохранятся для найденных снова файлов.</value>
   </data>
@@ -2522,9 +2504,6 @@
   </data>
   <data name="Settings.WhenThereAreFewExactMatches" xml:space="preserve">
     <value>Если точных совпадений мало, находить имена с опечаткой: «reprot» → «report»</value>
-  </data>
-  <data name="Settings.WhereAddedItemsGoByDefault" xml:space="preserve">
-    <value>Куда по умолчанию кладётся добавленное: перетаскивание на главную, «Отправить», буфер обмена</value>
   </data>
   <data name="Settings.WhereToShowTheQuickSearch" xml:space="preserve">
     <value>Где показывать окно быстрого поиска</value>
@@ -3034,7 +3013,7 @@
     <value>Перетащите файлы сюда</value>
   </data>
   <data name="Drop.InboxText" xml:space="preserve">
-    <value>Они попадут в основную папку-накопитель</value>
+    <value>Они попадут в «{0}»</value>
   </data>
   <data name="Drop.TrayHint" xml:space="preserve">
     <value>Щелчок по значку в трее теперь открывает это окно. Главное окно — двойным щелчком, быстрый поиск — {0}.</value>
@@ -3056,5 +3035,77 @@
   </data>
   <data name="Settings.DropWindowHotkeyText" xml:space="preserve">
     <value>Показать или спрятать окно, куда можно бросить файлы. Его открывает и щелчок по значку в трее.</value>
+  </data>
+  <data name="AddFiles.MainInbox" xml:space="preserve">
+    <value>основная папка-накопитель</value>
+  </data>
+  <data name="Drop.AlreadyThere" xml:space="preserve">
+    <value>Эти файлы уже в «{0}»</value>
+  </data>
+  <data name="Drop.Cancelled" xml:space="preserve">
+    <value>Отменено до завершения</value>
+  </data>
+  <data name="Drop.Copying" xml:space="preserve">
+    <value>Копируется: {0} → {1}…</value>
+  </data>
+  <data name="Drop.CopyTo" xml:space="preserve">
+    <value>Скопировать в «{0}»</value>
+  </data>
+  <data name="Drop.Done" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="Drop.Failed" xml:space="preserve">
+    <value>Не получилось: {0}</value>
+  </data>
+  <data name="Drop.IntoItself" xml:space="preserve">
+    <value>Папку нельзя бросить в неё саму</value>
+  </data>
+  <data name="Drop.ModifiersHint" xml:space="preserve">
+    <value>Shift — переместить, Ctrl — скопировать</value>
+  </data>
+  <data name="Drop.MoveTo" xml:space="preserve">
+    <value>Переместить в «{0}»</value>
+  </data>
+  <data name="Drop.Moving" xml:space="preserve">
+    <value>Переносится: {0} → {1}…</value>
+  </data>
+  <data name="Drop.NoInboxText" xml:space="preserve">
+    <value>Добавьте её на странице «Разбор» — сюда будут падать файлы</value>
+  </data>
+  <data name="Drop.NoInboxTitle" xml:space="preserve">
+    <value>Нет папки-накопителя</value>
+  </data>
+  <data name="Drop.NotAllowed" xml:space="preserve">
+    <value>Это сюда не бросить</value>
+  </data>
+  <data name="Drop.OpenSorting" xml:space="preserve">
+    <value>Открыть «Разбор»</value>
+  </data>
+  <data name="Drop.Undo" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="Drop.Undone" xml:space="preserve">
+    <value>Отменено</value>
+  </data>
+  <data name="Drop.Zone" xml:space="preserve">
+    <value>Область для файлов: бросить в папку-накопитель</value>
+  </data>
+  <data name="Settings.MainInbox" xml:space="preserve">
+    <value>Основная папка-накопитель</value>
+  </data>
+  <data name="Settings.MainInboxDescription" xml:space="preserve">
+    <value>Сюда падают файлы, брошенные в окно Drag&amp;Drop, и то, что добавлено без выбора места. Накопители добавляются на странице «Разбор».</value>
+  </data>
+  <data name="Settings.NoInboxesYet" xml:space="preserve">
+    <value>Накопителей пока нет — добавьте их на странице «Разбор».</value>
+  </data>
+  <data name="Settings.OpenSorting" xml:space="preserve">
+    <value>Открыть «Разбор»</value>
+  </data>
+  <data name="Sorting.MainInboxTip" xml:space="preserve">
+    <value>Основная папка-накопитель: сюда падают файлы из окна Drag&amp;Drop</value>
+  </data>
+  <data name="Sorting.MakeMainInbox" xml:space="preserve">
+    <value>Сделать основной</value>
   </data>
 </root>

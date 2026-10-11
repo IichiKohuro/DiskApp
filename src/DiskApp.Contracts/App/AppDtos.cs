@@ -79,6 +79,9 @@ public sealed record SortingSettingsDto
 
     /// <summary>Шаблон имени при переносе (<c>{имя}</c>, <c>{дата}</c>, <c>{время}</c>, <c>{теги}</c>, <c>{папка}</c>, <c>{№}</c>); пусто — без изменений.</summary>
     public string? NameTemplate { get; set; }
+
+    /// <summary>Основная папка-накопитель — путь из <see cref="Inboxes"/>; пусто или папка не из списка — первая в списке.</summary>
+    public string? MainInbox { get; set; }
 }
 
 /// <summary>Папка разбора.</summary>

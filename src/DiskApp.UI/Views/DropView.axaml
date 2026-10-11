@@ -5,12 +5,26 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:DiskApp.UI.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="220"
+             mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="270"
              x:Class="DiskApp.UI.Views.DropView"
              x:DataType="vm:DropWindowViewModel">
     <!-- Окно Drag&Drop у значка в трее (PLAN.md, этап 18, ADR-0011): заголовок с кнопкой закрытия, область
-         «Бросить в накопитель» и разовая подсказка о новом поведении значка; Esc — в окне. Приём файлов — этап 18.2. -->
-    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+         «Бросить в накопитель» (18.2) с подсветкой и подписью действия при перетаскивании, строка итога с «Отменить»
+         и разовая подсказка о новом поведении значка; Esc — в окне. -->
+    <UserControl.Styles>
+        <Style Selector="Rectangle#ZoneFrame">
+            <Setter Property="Stroke" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}" />
+        </Style>
+        <Style Selector="Panel#InboxZone.over Rectangle#ZoneFrame">
+            <Setter Property="Stroke" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+            <Setter Property="Fill" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+            <Setter Property="StrokeThickness" Value="2" />
+        </Style>
+        <Style Selector="TextBlock.error">
+            <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+        </Style>
+    </UserControl.Styles>
+    <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8">
         <DockPanel>
             <Button DockPanel.Dock="Right" Classes="tool" Command="{Binding CloseCommand}"
                     AutomationProperties.Name="{loc:Str Drop.Close}" ToolTip.Tip="{loc:Str Drop.Close}">
@@ -18,15 +32,22 @@
             </Button>
             <TextBlock Text="{loc:Str Drop.Title}" Theme="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
         </DockPanel>
-        <Panel Grid.Row="1" x:Name="InboxZone" MinHeight="120">
-            <Rectangle StrokeDashArray="4,3" StrokeThickness="1.5" RadiusX="8" RadiusY="8"
-                       Stroke="{DynamicResource ControlStrongStrokeColorDefaultBrush}" />
+        <Panel Grid.Row="1" x:Name="InboxZone" MinHeight="110" Background="Transparent" DragDrop.AllowDrop="True"
+               Classes.over="{Binding IsDragOver}" AutomationProperties.Name="{loc:Str Drop.Zone}">
+            <Rectangle x:Name="ZoneFrame" StrokeDashArray="4,3" StrokeThickness="1.5" RadiusX="8" RadiusY="8" />
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" Margin="16">
                 <ic:SymbolIcon Symbol="ArrowDownload" FontSize="32" HorizontalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                <TextBlock Text="{loc:Str Drop.InboxTitle}" Theme="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
-                <TextBlock Classes="secondary" Text="{loc:Str Drop.InboxText}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontSize="12" />
+                <TextBlock Text="{Binding ZoneTitle}" Theme="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock Classes="secondary" Text="{Binding ZoneText}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontSize="12" />
+                <Button HorizontalAlignment="Center" Content="{loc:Str Drop.OpenSorting}" Command="{Binding OpenSortingCommand}" IsVisible="{Binding HasNoInbox}" />
             </StackPanel>
         </Panel>
-        <TextBlock Grid.Row="2" Classes="secondary" Text="{Binding Hint}" IsVisible="{Binding HasHint}" TextWrapping="Wrap" FontSize="12" />
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" IsVisible="{Binding HasResult}">
+            <TextBlock Text="{Binding Result}" Classes.error="{Binding IsError}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding Result}" />
+            <Button Grid.Column="1" Content="{loc:Str Drop.Undo}" Command="{Binding UndoCommand}" IsVisible="{Binding CanUndo}" />
+            <Button Grid.Column="2" Content="{loc:Str Drop.OpenSorting}" Command="{Binding OpenSortingCommand}" />
+        </Grid>
+        <TextBlock Grid.Row="3" Classes="secondary" Text="{Binding Hint}" IsVisible="{Binding HasHint}" TextWrapping="Wrap" FontSize="12" />
     </Grid>
 </UserControl>

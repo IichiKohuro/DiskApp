@@ -57,7 +57,32 @@ public sealed class FileOperationServiceTests : IAsyncDisposable
         info.Progress.TotalBytes.ShouldBe(new FileInfo(file).Length + 4);
         progress.ShouldNotBeEmpty();
         _sink.Paths.ShouldContain(destination);
-        info.CanUndo.ShouldBeFalse("копирование не отменяется");
+        info.CanUndo.ShouldBeTrue("копирование отменяется: копии уходят в корзину");
+    }
+
+    [Fact]
+    public async Task Copy_Undo_RecyclesOnlyCreatedCopies()
+    {
+        // Arrange: файл, новая папка и файл, одноимённый уже лежащему в назначении (оставить оба)
+        var file = _root.CreateFile(Path.Combine("src", "report.txt"), "новый");
+        var folder = _root.CreateDirectory(Path.Combine("src", "photos"));
+        _root.CreateFile(Path.Combine("src", "photos", "a.jpg"), "a");
+        var destination = _root.CreateDirectory("dest");
+        var existing = _root.CreateFile(Path.Combine("dest", "report.txt"), "старый");
+        var service = Service();
+        var copied = await RunAsync(service, new FileOperationRequest(FileOperationKind.Copy, [file, folder], destination, Conflicts: ConflictPolicy.KeepBoth));
+
+        // Act
+        var undo = service.Undo(copied.Id);
+        await service.WhenIdleAsync(TestContext.Current.CancellationToken).WaitAsync(Wait, TestContext.Current.CancellationToken);
+
+        // Assert
+        copied.State.ShouldBe(OperationState.Completed, copied.Message);
+        undo.IsSuccess.ShouldBeTrue(undo.Error?.Message);
+        _shell.Recycled.ShouldBe([Path.Combine(destination, "report (2).txt"), Path.Combine(destination, "photos")], ignoreOrder: true);
+        File.ReadAllText(existing).ShouldBe("старый", "лежавший раньше файл не тронут");
+        File.Exists(file).ShouldBeTrue("источник копирования не тронут");
+        service.Get(copied.Id)!.CanUndo.ShouldBeFalse("повторная отмена невозможна");
     }
 
     [Fact]

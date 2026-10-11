@@ -276,4 +276,13 @@
   <data name="SettingsEndpoints.ValueOfTheWrongType" xml:space="preserve">
     <value>Значение не того типа: </value>
   </data>
+  <data name="SortingEndpoints.DropOnlyFromThisComputer" xml:space="preserve">
+    <value>Бросать файлы в накопитель можно только с этого компьютера.</value>
+  </data>
+  <data name="SortingEndpoints.NotAnInbox" xml:space="preserve">
+    <value>Папка «{0}» не папка-накопитель: файлы из окна Drag&amp;Drop падают только в накопители из настроек.</value>
+  </data>
+  <data name="SortingEndpoints.SourceNotFound" xml:space="preserve">
+    <value>Файл или папка не найдены: {0}</value>
+  </data>
 </root>

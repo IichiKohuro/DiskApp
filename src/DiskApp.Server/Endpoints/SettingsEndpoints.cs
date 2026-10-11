@@ -234,6 +234,12 @@ internal static partial class SettingsEndpoints
             errors["sorting.nameTemplate"] = [L.F("SettingsEndpoints.TemplateLongerThan", 200)];
         }
 
+        // Основная папка не обязана быть в списке: убранная из него просто перестаёт действовать (берётся первая).
+        if (settings.Sorting.MainInbox is { Length: > 0 } main && !Path.IsPathFullyQualified(main))
+        {
+            errors["sorting.mainInbox"] = [L.T("SettingsEndpoints.AFullFolderPathIsRequired")];
+        }
+
         for (var i = 0; i < settings.Indexing.Exclusions.Count; i++)
         {
             var rule = settings.Indexing.Exclusions[i];

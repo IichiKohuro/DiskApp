@@ -122,6 +122,9 @@ public interface IDiskAppApi
     /// <summary>Разбор: перенести из накопителя в рабочую папку с тегами (операция очереди).</summary>
     Task<OperationDto> SortFilesAsync(SortFilesRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Окно Drag&amp;Drop: бросить файлы в папку-накопитель — перенос или копия (операция очереди).</summary>
+    Task<OperationDto> DropFilesAsync(DropFilesRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Операции.</summary>
     Task<IReadOnlyList<OperationDto>> GetOperationsAsync(CancellationToken cancellationToken = default);
 
