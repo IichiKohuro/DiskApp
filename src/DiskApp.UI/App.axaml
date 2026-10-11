@@ -33,6 +33,9 @@
         <DataTemplate DataType="vm:BrowseViewModel">
             <views:BrowseView />
         </DataTemplate>
+        <DataTemplate DataType="vm:OperationsViewModel">
+            <views:OperationsView />
+        </DataTemplate>
         <DataTemplate DataType="vm:SettingsViewModel">
             <views:SettingsView />
         </DataTemplate>

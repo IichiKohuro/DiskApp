@@ -91,6 +91,13 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         CreateTray();
         _log.Information("Трей показан через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
         ConnectStatus();
+        _services.GetRequiredService<OperationsViewModel>().PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(OperationsViewModel.Summary))
+            {
+                UpdateTray();
+            }
+        };
 
         _instanceServer = new InstanceServer(_names.Pipe, OnSecondInstanceArguments, _log);
         _instanceServer.Start();
@@ -462,7 +469,14 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
             return;
         }
 
-        _tray.ToolTipText = _trayStatus.ToolTip;
+        // Идущие файловые операции дописываются к состоянию индекса; Windows обрезает подсказку до 127 символов.
+        var tooltip = _trayStatus.ToolTip;
+        if (_services.GetService<OperationsViewModel>() is { HasActive: true } operations)
+        {
+            tooltip += " · " + operations.Summary;
+        }
+
+        _tray.ToolTipText = tooltip.Length <= 127 ? tooltip : tooltip[..126] + "…";
         _tray.Icon = IconFor(_trayStatus.State) ?? _tray.Icon;
         if (_pauseItem is not null)
         {

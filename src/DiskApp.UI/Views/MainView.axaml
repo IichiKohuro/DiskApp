@@ -62,12 +62,27 @@
                               Message="{Binding IndexStatusDetail}"
                               Severity="{Binding IndexBarSeverity}"
                               IsClosable="True" />
+                <!-- Идущие файловые операции: сводка и переход на страницу «Операции» -->
+                <ui:FAInfoBar Margin="28,8,28,0"
+                              IsOpen="{Binding Operations.HasActive}"
+                              Title="Идут операции"
+                              Message="{Binding Operations.Summary}"
+                              Severity="Informational"
+                              IsClosable="False">
+                    <ui:FAInfoBar.ActionButton>
+                        <Button Content="Подробнее" Command="{Binding OpenOperationsCommand}" />
+                    </ui:FAInfoBar.ActionButton>
+                </ui:FAInfoBar>
                 <ui:FAInfoBar Margin="28,8,28,0"
                               IsOpen="{Binding IsNoticeOpen, Mode=TwoWay}"
                               Title="{Binding NoticeTitle}"
                               Message="{Binding NoticeMessage}"
                               Severity="{Binding NoticeSeverity}"
-                              IsClosable="True" />
+                              IsClosable="True">
+                    <ui:FAInfoBar.ActionButton>
+                        <Button Content="{Binding NoticeActionText}" Command="{Binding RunNoticeActionCommand}" IsVisible="{Binding HasNoticeAction}" />
+                    </ui:FAInfoBar.ActionButton>
+                </ui:FAInfoBar>
             </StackPanel>
             <!-- Переход между страницами задаёт MainView.axaml.cs: плавный или без анимации при «уменьшить движение». -->
             <TransitioningContentControl x:Name="PageHost" Grid.Row="1" Content="{Binding SelectedPage}" />

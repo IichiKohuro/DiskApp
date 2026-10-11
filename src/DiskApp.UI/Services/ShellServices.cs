@@ -26,6 +26,11 @@ public interface IInfoBarService
     /// <summary>Показать уведомление.</summary>
     void Show(string title, string message, FAInfoBarSeverity severity = FAInfoBarSeverity.Informational);
 
+    /// <summary>
+    /// Показать уведомление с кнопкой действия, например «Отменить» после операции.
+    /// </summary>
+    void Show(string title, string message, FAInfoBarSeverity severity, string actionText, Action action);
+
     /// <summary>Скрыть уведомление.</summary>
     void Close();
 }
@@ -49,6 +54,11 @@ public interface IDialogService
     /// <param name="primaryText">Подпись основной кнопки.</param>
     /// <param name="selectionLength">Сколько символов выделить с начала; отрицательное — выделить всё.</param>
     Task<string?> PromptAsync(string title, string label, string text, string primaryText, int selectionLength = -1);
+
+    /// <summary>
+    /// Спросить, что делать с конфликтом имён: заменить, пропустить, оставить оба или отменить операцию.
+    /// </summary>
+    Task<DiskApp.UI.Models.ConflictAnswer> ResolveConflictAsync(DiskApp.UI.Models.ConflictInfo conflict);
 }
 
 /// <summary>
@@ -87,6 +97,9 @@ public sealed class InfoBarService(Lazy<MainViewModel> main) : IInfoBarService
 {
     /// <inheritdoc />
     public void Show(string title, string message, FAInfoBarSeverity severity = FAInfoBarSeverity.Informational) => main.Value.ShowNotice(title, message, severity);
+
+    /// <inheritdoc />
+    public void Show(string title, string message, FAInfoBarSeverity severity, string actionText, Action action) => main.Value.ShowNotice(title, message, severity, actionText, action);
 
     /// <inheritdoc />
     public void Close() => main.Value.IsNoticeOpen = false;

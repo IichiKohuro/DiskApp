@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="DiskApp.UI.Views.OperationsView"
+             x:DataType="vm:OperationsViewModel">
+    <!-- Страница «Операции» (PLAN.md, этап 8.4): очередь копирования, перемещения, переименования и корзины с ходом,
+         скоростью и оставшимся временем; отмена идущих, отмена результата выполненных (Ctrl+Z — последней). -->
+    <Grid Margin="{StaticResource PagePadding}" RowDefinitions="Auto,*" MaxWidth="{StaticResource PageMaxWidth}">
+        <DockPanel Grid.Row="0" Margin="0,0,0,16">
+            <Button DockPanel.Dock="Right"
+                    VerticalAlignment="Bottom"
+                    Content="Убрать завершённые"
+                    Command="{Binding ClearFinishedCommand}"
+                    IsVisible="{Binding HasFinished}" />
+            <StackPanel Spacing="4">
+                <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="Операции" />
+                <TextBlock Classes="secondary" Text="Копирование, перемещение, переименование и корзина. Ctrl+Z отменяет последнюю операцию, которую можно отменить." />
+            </StackPanel>
+        </DockPanel>
+
+        <StackPanel Grid.Row="1" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsEmpty}">
+            <ic:SymbolIcon Symbol="ArrowSync" FontSize="40" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+            <TextBlock Classes="secondary" HorizontalAlignment="Center" Text="Операций пока не было" />
+            <TextBlock Classes="tertiary" FontSize="12" HorizontalAlignment="Center" Text="Копирование и перемещение из «Обзора», переименование и корзина появятся здесь" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" IsVisible="{Binding !IsEmpty}">
+            <ItemsControl ItemsSource="{Binding Items}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:OperationItemViewModel">
+                        <Border Classes="card" Margin="0,0,0,8" Padding="14,12">
+                            <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <ic:SymbolIcon Grid.RowSpan="3"
+                                               Symbol="{Binding Symbol}"
+                                               FontSize="24"
+                                               Margin="0,0,14,0"
+                                               VerticalAlignment="Top"
+                                               Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                <TextBlock Grid.Column="1" Theme="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" Text="{Binding Title}" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Classes="secondary" FontSize="12" Classes.error="{Binding IsFailed}" TextWrapping="Wrap" Margin="0,2,0,0">
+                                    <Run Text="{Binding StateText}" />
+                                    <Run Text="  " />
+                                    <Run Text="{Binding DetailText}" />
+                                </TextBlock>
+                                <ProgressBar Grid.Row="2" Grid.Column="1"
+                                             Margin="0,8,0,0"
+                                             Maximum="100"
+                                             Value="{Binding ProgressPercent}"
+                                             IsIndeterminate="{Binding IsIndeterminate}"
+                                             IsVisible="{Binding ShowProgress}" />
+                                <StackPanel Grid.RowSpan="3" Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0" VerticalAlignment="Center">
+                                    <Button Content="Отменить"
+                                            Command="{Binding $parent[ItemsControl].((vm:OperationsViewModel)DataContext).CancelCommand}"
+                                            CommandParameter="{Binding}"
+                                            IsVisible="{Binding CanCancel}" />
+                                    <Button Command="{Binding $parent[ItemsControl].((vm:OperationsViewModel)DataContext).UndoCommand}"
+                                            CommandParameter="{Binding}"
+                                            IsVisible="{Binding CanUndo}"
+                                            ToolTip.Tip="Вернуть как было">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <ic:SymbolIcon Symbol="ArrowUndo" FontSize="14" />
+                                            <TextBlock Text="Отменить результат" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

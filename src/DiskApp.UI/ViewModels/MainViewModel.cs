@@ -17,13 +17,14 @@ public sealed partial class MainViewModel : ViewModelBase
     private readonly ISearchService _search;
     private readonly QuickSearchViewModel _quickSearch;
     private bool _healthFromServer;
+    private Action? _noticeAction;
     private readonly Func<DateTimeOffset> _clock;
 
     /// <summary>
     /// Создаёт оболочку приложения и запускает загрузку состояния индекса (<see cref="Initialization"/>).
     /// </summary>
-    public MainViewModel(HomeViewModel home, QuickSearchViewModel search, BrowseViewModel browse, SettingsViewModel settings, ISearchService searchService)
-        : this(home, search, browse, settings, searchService, static () => DateTimeOffset.Now)
+    public MainViewModel(HomeViewModel home, QuickSearchViewModel search, BrowseViewModel browse, OperationsViewModel operations, SettingsViewModel settings, ISearchService searchService)
+        : this(home, search, browse, operations, settings, searchService, static () => DateTimeOffset.Now)
     {
     }
 
@@ -39,18 +40,20 @@ public sealed partial class MainViewModel : ViewModelBase
     /// Создаёт оболочку с заданными часами и макетным обзором (для тестов и превью).
     /// </summary>
     public MainViewModel(HomeViewModel home, QuickSearchViewModel search, SettingsViewModel settings, ISearchService searchService, Func<DateTimeOffset> clock)
-        : this(home, search, SampleBrowse(searchService, clock), settings, searchService, clock)
+        : this(home, search, SampleBrowse(searchService, clock), new OperationsViewModel(new SampleOperationsService(), new ImmediateDispatcher()), settings, searchService, clock)
     {
     }
 
     /// <summary>
     /// Создаёт оболочку с заданными страницами и часами.
     /// </summary>
-    public MainViewModel(HomeViewModel home, QuickSearchViewModel search, BrowseViewModel browse, SettingsViewModel settings, ISearchService searchService, Func<DateTimeOffset> clock)
+    public MainViewModel(HomeViewModel home, QuickSearchViewModel search, BrowseViewModel browse, OperationsViewModel operations, SettingsViewModel settings, ISearchService searchService, Func<DateTimeOffset> clock)
     {
         ArgumentNullException.ThrowIfNull(home);
         ArgumentNullException.ThrowIfNull(search);
         ArgumentNullException.ThrowIfNull(browse);
+        ArgumentNullException.ThrowIfNull(operations);
+        Operations = operations;
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(searchService);
         ArgumentNullException.ThrowIfNull(clock);
@@ -76,10 +79,7 @@ public sealed partial class MainViewModel : ViewModelBase
                 PageKeys.Inbox, "Входящие", FASymbol.Download, Symbol.MailInbox,
                 "Разбор «Загрузок» по профильным складам: подсказка «куда положить», одна клавиша — следующий файл, отмена любого решения.",
                 "Этап 17"),
-            new PlaceholderPageViewModel(
-                PageKeys.Operations, "Операции", FASymbol.Sync, Symbol.ArrowSync,
-                "Очередь копирования, перемещения и резервных копий с прогрессом, отменой и журналом.",
-                "Этап 8"),
+            operations,
         ];
         FooterPages = [settings];
         SelectedPage = home;
@@ -95,6 +95,9 @@ public sealed partial class MainViewModel : ViewModelBase
 
     /// <summary>Завершается, когда состояние индекса загружено.</summary>
     public Task Initialization { get; }
+
+    /// <summary>Страница и координатор файловых операций: полоса хода, <c>Ctrl+Z</c>.</summary>
+    public OperationsViewModel Operations { get; }
 
     /// <summary>Страницы в основной части панели навигации.</summary>
     public IReadOnlyList<PageViewModel> Pages { get; }
@@ -159,10 +162,42 @@ public sealed partial class MainViewModel : ViewModelBase
     /// </summary>
     public void ShowNotice(string title, string message, FAInfoBarSeverity severity = FAInfoBarSeverity.Informational)
     {
+        _noticeAction = null;
+        NoticeActionText = string.Empty;
         NoticeTitle = title;
         NoticeMessage = message;
         NoticeSeverity = severity;
         IsNoticeOpen = true;
+    }
+
+    /// <summary>
+    /// Показывает уведомление с кнопкой действия («Отменить» после операции).
+    /// </summary>
+    public void ShowNotice(string title, string message, FAInfoBarSeverity severity, string actionText, Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        ShowNotice(title, message, severity);
+        _noticeAction = action;
+        NoticeActionText = actionText;
+    }
+
+    /// <summary>Подпись кнопки действия в уведомлении; пусто — кнопки нет.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoticeAction))]
+    public partial string NoticeActionText { get; set; } = string.Empty;
+
+    /// <summary>У уведомления есть кнопка действия.</summary>
+    public bool HasNoticeAction => NoticeActionText.Length > 0;
+
+    /// <summary>Выполняет действие уведомления и закрывает его.</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void RunNoticeAction()
+    {
+        var action = _noticeAction;
+        IsNoticeOpen = false;
+        _noticeAction = null;
+        NoticeActionText = string.Empty;
+        action?.Invoke();
     }
 
     /// <summary>

@@ -115,6 +115,10 @@ public sealed partial class MainViewModel
         }
     }
 
+    /// <summary>Открыть страницу «Операции».</summary>
+    [RelayCommand]
+    private void OpenOperations() => NavigateTo(PageKeys.Operations);
+
     /// <summary>
     /// Поиск из заголовка: открывает страницу «Поиск» с введённым текстом.
     /// </summary>

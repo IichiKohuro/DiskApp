@@ -58,6 +58,14 @@ public partial class MainWindow : FAAppWindow
             return;
         }
 
+        // Ctrl+Z вне полей ввода — отменить последнюю файловую операцию.
+        if (e.Key == Key.Z && e.KeyModifiers == KeyModifiers.Control && e.Source is not TextBox && DataContext is DiskApp.UI.ViewModels.MainViewModel main)
+        {
+            _ = main.Operations.UndoLastAsync();
+            e.Handled = true;
+            return;
+        }
+
         base.OnKeyDown(e);
     }
 
