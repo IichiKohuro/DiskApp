@@ -39,6 +39,12 @@ public partial class MainWindow : FAAppWindow
     /// </summary>
     public bool AllowClose { get; set; }
 
+    /// <summary>Крестик прячет окно в трей (настройка «Закрывать главное окно в трей»); по умолчанию — да.</summary>
+    public Func<bool>? CloseToTray { get; set; }
+
+    /// <summary>Крестик при выключенной настройке «в трей»: оболочка решает, выходить ли из приложения.</summary>
+    public event EventHandler? ExitRequested;
+
     /// <inheritdoc />
     protected override void OnClosing(WindowClosingEventArgs e)
     {
@@ -47,7 +53,14 @@ public partial class MainWindow : FAAppWindow
         if (!AllowClose && !e.Cancel)
         {
             e.Cancel = true;
-            Hide();
+            if (CloseToTray?.Invoke() ?? true)
+            {
+                Hide();
+            }
+            else
+            {
+                ExitRequested?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 

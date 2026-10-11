@@ -117,6 +117,10 @@ public sealed partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool IsIndexing { get; set; }
 
+    /// <summary>«Уменьшить движение»: страницы сменяются без анимации (PLAN.md, этап 6.8).</summary>
+    [ObservableProperty]
+    public partial bool ReduceMotion { get; set; }
+
     /// <summary>
     /// Переходит на страницу по ключу.
     /// </summary>

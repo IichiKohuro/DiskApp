@@ -49,11 +49,8 @@
                           Message="{Binding NoticeMessage}"
                           Severity="{Binding NoticeSeverity}"
                           IsClosable="True" />
-            <TransitioningContentControl Grid.Row="1" Content="{Binding SelectedPage}">
-                <TransitioningContentControl.PageTransition>
-                    <CrossFade Duration="0:0:0.2" />
-                </TransitioningContentControl.PageTransition>
-            </TransitioningContentControl>
+            <!-- Переход между страницами задаёт MainView.axaml.cs: плавный или без анимации при «уменьшить движение». -->
+            <TransitioningContentControl x:Name="PageHost" Grid.Row="1" Content="{Binding SelectedPage}" />
         </Grid>
     </ui:FANavigationView>
 </UserControl>

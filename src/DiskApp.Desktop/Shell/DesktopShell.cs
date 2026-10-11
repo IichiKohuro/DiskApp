@@ -542,6 +542,9 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         window.Opened += (_, _) => _log.Information("Главное окно открыто через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
         window.Closing += (_, _) => SavePlacement(window);
+        var settings = _services.GetRequiredService<ISettingsStore<AppSettings>>();
+        window.CloseToTray = () => settings.Current.Tray.CloseToTray;
+        window.ExitRequested += (_, _) => Exit();
 
         var hotkeys = _services.GetRequiredService<HotkeyStatus>();
         if (!hotkeys.IsRegistered)
@@ -561,10 +564,13 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     /// </summary>
     private void ApplyMotion(AppSettings settings)
     {
+        var reduce = settings.Appearance.ReduceMotion || (OperatingSystem.IsWindows() && !NativeMethods.AnimationsEnabled());
         if (_quickSearch is not null)
         {
-            _quickSearch.ReduceMotion = settings.Appearance.ReduceMotion || (OperatingSystem.IsWindows() && !NativeMethods.AnimationsEnabled());
+            _quickSearch.ReduceMotion = reduce;
         }
+
+        _services.GetRequiredService<MainViewModel>().ReduceMotion = reduce;
     }
 
     private WindowPlacementStore Placements()
