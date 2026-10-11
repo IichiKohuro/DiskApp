@@ -218,6 +218,12 @@ public sealed record AppearanceSettings
     /// <summary>Уменьшить анимации независимо от системной настройки.</summary>
     public bool ReduceMotion { get; set; }
 
+    /// <summary>
+    /// Аппаратное ускорение рендеринга через GPU: Acrylic в окне поиска, но около 90 МБ памяти сверх бюджета; по умолчанию
+    /// выключено (ADR-0009). Применяется после перезапуска.
+    /// </summary>
+    public bool HardwareAcceleration { get; set; }
+
     /// <summary>Свой акцентный цвет <c>#RRGGBB</c>, когда системный выключен; <c>null</c> — синий Windows по умолчанию.</summary>
     public string? AccentColor { get; set; }
 

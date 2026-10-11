@@ -51,6 +51,9 @@ public interface IDiskAppApi
     /// <summary>Пересобрать индекс.</summary>
     Task RebuildIndexAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>Сколько записей индекса исключит правило (этап 10.2).</summary>
+    Task<ExclusionPreviewDto> PreviewExclusionAsync(string pattern, CancellationToken cancellationToken = default);
+
     /// <summary>Приостановить всю индексацию.</summary>
     Task<IndexStatusDto> PauseIndexingAsync(CancellationToken cancellationToken = default);
 

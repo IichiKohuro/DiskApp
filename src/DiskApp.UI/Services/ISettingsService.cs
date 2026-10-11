@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using DiskApp.Client;
 using DiskApp.Contracts;
 using DiskApp.Contracts.App;
+using DiskApp.Contracts.Roots;
 
 namespace DiskApp.UI.Services;
 
@@ -25,6 +26,9 @@ public interface ISettingsService
 
     /// <summary>Сведения о приложении: версия, папка данных, режим запуска.</summary>
     Task<AppInfoDto> GetAppInfoAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Сколько записей индекса исключит правило (этап 10.2).</summary>
+    Task<ExclusionPreviewDto> PreviewExclusionAsync(string pattern, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -53,6 +57,10 @@ public sealed class ApiSettingsService(IDiskAppApi api) : ISettingsService
 
     /// <inheritdoc />
     public Task<AppInfoDto> GetAppInfoAsync(CancellationToken cancellationToken = default) => _api.GetAppInfoAsync(cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ExclusionPreviewDto> PreviewExclusionAsync(string pattern, CancellationToken cancellationToken = default)
+        => _api.PreviewExclusionAsync(pattern, cancellationToken);
 
     private static string Describe(DiskAppApiException exception)
         => exception.Errors is { Count: > 0 } errors
@@ -141,6 +149,19 @@ public sealed class SampleSettingsService : ISettingsService
     /// <inheritdoc />
     public Task<AppInfoDto> GetAppInfoAsync(CancellationToken cancellationToken = default)
         => Task.FromResult(new AppInfoDto("DiskApp", "0.0.0", ".NET", "Windows", @"C:\Users\user\AppData\Local\DiskApp", false, DateTimeOffset.UnixEpoch));
+
+    /// <summary>Ответ предпросмотра правила (тесты); по умолчанию — 12 записей из 1 000.</summary>
+    public Func<string, ExclusionPreviewDto> Preview { get; set; } = static pattern => new ExclusionPreviewDto(pattern, 12, 1_000, Complete: true);
+
+    /// <summary>Сколько раз запрашивали предпросмотр.</summary>
+    public int PreviewCount { get; private set; }
+
+    /// <inheritdoc />
+    public Task<ExclusionPreviewDto> PreviewExclusionAsync(string pattern, CancellationToken cancellationToken = default)
+    {
+        PreviewCount++;
+        return Task.FromResult(Preview(pattern));
+    }
 
     private static DiskAppJsonContext AllFields { get; } = new(new JsonSerializerOptions(DiskAppJsonContext.Default.Options)
     {

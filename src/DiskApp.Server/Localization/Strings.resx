@@ -186,6 +186,9 @@
   <data name="RootEndpoints.TheLabelCannotBeEmpty" xml:space="preserve">
     <value>Подпись не может быть пустой.</value>
   </data>
+  <data name="RootEndpoints.ThePatternIsNotValid" xml:space="preserve">
+    <value>Шаблон не разбирается: проверьте символы * ? и разделители папок</value>
+  </data>
   <data name="Roots.DepthNegative" xml:space="preserve">
     <value>Глубина не может быть отрицательной.</value>
   </data>

@@ -23,6 +23,8 @@ public sealed class SqliteWriter : IDisposable, IAsyncDisposable
     private readonly TaskCompletionSource _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private int _pending;
     private int _disposed;
+    private long _lastActivity = Environment.TickCount64;
+    private long _completedCount;
 
     /// <summary>
     /// Запускает поток писателя; соединение открывается на нём при старте.
@@ -45,6 +47,12 @@ public sealed class SqliteWriter : IDisposable, IAsyncDisposable
 
     /// <summary>Очередь остановлена: новые задания отклоняются.</summary>
     public bool IsDisposed => Volatile.Read(ref _disposed) != 0;
+
+    /// <summary>Сколько прошло с последней записи; пока задания в очереди — ноль (обслуживание при простое, этап 10.2).</summary>
+    public TimeSpan SinceLastActivity => PendingCount > 0 ? TimeSpan.Zero : TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref _lastActivity));
+
+    /// <summary>Сколько заданий выполнено за всё время.</summary>
+    public long CompletedCount => Interlocked.Read(ref _completedCount);
 
     /// <summary>
     /// Ставит задание в очередь и возвращает его результат. Транзакцию задание открывает само, если нужна.
@@ -152,6 +160,8 @@ public sealed class SqliteWriter : IDisposable, IAsyncDisposable
                 }
                 finally
                 {
+                    Volatile.Write(ref _lastActivity, Environment.TickCount64);
+                    Interlocked.Increment(ref _completedCount);
                     Interlocked.Decrement(ref _pending);
                 }
             }

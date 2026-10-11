@@ -305,6 +305,41 @@ public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepo
     public Task<long> CountAsync(CancellationToken cancellationToken = default)
         => ReadAsync(connection => connection.ExecuteScalar<long>("SELECT COUNT(*) FROM entries"), cancellationToken);
 
+    /// <inheritdoc />
+    public Task<PathCount> CountPathsAsync(Func<string, bool> matches, TimeSpan timeLimit, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(matches);
+
+        return ReadAsync(connection =>
+        {
+            var deadline = Environment.TickCount64 + (long)timeLimit.TotalMilliseconds;
+            long matched = 0;
+            long checkedCount = 0;
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT rel_path FROM entries";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                if (matches(reader.GetString(0)))
+                {
+                    matched++;
+                }
+
+                // Проверка времени и отмены — раз в 4 096 записей, чтобы не замедлять чтение.
+                if ((++checkedCount & 0xFFF) == 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (Environment.TickCount64 > deadline)
+                    {
+                        return new PathCount(matched, checkedCount, Complete: false);
+                    }
+                }
+            }
+
+            return new PathCount(matched, checkedCount, Complete: true);
+        }, cancellationToken);
+    }
+
     /// <summary>
     /// Имя для колонки <c>name_folded</c>: свёртка для поиска (<see cref="SearchText.Fold"/>, ADR-0005).
     /// </summary>

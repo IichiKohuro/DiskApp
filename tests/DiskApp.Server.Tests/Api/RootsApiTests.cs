@@ -169,6 +169,32 @@ public sealed class RootsApiTests
     }
 
     [Fact]
+    public async Task PreviewExclusion_CountsEntriesUnderPattern()
+    {
+        // Arrange
+        await using var context = await ServerTestContext.StartAsync();
+        context.Files.CreateFile(Path.Combine("src", "app.cs"), "a");
+        context.Files.CreateFile(Path.Combine("src", "build", "app.dll"), "b");
+        context.Files.CreateFile(Path.Combine("src", "build", "app.pdb"), "c");
+        context.Files.CreateFile(Path.Combine("docs", "notes.bak"), "d");
+        await context.AddRootAsync();
+
+        // Act
+        var folder = await context.GetAsync(ApiRoutes.V1.IndexExclusionPreview + "?pattern=" + Uri.EscapeDataString("**/build/**"), DiskAppJsonContext.Default.ExclusionPreviewDto);
+        var name = await context.GetAsync(ApiRoutes.V1.IndexExclusionPreview + "?pattern=*.bak", DiskAppJsonContext.Default.ExclusionPreviewDto);
+        var nothing = await context.GetAsync(ApiRoutes.V1.IndexExclusionPreview + "?pattern=*.xyz", DiskAppJsonContext.Default.ExclusionPreviewDto);
+        var empty = await context.Client.GetAsync(new Uri(ApiRoutes.V1.IndexExclusionPreview + "?pattern=%20", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Assert
+        folder.Matched.ShouldBe(2, "файлы внутри build, сама папка build под шаблон **/build/** не подходит");
+        folder.Complete.ShouldBeTrue();
+        folder.Checked.ShouldBe(7, "4 файла и 3 папки");
+        name.Matched.ShouldBe(1);
+        nothing.Matched.ShouldBe(0);
+        empty.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Rebuild_ReindexesEverything()
     {
         // Arrange

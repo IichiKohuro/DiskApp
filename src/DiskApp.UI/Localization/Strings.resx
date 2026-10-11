@@ -2067,6 +2067,15 @@
   <data name="Settings.EveryMin" xml:space="preserve">
     <value>Каждые {0} мин</value>
   </data>
+  <data name="Settings.ExclusionMatchesNothing" xml:space="preserve">
+    <value>Ни одна запись в индексе не подходит</value>
+  </data>
+  <data name="Settings.ExclusionWillRemove" xml:space="preserve">
+    <value>Уберёт из индекса {0}</value>
+  </data>
+  <data name="Settings.ExclusionWillRemoveAtLeast" xml:space="preserve">
+    <value>Уберёт из индекса не меньше {0}: проверена только часть индекса</value>
+  </data>
   <data name="Settings.Exclusions" xml:space="preserve">
     <value>Исключения</value>
   </data>
@@ -2096,6 +2105,12 @@
   </data>
   <data name="Settings.FuzzySearch" xml:space="preserve">
     <value>Нечёткий поиск</value>
+  </data>
+  <data name="Settings.HardwareAcceleration" xml:space="preserve">
+    <value>Аппаратное ускорение</value>
+  </data>
+  <data name="Settings.HardwareAccelerationDescription" xml:space="preserve">
+    <value>Рисовать окна видеокартой: Acrylic в окне поиска. Занимает примерно на 90 МБ памяти больше. Применяется после перезапуска</value>
   </data>
   <data name="Settings.Hidden" xml:space="preserve">
     <value>Скрытые</value>
@@ -2188,7 +2203,7 @@
     <value>Строки результатов ниже — на экране помещается больше файлов</value>
   </data>
   <data name="Settings.MicaInTheMainWindowAnd" xml:space="preserve">
-    <value>Mica в главном окне и Acrylic в окне поиска или сплошной цвет темы</value>
+    <value>Mica в главном окне и Acrylic в окне поиска или сплошной цвет темы; Acrylic работает с аппаратным ускорением</value>
   </data>
   <data name="Settings.MinimizedToTheTraySoThe" xml:space="preserve">
     <value>Свёрнутым в трей, чтобы горячая клавиша работала сразу после входа</value>
@@ -2330,6 +2345,9 @@
   </data>
   <data name="Settings.ResetSettingsDescription" xml:space="preserve">
     <value>Все настройки — к значениям по умолчанию; прежний файл сохранится рядом</value>
+  </data>
+  <data name="Settings.RestartToApply" xml:space="preserve">
+    <value>Перезапустите DiskApp, чтобы применить: «Выход» в меню трея и новый запуск.</value>
   </data>
   <data name="Settings.ResultOrder" xml:space="preserve">
     <value>Порядок результатов</value>

@@ -159,6 +159,9 @@ public sealed record AppearanceSettingsDto
     /// <summary>Меньше анимаций.</summary>
     public bool ReduceMotion { get; set; }
 
+    /// <summary>Аппаратное ускорение рендеринга (GPU); применяется после перезапуска.</summary>
+    public bool HardwareAcceleration { get; set; }
+
     /// <summary>Свой акцентный цвет <c>#RRGGBB</c> при выключенном системном; <c>null</c> — синий по умолчанию.</summary>
     public string? AccentColor { get; set; }
 

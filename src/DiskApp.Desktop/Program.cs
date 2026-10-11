@@ -79,7 +79,10 @@ internal static class Program
             }
 
             var hostCreation = Task.Run(() => CreateServerHost(paths, lifetime, names, safeMode));
-            BuildAvaloniaApp().SetupWithLifetime(lifetime);
+            var hardwareAcceleration = RenderingChoice.UseHardwareAcceleration(paths.SettingsPath, Environment.GetEnvironmentVariable(RenderingChoice.Variable));
+            RenderingInfo.HardwareAccelerated = hardwareAcceleration;
+            Log.Information("Рендеринг: {Rendering}", hardwareAcceleration ? "аппаратный (GPU)" : "программный");
+            BuildAvaloniaApp(hardwareAcceleration).SetupWithLifetime(lifetime);
             Log.Information("Avalonia готова через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
 
             var host = hostCreation.GetAwaiter().GetResult();
@@ -114,14 +117,24 @@ internal static class Program
     }
 
     // Конфигурация Avalonia. Не удалять: метод также использует визуальный конструктор.
-    public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
-            .UsePlatformDetect()
+    public static AppBuilder BuildAvaloniaApp() => BuildAvaloniaApp(hardwareAcceleration: true);
+
+    // Без аппаратного ускорения окна рисуются программно (ADR-0009): так приложение укладывается в бюджет памяти.
+    private static AppBuilder BuildAvaloniaApp(bool hardwareAcceleration)
+    {
+        var builder = AppBuilder.Configure<App>().UsePlatformDetect();
+        if (!hardwareAcceleration)
+        {
+            builder = builder.With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Software] });
+        }
+
+        return builder
 #if DEBUG
             .WithDeveloperTools()
 #endif
             .WithInterFont()
             .LogToTrace();
+    }
 
     private static DiskAppServerHost CreateServerHost(AppPaths paths, IClassicDesktopStyleApplicationLifetime lifetime, InstanceNames names, bool safeMode)
     {

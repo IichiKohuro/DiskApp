@@ -5,9 +5,11 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using DiskApp.Contracts.App;
+using DiskApp.Contracts.Roots;
 using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
+using DiskApp.UI.Text;
 
 using FluentAvalonia.UI.Controls;
 
@@ -150,6 +152,25 @@ public sealed partial class SettingsViewModel
     /// <summary>Есть ошибка шаблона.</summary>
     public bool HasExclusionError => ExclusionError.Length > 0;
 
+    private CancellationTokenSource? _exclusionPreview;
+
+    /// <summary>Пауза после ввода шаблона, после которой считаются записи под него.</summary>
+    public TimeSpan ExclusionPreviewDelay { get; set; } = TimeSpan.FromMilliseconds(400);
+
+    /// <summary>
+    /// Сколько записей индекса уберёт новое правило (PLAN.md, этап 10.2, перенесено из 9.1): «Уберёт из индекса 1 234 записи»;
+    /// пусто — шаблона нет или он неверный.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasExclusionPreview))]
+    public partial string ExclusionPreview { get; set; } = string.Empty;
+
+    /// <summary>Есть подсчёт для нового правила.</summary>
+    public bool HasExclusionPreview => ExclusionPreview.Length > 0;
+
+    /// <summary>Завершается, когда подсчёт для текущего шаблона готов.</summary>
+    public Task PendingExclusionPreview { get; private set; } = Task.CompletedTask;
+
     /// <summary>Диски компьютера для добавления целиком.</summary>
     public ObservableCollection<string> Drives { get; } = [];
 
@@ -198,6 +219,61 @@ public sealed partial class SettingsViewModel
         }
 
         Save("indexing", "exclusions", array);
+    }
+
+    partial void OnNewExclusionChanged(string value)
+    {
+        _exclusionPreview?.Cancel();
+        _exclusionPreview?.Dispose();
+        _exclusionPreview = null;
+
+        var pattern = value.Trim().Replace('\\', '/');
+        if (pattern.Length == 0 || ValidateGlob(pattern) is not null)
+        {
+            ExclusionPreview = string.Empty;
+            PendingExclusionPreview = Task.CompletedTask;
+            return;
+        }
+
+        _exclusionPreview = new CancellationTokenSource();
+        PendingExclusionPreview = PreviewExclusionAsync(pattern, _exclusionPreview.Token);
+    }
+
+    private async Task PreviewExclusionAsync(string pattern, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (ExclusionPreviewDelay > TimeSpan.Zero)
+            {
+                await Task.Delay(ExclusionPreviewDelay, cancellationToken);
+            }
+
+            var preview = await _settings.PreviewExclusionAsync(pattern, cancellationToken);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                ExclusionPreview = DescribePreview(preview);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Шаблон изменился, пока считались записи.
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Подсчёт — подсказка: без него правило всё равно можно добавить.
+            ExclusionPreview = string.Empty;
+        }
+    }
+
+    private static string DescribePreview(ExclusionPreviewDto preview)
+    {
+        var entries = Formatting.Count(preview.Matched, L.T("Common.Entry.One"), L.T("Common.Entry.Few"), L.T("Common.Entry.Many"));
+        return preview switch
+        {
+            { Matched: 0, Complete: true } => L.T("Settings.ExclusionMatchesNothing"),
+            { Complete: true } => L.F("Settings.ExclusionWillRemove", entries),
+            _ => L.F("Settings.ExclusionWillRemoveAtLeast", entries),
+        };
     }
 
     private bool CanAddExclusion() => NewExclusion.Trim().Length > 0;

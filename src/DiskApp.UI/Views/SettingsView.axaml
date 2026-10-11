@@ -97,6 +97,15 @@
                             <ToggleSwitch AutomationProperties.Name="{loc:Str Settings.ReduceMotion}" IsChecked="{Binding ReduceMotion, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.HardwareAcceleration}" Description="{loc:Str Settings.HardwareAccelerationDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Pictures" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <ToggleSwitch AutomationProperties.Name="{loc:Str Settings.HardwareAcceleration}" IsChecked="{Binding HardwareAcceleration, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
+                        </ui:FASettingsExpander.Footer>
+                        <ui:FASettingsExpanderItem AutomationProperties.Name="{loc:Str Settings.RestartToApply}" IsVisible="{Binding HardwareAccelerationRestartNeeded}">
+                            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="{loc:Str Settings.RestartToApply}" />
+                        </ui:FASettingsExpanderItem>
+                    </ui:FASettingsExpander>
                 </StackPanel>
 
                 <!-- Быстрый поиск -->
@@ -303,6 +312,8 @@
                                     <TextBox AutomationProperties.Name="{loc:Str A11y.NewExclusionRule}" x:Name="NewExclusionBox" PlaceholderText="{loc:Str Settings.ForExampleBinOrTmp}" Text="{Binding NewExclusion, Mode=TwoWay}" />
                                     <Button Grid.Column="1" Content="{loc:Str Settings.Add}" Command="{Binding AddExclusionCommand}" />
                                 </Grid>
+                                <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap"
+                                           Text="{Binding ExclusionPreview}" IsVisible="{Binding HasExclusionPreview}" />
                                 <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
                                            Text="{Binding ExclusionError}" IsVisible="{Binding HasExclusionError}" />
                             </StackPanel>

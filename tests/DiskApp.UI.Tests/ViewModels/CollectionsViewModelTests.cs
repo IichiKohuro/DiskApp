@@ -227,6 +227,9 @@ public sealed class CollectionsViewModelTests : IDisposable
         page.OnNavigatedTo();
         await Task.Delay(400, TestContext.Current.CancellationToken);
         page.OnNavigatedFrom();
+
+        // Тик, начавшийся до ухода со страницы, может закончиться после него: отсчёт — когда он завершился.
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         var whileVisible = library.ReceivedCalls().Count(call => call.GetMethodInfo().Name == nameof(ILibraryService.GetCollectionItemsAsync));
         await Task.Delay(200, TestContext.Current.CancellationToken);
         var afterLeaving = library.ReceivedCalls().Count(call => call.GetMethodInfo().Name == nameof(ILibraryService.GetCollectionItemsAsync));

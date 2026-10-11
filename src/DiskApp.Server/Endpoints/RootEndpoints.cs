@@ -87,6 +87,36 @@ internal static class RootEndpoints
             .WithName("RebuildIndex")
             .WithSummary("Пересобрать индекс")
             .WithDescription("Удаляет записи всех корней и ставит полное сканирование каждого. Избранное и теги удалённых записей теряются.");
+
+        index.MapGet(ApiRoutes.V1.IndexExclusionPreview, PreviewExclusionAsync)
+            .WithName("PreviewExclusion")
+            .WithSummary("Сколько записей исключит правило")
+            .WithDescription("Считает записи индекса, у которых сама запись или папка на пути подходит под glob-шаблон, как при сканировании. Не дольше 3 с: на большом индексе ответ может быть неполным (complete = false).");
+    }
+
+    private static readonly TimeSpan ExclusionPreviewLimit = TimeSpan.FromSeconds(3);
+
+    // Скрытые и системные объекты в предпросмотре не исключаются: считается только шаблон.
+    private static readonly Root PreviewRoot = new() { Path = string.Empty, Label = string.Empty, IncludeHidden = true, IncludeSystem = true };
+
+    private static async Task<Results<Ok<ExclusionPreviewDto>, ValidationProblem>> PreviewExclusionAsync(string? pattern, IFileIndexRepository entries, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(pattern))
+        {
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]> { ["pattern"] = [L.T("SettingsEndpoints.ThePatternCannotBeEmpty")] });
+        }
+
+        var text = pattern.Trim();
+        try
+        {
+            var matcher = ExclusionMatcher.Create([new ExclusionRule(ExclusionKind.Glob, text)], PreviewRoot, PathNormalizer.Current);
+            var count = await entries.CountPathsAsync(matcher.IsPathExcluded, ExclusionPreviewLimit, cancellationToken).ConfigureAwait(false);
+            return TypedResults.Ok(new ExclusionPreviewDto(text, count.Matched, count.Checked, count.Complete));
+        }
+        catch (Exception exception) when (exception is ArgumentException or System.Text.RegularExpressions.RegexMatchTimeoutException)
+        {
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]> { ["pattern"] = [L.T("RootEndpoints.ThePatternIsNotValid")] });
+        }
     }
 
     private static async Task<Ok<RootDto[]>> GetAllAsync(IRootRepository repository, IndexerService indexer, CancellationToken cancellationToken)

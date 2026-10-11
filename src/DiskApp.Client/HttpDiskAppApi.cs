@@ -64,6 +64,10 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
     public Task<IndexStatusDto> GetIndexStatusAsync(CancellationToken cancellationToken = default) => GetAsync(ApiRoutes.V1.IndexStatus, Json.IndexStatusDto, cancellationToken);
 
     /// <inheritdoc />
+    public Task<ExclusionPreviewDto> PreviewExclusionAsync(string pattern, CancellationToken cancellationToken = default)
+        => GetAsync(ApiRoutes.V1.IndexExclusionPreview + new QueryBuilder().Add("pattern", pattern), Json.ExclusionPreviewDto, cancellationToken);
+
+    /// <inheritdoc />
     public Task RebuildIndexAsync(CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Post, ApiRoutes.V1.IndexRebuild, cancellationToken);
 
     /// <inheritdoc />

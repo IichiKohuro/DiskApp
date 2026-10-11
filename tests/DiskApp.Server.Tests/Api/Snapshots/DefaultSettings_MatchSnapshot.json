@@ -9,6 +9,7 @@
     "backdrop": "Mica",
     "useSystemAccent": true,
     "reduceMotion": false,
+    "hardwareAcceleration": false,
     "fontScale": 1,
     "compact": false,
     "language": "system"

@@ -14,8 +14,20 @@ public sealed class SqliteDatabase : IDisposable, IAsyncDisposable
     private const string IntegrityOk = "ok";
     private static readonly string[] SidecarSuffixes = ["-wal", "-shm", "-journal"];
 
+    private static readonly TimeSpan IdleCheckInterval = TimeSpan.FromSeconds(15);
+
     private SqliteWriter? _writer;
+    private Timer? _idleTimer;
+    private long _releasedVersion = -1;
+    private int _releasing;
     private bool _disposed;
+
+    /// <summary>
+    /// Простой без чтений и записей, после которого база отдаёт память (этап 10.2): соединения пула закрываются вместе с
+    /// кэшем страниц (до 64 МБ каждое), писатель выполняет <c>PRAGMA optimize</c>, усекает WAL и сжимает свой кэш. Во время
+    /// работы кэш нужен: на 1 млн записей запросы с фильтрами при 8 МБ кэша выходят из бюджета поиска.
+    /// </summary>
+    public TimeSpan IdleDelay { get; init; } = TimeSpan.FromMinutes(1);
 
     /// <summary>
     /// Создаёт объект базы; файл открывается в <see cref="InitializeAsync"/>.
@@ -60,6 +72,7 @@ public sealed class SqliteDatabase : IDisposable, IAsyncDisposable
         }
 
         _writer = new SqliteWriter(Connections);
+        _idleTimer = new Timer(static state => ((SqliteDatabase)state!).OnIdleTick(), this, IdleCheckInterval, IdleCheckInterval);
         var applied = await _writer.EnqueueAsync(static connection => SqliteMigrator.Apply(connection), cancellationToken).ConfigureAwait(false);
 
         return new DatabaseInitialization(
@@ -102,6 +115,50 @@ public sealed class SqliteDatabase : IDisposable, IAsyncDisposable
         => Writer.EnqueueAsync(static connection => Execute(connection, "PRAGMA optimize; PRAGMA wal_checkpoint(TRUNCATE);"), cancellationToken);
 
     /// <summary>
+    /// Отдаёт память, если база простаивает дольше <see cref="IdleDelay"/> и с прошлого раза были чтения или записи; за один
+    /// простой — один раз. Завершается, когда писатель сжал свой кэш.
+    /// </summary>
+    /// <returns><c>true</c>, если память отдана сейчас.</returns>
+    public async Task<bool> ReleaseIdleMemoryAsync()
+    {
+        if (_disposed || _writer is not { IsDisposed: false } writer)
+        {
+            return false;
+        }
+
+        if (Connections.SinceLastOpen < IdleDelay || writer.SinceLastActivity < IdleDelay || ActivityVersion == Interlocked.Read(ref _releasedVersion))
+        {
+            return false;
+        }
+
+        if (Interlocked.Exchange(ref _releasing, 1) == 1)
+        {
+            return false;
+        }
+
+        try
+        {
+            Connections.ClearPool();
+            await writer.EnqueueAsync(static connection => Execute(connection, "PRAGMA optimize; PRAGMA wal_checkpoint(TRUNCATE); PRAGMA shrink_memory;"))
+                .ConfigureAwait(false);
+
+            // Собственное задание обслуживания тоже считается записью: версия берётся после него.
+            Interlocked.Exchange(ref _releasedVersion, ActivityVersion);
+            return true;
+        }
+        finally
+        {
+            Volatile.Write(ref _releasing, 0);
+        }
+    }
+
+    // Растёт при каждом открытом соединении и каждой записи: так видно, была ли работа с прошлого обслуживания.
+    private long ActivityVersion => Connections.OpenCount + (_writer?.CompletedCount ?? 0);
+
+    private void OnIdleTick()
+        => _ = ReleaseIdleMemoryAsync().ContinueWith(static task => _ = task.Exception, TaskScheduler.Default);
+
+    /// <summary>
     /// <c>VACUUM</c>: пересобирает файл после больших удалений; требует места на диске и выполняется вне транзакции.
     /// </summary>
     public Task VacuumAsync(CancellationToken cancellationToken = default)
@@ -125,6 +182,7 @@ public sealed class SqliteDatabase : IDisposable, IAsyncDisposable
         }
 
         _disposed = true;
+        _idleTimer?.Dispose();
         _writer?.Dispose();
         Connections.ClearPool();
     }
@@ -138,6 +196,11 @@ public sealed class SqliteDatabase : IDisposable, IAsyncDisposable
         }
 
         _disposed = true;
+        if (_idleTimer is not null)
+        {
+            await _idleTimer.DisposeAsync().ConfigureAwait(false);
+        }
+
         if (_writer is not null)
         {
             await _writer.DisposeAsync().ConfigureAwait(false);

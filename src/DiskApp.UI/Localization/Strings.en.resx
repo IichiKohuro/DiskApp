@@ -2067,6 +2067,15 @@
   <data name="Settings.EveryMin" xml:space="preserve">
     <value>Every {0} min</value>
   </data>
+  <data name="Settings.ExclusionMatchesNothing" xml:space="preserve">
+    <value>No indexed entry matches</value>
+  </data>
+  <data name="Settings.ExclusionWillRemove" xml:space="preserve">
+    <value>Will remove {0} from the index</value>
+  </data>
+  <data name="Settings.ExclusionWillRemoveAtLeast" xml:space="preserve">
+    <value>Will remove at least {0} from the index: only part of the index was checked</value>
+  </data>
   <data name="Settings.Exclusions" xml:space="preserve">
     <value>Exclusions</value>
   </data>
@@ -2096,6 +2105,12 @@
   </data>
   <data name="Settings.FuzzySearch" xml:space="preserve">
     <value>Fuzzy search</value>
+  </data>
+  <data name="Settings.HardwareAcceleration" xml:space="preserve">
+    <value>Hardware acceleration</value>
+  </data>
+  <data name="Settings.HardwareAccelerationDescription" xml:space="preserve">
+    <value>Draw windows on the graphics card: Acrylic in the search window. Takes about 90 MB more memory. Applies after a restart</value>
   </data>
   <data name="Settings.Hidden" xml:space="preserve">
     <value>Hidden</value>
@@ -2188,7 +2203,7 @@
     <value>Lower result rows — more files fit on the screen</value>
   </data>
   <data name="Settings.MicaInTheMainWindowAnd" xml:space="preserve">
-    <value>Mica in the main window and Acrylic in the search window, or a solid theme color</value>
+    <value>Mica in the main window and Acrylic in the search window, or a solid theme color; Acrylic needs hardware acceleration</value>
   </data>
   <data name="Settings.MinimizedToTheTraySoThe" xml:space="preserve">
     <value>Minimized to the tray, so the hotkey works right after sign-in</value>
@@ -2330,6 +2345,9 @@
   </data>
   <data name="Settings.ResetSettingsDescription" xml:space="preserve">
     <value>All settings back to their defaults; the previous file is kept next to it</value>
+  </data>
+  <data name="Settings.RestartToApply" xml:space="preserve">
+    <value>Restart DiskApp to apply: Exit in the tray menu, then start it again.</value>
   </data>
   <data name="Settings.ResultOrder" xml:space="preserve">
     <value>Result order</value>

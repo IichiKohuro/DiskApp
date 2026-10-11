@@ -96,6 +96,12 @@ public interface IFileIndexRepository
 
     /// <summary>Общее число записей в индексе.</summary>
     Task<long> CountAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Считает записи, относительный путь которых подходит под условие (предпросмотр правила исключения, этап 10.2).
+    /// Пути читаются потоком; по истечении <paramref name="timeLimit"/> подсчёт останавливается и результат неполный.
+    /// </summary>
+    Task<PathCount> CountPathsAsync(Func<string, bool> matches, TimeSpan timeLimit, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -128,6 +134,14 @@ public sealed record UpsertDetails(UpsertResult Totals, IReadOnlyList<int> Inser
     /// <summary>Пустой итог.</summary>
     public static UpsertDetails Empty { get; } = new(default, [], []);
 }
+
+/// <summary>
+/// Итог подсчёта путей (<see cref="IFileIndexRepository.CountPathsAsync"/>).
+/// </summary>
+/// <param name="Matched">Подошло записей.</param>
+/// <param name="Checked">Проверено записей.</param>
+/// <param name="Complete">Проверены все записи; <c>false</c> — подсчёт остановлен по времени.</param>
+public sealed record PathCount(long Matched, long Checked, bool Complete);
 
 /// <summary>
 /// Сводка по корню.

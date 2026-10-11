@@ -52,6 +52,71 @@ public sealed class SettingsPageTests
     }
 
     [Fact]
+    public async Task NewExclusion_ShowsHowManyEntriesItRemoves()
+    {
+        // Arrange
+        var service = new SampleSettingsService
+        {
+            Preview = static pattern => pattern switch
+            {
+                "**/bin/**" => new DiskApp.Contracts.Roots.ExclusionPreviewDto(pattern, 1_234, 50_000, Complete: true),
+                "*.tmp" => new DiskApp.Contracts.Roots.ExclusionPreviewDto(pattern, 0, 50_000, Complete: true),
+                _ => new DiskApp.Contracts.Roots.ExclusionPreviewDto(pattern, 7, 10_000, Complete: false),
+            },
+        };
+        var page = Create(service);
+        page.ExclusionPreviewDelay = TimeSpan.Zero;
+        await page.Initialization;
+
+        // Act
+        page.NewExclusion = @"**\bin\**";
+        await page.PendingExclusionPreview;
+        var many = page.ExclusionPreview;
+        page.NewExclusion = "*.tmp";
+        await page.PendingExclusionPreview;
+        var none = page.ExclusionPreview;
+        page.NewExclusion = "**/node*";
+        await page.PendingExclusionPreview;
+        var partial = page.ExclusionPreview;
+        page.NewExclusion = "bad|pattern";
+        await page.PendingExclusionPreview;
+
+        // Assert
+        many.ShouldBe("Уберёт из индекса 1\u202F234 записи", "разряды — узким неразрывным пробелом");
+        none.ShouldBe("Ни одна запись в индексе не подходит");
+        partial.ShouldBe("Уберёт из индекса не меньше 7 записей: проверена только часть индекса");
+        page.HasExclusionPreview.ShouldBeFalse("неверный шаблон не считается");
+        service.PreviewCount.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task HardwareAcceleration_SavedAndAsksForRestart()
+    {
+        // Arrange
+        var service = new SampleSettingsService();
+        var page = Create(service);
+        await page.Initialization;
+        var before = RenderingInfo.HardwareAccelerated;
+        RenderingInfo.HardwareAccelerated = false;
+        try
+        {
+            // Act
+            var restartBefore = page.HardwareAccelerationRestartNeeded;
+            page.HardwareAcceleration = true;
+            await page.PendingSave;
+
+            // Assert
+            restartBefore.ShouldBeFalse();
+            page.HardwareAccelerationRestartNeeded.ShouldBeTrue("рендеринг выбирается при запуске");
+            service.LastPatch!.ToJsonString().ShouldBe("""{"appearance":{"hardwareAcceleration":true}}""");
+        }
+        finally
+        {
+            RenderingInfo.HardwareAccelerated = before;
+        }
+    }
+
+    [Fact]
     public async Task Toggle_SavesOnlyThatField()
     {
         // Arrange

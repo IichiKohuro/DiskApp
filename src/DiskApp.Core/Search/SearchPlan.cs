@@ -105,6 +105,11 @@ public sealed record SearchPlan
         || Favorite is not null;
 
     /// <summary>
+    /// Подпись всего плана: у планов с одной подписью одинаковые кандидаты (объединение одновременных запросов, этап 10.2).
+    /// </summary>
+    public string Signature => string.Join('\u001f', FtsTerms) + "|" + string.Join('\u001f', ShortTerms) + "|" + ConditionsSignature;
+
+    /// <summary>
     /// Подпись всего, кроме положительных термов: два плана с одной подписью отличаются только термами,
     /// и результат более длинного запроса — подмножество результата более короткого (кэш уточнения).
     /// </summary>

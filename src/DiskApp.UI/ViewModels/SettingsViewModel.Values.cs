@@ -207,6 +207,14 @@ public sealed partial class SettingsViewModel
     [ObservableProperty]
     public partial bool ReduceMotion { get; set; }
 
+    /// <summary>Аппаратное ускорение (GPU); применяется после перезапуска (этап 10.2, ADR-0009).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HardwareAccelerationRestartNeeded))]
+    public partial bool HardwareAcceleration { get; set; }
+
+    /// <summary>Настройка рендеринга отличается от того, с которым приложение запущено: нужен перезапуск.</summary>
+    public bool HardwareAccelerationRestartNeeded => RenderingInfo.HardwareAccelerated is { } running && running != HardwareAcceleration;
+
     /// <summary>Монитор для окна поиска.</summary>
     [ObservableProperty]
     public partial SettingOption<PopupMonitor> SelectedPopupMonitor { get; set; } = MonitorOptions[0];
@@ -328,6 +336,7 @@ public sealed partial class SettingsViewModel
             SelectedFontScale = FontScales.MinBy(option => Math.Abs(option.Value - settings.Appearance.FontScale)) ?? FontScales[1];
             Compact = settings.Appearance.Compact;
             ReduceMotion = settings.Appearance.ReduceMotion;
+            HardwareAcceleration = settings.Appearance.HardwareAcceleration;
 
             SelectedPopupMonitor = PopupMonitors.FirstOrDefault(option => option.Value == settings.Popup.Monitor) ?? PopupMonitors[0];
             HideOnDeactivate = settings.Popup.HideOnDeactivate;
@@ -428,6 +437,8 @@ public sealed partial class SettingsViewModel
     partial void OnCompactChanged(bool value) => Save("appearance", "compact", value);
 
     partial void OnReduceMotionChanged(bool value) => Save("appearance", "reduceMotion", value);
+
+    partial void OnHardwareAccelerationChanged(bool value) => Save("appearance", "hardwareAcceleration", value);
 
     partial void OnSelectedPopupMonitorChanged(SettingOption<PopupMonitor> value) => Save("popup", "monitor", value.Value.ToString());
 

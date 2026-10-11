@@ -30,6 +30,7 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(CreateRootRequest))]
 [JsonSerializable(typeof(UpdateRootRequest))]
 [JsonSerializable(typeof(IndexStatusDto))]
+[JsonSerializable(typeof(ExclusionPreviewDto))]
 [JsonSerializable(typeof(IndexProgressDto))]
 [JsonSerializable(typeof(RootStatusChangedDto))]
 [JsonSerializable(typeof(EntryDto))]

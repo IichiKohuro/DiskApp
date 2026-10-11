@@ -186,6 +186,9 @@
   <data name="RootEndpoints.TheLabelCannotBeEmpty" xml:space="preserve">
     <value>The label cannot be empty.</value>
   </data>
+  <data name="RootEndpoints.ThePatternIsNotValid" xml:space="preserve">
+    <value>The pattern cannot be parsed: check the * ? characters and folder separators</value>
+  </data>
   <data name="Roots.DepthNegative" xml:space="preserve">
     <value>Depth cannot be negative.</value>
   </data>

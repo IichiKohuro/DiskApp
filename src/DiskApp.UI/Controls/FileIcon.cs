@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
+using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 
@@ -44,8 +45,15 @@ public sealed class FileIcon : Border
     private static readonly int[] PixelSizes = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256];
 
     private readonly Image _image = new() { Stretch = Stretch.Uniform, IsVisible = false };
-    private readonly SymbolIcon _fallback = new() { HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+    private readonly SymbolIcon _fallback = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     private int _version;
+
+    // Миниатюра грузится, когда иконка подошла к видимой области прокрутки (этап 10.2): плитка «Обзора» не виртуализуется,
+    // и без этого папка с тысячами фотографий запрашивала бы все миниатюры сразу. До того — иконка типа, она в кэше по
+    // расширению и дешёвая.
+    private const double ViewportMargin = 300;
+    private bool _nearViewport;
+    private bool _thumbnailDeferred;
 
     /// <summary>
     /// Создаёт элемент с заглушкой.
@@ -151,16 +159,32 @@ public sealed class FileIcon : Border
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        _nearViewport = false;
+        EffectiveViewportChanged += OnEffectiveViewportChanged;
         Reload();
     }
 
     /// <inheritdoc />
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        EffectiveViewportChanged -= OnEffectiveViewportChanged;
         base.OnDetachedFromVisualTree(e);
 
         // Ответ, пришедший после отсоединения, не нужен: версия сменится.
         _version++;
+    }
+
+    private void OnEffectiveViewportChanged(object? sender, EffectiveViewportChangedEventArgs e)
+    {
+        var near = e.EffectiveViewport.Inflate(ViewportMargin).Intersects(new Rect(Bounds.Size));
+        if (near && !_nearViewport)
+        {
+            _nearViewport = true;
+            if (_thumbnailDeferred)
+            {
+                Reload();
+            }
+        }
     }
 
     private void ApplySize()
@@ -182,6 +206,11 @@ public sealed class FileIcon : Border
 
         var size = PixelSizeFor(IconSize, TopLevel.GetTopLevel(this)?.RenderScaling ?? 1);
         var thumbnail = WantsThumbnail(entry, PreferThumbnail);
+        _thumbnailDeferred = thumbnail && !_nearViewport && !cache.TryGet(entry, Math.Max(size, 32), thumbnail: true, out _);
+        if (_thumbnailDeferred)
+        {
+            thumbnail = false;
+        }
         if (thumbnail && cache.TryGet(entry, Math.Max(size, 32), thumbnail: true, out var preview))
         {
             if (preview is not null)

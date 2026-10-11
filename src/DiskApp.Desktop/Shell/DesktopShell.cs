@@ -124,6 +124,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _instanceServer = new InstanceServer(_names.Pipe, OnSecondInstanceArguments, _log);
         _instanceServer.Start();
 
+        // Окно поиска прогревается, когда старт уже позади: на критическом пути трея его нет (этап 10.2).
+        DispatcherTimer.RunOnce(() => _quickSearch?.Prewarm(), TimeSpan.FromSeconds(3));
+
         ApplyArguments(startup, initialLaunch: true);
         if (!startup.Exit)
         {

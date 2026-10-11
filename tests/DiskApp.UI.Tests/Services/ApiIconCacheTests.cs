@@ -19,6 +19,7 @@ namespace DiskApp.UI.Tests.Services;
 /// Иконки и миниатюры в интерфейсе (PLAN.md, этап 7.4): ключи кэша, одна загрузка на ключ, кэширование
 /// «изображения нет», повтор после сбоя связи; элемент <see cref="FileIcon"/> с заглушкой.
 /// </summary>
+[Collection(FileIconStatics.Name)]
 public sealed class ApiIconCacheTests
 {
     private static readonly byte[] Png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
@@ -161,6 +162,42 @@ public sealed class ApiIconCacheTests
             image.Source.ShouldNotBeNull();
             icon.Background.ShouldBeNull("у настоящей иконки подложки нет");
             icon.GetVisualDescendants().OfType<SymbolIcon>().Single().IsVisible.ShouldBeFalse();
+            window.Close();
+        }
+        finally
+        {
+            FileIcon.Cache = previous;
+        }
+    });
+
+    [Fact]
+    public Task FileIcon_Thumbnail_LoadsOnlyNearViewport() => HeadlessTest.RunAsync(static async () =>
+    {
+        // Arrange: фотография далеко ниже видимой области прокрутки (плитка «Обзора» не виртуализуется, этап 10.2).
+        var cache = Substitute.For<IIconCache>();
+        var previous = FileIcon.Cache;
+        FileIcon.Cache = cache;
+        try
+        {
+            var icon = new FileIcon { Entry = Pdf with { Kind = FileKind.Image, FullPath = @"D:\Фото\море.jpg" }, PreferThumbnail = true, Width = 32, Height = 32 };
+            var scroller = new ScrollViewer { Content = new StackPanel { Children = { new Border { Height = 3000 }, icon } } };
+            var window = new Window { Width = 200, Height = 200, Content = scroller };
+            int ThumbnailRequests() => cache.ReceivedCalls().Count(static call => call.GetMethodInfo().Name == nameof(IIconCache.GetAsync) && (bool)call.GetArguments()[2]!);
+
+            // Act
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(50);
+            Dispatcher.UIThread.RunJobs();
+            var before = ThumbnailRequests();
+            scroller.Offset = new Avalonia.Vector(0, 3000);
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(50);
+            Dispatcher.UIThread.RunJobs();
+
+            // Assert
+            before.ShouldBe(0, "миниатюра не запрашивается, пока иконка далеко за видимой областью");
+            ThumbnailRequests().ShouldBe(1);
             window.Close();
         }
         finally

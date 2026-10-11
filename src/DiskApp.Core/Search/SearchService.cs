@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Domain;
@@ -30,6 +31,10 @@ public sealed class SearchService
     private volatile SearchOptions _options;
     private readonly TimeZoneInfo _zone;
     private readonly Lock _gate = new();
+    private readonly InFlightRequests<SearchPage> _searches = new();
+    private readonly InFlightRequests<CandidateBatch> _finds = new();
+    private readonly InFlightRequests<CandidateCount> _counts = new();
+    private readonly InFlightRequests<IReadOnlyList<SearchCandidate>> _recent = new();
     private RefinementCache? _cache;
     private (DateTimeOffset At, IReadOnlyList<Root> Roots)? _rootsCache;
     private (DateTimeOffset At, IReadOnlyList<string> Extensions)? _extensionsCache;
@@ -60,11 +65,17 @@ public sealed class SearchService
     /// <summary>
     /// Ищет и возвращает страницу результатов.
     /// </summary>
-    public async Task<SearchPage> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default)
+    public Task<SearchPage> SearchAsync(SearchRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentOutOfRangeException.ThrowIfLessThan(request.Limit, 1);
 
+        // Одинаковые запросы, идущие одновременно, ранжируются один раз (этап 10.2); ключ — все поля запроса (запись).
+        return _searches.RunAsync(request.ToString(), token => SearchCoreAsync(request, token), cancellationToken);
+    }
+
+    private async Task<SearchPage> SearchCoreAsync(SearchRequest request, CancellationToken cancellationToken)
+    {
         var stopwatch = Stopwatch.StartNew();
         var now = _clock.UtcNow;
         var query = QueryParser.Parse(request.Text);
@@ -83,7 +94,8 @@ public sealed class SearchService
         Task<CandidateCount>? countTask = null;
         if (plan.IsEmpty)
         {
-            candidates = await _index.FindRecentAsync(Math.Max(request.Limit, _options.RecentLimit), cancellationToken).ConfigureAwait(false);
+            var recentLimit = Math.Max(request.Limit, _options.RecentLimit);
+            candidates = await _recent.RunAsync(recentLimit.ToString(CultureInfo.InvariantCulture), token => _index.FindRecentAsync(recentLimit, token), cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -92,10 +104,10 @@ public sealed class SearchService
             {
                 // Подсчёт идёт параллельно выборке на другом соединении (WAL допускает параллельных читателей):
                 // если выборка окажется усечённой, число уже готово или почти готово.
-                countTask = _index.CountAsync(plan, _options.CountCap, countCancellation.Token);
+                countTask = CountSharedAsync(plan, countCancellation.Token);
             }
 
-            var batch = refined ?? await _index.FindAsync(plan, new CandidateQuery(_options.CandidateLimit, _options.QueryTimeout), cancellationToken).ConfigureAwait(false);
+            var batch = refined ?? await FindSharedAsync(plan, cancellationToken).ConfigureAwait(false);
             candidates = batch.Candidates;
             truncated = batch.Truncated;
             partial = batch.Partial;
@@ -145,7 +157,7 @@ public sealed class SearchService
         var exactTotal = !partial && !fuzzyAdded;
         if (truncated && !partial)
         {
-            var count = await (countTask ?? _index.CountAsync(plan, _options.CountCap, cancellationToken)).ConfigureAwait(false);
+            var count = await (countTask ?? CountSharedAsync(plan, cancellationToken)).ConfigureAwait(false);
             total = Math.Max(total, count.Count);
             exactTotal = count.IsExact && !fuzzyAdded;
         }
@@ -351,6 +363,22 @@ public sealed class SearchService
         var found = await _index.FindByAnyTrigramAsync(plan, trigrams, _options.FuzzyCandidateLimit, cancellationToken).ConfigureAwait(false);
         var known = exact.Select(static candidate => candidate.Entry.Id).ToHashSet();
         return found.Where(candidate => !known.Contains(candidate.Entry.Id)).ToArray();
+    }
+
+    // Одинаковые запросы, идущие одновременно (несколько окон, клиенты удалённого режима, быстрый набор), читают базу один
+    // раз (этап 10.2): со 100 одновременными поисками SQLite иначе выполняет одну и ту же выборку десятки раз.
+    private Task<CandidateBatch> FindSharedAsync(SearchPlan plan, CancellationToken cancellationToken)
+    {
+        var query = new CandidateQuery(_options.CandidateLimit, _options.QueryTimeout);
+        var key = string.Create(CultureInfo.InvariantCulture, $"{plan.Signature}|{query.Limit}|{query.Timeout.Ticks}");
+        return _finds.RunAsync(key, token => _index.FindAsync(plan, query, token), cancellationToken);
+    }
+
+    private Task<CandidateCount> CountSharedAsync(SearchPlan plan, CancellationToken cancellationToken)
+    {
+        var cap = _options.CountCap;
+        var key = string.Create(CultureInfo.InvariantCulture, $"{plan.Signature}|{cap}");
+        return _counts.RunAsync(key, token => _index.CountAsync(plan, cap, token), cancellationToken);
     }
 
     private CandidateBatch? TryRefine(SearchPlan plan)

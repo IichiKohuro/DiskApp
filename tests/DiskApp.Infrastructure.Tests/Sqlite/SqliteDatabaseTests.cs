@@ -31,6 +31,41 @@ public sealed class SqliteDatabaseTests
     }
 
     [Fact]
+    public async Task TryReleaseIdleMemory_OncePerIdlePeriod()
+    {
+        // Arrange
+        using var folder = new TemporaryDirectory();
+        await using var database = new SqliteDatabase(folder.Resolve("index.db")) { IdleDelay = TimeSpan.Zero };
+        await database.InitializeAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var first = await database.ReleaseIdleMemoryAsync();
+        var second = await database.ReleaseIdleMemoryAsync();
+        using (database.Connections.Open())
+        {
+        }
+
+        var afterActivity = await database.ReleaseIdleMemoryAsync();
+
+        // Assert
+        first.ShouldBeTrue();
+        second.ShouldBeFalse("за один простой память отдаётся один раз");
+        afterActivity.ShouldBeTrue("новое чтение начинает новый период простоя");
+    }
+
+    [Fact]
+    public async Task TryReleaseIdleMemory_RecentActivity_KeepsCaches()
+    {
+        // Arrange
+        using var folder = new TemporaryDirectory();
+        await using var database = new SqliteDatabase(folder.Resolve("index.db")) { IdleDelay = TimeSpan.FromHours(1) };
+        await database.InitializeAsync(TestContext.Current.CancellationToken);
+
+        // Act & Assert
+        (await database.ReleaseIdleMemoryAsync()).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task InitializeAsync_ExistingHealthyFile_AppliesNothing()
     {
         // Arrange

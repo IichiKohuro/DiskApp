@@ -104,6 +104,15 @@ public sealed record UpdateRootRequest
 /// <param name="TotalEntries">Записей в индексе (только в <c>GET /api/v1/index/status</c>).</param>
 public sealed record IndexStatusDto(IndexerState State, bool IsPaused, IReadOnlyList<RootIndexStatusDto> Roots, long? TotalEntries = null);
 
+/// <summary>
+/// Сколько записей индекса исключит правило: <c>GET /api/v1/index/exclusions/preview?pattern=</c> (этап 10.2).
+/// </summary>
+/// <param name="Pattern">Шаблон.</param>
+/// <param name="Matched">Записей подходит: сама запись или папка на её пути.</param>
+/// <param name="Checked">Проверено записей.</param>
+/// <param name="Complete">Проверены все записи; <c>false</c> — подсчёт остановлен по времени, подходит не меньше <paramref name="Matched"/>.</param>
+public sealed record ExclusionPreviewDto(string Pattern, long Matched, long Checked, bool Complete);
+
 /// <summary>Общее состояние индексации.</summary>
 public enum IndexerState
 {

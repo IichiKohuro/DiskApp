@@ -39,8 +39,17 @@ public sealed class SqliteConnectionFactory
         }.ToString();
     }
 
+    private long _lastOpened = Environment.TickCount64;
+    private long _openCount;
+
     /// <summary>Абсолютный путь к файлу базы.</summary>
     public string DatabasePath { get; }
+
+    /// <summary>Сколько прошло с открытия последнего соединения (обслуживание при простое, этап 10.2).</summary>
+    public TimeSpan SinceLastOpen => TimeSpan.FromMilliseconds(Environment.TickCount64 - Volatile.Read(ref _lastOpened));
+
+    /// <summary>Сколько соединений открыто за всё время: по нему видно, было ли чтение с прошлого обслуживания.</summary>
+    public long OpenCount => Interlocked.Read(ref _openCount);
 
     /// <summary>Строка подключения с созданием файла при отсутствии.</summary>
     public string ConnectionString { get; }
@@ -50,6 +59,8 @@ public sealed class SqliteConnectionFactory
     /// </summary>
     public SqliteConnection Open()
     {
+        Volatile.Write(ref _lastOpened, Environment.TickCount64);
+        Interlocked.Increment(ref _openCount);
         var connection = new SqliteConnection(ConnectionString);
         try
         {

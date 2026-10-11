@@ -7,7 +7,8 @@
       - старт до трея: первый запуск копии (ближе всего к холодному) и тёплые запуски, по журналу приложения;
       - показ окна быстрого поиска: от вызова до первого кадра, по журналу; окно вызывается аргументом --search;
       - первичную индексацию сгенерированного дерева файлов внутри приложения;
-      - память и CPU в простое: после показа и скрытия главного окна, выборка раз в 5 с;
+      - память (частный рабочий набор, как «Память» в Диспетчере задач) и CPU в простое после показа и скрытия
+        главного окна, выборка раз в 5 с;
       - сканирование 100 тыс. файлов, поиск p95 на 1 млн записей (сервис и API) — проверками бюджета из
         tests/DiskApp.Benchmarks (scan-budget, search-budget, api-budget).
     Итог — таблица «бюджет / замер» в консоли и в artifacts\perf\perf-<дата>.md вместе с конфигурацией машины.
@@ -144,6 +145,12 @@ function Get-Median([double[]]$values) {
 
 function Format-Number([double]$value, [string]$format = 'N0') { $value.ToString($format, [Globalization.CultureInfo]::GetCultureInfo('ru-RU')) }
 
+# Частный рабочий набор — столбец «Память» Диспетчера задач, которым задан бюджет; полный рабочий набор включает общие
+# страницы библиотек и даётся для справки.
+function Get-PrivateWorkingSet([int]$processId) {
+    (Get-CimInstance Win32_PerfFormattedData_PerfProc_Process -Filter "IDProcess=$processId").WorkingSetPrivate / 1MB
+}
+
 $results = [Collections.Generic.List[object]]::new()
 function Add-Result([string]$metric, [string]$budget, [string]$measured, [Nullable[bool]]$ok) {
     $results.Add([pscustomobject]@{ Metric = $metric; Budget = $budget; Measured = $measured; Ok = $ok })
@@ -229,7 +236,8 @@ Start-Sleep -Seconds 15
 $session.Process.Refresh()
 $trayWorkingSet = $session.Process.WorkingSet64 / 1MB
 $trayPrivate = $session.Process.PrivateMemorySize64 / 1MB
-Add-Result 'Память: трей и окно поиска, без главного окна' '< 150 МБ' "$(Format-Number $trayWorkingSet) МБ рабочий набор, выделено $(Format-Number $trayPrivate)" ($trayWorkingSet -lt 150)
+$trayPrivateSet = Get-PrivateWorkingSet $session.Process.Id
+Add-Result 'Память: трей и окно поиска, без главного окна (Диспетчер задач)' '< 150 МБ' "$(Format-Number $trayPrivateSet) МБ (рабочий набор $(Format-Number $trayWorkingSet), выделено $(Format-Number $trayPrivate))" ($trayPrivateSet -lt 150)
 
 # Главное окно показывается и закрывается в трей, как после обычной работы; потом — простой.
 Invoke-Second @('--show')
@@ -258,9 +266,10 @@ $cpu = ($session.Process.TotalProcessorTime - $startCpu).TotalSeconds / ((Get-Da
 $finalWorkingSet = $workingSets[-1] / 1MB
 $maxWorkingSet = ($workingSets | Measure-Object -Maximum).Maximum / 1MB
 $finalPrivate = $privates[-1] / 1MB
+$finalPrivateSet = Get-PrivateWorkingSet $session.Process.Id
 $handles = $session.Process.HandleCount
 Stop-App $session.Process
-Add-Result "Память в простое через $IdleSeconds с, рабочий набор" '< 150 МБ' "$(Format-Number $finalWorkingSet) МБ (макс. $(Format-Number $maxWorkingSet), выделено $(Format-Number $finalPrivate))" ($finalWorkingSet -lt 150)
+Add-Result "Память в простое через $IdleSeconds с (Диспетчер задач)" '< 150 МБ' "$(Format-Number $finalPrivateSet) МБ (рабочий набор $(Format-Number $finalWorkingSet), макс. $(Format-Number $maxWorkingSet), выделено $(Format-Number $finalPrivate))" ($finalPrivateSet -lt 150)
 Add-Result 'CPU в простое' '≈ 0 %' "$(Format-Number $cpu 'N2') % (дескрипторов $(Format-Number $handles))" ($cpu -lt 0.5)
 
 # --- 4. Проверки бюджета ядра -----------------------------------------------------------------------------------

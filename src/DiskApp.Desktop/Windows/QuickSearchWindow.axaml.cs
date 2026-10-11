@@ -101,6 +101,35 @@ public partial class QuickSearchWindow : Window
     }
 
     /// <summary>
+    /// Прогрев перед первым показом (PLAN.md, этап 10.2): окно один раз рисуется за пределами экрана без активации и сразу
+    /// прячется. Шаблоны, раскладка и первый кадр готовы заранее, и первый показ по хоткею не платит за них (было 100–180 мс).
+    /// Если пользователь вызвал окно, пока идёт прогрев, оно остаётся на экране.
+    /// </summary>
+    public void Prewarm()
+    {
+        if (IsVisible || _showCount > 0)
+        {
+            return;
+        }
+
+        ShowActivated = false;
+        Position = new PixelPoint(-32000, -32000);
+        Show();
+        RequestAnimationFrame(_ => Dispatcher.UIThread.Post(
+            () =>
+            {
+                ShowActivated = true;
+                if (_showCount == 0)
+                {
+                    Hide();
+                }
+
+                Log.Debug("Окно поиска прогрето");
+            },
+            DispatcherPriority.Background));
+    }
+
+    /// <summary>
     /// Хоткей: активное окно прячется, иначе показывается.
     /// </summary>
     public void Toggle(PixelPoint? anchor)
