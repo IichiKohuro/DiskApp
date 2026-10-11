@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Transformation;
 using Avalonia.Threading;
 
@@ -184,7 +185,7 @@ public partial class QuickSearchWindow : Window
     {
         base.OnPropertyChanged(change);
 
-        if (change.Property == ActualTransparencyLevelProperty)
+        if (change.Property == ActualTransparencyLevelProperty || change.Property == ActualThemeVariantProperty)
         {
             UpdateBackdrop();
         }
@@ -253,6 +254,13 @@ public partial class QuickSearchWindow : Window
 
         var level = ActualTransparencyLevel;
         Acrylic.IsVisible = level.Equals(WindowTransparencyLevel.AcrylicBlur) || level.Equals(WindowTransparencyLevel.Blur);
+        Solid.IsVisible = !Acrylic.IsVisible;
+
+        // Запасной фон окна не следит за темой: после смены темы на ходу он оставался прежним.
+        if (this.TryFindResource("SolidBackgroundFillColorBaseBrush", ActualThemeVariant, out var brush) && brush is IBrush solid)
+        {
+            TransparencyBackgroundFallback = solid;
+        }
     }
 
     private void OnDeactivated(object? sender, EventArgs e)

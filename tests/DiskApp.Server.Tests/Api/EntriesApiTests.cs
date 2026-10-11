@@ -156,6 +156,28 @@ public sealed class EntriesApiTests
     }
 
     [Fact]
+    public async Task Icon_CyrillicExtension_ReturnsPngWithAsciiETag()
+    {
+        // Arrange: расширение кириллицей попадало в ETag как есть, и Kestrel отвечал 500 (журнал 2026-10-11)
+        await using var context = await ServerTestContext.StartAsync();
+        context.Files.CreateFile("база.бд", "b");
+        await context.AddRootAsync();
+        var entry = (await context.GetAsync(ApiRoutes.V1.Search + "?q=" + Uri.EscapeDataString("база"), DiskAppJsonContext.Default.SearchResponse)).Items.ShouldHaveSingleItem();
+        var uri = new Uri(ApiRoutes.V1.Entry(entry.Id) + "/icon?size=48", UriKind.Relative);
+
+        // Act
+        using var first = await context.Client.GetAsync(uri, TestContext.Current.CancellationToken);
+        using var conditional = new HttpRequestMessage(HttpMethod.Get, uri);
+        conditional.Headers.IfNoneMatch.Add(first.Headers.ETag!);
+        using var second = await context.Client.SendAsync(conditional, TestContext.Current.CancellationToken);
+
+        // Assert
+        first.StatusCode.ShouldBe(HttpStatusCode.OK);
+        first.Headers.ETag!.Tag.ShouldBe("\"ext:%D0%B1%D0%B4:48\"");
+        second.StatusCode.ShouldBe(HttpStatusCode.NotModified);
+    }
+
+    [Fact]
     public async Task Icon_ReturnsPngWithETagAndHonorsIfNoneMatch()
     {
         // Arrange

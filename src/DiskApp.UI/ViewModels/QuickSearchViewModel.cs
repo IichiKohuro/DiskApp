@@ -190,15 +190,16 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// </summary>
     public async Task RefreshAsync()
     {
+        // Токен берётся до первого await: следующий вызов может отменить и освободить этот источник раньше,
+        // чем мы до него дойдём, и обращение к cts.Token упало бы с ObjectDisposedException.
         var cts = new CancellationTokenSource();
+        var token = cts.Token;
         var previous = Interlocked.Exchange(ref _pending, cts);
         if (previous is not null)
         {
             await previous.CancelAsync();
             previous.Dispose();
         }
-
-        var token = cts.Token;
         var raw = Query;
         var query = raw.Trim();
         UpdateFilterChips();

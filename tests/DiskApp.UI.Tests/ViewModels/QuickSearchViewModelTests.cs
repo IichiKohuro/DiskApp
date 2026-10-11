@@ -138,6 +138,28 @@ public sealed class QuickSearchViewModelTests
     }
 
     [Fact]
+    public async Task Refresh_ThreeInARow_SecondDoesNotTouchDisposedSource()
+    {
+        // Arrange: первый запрос ждёт паузу набора, поэтому отмена его источника не мгновенна (замечание пользователя,
+        // журнал 2026-10-11: «The CancellationTokenSource has been disposed» в RefreshAsync)
+        using var viewModel = Create();
+        await viewModel.PendingRefresh;
+        viewModel.DebounceDelay = TimeSpan.FromSeconds(5);
+        viewModel.Query = "отчёт";
+
+        // Act
+        var second = viewModel.RefreshAsync();
+        var third = viewModel.RefreshAsync();
+        viewModel.DebounceDelay = TimeSpan.Zero;
+        var fourth = viewModel.RefreshAsync();
+        var all = Task.WhenAll(second, third, fourth);
+
+        // Assert
+        await Should.NotThrowAsync(() => all.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+        viewModel.Results.ShouldNotBeEmpty();
+    }
+
+    [Fact]
     public async Task MoveSelection_PastEnds_ClampsToBounds()
     {
         // Arrange

@@ -19,6 +19,11 @@
                 <ResourceInclude Source="avares://DiskApp.UI/Styles/Tokens.axaml" />
                 <ResourceInclude Source="avares://DiskApp.UI/Styles/Templates.axaml" />
             </ResourceDictionary.MergedDictionaries>
+            <!-- Панель заголовка FAAppWindow тянет окно, только если у неё есть фон: в светлой теме FluentAvalonia ресурса
+                 TitleBarBackground нет, и главное окно нельзя было перетащить (замечание пользователя, 2026-10-11). Ключ в
+                 ресурсах окна FAAppWindow стирает сам, поэтому прозрачные кисти — здесь, для обеих тем. -->
+            <SolidColorBrush x:Key="TitleBarBackground" Color="Transparent" />
+            <SolidColorBrush x:Key="TitleBarBackgroundInactive" Color="Transparent" />
         </ResourceDictionary>
     </Application.Resources>
 

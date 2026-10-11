@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text;
 
 using DiskApp.Contracts;
 using DiskApp.Contracts.Entries;
@@ -348,7 +349,8 @@ internal static class EntryEndpoints
         }
 
         var key = DtoMapper.IconKey(entry);
-        var etag = new EntityTagHeaderValue("\"" + key.Replace("\"", string.Empty, StringComparison.Ordinal) + ":" + pixels.ToString(CultureInfo.InvariantCulture) + "\"");
+        // Заголовки HTTP — только ASCII, а в ключе бывает кириллическое расширение («ext:бд»): ключ экранируется.
+        var etag = new EntityTagHeaderValue("\"" + AsciiTag(key) + ":" + pixels.ToString(CultureInfo.InvariantCulture) + "\"");
         if (NotModified(context, etag))
         {
             return TypedResults.StatusCode(StatusCodes.Status304NotModified);
@@ -394,6 +396,25 @@ internal static class EntryEndpoints
         }
 
         return Png(context, await icons.GetThumbnailAsync(lookup.FullPath(entry, root), pixels, cancellationToken).ConfigureAwait(false), etag);
+    }
+
+    // Видимые ASCII-символы остаются как есть, остальное и кавычки — %XX от UTF-8: заголовок принимает только ASCII.
+    private static string AsciiTag(string value)
+    {
+        var builder = new StringBuilder(value.Length);
+        foreach (var rune in value.EnumerateRunes())
+        {
+            if (rune.Value is > 0x20 and < 0x7F and not '"' and not '\\' and not '%')
+            {
+                builder.Append((char)rune.Value);
+            }
+            else
+            {
+                builder.Append(Uri.EscapeDataString(rune.ToString()));
+            }
+        }
+
+        return builder.ToString();
     }
 
     private static bool NotModified(HttpContext context, EntityTagHeaderValue etag)

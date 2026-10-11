@@ -23,6 +23,9 @@
     <!-- Всплывающее окно поиска: без рамки, поверх всех окон, Acrylic (при недоступности — сплошной цвет темы),
          скруглённые углы через DWM в code-behind, тонкая обводка. Скрывается по Esc, потере фокуса и хоткею. -->
     <Panel x:Name="Root">
+        <!-- Сплошная подложка, когда Acrylic недоступен (программная отрисовка): обычный элемент со ссылкой на ресурс темы
+             перекрашивается при смене темы на ходу, а запасной фон окна — нет (замечание пользователя, 2026-10-11). -->
+        <Border x:Name="Solid" CornerRadius="8" IsHitTestVisible="False" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" />
         <ExperimentalAcrylicBorder x:Name="Acrylic" CornerRadius="8" IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial BackgroundSource="Digger"

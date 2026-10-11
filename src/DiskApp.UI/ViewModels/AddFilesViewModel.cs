@@ -158,6 +158,7 @@ public sealed partial class AddFilesViewModel : ViewModelBase
     private async Task SearchFoldersAsync(string text)
     {
         var cts = new CancellationTokenSource();
+        var token = cts.Token;
         var previous = Interlocked.Exchange(ref _searching, cts);
         if (previous is not null)
         {
@@ -167,8 +168,8 @@ public sealed partial class AddFilesViewModel : ViewModelBase
 
         try
         {
-            var result = await _search.SearchAsync("is:dir " + text, cts.Token);
-            cts.Token.ThrowIfCancellationRequested();
+            var result = await _search.SearchAsync("is:dir " + text, token);
+            token.ThrowIfCancellationRequested();
             Show([.. result.Entries
                 .Where(static entry => entry.Kind == FileKind.Folder && !entry.IsOffline)
                 .Select(static entry => new AddTarget(entry.Name, entry.FullPath, entry.Root, Symbol.Folder))]);
