@@ -31,6 +31,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     private CancellationTokenSource? _pending;
     private IndexStatus? _status;
     private FileDetails? _details;
+    private readonly ITagEditor? _tagEditor;
 
     /// <summary>
     /// Создаёт ViewModel с макетными действиями над файлами (превью) и сразу загружает подборку (<see cref="PendingRefresh"/>).
@@ -43,9 +44,13 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// <summary>
     /// Создаёт ViewModel приложения и сразу загружает подборку (<see cref="PendingRefresh"/>).
     /// </summary>
-    public QuickSearchViewModel(ISearchService search, IFileActions actions)
+    /// <param name="search">Поиск.</param>
+    /// <param name="actions">Действия над файлами.</param>
+    /// <param name="tagEditor">Диалог тегов; без него пункт «Теги…» скрыт.</param>
+    public QuickSearchViewModel(ISearchService search, IFileActions actions, ITagEditor? tagEditor = null)
         : this(search, actions, static () => DateTimeOffset.Now)
     {
+        _tagEditor = tagEditor;
     }
 
     /// <summary>

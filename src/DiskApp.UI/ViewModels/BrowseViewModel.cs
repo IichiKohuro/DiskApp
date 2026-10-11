@@ -135,9 +135,18 @@ public sealed partial class BrowseViewModel : PageViewModel
     /// <summary>
     /// Создаёт страницу приложения.
     /// </summary>
-    public BrowseViewModel(IBrowseService browse, IRootsService roots, ISearchService search, IFileActions actions, IDialogService dialogs, IInfoBarService notices, IOperationsCoordinator operations)
+    public BrowseViewModel(
+        IBrowseService browse,
+        IRootsService roots,
+        ISearchService search,
+        IFileActions actions,
+        IDialogService dialogs,
+        IInfoBarService notices,
+        IOperationsCoordinator operations,
+        ITagEditor? tagEditor = null)
         : this(browse, roots, search, actions, dialogs, notices, operations, static () => DateTimeOffset.Now)
     {
+        TagEditor = tagEditor;
     }
 
     /// <summary>
@@ -487,17 +496,55 @@ public sealed partial class BrowseViewModel : PageViewModel
         }
     }
 
-    /// <summary>Закрепить выбранное или открепить.</summary>
+    /// <summary>Диалог тегов (PLAN.md, этап 8.7); без него команда «Теги…» скрыта.</summary>
+    public ITagEditor? TagEditor { get; init; }
+
+    /// <summary>Теги можно менять.</summary>
+    public bool CanEditTags => TagEditor is not null;
+
+    /// <summary>
+    /// Закрепить выбранное или открепить (<c>Ctrl+D</c>, PLAN.md, этап 8.7): если среди выбранного есть незакреплённое —
+    /// закрепляется всё, иначе всё открепляется.
+    /// </summary>
     [RelayCommand]
     private async Task TogglePinAsync()
     {
-        if (Single() is not { } entry)
+        var entries = Selected();
+        if (entries.Count == 0)
         {
             return;
         }
 
-        if (await TryAsync(() => _actions.SetFavoriteAsync(entry, !entry.IsFavorite), "Не удалось изменить закрепление"))
+        var favorite = entries.Any(static entry => !entry.IsFavorite);
+        var changed = entries.Where(entry => entry.IsFavorite != favorite).ToArray();
+        if (await TryAsync(async () =>
         {
+            foreach (var entry in changed)
+            {
+                await _actions.SetFavoriteAsync(entry, favorite);
+            }
+        }, "Не удалось изменить закрепление"))
+        {
+            var what = changed.Length == 1 ? $"«{changed[0].Name}»" : Formatting.Count(changed.Length, "элемент", "элемента", "элементов");
+            _notices?.Show(favorite ? "Закреплено" : "Откреплено", what, FAInfoBarSeverity.Success);
+            await RefreshAsync();
+        }
+    }
+
+    /// <summary>Теги выбранного (<c>Ctrl+T</c>).</summary>
+    [RelayCommand]
+    private async Task EditTagsAsync()
+    {
+        var entries = Selected();
+        if (entries.Count == 0 || TagEditor is null)
+        {
+            return;
+        }
+
+        IReadOnlyList<FileEntry>? updated = null;
+        if (await TryAsync(async () => updated = await TagEditor.EditAsync(entries), "Не удалось изменить теги") && updated is { Count: > 0 })
+        {
+            _notices?.Show("Теги сохранены", updated.Count == 1 ? $"«{updated[0].Name}»" : Formatting.Count(updated.Count, "файл", "файла", "файлов"), FAInfoBarSeverity.Success);
             await RefreshAsync();
         }
     }

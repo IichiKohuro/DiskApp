@@ -1,0 +1,120 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="DiskApp.UI.Views.CollectionsView"
+             x:DataType="vm:CollectionsViewModel">
+    <!-- Страница «Коллекции» (PLAN.md, этап 8.7): слева избранное, ручные коллекции и сохранённые запросы; справа записи
+         выбранного списка с порядком, выгрузкой и загрузкой списка путей. Файлы можно бросить на список слева или справа. -->
+    <Grid Margin="16,12,16,8" RowDefinitions="Auto,*,Auto" ColumnDefinitions="260,*">
+        <DockPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Bottom">
+                <Button Classes="tool" ToolTip.Tip="Новая коллекция или сохранённый запрос">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:SymbolIcon Symbol="Add" FontSize="16" />
+                        <TextBlock Text="Создать" />
+                    </StackPanel>
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuItem Header="Коллекцию" Command="{Binding NewCollectionCommand}">
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Collections" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Сохранённый запрос" Command="{Binding NewSavedQueryCommand}">
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="SearchSquare" /></MenuItem.Icon>
+                            </MenuItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+                <Button Classes="tool" ToolTip.Tip="Список путей">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:SymbolIcon Symbol="DocumentText" FontSize="16" />
+                        <TextBlock Text="Список" />
+                    </StackPanel>
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuItem Header="Копировать пути" Command="{Binding CopyPathsCommand}" />
+                            <MenuItem Header="Сохранить в файл…" Command="{Binding ExportCommand}" />
+                            <MenuItem Header="Загрузить из файла…" Command="{Binding ImportCommand}" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
+                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="Обновить (F5)">
+                    <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
+                </Button>
+            </StackPanel>
+            <StackPanel Spacing="4">
+                <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="Коллекции" />
+                <TextBlock Classes="secondary" TextWrapping="Wrap" Text="Избранное, подборки файлов из разных мест и сохранённые запросы, которые обновляются сами." />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Списки -->
+        <Border Grid.Row="1" Classes="card" Padding="6">
+            <ListBox x:Name="ListsBox" ItemsSource="{Binding Lists}" SelectedItem="{Binding SelectedList, Mode=TwoWay}" DragDrop.AllowDrop="True">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CollectionListItem">
+                        <Grid ColumnDefinitions="Auto,*" Margin="0,4">
+                            <ic:SymbolIcon Symbol="{Binding Symbol}" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                            <StackPanel Grid.Column="1" Spacing="1">
+                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Classes="tertiary" FontSize="11" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                <ListBox.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuItem Header="Переименовать…" Command="{Binding RenameCommand}" InputGesture="F2" />
+                        <MenuItem Header="Изменить запрос…" Command="{Binding EditQueryCommand}" IsVisible="{Binding IsSavedQuery}" />
+                        <MenuItem Header="Удалить коллекцию…" Command="{Binding DeleteCommand}" InputGesture="Delete" />
+                    </MenuFlyout>
+                </ListBox.ContextFlyout>
+            </ListBox>
+        </Border>
+
+        <!-- Записи -->
+        <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="8" Margin="8,0,0,0">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="6,2,6,8">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsEditable}">
+                        <Button Classes="tool" Command="{Binding MoveUpCommand}" ToolTip.Tip="Выше (Alt+↑)">
+                            <ic:SymbolIcon Symbol="ArrowUp" FontSize="14" />
+                        </Button>
+                        <Button Classes="tool" Command="{Binding MoveDownCommand}" ToolTip.Tip="Ниже (Alt+↓)">
+                            <ic:SymbolIcon Symbol="ArrowDown" FontSize="14" />
+                        </Button>
+                        <Button Classes="tool" Command="{Binding RemoveFileCommand}" ToolTip.Tip="Убрать из списка (Del); файл останется">
+                            <ic:SymbolIcon Symbol="Dismiss" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding FilesTitle}" />
+                </DockPanel>
+                <ListBox x:Name="FilesList"
+                         Classes="results"
+                         ItemsSource="{Binding Files}"
+                         SelectedItem="{Binding SelectedFile, Mode=TwoWay}"
+                         ItemTemplate="{StaticResource FileHitTemplate}"
+                         DragDrop.AllowDrop="True">
+                    <ListBox.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuItem Header="Открыть" Command="{Binding OpenFileCommand}" CommandParameter="{x:Null}" InputGesture="Enter" />
+                            <MenuItem Header="Показать в Проводнике" Command="{Binding RevealFileCommand}" />
+                            <MenuItem Header="Теги…" Command="{Binding EditFileTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditFileTags}" />
+                            <Separator IsVisible="{Binding IsEditable}" />
+                            <MenuItem Header="Выше" Command="{Binding MoveUpCommand}" InputGesture="Alt+Up" IsVisible="{Binding IsEditable}" />
+                            <MenuItem Header="Ниже" Command="{Binding MoveDownCommand}" InputGesture="Alt+Down" IsVisible="{Binding IsEditable}" />
+                            <MenuItem Header="Убрать из списка" Command="{Binding RemoveFileCommand}" InputGesture="Delete" IsVisible="{Binding IsEditable}" />
+                        </MenuFlyout>
+                    </ListBox.ContextFlyout>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Classes="secondary" FontSize="12" Margin="4,8,0,0" Text="{Binding FilesText}" />
+        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Classes="secondary" FontSize="12" Margin="4,8,0,0" HorizontalAlignment="Right"
+                   Foreground="{DynamicResource SystemFillColorCriticalBrush}" Text="{Binding Error}" IsVisible="{Binding HasError}" />
+    </Grid>
+</UserControl>

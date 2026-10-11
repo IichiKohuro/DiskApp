@@ -36,6 +36,12 @@
         <DataTemplate DataType="vm:OperationsViewModel">
             <views:OperationsView />
         </DataTemplate>
+        <DataTemplate DataType="vm:CollectionsViewModel">
+            <views:CollectionsView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:TagsViewModel">
+            <views:TagsView />
+        </DataTemplate>
         <DataTemplate DataType="vm:SettingsViewModel">
             <views:SettingsView />
         </DataTemplate>

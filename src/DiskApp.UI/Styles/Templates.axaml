@@ -3,6 +3,16 @@
                     xmlns:m="using:DiskApp.UI.Models"
                     xmlns:c="using:DiskApp.UI.Controls"
                     xmlns:ic="using:FluentIcons.Avalonia">
+    <!-- Чип тега: цветная точка и имя (PLAN.md, этап 8.7) -->
+    <DataTemplate x:Key="TagChipTemplate" DataType="m:TagLabel">
+        <Border Classes="tag">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Ellipse Width="7" Height="7" VerticalAlignment="Center" Fill="{Binding Color, Converter={x:Static c:TagConverters.Brush}}" />
+                <TextBlock Text="{Binding Name}" />
+            </StackPanel>
+        </Border>
+    </DataTemplate>
+
     <!-- Строка файла в списках результатов, недавних и коллекций: иконка по виду, имя с подсветкой, папка,
          теги, размер и дата, звезда избранного и номер для Ctrl+1…9. -->
     <DataTemplate x:Key="FileHitTemplate" DataType="m:SearchHit">
@@ -48,10 +58,16 @@
                                FontSize="12"
                                Text="{Binding DirectoryText}"
                                TextTrimming="CharacterEllipsis" />
-                    <TextBlock Classes="tertiary"
-                               FontSize="12"
-                               Text="{Binding TagsText}"
-                               IsVisible="{Binding HasTags}" />
+                    <ItemsControl ItemsSource="{Binding Entry.TagLabels}"
+                                  ItemTemplate="{StaticResource TagChipTemplate}"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding HasTags}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
                 </StackPanel>
             </StackPanel>
 

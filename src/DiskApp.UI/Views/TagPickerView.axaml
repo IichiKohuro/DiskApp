@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="using:DiskApp.UI.Controls"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="380"
+             x:Class="DiskApp.UI.Views.TagPickerView"
+             x:DataType="vm:TagPickerViewModel">
+    <!-- Диалог тегов (PLAN.md, этап 8.7): отметки тегов для одного или нескольких файлов, новый тег с цветом из палитры.
+         Кнопки — у диалога. -->
+    <StackPanel Spacing="10" Width="400">
+        <TextBlock Classes="secondary" TextTrimming="CharacterEllipsis" Text="{Binding TargetText}" />
+        <ScrollViewer MaxHeight="260">
+            <ItemsControl ItemsSource="{Binding Choices}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TagChoice">
+                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" IsThreeState="{Binding IsThreeState}" Margin="0,2">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Ellipse Classes="swatch" Fill="{Binding Tag.Color, Converter={x:Static c:TagConverters.Brush}}" />
+                                <TextBlock Text="{Binding Tag.Name}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </CheckBox>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding IsEmpty}"
+                   Text="Тегов пока нет. Введите имя ниже — тег получит цвет и сразу отметится." />
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <TextBox x:Name="NewTagBox" PlaceholderText="Новый тег" Text="{Binding NewTagName, Mode=TwoWay}" />
+            <Button Grid.Column="1" Content="Добавить" Command="{Binding AddTagCommand}" />
+        </Grid>
+        <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                   Text="{Binding Error}" IsVisible="{Binding HasError}" />
+    </StackPanel>
+</UserControl>

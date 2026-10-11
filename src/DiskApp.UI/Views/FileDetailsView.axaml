@@ -37,17 +37,15 @@
             <TextBlock Grid.Row="4" Classes="label" Text="Папка" />
             <SelectableTextBlock Grid.Row="4" Grid.Column="1" Classes="value" TextWrapping="Wrap" Text="{Binding Entry.Directory}" />
         </Grid>
-        <ItemsControl ItemsSource="{Binding Entry.Tags}" IsVisible="{Binding HasTags}">
+        <ItemsControl ItemsSource="{Binding Entry.TagLabels}" IsVisible="{Binding HasTags}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel />
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
-                    <Border Classes="chip" Margin="0,0,6,6">
-                        <TextBlock Text="{Binding}" />
-                    </Border>
+                <DataTemplate x:DataType="m:TagLabel">
+                    <ContentControl Margin="0,0,6,6" Content="{Binding}" ContentTemplate="{StaticResource TagChipTemplate}" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

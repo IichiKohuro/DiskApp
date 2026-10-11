@@ -48,11 +48,43 @@ public sealed partial class MainViewModel : ViewModelBase
     /// Создаёт оболочку с заданными страницами и часами.
     /// </summary>
     public MainViewModel(HomeViewModel home, QuickSearchViewModel search, BrowseViewModel browse, OperationsViewModel operations, SettingsViewModel settings, ISearchService searchService, Func<DateTimeOffset> clock)
+        : this(home, search, browse, operations, CollectionsPlaceholder(), TagsPlaceholder(), settings, searchService, clock)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт главное окно приложения со всеми страницами, включая «Коллекции» и «Теги» (PLAN.md, этап 8.7).
+    /// </summary>
+    public MainViewModel(
+        HomeViewModel home,
+        QuickSearchViewModel search,
+        BrowseViewModel browse,
+        OperationsViewModel operations,
+        CollectionsViewModel collections,
+        TagsViewModel tags,
+        SettingsViewModel settings,
+        ISearchService searchService)
+        : this(home, search, browse, operations, collections, tags, settings, searchService, static () => DateTimeOffset.Now)
+    {
+    }
+
+    private MainViewModel(
+        HomeViewModel home,
+        QuickSearchViewModel search,
+        BrowseViewModel browse,
+        OperationsViewModel operations,
+        PageViewModel collections,
+        PageViewModel tags,
+        SettingsViewModel settings,
+        ISearchService searchService,
+        Func<DateTimeOffset> clock)
     {
         ArgumentNullException.ThrowIfNull(home);
         ArgumentNullException.ThrowIfNull(search);
         ArgumentNullException.ThrowIfNull(browse);
         ArgumentNullException.ThrowIfNull(operations);
+        ArgumentNullException.ThrowIfNull(collections);
+        ArgumentNullException.ThrowIfNull(tags);
         Operations = operations;
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(searchService);
@@ -67,14 +99,8 @@ public sealed partial class MainViewModel : ViewModelBase
             home,
             search,
             browse,
-            new PlaceholderPageViewModel(
-                PageKeys.Collections, "Коллекции", FASymbol.Library, Symbol.Collections,
-                "Избранное, закреплённые папки и подборки файлов из разных мест — для проектов, поездок и дел.",
-                "Этап 8"),
-            new PlaceholderPageViewModel(
-                PageKeys.Tags, "Теги", FASymbol.Tag, Symbol.TagMultiple,
-                "Теги и цвета для файлов и папок; фильтр tag: в поиске; быстрые метки одной клавишей.",
-                "Этап 8"),
+            collections,
+            tags,
             new PlaceholderPageViewModel(
                 PageKeys.Inbox, "Входящие", FASymbol.Download, Symbol.MailInbox,
                 "Разбор «Загрузок» по профильным складам: подсказка «куда положить», одна клавиша — следующий файл, отмена любого решения.",
@@ -145,6 +171,24 @@ public sealed partial class MainViewModel : ViewModelBase
     /// Переходит на страницу по ключу.
     /// </summary>
     /// <returns><c>true</c>, если страница найдена.</returns>
+    /// <summary>Страница «Коллекции» без библиотеки (превью, тесты оболочки).</summary>
+    private static PlaceholderPageViewModel CollectionsPlaceholder() => new(
+        PageKeys.Collections, "Коллекции", FASymbol.Library, Symbol.Collections,
+        "Избранное, закреплённые папки и подборки файлов из разных мест — для проектов, поездок и дел.",
+        "Этап 8");
+
+    /// <summary>Страница «Теги» без библиотеки (превью, тесты оболочки).</summary>
+    private static PlaceholderPageViewModel TagsPlaceholder() => new(
+        PageKeys.Tags, "Теги", FASymbol.Tag, Symbol.TagMultiple,
+        "Теги и цвета для файлов и папок; фильтр tag: в поиске; быстрые метки одной клавишей.",
+        "Этап 8");
+
+    partial void OnSelectedPageChanged(PageViewModel? oldValue, PageViewModel? newValue)
+    {
+        (oldValue as IPageLifecycle)?.OnNavigatedFrom();
+        (newValue as IPageLifecycle)?.OnNavigatedTo();
+    }
+
     public bool NavigateTo(string pageKey)
     {
         var page = Pages.Concat(FooterPages).FirstOrDefault(candidate => candidate.Key == pageKey);

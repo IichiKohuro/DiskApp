@@ -130,6 +130,8 @@ public partial class BrowseView : UserControl
             Key.F2 when none && !inTextBox => viewModel.RenameCommand,
             Key.Delete when none && !inTextBox => viewModel.DeleteCommand,
             Key.C when ctrl && !inTextBox => viewModel.CopyFilesCommand,
+            Key.D when ctrl && !inTextBox => viewModel.TogglePinCommand,
+            Key.T when ctrl && !inTextBox => viewModel.EditTagsCommand,
             Key.C when e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && !inTextBox => viewModel.CopyPathCommand,
             _ => null,
         };

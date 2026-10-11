@@ -164,6 +164,15 @@
                             </MenuItem.Header>
                             <MenuItem.Icon><ic:SymbolIcon Symbol="Pin" /></MenuItem.Icon>
                         </MenuItem>
+                        <MenuItem Command="{Binding EditTagsCommand}" IsVisible="{Binding CanEditTags}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Теги…" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.EditTagsText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="Tag" /></MenuItem.Icon>
+                        </MenuItem>
                         <MenuItem Command="{Binding BeginRenameCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">

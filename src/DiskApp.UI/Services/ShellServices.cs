@@ -64,6 +64,24 @@ public interface IDialogService
     /// Показать окно «Добавить»; <c>true</c> — пользователь выбрал место и нажал «Добавить».
     /// </summary>
     Task<bool> ShowAddFilesAsync(DiskApp.UI.ViewModels.AddFilesViewModel dialog);
+
+    /// <summary>
+    /// Диалог тегов (PLAN.md, этап 8.7).
+    /// </summary>
+    /// <returns><c>true</c> — нажата «Сохранить».</returns>
+    Task<bool> ShowTagPickerAsync(DiskApp.UI.ViewModels.TagPickerViewModel dialog);
+
+    /// <summary>
+    /// Редактор тега: имя и цвет из палитры (PLAN.md, этап 8.7).
+    /// </summary>
+    /// <returns>Имя и цвет или <c>null</c>, если отменено.</returns>
+    Task<(string Name, string? Color)?> EditTagAsync(string title, string name, string? color, string primaryText);
+
+    /// <summary>Выбор файла для сохранения списка; <c>null</c> — отменено.</summary>
+    Task<string?> PickSaveFileAsync(string title, string suggestedName);
+
+    /// <summary>Выбор текстового файла для чтения списка; <c>null</c> — отменено.</summary>
+    Task<string?> PickOpenFileAsync(string title);
 }
 
 /// <summary>

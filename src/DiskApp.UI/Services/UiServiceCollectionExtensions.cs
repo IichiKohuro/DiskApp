@@ -22,6 +22,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<IRootsService, SampleRootsService>();
         services.AddSingleton<IBrowseService, SampleBrowseService>();
         services.AddSingleton<IOperationsService, SampleOperationsService>();
+        services.AddSingleton<ILibraryService, SampleLibraryService>();
         services.AddSingleton<IThemeService, AppThemeService>();
         services.AddSingleton<HotkeyStatus>();
         services.AddSingleton<IDispatcher, AvaloniaDispatcher>();
@@ -33,6 +34,8 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<HomeViewModel>();
         services.AddSingleton<BrowseViewModel>();
+        services.AddSingleton<CollectionsViewModel>();
+        services.AddSingleton<TagsViewModel>();
         services.AddSingleton<OperationsViewModel>();
         services.AddSingleton<IOperationsCoordinator>(static provider => provider.GetRequiredService<OperationsViewModel>());
         services.AddSingleton<QuickSearchViewModel>();

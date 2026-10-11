@@ -90,6 +90,12 @@ public sealed record FileEntry
     /// <summary>Теги пользователя.</summary>
     public IReadOnlyList<string> Tags { get; init; } = [];
 
+    /// <summary>Цвета тегов по имени (<c>#RRGGBB</c>); у тега без цвета записи нет.</summary>
+    public IReadOnlyDictionary<string, string> TagColors { get; init; } = NoColors;
+
+    /// <summary>Теги с цветами — для чипов в списках и карточке.</summary>
+    public IReadOnlyList<TagLabel> TagLabels => [.. Tags.Select(name => new TagLabel(name, TagColors.GetValueOrDefault(name)))];
+
     /// <summary>Облачная заглушка (OneDrive и т. п.): содержимого на диске нет, открытие его скачает.</summary>
     public bool IsCloudOnly { get; init; }
 
@@ -104,4 +110,6 @@ public sealed record FileEntry
 
     /// <summary>Расширение без точки в нижнем регистре; пусто, если расширения нет.</summary>
     public string Extension => PathText.Extension(FullPath);
+
+    private static IReadOnlyDictionary<string, string> NoColors { get; } = new Dictionary<string, string>();
 }

@@ -30,7 +30,7 @@ public sealed class QuickSearchKeyMapTests
     [InlineData(Key.C, KeyModifiers.Control | KeyModifiers.Shift, QuickSearchCommand.CopyPath)]
     [InlineData(Key.F2, KeyModifiers.None, QuickSearchCommand.Rename)]
     [InlineData(Key.Delete, KeyModifiers.None, QuickSearchCommand.Delete)]
-    [InlineData(Key.P, KeyModifiers.Control, QuickSearchCommand.TogglePin)]
+    [InlineData(Key.D, KeyModifiers.Control, QuickSearchCommand.TogglePin)]
     [InlineData(Key.Tab, KeyModifiers.None, QuickSearchCommand.ContextMenu)]
     [InlineData(Key.F10, KeyModifiers.Shift, QuickSearchCommand.ContextMenu)]
     [InlineData(Key.Apps, KeyModifiers.None, QuickSearchCommand.ContextMenu)]

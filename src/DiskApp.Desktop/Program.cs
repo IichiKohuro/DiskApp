@@ -138,6 +138,8 @@ internal static class Program
             services.AddSingleton<IOperationsService, ApiOperationsService>();
             services.AddSingleton<IAddPreferences, SettingsAddPreferences>();
             services.AddSingleton<IAddFilesService, AddFilesService>();
+            services.AddSingleton<ILibraryService, ApiLibraryService>();
+            services.AddSingleton<ITagEditor, TagEditor>();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));

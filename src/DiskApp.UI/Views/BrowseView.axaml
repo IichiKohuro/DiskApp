@@ -179,7 +179,8 @@
             <Separator />
             <MenuItem Header="Новая папка" Command="{Binding NewFolderCommand}" InputGesture="Ctrl+Shift+N" />
             <Separator />
-            <MenuItem Header="Закрепить или открепить" Command="{Binding TogglePinCommand}" />
+            <MenuItem Header="Закрепить или открепить" Command="{Binding TogglePinCommand}" InputGesture="Ctrl+D" />
+            <MenuItem Header="Теги…" Command="{Binding EditTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditTags}" />
             <MenuItem Header="Переименовать…" Command="{Binding RenameCommand}" />
             <MenuItem Header="В корзину…" Command="{Binding DeleteCommand}" />
             <Separator />

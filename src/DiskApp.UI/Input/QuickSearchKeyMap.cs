@@ -53,8 +53,11 @@ public enum QuickSearchCommand
     /// <summary>В корзину; <c>Del</c>, если курсор в конце поля и текст не выделен.</summary>
     Delete,
 
-    /// <summary>Закрепить или открепить; <c>Ctrl+P</c>.</summary>
+    /// <summary>Закрепить или открепить; <c>Ctrl+D</c> (PLAN.md, этап 8.7; <c>Ctrl+P</c> оставлен для предпросмотра).</summary>
     TogglePin,
+
+    /// <summary>Теги выбранного файла; <c>Ctrl+T</c> (PLAN.md, этап 8.7).</summary>
+    EditTags,
 
     /// <summary>Контекстное меню; <c>Tab</c> (если нет подсказки), <c>Shift+F10</c>, клавиша меню.</summary>
     ContextMenu,
@@ -104,7 +107,8 @@ public static class QuickSearchKeyMap
         [QuickSearchCommand.CopyPath] = new(Key.C, KeyModifiers.Control | KeyModifiers.Shift),
         [QuickSearchCommand.Rename] = new(Key.F2),
         [QuickSearchCommand.Delete] = new(Key.Delete),
-        [QuickSearchCommand.TogglePin] = new(Key.P, KeyModifiers.Control),
+        [QuickSearchCommand.TogglePin] = new(Key.D, KeyModifiers.Control),
+        [QuickSearchCommand.EditTags] = new(Key.T, KeyModifiers.Control),
     };
 
     /// <summary>Подпись клавиши пункта «Открыть».</summary>
@@ -136,6 +140,9 @@ public static class QuickSearchKeyMap
 
     /// <summary>Подпись клавиши пункта «Закрепить».</summary>
     public static string TogglePinText => GestureText(QuickSearchCommand.TogglePin);
+
+    /// <summary>Подпись клавиши пункта «Теги».</summary>
+    public static string EditTagsText => GestureText(QuickSearchCommand.EditTags);
 
     /// <summary>
     /// Подпись сочетания, как её пишет Windows: «Ctrl+Enter», «Del»; пусто, если у команды нет сочетания.
@@ -199,7 +206,8 @@ public static class QuickSearchKeyMap
             Key.C when modifiers == (KeyModifiers.Control | KeyModifiers.Shift) => new(QuickSearchCommand.CopyPath),
             Key.F2 when none => new(QuickSearchCommand.Rename),
             Key.Delete when none && box.CaretAtEnd && !box.HasSelection => new(QuickSearchCommand.Delete),
-            Key.P when ctrl => new(QuickSearchCommand.TogglePin),
+            Key.D when ctrl => new(QuickSearchCommand.TogglePin),
+            Key.T when ctrl => new(QuickSearchCommand.EditTags),
 
             Key.Tab when none && box.HasSuggestions => new(QuickSearchCommand.AcceptSuggestion),
             Key.Tab when none => new(QuickSearchCommand.ContextMenu),

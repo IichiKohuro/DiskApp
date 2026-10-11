@@ -155,6 +155,9 @@ public sealed partial class QuickSearchViewModel
             case QuickSearchCommand.TogglePin:
                 await TogglePinAsync();
                 break;
+            case QuickSearchCommand.EditTags:
+                await EditTagsAsync();
+                break;
             case QuickSearchCommand.Escape:
                 if (HasPendingAction)
                 {
@@ -277,6 +280,26 @@ public sealed partial class QuickSearchViewModel
         {
             ReplaceEntry(hit, updated!);
             ShowNotice(favorite ? "Закреплено" : "Откреплено", $"«{hit.Entry.Name}»", FAInfoBarSeverity.Success);
+        }
+    }
+
+    /// <summary>Теги можно менять: диалог тегов подключён.</summary>
+    public bool CanEditTags => _tagEditor is not null;
+
+    /// <summary>Диалог тегов для выбранного файла (PLAN.md, этап 8.7).</summary>
+    [RelayCommand]
+    private async Task EditTagsAsync()
+    {
+        if (SelectedResult is not { } hit || _tagEditor is null)
+        {
+            return;
+        }
+
+        IReadOnlyList<FileEntry>? updated = null;
+        if (await TryAsync(async () => updated = await _tagEditor.EditAsync([hit.Entry]), "Не удалось изменить теги") && updated is { Count: > 0 })
+        {
+            ReplaceEntry(hit, updated[0]);
+            ShowNotice("Теги сохранены", $"«{hit.Entry.Name}»", FAInfoBarSeverity.Success);
         }
     }
 
