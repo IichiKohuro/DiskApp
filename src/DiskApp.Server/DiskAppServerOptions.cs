@@ -35,4 +35,16 @@ public sealed record DiskAppServerOptions
 
     /// <summary>Случайный токен сессии: 32 байта в Base64Url.</summary>
     public static string CreateSessionToken() => System.Buffers.Text.Base64Url.EncodeToString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+
+    // Токен не попадает в журнал, даже если параметры выводят целиком (этап 10.4).
+    private bool PrintMembers(System.Text.StringBuilder builder)
+    {
+        builder.Append("Url = ").Append(Url)
+            .Append(", DataDirectory = ").Append(Paths?.DataDirectory)
+            .Append(", EnvironmentName = ").Append(EnvironmentName)
+            .Append(", StartIndexer = ").Append(StartIndexer)
+            .Append(", SessionToken = ").Append(SessionToken is null ? "null" : "***")
+            .Append(", MaxRequestBodyBytes = ").Append(MaxRequestBodyBytes);
+        return true;
+    }
 }

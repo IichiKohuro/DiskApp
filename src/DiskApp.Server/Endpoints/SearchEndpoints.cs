@@ -102,6 +102,11 @@ internal static class SearchEndpoints
             return ApiProblems.Invalid("limit", L.F("SearchEndpoints.PageSizeIsFrom1To", MaxLimit));
         }
 
+        if (request.Q is { Length: > SearchRequest.MaxQueryLength })
+        {
+            return ApiProblems.Invalid("q", L.F("SearchEndpoints.QueryIsLongerThan", SearchRequest.MaxQueryLength));
+        }
+
         SearchCursor? cursor = null;
         if (!string.IsNullOrEmpty(request.Cursor))
         {
@@ -142,6 +147,11 @@ internal static class SearchEndpoints
         if (limit is < 1 or > 50)
         {
             return ApiProblems.Invalid("limit", L.T("SearchEndpoints.SuggestionsFrom1To50"));
+        }
+
+        if (q is { Length: > SearchRequest.MaxQueryLength })
+        {
+            return ApiProblems.Invalid("q", L.F("SearchEndpoints.QueryIsLongerThan", SearchRequest.MaxQueryLength));
         }
 
         var suggestions = await service.SuggestAsync(q, limit ?? 10, cancellationToken).ConfigureAwait(false);

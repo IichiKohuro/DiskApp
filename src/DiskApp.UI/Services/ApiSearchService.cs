@@ -31,7 +31,9 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
     /// <inheritdoc />
     public async Task<SearchResult> SearchAsync(string query, CancellationToken cancellationToken)
     {
-        var response = await _api.SearchAsync(new SearchRequest { Q = query, Limit = PageSize }, cancellationToken).ConfigureAwait(false);
+        // Сервер отклоняет запрос длиннее предела (этап 10.4); вставленный в поле огромный текст обрезается.
+        var text = query.Length > SearchRequest.MaxQueryLength ? query[..SearchRequest.MaxQueryLength] : query;
+        var response = await _api.SearchAsync(new SearchRequest { Q = text, Limit = PageSize }, cancellationToken).ConfigureAwait(false);
         var entries = await ToEntriesAsync(response.Items, cancellationToken).ConfigureAwait(false);
         return new SearchResult(entries, (int)Math.Min(response.Total, int.MaxValue), TimeSpan.FromMilliseconds(response.ElapsedMs), response.IsTotalApproximate);
     }

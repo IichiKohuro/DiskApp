@@ -9,10 +9,12 @@ namespace DiskApp.Server.Endpoints;
 /// <summary>
 /// Доступ только внутри добавленных корней (PLAN.md, этап 4.6): путь нормализуется (без <c>..</c>), должен лежать
 /// в одном из корней, а если по дороге от корня встречается ссылка (junction, symlink), её настоящая цель тоже
-/// должна оказаться внутри корней — так ссылка не выводит за их пределы.
+/// должна оказаться внутри корней — так ссылка не выводит за их пределы. Цепочка ссылок проверяется до конца.
 /// </summary>
 internal sealed class RootGuard(IRootRepository roots, PathNormalizer paths)
 {
+    private const int MaxLinkDepth = 8;
+
     /// <summary>Нормализованный путь и корень, внутри которого он лежит; <c>false</c> — путь вне корней или выводит из них.</summary>
     public async Task<(bool Allowed, string? Path, Root? Root)> CheckAsync(string? path, CancellationToken cancellationToken)
     {
@@ -30,8 +32,14 @@ internal sealed class RootGuard(IRootRepository roots, PathNormalizer paths)
         => all.Where(candidate => paths.Comparer.Equals(candidate.Path, normalized) || paths.IsNestedIn(normalized, candidate.Path))
             .MaxBy(static candidate => candidate.Path.Length);
 
-    private bool EscapesThroughLink(IReadOnlyList<Root> all, Root root, string normalized)
+    private bool EscapesThroughLink(IReadOnlyList<Root> all, Root root, string normalized, int depth = 0)
     {
+        // Цепочка ссылок длиннее разумной считается выводящей наружу: так не уйти в бесконечный цикл.
+        if (depth > MaxLinkDepth)
+        {
+            return true;
+        }
+
         if (!paths.TryGetRelativePath(root.Path, normalized, out var relative) || relative.Length == 0)
         {
             return false;
@@ -45,7 +53,9 @@ internal sealed class RootGuard(IRootRepository roots, PathNormalizer paths)
             {
                 var remainder = normalized.Length > current.Length ? normalized[(current.Length + 1)..] : string.Empty;
                 var real = remainder.Length > 0 ? paths.Combine(target, remainder) : target;
-                return FindRoot(all, real) is null;
+
+                // Цель ссылки внутри корней, но дальше по пути может встретиться следующая ссылка (этап 10.4).
+                return FindRoot(all, real) is not { } realRoot || EscapesThroughLink(all, realRoot, real, depth + 1);
             }
         }
 

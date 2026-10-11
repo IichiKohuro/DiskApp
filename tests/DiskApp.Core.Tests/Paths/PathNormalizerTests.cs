@@ -45,6 +45,10 @@ public sealed class PathNormalizerTests
     [InlineData(@"C:\Projects\bad|name")]
     [InlineData(@"C:\Projects\bad?name")]
     [InlineData("C:\\Projects\\bad\tname")]
+    [InlineData(@"\\.\C:\Windows")]
+    [InlineData(@"\\.\PhysicalDrive0")]
+    [InlineData(@"\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1\Users")]
+    [InlineData(@"\\?\Volume{01234567-89ab-cdef-0123-456789abcdef}\Data")]
     public void TryNormalize_WindowsRelativeOrInvalidPath_ReturnsFalse(string input)
     {
         // Act

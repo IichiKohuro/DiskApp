@@ -8,7 +8,10 @@ namespace DiskApp.Contracts.Search;
 /// </summary>
 public sealed record SearchRequest
 {
-    /// <summary>Строка запроса с фильтрами.</summary>
+    /// <summary>Наибольшая длина строки запроса (этап 10.4): длиннее — ответ 400, а не тысячи условий в SQL.</summary>
+    public const int MaxQueryLength = 1_000;
+
+    /// <summary>Строка запроса с фильтрами (до <see cref="MaxQueryLength"/> символов).</summary>
     public string? Q { get; set; }
 
     /// <summary>Размер страницы (1…500).</summary>

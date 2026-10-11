@@ -255,7 +255,8 @@ public sealed class PathNormalizer
         if (text.StartsWith(UncPrefix, StringComparison.Ordinal))
         {
             var parts = text[UncPrefix.Length..].Split('\\', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2 || !IsValidSegment(parts[0]) || !IsValidSegment(parts[1]))
+            // «\\.\» и «\\?\» — пространство имён устройств (диски, каналы), а не сетевой ресурс (этап 10.4).
+            if (parts.Length < 2 || parts[0] is "." or "?" || !IsValidSegment(parts[0]) || !IsValidSegment(parts[1]))
             {
                 return false;
             }

@@ -84,6 +84,28 @@ public sealed class SearchApiTests
         item.RankReason.ShouldNotBeNullOrWhiteSpace();
     }
 
+    [Fact]
+    public async Task QueryOverLimit_Returns400ForSearchAndSuggest()
+    {
+        // Arrange
+        await using var context = await ServerTestContext.StartAsync();
+        var text = string.Join(' ', Enumerable.Repeat("word", SearchRequest.MaxQueryLength / 4));
+
+        // Act
+        var search = await context.Client.PostAsJsonAsync(ApiRoutes.V1.Search, new SearchRequest { Q = text },
+            DiskAppJsonContext.Default.SearchRequest, TestContext.Current.CancellationToken);
+        var suggest = await context.Client.GetAsync(new Uri(ApiRoutes.V1.Suggest + "?q=" + Uri.EscapeDataString(text), UriKind.Relative), TestContext.Current.CancellationToken);
+        var atLimit = await context.Client.PostAsJsonAsync(ApiRoutes.V1.Search, new SearchRequest { Q = new string('a', SearchRequest.MaxQueryLength) },
+            DiskAppJsonContext.Default.SearchRequest, TestContext.Current.CancellationToken);
+
+        // Assert
+        text.Length.ShouldBeGreaterThan(SearchRequest.MaxQueryLength);
+        search.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await search.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldContain("\"q\"");
+        suggest.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        atLimit.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
     [Theory]
     [InlineData("?q=a&limit=0")]
     [InlineData("?q=a&limit=501")]

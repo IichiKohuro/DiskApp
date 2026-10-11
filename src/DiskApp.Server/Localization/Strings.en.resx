@@ -204,6 +204,9 @@
   <data name="SearchEndpoints.PageSizeIsFrom1To" xml:space="preserve">
     <value>Page size is from 1 to {0}.</value>
   </data>
+  <data name="SearchEndpoints.QueryIsLongerThan" xml:space="preserve">
+    <value>The query is longer than {0} characters.</value>
+  </data>
   <data name="SearchEndpoints.SpecifyAQuery" xml:space="preserve">
     <value>Specify a query.</value>
   </data>

@@ -201,6 +201,34 @@ public sealed class OperationsApiTests
         copy.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
+    [Fact]
+    public async Task JunctionChain_InsideRootThenOutside_IsForbidden()
+    {
+        // Arrange: первая ссылка ведёт в другую папку корня, вторая оттуда — наружу
+        await using var context = await ServerTestContext.StartAsync();
+        var outside = context.Data.CreateDirectory("secret");
+        File.WriteAllText(Path.Combine(outside, "passwords.txt"), "x");
+        var inner = context.Files.CreateDirectory("inner");
+        await context.AddRootAsync();
+        var first = context.Files.Resolve("first");
+        if (!CreateJunction(first, inner) || !CreateJunction(Path.Combine(inner, "second"), outside))
+        {
+            Assert.Skip("Не удалось создать junction (mklink /J).");
+        }
+
+        var escaped = Path.Combine(first, "second");
+
+        // Act
+        var browse = await context.Client.GetAsync(new Uri(ApiRoutes.V1.Browse + "?path=" + Uri.EscapeDataString(escaped), UriKind.Relative), TestContext.Current.CancellationToken);
+        var copy = await PostAsync(context, new OperationRequest { Kind = OperationKind.Copy, Sources = [Path.Combine(escaped, "passwords.txt")], Destination = context.Files.FullPath });
+        var allowed = await context.Client.GetAsync(new Uri(ApiRoutes.V1.Browse + "?path=" + Uri.EscapeDataString(first), UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Assert
+        browse.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        copy.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        allowed.StatusCode.ShouldNotBe(HttpStatusCode.Forbidden, "ссылка на папку внутри корня не выводит наружу");
+    }
+
     private static Task<HttpResponseMessage> PostAsync(ServerTestContext context, OperationRequest request)
         => context.Client.PostAsJsonAsync(ApiRoutes.V1.Operations, request, DiskAppJsonContext.Default.OperationRequest, TestContext.Current.CancellationToken);
 

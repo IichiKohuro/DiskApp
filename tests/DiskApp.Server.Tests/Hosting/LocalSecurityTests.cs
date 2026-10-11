@@ -6,12 +6,13 @@ using DiskApp.Infrastructure;
 
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace DiskApp.Server.Tests.Hosting;
 
 /// <summary>
 /// Безопасность локального режима (PLAN.md, этап 4.6): только loopback-адрес и заголовок Host, запрет чужого Origin,
-/// токен сессии за флагом (заголовок и параметр хаба), лимит размера тела.
+/// токен сессии за флагом (заголовок и параметр хаба), лимит размера тела; токен и текст запросов не попадают в журнал (этап 10.4).
 /// </summary>
 public sealed class LocalSecurityTests : IDisposable
 {
@@ -87,6 +88,59 @@ public sealed class LocalSecurityTests : IDisposable
     }
 
     [Fact]
+    public async Task Logs_NeverContainSessionTokenOrQueryText()
+    {
+        // Arrange: свои записи — на самом подробном уровне, записи ASP.NET Core — от предупреждений, как в журнале
+        // приложения (Program.CreateLogger)
+        var token = DiskAppServerOptions.CreateSessionToken();
+        var captured = new CapturingLoggerProvider();
+        var host = DiskAppServerHost.Create(Options() with { SessionToken = token }, services => services.AddLogging(logging => logging
+            .SetMinimumLevel(LogLevel.Trace)
+            .AddFilter("Microsoft", LogLevel.Warning)
+            .AddProvider(captured)));
+        await host.StartAsync(TestContext.Current.CancellationToken);
+        await using var _ = host;
+        using var client = Client(host);
+        const string Query = "паспорт-серия-4510";
+
+        // Act
+        using var search = new HttpRequestMessage(HttpMethod.Get, new Uri(ApiRoutes.V1.Search + "?q=" + Uri.EscapeDataString(Query), UriKind.Relative));
+        search.Headers.Add(ApiHeaders.SessionToken, token);
+        using var searched = await client.SendAsync(search, TestContext.Current.CancellationToken);
+        using var wrong = new HttpRequestMessage(HttpMethod.Get, new Uri(ApiRoutes.V1.Roots, UriKind.Relative));
+        wrong.Headers.Add(ApiHeaders.SessionToken, token + "x");
+        using var rejected = await client.SendAsync(wrong, TestContext.Current.CancellationToken);
+        using var negotiated = await client.PostAsync(
+            new Uri(HubRoutes.Path + "/negotiate?negotiateVersion=1&" + ApiHeaders.SessionTokenQuery + "=" + Uri.EscapeDataString(token), UriKind.Relative),
+            null,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        searched.StatusCode.ShouldBe(HttpStatusCode.OK);
+        rejected.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        negotiated.StatusCode.ShouldBe(HttpStatusCode.OK);
+        captured.Messages.ShouldNotBeEmpty();
+        captured.Messages.ShouldAllBe(message => !message.Contains(token, StringComparison.Ordinal) && !message.Contains(Query, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void ToString_EndpointAndOptions_HideSessionToken()
+    {
+        // Arrange
+        var token = DiskAppServerOptions.CreateSessionToken();
+
+        // Act
+        var endpoint = new DiskApp.Client.ServerEndpoint(new Uri("http://127.0.0.1:5000/"), token).ToString();
+        var options = (Options() with { SessionToken = token }).ToString();
+
+        // Assert
+        endpoint.ShouldNotContain(token);
+        endpoint.ShouldContain("http://127.0.0.1:5000/");
+        options.ShouldNotContain(token);
+        options.ShouldContain(DiskAppServerOptions.LoopbackDynamicUrl);
+    }
+
+    [Fact]
     public async Task BodyOverLimit_Returns413()
     {
         // Arrange
@@ -125,6 +179,30 @@ public sealed class LocalSecurityTests : IDisposable
     }
 
     private static HttpClient Client(DiskAppServerHost host) => new() { BaseAddress = host.BaseAddress, Timeout = TimeSpan.FromSeconds(10) };
+
+    private sealed class CapturingLoggerProvider : ILoggerProvider
+    {
+        private readonly System.Collections.Concurrent.ConcurrentQueue<string> _messages = new();
+
+        public IReadOnlyCollection<string> Messages => _messages;
+
+        public ILogger CreateLogger(string categoryName) => new CapturingLogger(this, categoryName);
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class CapturingLogger(CapturingLoggerProvider owner, string category) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state)
+                where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+                => owner._messages.Enqueue($"{category}: {formatter(state, exception)} {exception}");
+        }
+    }
 
     private static HubConnection HubConnection(DiskAppServerHost host, string? token)
         => new HubConnectionBuilder()

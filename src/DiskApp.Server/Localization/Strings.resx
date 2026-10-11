@@ -204,6 +204,9 @@
   <data name="SearchEndpoints.PageSizeIsFrom1To" xml:space="preserve">
     <value>Размер страницы — от 1 до {0}.</value>
   </data>
+  <data name="SearchEndpoints.QueryIsLongerThan" xml:space="preserve">
+    <value>Запрос длиннее {0} символов.</value>
+  </data>
   <data name="SearchEndpoints.SpecifyAQuery" xml:space="preserve">
     <value>Укажите запрос.</value>
   </data>

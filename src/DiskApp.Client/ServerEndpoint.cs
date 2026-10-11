@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace DiskApp.Client;
 
 /// <summary>
@@ -6,7 +8,17 @@ namespace DiskApp.Client;
 /// <param name="BaseAddress">Адрес сервера, например <c>http://127.0.0.1:53187/</c>.</param>
 /// <param name="SessionToken">Токен сессии для заголовка <c>X-DiskApp-Token</c>; <c>null</c> — сервер его не требует.</param>
 /// <param name="CertificateThumbprint">Ожидаемый отпечаток сертификата HTTPS (этап 13).</param>
-public sealed record ServerEndpoint(Uri BaseAddress, string? SessionToken = null, string? CertificateThumbprint = null);
+public sealed record ServerEndpoint(Uri BaseAddress, string? SessionToken = null, string? CertificateThumbprint = null)
+{
+    // Токен не попадает в журнал и тексты ошибок, даже если адрес выводят целиком (этап 10.4).
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append("BaseAddress = ").Append(BaseAddress)
+            .Append(", SessionToken = ").Append(SessionToken is null ? "null" : "***")
+            .Append(", CertificateThumbprint = ").Append(CertificateThumbprint ?? "null");
+        return true;
+    }
+}
 
 /// <summary>
 /// Источник адреса сервера (PLAN.md, этап 5.3): внутри процесса адрес известен только после старта Kestrel,
