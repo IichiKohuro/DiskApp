@@ -361,7 +361,7 @@ flowchart LR
 |---|---|---|
 | Roots, Index | `roots`, `roots/{id}`, `rescan`, `pause`, `resume`, `index/status`, `index/rebuild` | Путь проверяется `RootValidator` и наличием папки; удаление сначала отключает корень, файлы не трогает; пауза — отдельного корня |
 | Search | `search` (GET и POST), `suggest`, `history`, `history/entry?query=` | Курсор — непрозрачная строка Base64Url (оценка и id); лимит 1…500 |
-| Entries | `entries/{id}`, `children`, `browse?path=`, `content`, `icon`, `thumbnail`, `open`, `open-with`, `reveal`, `properties`, `run-as-admin`, `tags` | `browse` только внутри корней; `content` с Range, без облачных заглушек; иконки с ETag; действия через `IPlatformShell`, без реализации — 501, ошибка оболочки — 422; `open?query=` пишет запрос в историю |
+| Entries | `entries/{id}`, `children`, `browse?path=`, `entries/resolve`, `content`, `icon`, `thumbnail`, `open`, `open-with`, `reveal`, `properties`, `run-as-admin`, `tags` | `browse` только внутри корней; `content` с Range, без облачных заглушек; иконки с ETag; действия через `IPlatformShell`, без реализации — 501, ошибка оболочки — 422; `open?query=` пишет запрос в историю |
 | Operations | `operations`, `operations/{id}`, `cancel`, `decision`, `undo`, `upload` | Раздел 8; загрузка до 2 ГБ |
 | Library | `favorites`, `favorites/order`, `pinned`, `recent`, `tags`, `collections`, `collections/{id}/items` | Порядок избранного, ручные коллекции и сохранённые запросы |
 | Settings, App | `settings` (GET и PATCH), `app/info` | PATCH — JSON Merge Patch: `null` возвращает значение по умолчанию, неизвестное поле и значение вне диапазона — 400 |
@@ -405,6 +405,19 @@ Endpoints проверяют, что все пути лежат в добавл�
 С этапа 7 (2026-10-11) окна работают с настоящим индексом: `ApiSearchService` переводит ответы `IDiskAppApi` в модели интерфейса (подсветка диапазонами сервера, подписи и доступность корней, ход индексации), пустой запрос показывает секции «Недавно открытые», «Закреплённые», «Недавно изменённые» строками-заголовками, которые не выбираются. Действия над файлом — `IFileActions` (`ApiFileActions`): действия оболочки идут запросами к серверу, корзина и переименование — операциями его очереди с ожиданием итога, буфер обмена — `IClipboardService`, который десктоп реализует через оболочку Windows (`ShellClipboardService`). Клавиши быстрого поиска связаны с командами в одном месте — `QuickSearchKeyMap` (клавиши редактирования остаются полю запроса); `F2` и `Del` открывают панель под списком (новое имя, подтверждение корзины), итог действия показывает `InfoBar` в окне поиска, контекстное меню строки открывается правой кнопкой, `Tab` или `Shift+F10`.
 
 Иконки строк показывает `FileIcon`: растр берётся из `IIconCache` (`ApiIconCache` — PNG с `/icon` и `/thumbnail`, LRU на 768 растров, одна загрузка на ключ), до загрузки и при отсутствии — заглушка FluentIcons по виду файла; у изображений и видео — миниатюра. Над результатами — чипы фильтров, которые переписывают текст запроса (`type:`, `modified:`, `root:`), под полем — подсказки сервера (`/suggest`) или история запросов; запрос `?` показывает справку (`SearchHelp`). Перетаскивание из списка — `DragDrop.DoDragDropAsync` с файлом (копия по умолчанию), файлы извне принимаются на строку-папку и копируются загрузкой через API.
+
+Страницы главного окна этапа 8 (2026-10-11) — отдельные ViewModel в `DiskApp.UI`, каждая поверх своего сервиса с реализацией через API и макетом для превью и тестов:
+
+| Страница или окно | ViewModel | Сервис | Что умеет |
+|---|---|---|---|
+| Главная | `HomeViewModel`, `RootCardViewModel` | `IRootsService`, `ISearchService` | Карточки корней со сводкой `roots/{id}/stats`, добавление папок, закреплённые и изменённые за сутки |
+| Обзор | `BrowseViewModel` | `IBrowseService`, `IFileActions`, `IOperationsCoordinator` | Дерево, список и плитка, история, фильтры, выбор, буфер обмена, создание, перетаскивание, `Ctrl+D` и `Ctrl+T` |
+| Операции | `OperationsViewModel` (он же `IOperationsCoordinator`) | `IOperationsService` | Очередь сервера по событиям хаба, конфликты через `IDialogService`, `Ctrl+Z` |
+| «Добавить» | `AddFilesViewModel` | `IAddFilesService`, `IAddPreferences` | Выбор папки для файлов извне, буфер обмена в файл |
+| Коллекции | `CollectionsViewModel` | `ILibraryService` | Избранное, ручные коллекции, сохранённые запросы; добавление перетаскиванием и из списка путей через `entries/resolve`, порядок, выгрузка путей |
+| Теги | `TagsViewModel`, диалог `TagPickerViewModel` через `ITagEditor` | `ILibraryService` | Теги с цветами палитры `TagPalette`, файлы тега поиском `tag:`, отметки нескольким файлам с третьим состоянием |
+
+Страница, которой важна видимость, реализует `IPageLifecycle`: `MainViewModel` вызывает `OnNavigatedTo` и `OnNavigatedFrom` при смене страницы. «Коллекции» так перечитывают данные при входе и обновляют сохранённый запрос раз в 15 секунд, пока страница открыта. Чипы тегов в строках берут цвет из `FileEntry.TagColors` (конвертер `TagConverters.Brush`).
 
 Состав оболочки и интерфейса после этапа 7:
 
