@@ -147,4 +147,17 @@ internal static unsafe partial class NativeMethods
 
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmSetWindowAttribute(nint window, int attribute, in int value, int size);
+
+    /// <summary>SPI_GETCLIENTAREAANIMATION: включены ли анимации интерфейса («Эффекты анимации» в параметрах).</summary>
+    public const uint SpiGetClientAreaAnimation = 0x1042;
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SystemParametersInfoW(uint action, uint param, [MarshalAs(UnmanagedType.Bool)] out bool value, uint winIni);
+
+    /// <summary>
+    /// Системная настройка «Эффекты анимации» Windows; если её не удалось прочитать — анимации считаются включёнными.
+    /// </summary>
+    public static bool AnimationsEnabled()
+        => !SystemParametersInfoW(SpiGetClientAreaAnimation, 0, out var enabled, 0) || enabled;
 }

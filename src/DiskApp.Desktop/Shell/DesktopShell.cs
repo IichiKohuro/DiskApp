@@ -4,10 +4,12 @@ using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Input;
-using Avalonia.Platform;
 using Avalonia.Threading;
 
+using DiskApp.Client;
+using DiskApp.Contracts.Operations;
+using DiskApp.Core.Abstractions;
+using DiskApp.Core.Settings;
 using DiskApp.Desktop.Platform.Windows;
 using DiskApp.Desktop.SingleInstance;
 using DiskApp.Desktop.Startup;
@@ -24,35 +26,31 @@ using Serilog;
 namespace DiskApp.Desktop.Shell;
 
 /// <summary>
-/// Оболочка десктопа: иконка в трее с меню, глобальная горячая клавиша, приём аргументов от вторых экземпляров,
-/// главное окно (создаётся при первом обращении) и заранее созданное окно быстрого поиска.
-/// Реализует <see cref="IAppCommands"/> для интерфейса.
+/// Оболочка десктопа: иконка в трее с меню и состоянием индексации, глобальная горячая клавиша из настроек,
+/// приём аргументов от вторых экземпляров, главное окно (создаётся при первом обращении) и заранее созданное
+/// окно быстрого поиска. Реализует <see cref="IAppCommands"/> для интерфейса.
 /// </summary>
 internal sealed class DesktopShell : IAppCommands, IDisposable
 {
     private const int SearchHotkeyId = 1;
     private const string IconUri = "avares://DiskApp/Assets/DiskApp.ico";
-
-    /// <summary>
-    /// Сочетания для быстрого поиска по убыванию предпочтения (ADR-0006): регистрируется первое свободное.
-    /// </summary>
-    [SupportedOSPlatform("windows")]
-    private static HotkeyCandidate[] QuickSearchHotkeys() =>
-    [
-        new(NativeMethods.ModControl | NativeMethods.ModAlt, NativeMethods.VkD, "Ctrl + Alt + D", new KeyGesture(Key.D, KeyModifiers.Control | KeyModifiers.Alt)),
-        new(NativeMethods.ModControl | NativeMethods.ModAlt, NativeMethods.VkF, "Ctrl + Alt + F", new KeyGesture(Key.F, KeyModifiers.Control | KeyModifiers.Alt)),
-        new(NativeMethods.ModControl | NativeMethods.ModAlt, NativeMethods.VkSpace, "Ctrl + Alt + Space", new KeyGesture(Key.Space, KeyModifiers.Control | KeyModifiers.Alt)),
-    ];
+    private static readonly TimeSpan OperationsCheckTimeout = TimeSpan.FromSeconds(2);
 
     private readonly IClassicDesktopStyleApplicationLifetime _lifetime;
     private readonly IServiceProvider _services;
     private readonly InstanceNames _names;
     private readonly ILogger _log;
+    private readonly TrayIconRenderer _icons = new(new Uri(IconUri));
+    private readonly TrayStatus _trayStatus = new();
 
     private TrayIcon? _tray;
+    private NativeMenuItem? _searchItem;
+    private NativeMenuItem? _pauseItem;
     private MessageWindow? _messageWindow;
     private GlobalHotkey? _hotkey;
-    private HotkeyCandidate? _activeHotkey;
+    private Hotkey? _activeHotkey;
+    private string? _registeredSetting;
+    private IDisposable? _settingsSubscription;
     private InstanceServer? _instanceServer;
     private MainWindow? _mainWindow;
     private QuickSearchWindow? _quickSearch;
@@ -84,10 +82,12 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         var startup = StartupArguments.Parse(args);
         _quickSearch = new QuickSearchWindow { DataContext = _services.GetRequiredService<QuickSearchViewModel>() };
+        ApplyMotion(_services.GetRequiredService<ISettingsStore<AppSettings>>().Current);
 
         RegisterHotkey();
         CreateTray();
         _log.Information("Трей показан через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
+        ConnectStatus();
 
         _instanceServer = new InstanceServer(_names.Pipe, OnSecondInstanceArguments, _log);
         _instanceServer.Start();
@@ -96,7 +96,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         _log.Information("Оболочка запущена через {StartupMs} мс: хоткей {HotkeyState}, аргументы {Arguments}",
             StartupTimer.Milliseconds,
-            _activeHotkey?.Text ?? "не зарегистрирован",
+            _activeHotkey?.DisplayText ?? "не зарегистрирован",
             startup);
     }
 
@@ -125,9 +125,23 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     }
 
     /// <summary>
-    /// Завершает приложение: закрывает окна, снимает хоткей, трей и сервер экземпляра, останавливает цикл сообщений.
+    /// Выход из меню трея: если идут файловые операции и в настройках включено подтверждение, сначала спрашивает.
     /// </summary>
-    public void Exit()
+    public void Exit() => _ = ExitAsync();
+
+    /// <summary>
+    /// Главное окно для диалогов: показывается, если было скрыто в трее.
+    /// </summary>
+    public Window MainWindowForDialogs()
+    {
+        ShowMainWindow();
+        return _mainWindow!;
+    }
+
+    /// <summary>
+    /// Завершает приложение без вопросов: закрывает окна, снимает хоткей, трей и сервер экземпляра, останавливает цикл сообщений.
+    /// </summary>
+    public void ExitNow()
     {
         if (_exiting)
         {
@@ -139,6 +153,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         if (_mainWindow is not null)
         {
+            SavePlacement(_mainWindow);
             _mainWindow.AllowClose = true;
             _mainWindow.Close();
         }
@@ -156,6 +171,8 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        _settingsSubscription?.Dispose();
+        _settingsSubscription = null;
         _instanceServer?.Dispose();
         _instanceServer = null;
 
@@ -181,8 +198,14 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     {
         if (startup.Exit)
         {
-            Exit();
+            // --exit из скрипта или установщика завершает без вопросов.
+            ExitNow();
             return;
+        }
+
+        if (startup.AddPaths is { Count: > 0 } addPaths)
+        {
+            _ = AddRootsAsync(addPaths);
         }
 
         var showMain = initialLaunch
@@ -217,11 +240,15 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         open.Click += (_, _) => ShowMainWindow();
         menu.Items.Add(open);
 
-        var search = new NativeMenuItem("Быстрый поиск") { Gesture = _activeHotkey?.Gesture };
-        search.Click += (_, _) => ShowQuickSearch();
-        menu.Items.Add(search);
+        _searchItem = new NativeMenuItem("Быстрый поиск") { Gesture = _activeHotkey?.ToGesture() };
+        _searchItem.Click += (_, _) => ShowQuickSearch();
+        menu.Items.Add(_searchItem);
 
         menu.Items.Add(new NativeMenuItemSeparator());
+
+        _pauseItem = new NativeMenuItem("Приостановить индексацию") { IsEnabled = false };
+        _pauseItem.Click += (_, _) => _ = TogglePauseAsync();
+        menu.Items.Add(_pauseItem);
 
         var settings = new NativeMenuItem("Настройки");
         settings.Click += (_, _) => NavigateTo(PageKeys.Settings);
@@ -235,8 +262,8 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         _tray = new TrayIcon
         {
-            Icon = LoadIcon(),
-            ToolTipText = "DiskApp — индекс актуален",
+            Icon = IconFor(_trayStatus.State),
+            ToolTipText = _trayStatus.ToolTip,
             Menu = menu,
             IsVisible = true,
         };
@@ -249,7 +276,8 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     }
 
     /// <summary>
-    /// Регистрирует первое свободное сочетание из <see cref="QuickSearchHotkeys"/> и записывает итог в <see cref="HotkeyStatus"/>.
+    /// Регистрирует сочетание быстрого поиска из настроек, а если оно занято — первое свободное из запасных (ADR-0006);
+    /// итог — в <see cref="HotkeyStatus"/>. Изменение сочетания в настройках перерегистрирует его без перезапуска.
     /// </summary>
     private void RegisterHotkey()
     {
@@ -274,40 +302,233 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
             return;
         }
 
-        var candidates = QuickSearchHotkeys();
+        var settings = _services.GetRequiredService<ISettingsStore<AppSettings>>();
+        RegisterQuickSearchHotkey(settings.Current.Hotkeys.QuickSearch);
+        _settingsSubscription = settings.Subscribe(changed => Dispatcher.UIThread.Post(() =>
+        {
+            ApplyMotion(changed);
+            if (OperatingSystem.IsWindows() && !_exiting && !string.Equals(changed.Hotkeys.QuickSearch, _registeredSetting, StringComparison.Ordinal))
+            {
+                RegisterQuickSearchHotkey(changed.Hotkeys.QuickSearch);
+            }
+        }));
+    }
+
+    [SupportedOSPlatform("windows")]
+    private void RegisterQuickSearchHotkey(string configured)
+    {
+        var status = _services.GetRequiredService<HotkeyStatus>();
+        _hotkey?.Dispose();
+        _hotkey = null;
+        _activeHotkey = null;
+        _registeredSetting = configured;
+
+        var recognized = Hotkey.TryParse(configured, out var preferred);
+        preferred ??= Hotkey.DefaultQuickSearch;
+        var candidates = new[] { preferred }.Concat(Hotkey.QuickSearchFallbacks).Distinct().ToArray();
         var failures = new List<string>();
         foreach (var candidate in candidates)
         {
+            if (HotkeyKeys.ToVirtualKey(candidate.Key) is not { } virtualKey)
+            {
+                failures.Add($"{candidate.DisplayText} — клавиша не поддерживается");
+                continue;
+            }
+
             try
             {
-                _hotkey = GlobalHotkey.Register(_messageWindow, SearchHotkeyId, candidate.Modifiers, candidate.VirtualKey);
+                _hotkey = GlobalHotkey.Register(_messageWindow!, SearchHotkeyId, (uint)candidate.Modifiers, virtualKey);
             }
             catch (Win32Exception exception)
             {
-                failures.Add($"{candidate.Text} — {exception.Message}");
-                _log.Debug("Сочетание {Hotkey} не зарегистрировано: {Reason}", candidate.Text, exception.Message);
+                failures.Add($"{candidate.DisplayText} — {exception.Message}");
+                _log.Debug("Сочетание {Hotkey} не зарегистрировано: {Reason}", candidate.DisplayText, exception.Message);
                 continue;
             }
 
             _hotkey.Pressed += (_, _) => ToggleQuickSearch();
             _activeHotkey = candidate;
-            status.QuickSearchText = candidate.Text;
+            status.QuickSearchText = candidate.DisplayText;
             status.IsRegistered = true;
-            status.Message = ReferenceEquals(candidate, candidates[0])
-                ? string.Empty
-                : $"Сочетание {candidates[0].Text} занято другим приложением, поэтому действует {candidate.Text}.";
+            status.Message = !recognized
+                ? $"Сочетание «{configured}» в настройках не распознано, поэтому действует {candidate.DisplayText}."
+                : candidate == preferred
+                    ? string.Empty
+                    : $"Сочетание {preferred.DisplayText} занято другим приложением, поэтому действует {candidate.DisplayText}. Его можно сменить в настройках.";
 
             if (status.Message.Length > 0)
             {
                 _log.Warning("Запасное сочетание: {Message}", status.Message);
             }
 
+            if (_searchItem is not null)
+            {
+                _searchItem.Gesture = candidate.ToGesture();
+            }
+
             return;
         }
 
         status.IsRegistered = false;
-        status.Message = "Ни одно сочетание не удалось зарегистрировать: " + string.Join("; ", failures) + ". Поиск открывается щелчком по иконке в трее.";
+        status.Message = "Ни одно сочетание не удалось зарегистрировать: " + string.Join("; ", failures)
+            + ". Поиск открывается щелчком по иконке в трее; сочетание можно сменить в настройках.";
         _log.Warning("Горячая клавиша недоступна: {Message}", status.Message);
+    }
+
+    /// <summary>
+    /// Подписывается на события хаба: подсказка, значок и пункт паузы в трее следят за индексацией.
+    /// Подключение ждёт, пока сервер внутри процесса не запустится.
+    /// </summary>
+    private void ConnectStatus()
+    {
+        var hub = _services.GetRequiredService<DiskAppHubConnection>();
+        hub.StatusReceived += status => Dispatcher.UIThread.Post(() =>
+        {
+            _trayStatus.Apply(status);
+            UpdateTray();
+        });
+        hub.RootStatusChanged += change => Dispatcher.UIThread.Post(() =>
+        {
+            _trayStatus.Apply(change);
+            UpdateTray();
+        });
+        hub.IndexProgress += progress => Dispatcher.UIThread.Post(() =>
+        {
+            _trayStatus.Apply(progress);
+            UpdateTray();
+        });
+        _ = StartHubAsync(hub);
+    }
+
+    private async Task StartHubAsync(DiskAppHubConnection hub)
+    {
+        try
+        {
+            await hub.StartAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _log.Warning(exception, "Хаб событий недоступен");
+            Dispatcher.UIThread.Post(() =>
+            {
+                _trayStatus.Fail(exception.Message);
+                UpdateTray();
+            });
+        }
+    }
+
+    private void UpdateTray()
+    {
+        if (_tray is null)
+        {
+            return;
+        }
+
+        _tray.ToolTipText = _trayStatus.ToolTip;
+        _tray.Icon = IconFor(_trayStatus.State) ?? _tray.Icon;
+        if (_pauseItem is not null)
+        {
+            _pauseItem.Header = _trayStatus.IsPaused ? "Возобновить индексацию" : "Приостановить индексацию";
+            _pauseItem.IsEnabled = _trayStatus.State is not (TrayState.Starting or TrayState.Error) || _trayStatus.IsPaused;
+        }
+    }
+
+    private async Task TogglePauseAsync()
+    {
+        var api = _services.GetRequiredService<IDiskAppApi>();
+        try
+        {
+            var status = _trayStatus.IsPaused
+                ? await api.ResumeIndexingAsync().ConfigureAwait(false)
+                : await api.PauseIndexingAsync().ConfigureAwait(false);
+            Dispatcher.UIThread.Post(() =>
+            {
+                _trayStatus.Apply(status);
+                UpdateTray();
+            });
+        }
+        catch (Exception exception) when (exception is DiskAppApiException or HttpRequestException or OperationCanceledException)
+        {
+            _log.Warning(exception, "Пауза индексации не переключилась");
+            Dispatcher.UIThread.Post(() => _services.GetRequiredService<IInfoBarService>()
+                .Show("Пауза индексации не переключилась", exception.Message, FAInfoBarSeverity.Error));
+        }
+    }
+
+    /// <summary>
+    /// <c>--add &lt;пути&gt;</c>: добавляет папки корнями через API (запрос ждёт старта сервера) и показывает итог в главном окне.
+    /// </summary>
+    private async Task AddRootsAsync(IReadOnlyList<string> paths)
+    {
+        var api = _services.GetRequiredService<IDiskAppApi>();
+        var added = new List<string>();
+        var failed = new List<string>();
+        foreach (var path in paths)
+        {
+            try
+            {
+                var root = await api.CreateRootAsync(new Contracts.Roots.CreateRootRequest { Path = path }).ConfigureAwait(false);
+                added.Add(root.Label);
+            }
+            catch (Exception exception) when (exception is DiskAppApiException or HttpRequestException or InvalidOperationException)
+            {
+                failed.Add($"{path}: {exception.Message}");
+                _log.Warning(exception, "Корень {Path} не добавлен", path);
+            }
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            ShowMainWindow();
+            var notices = _services.GetRequiredService<IInfoBarService>();
+            if (failed.Count == 0)
+            {
+                notices.Show("Корни добавлены", string.Join(", ", added) + ". Индексация уже идёт.", FAInfoBarSeverity.Success);
+            }
+            else
+            {
+                var message = (added.Count > 0 ? "Добавлены: " + string.Join(", ", added) + ". " : string.Empty) + "Не добавлены: " + string.Join("; ", failed);
+                notices.Show("Не все корни добавлены", message, FAInfoBarSeverity.Warning);
+            }
+        });
+    }
+
+    private async Task ExitAsync()
+    {
+        if (_exiting)
+        {
+            return;
+        }
+
+        var settings = _services.GetRequiredService<ISettingsStore<AppSettings>>().Current;
+        if (settings.Tray.ConfirmExitDuringOperations && await CountActiveOperationsAsync().ConfigureAwait(true) is > 0 and var active)
+        {
+            var confirmed = await _services.GetRequiredService<IDialogService>().ConfirmAsync(
+                "Выйти из DiskApp?",
+                $"Идут файловые операции: {active}. При выходе они отменятся, недокопированные файлы удалятся.",
+                "Выйти").ConfigureAwait(true);
+            if (!confirmed)
+            {
+                return;
+            }
+        }
+
+        ExitNow();
+    }
+
+    private async Task<int> CountActiveOperationsAsync()
+    {
+        try
+        {
+            using var timeout = new CancellationTokenSource(OperationsCheckTimeout);
+            var operations = await _services.GetRequiredService<IDiskAppApi>().GetOperationsAsync(timeout.Token).ConfigureAwait(true);
+            return operations.Count(static operation => operation.State is OperationState.Queued or OperationState.Running or OperationState.WaitingDecision);
+        }
+        catch (Exception exception) when (exception is DiskAppApiException or HttpRequestException or OperationCanceledException)
+        {
+            // Сервер недоступен — и операций, которые можно прервать, нет.
+            return 0;
+        }
     }
 
     private void ToggleQuickSearch() => _quickSearch?.Toggle(CursorPosition());
@@ -317,8 +538,10 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         var viewModel = _services.GetRequiredService<MainViewModel>();
         var window = new MainWindow { DataContext = viewModel };
         _lifetime.MainWindow = window;
+        RestorePlacement(window);
 
         window.Opened += (_, _) => _log.Information("Главное окно открыто через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
+        window.Closing += (_, _) => SavePlacement(window);
 
         var hotkeys = _services.GetRequiredService<HotkeyStatus>();
         if (!hotkeys.IsRegistered)
@@ -334,20 +557,68 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     }
 
     /// <summary>
-    /// Сочетание клавиш: модификаторы и код для <c>RegisterHotKey</c>, подпись и жест для меню.
+    /// «Уменьшить движение»: настройка приложения или выключенные эффекты анимации Windows.
     /// </summary>
-    private sealed record HotkeyCandidate(uint Modifiers, uint VirtualKey, string Text, KeyGesture Gesture);
+    private void ApplyMotion(AppSettings settings)
+    {
+        if (_quickSearch is not null)
+        {
+            _quickSearch.ReduceMotion = settings.Appearance.ReduceMotion || (OperatingSystem.IsWindows() && !NativeMethods.AnimationsEnabled());
+        }
+    }
 
-    private WindowIcon? LoadIcon()
+    private WindowPlacementStore Placements()
+        => new(Path.Combine(_services.GetRequiredService<IAppPaths>().DataDirectory, "window-state.json"));
+
+    /// <summary>
+    /// Положение и размер главного окна с прошлого раза; если заголовок не попадает ни на один экран — по центру.
+    /// </summary>
+    private void RestorePlacement(MainWindow window)
+    {
+        if (Placements().LoadMain() is not { } placement)
+        {
+            return;
+        }
+
+        window.Width = Math.Max(window.MinWidth, placement.Width);
+        window.Height = Math.Max(window.MinHeight, placement.Height);
+        if (WindowPlacementStore.IsReachable(placement, window.Screens.All.Select(static screen => screen.WorkingArea)))
+        {
+            window.WindowStartupLocation = WindowStartupLocation.Manual;
+            window.Position = new PixelPoint(placement.X, placement.Y);
+        }
+
+        if (placement.Maximized)
+        {
+            window.WindowState = WindowState.Maximized;
+        }
+    }
+
+    private void SavePlacement(MainWindow window)
+    {
+        if (!window.IsVisible && window.Position == default)
+        {
+            return;
+        }
+
+        // У развёрнутого окна сохраняется прежний обычный размер, иначе после «восстановить» оно останется во весь экран.
+        var maximized = window.WindowState == WindowState.Maximized;
+        var previous = Placements().LoadMain();
+        var placement = maximized && previous is not null
+            ? previous with { Maximized = true }
+            : new WindowPlacement(window.Position.X, window.Position.Y, window.Width, window.Height, maximized);
+        Placements().SaveMain(placement);
+    }
+
+    private WindowIcon? IconFor(TrayState state)
     {
         try
         {
-            using var stream = AssetLoader.Open(new Uri(IconUri));
-            return new WindowIcon(stream);
+            return _icons.For(state);
         }
         catch (Exception exception)
         {
-            _log.Warning(exception, "Иконка трея не загружена из {Uri}", IconUri);
+            _log.Warning(exception, "Иконка трея не построена из {Uri}", IconUri);
             return null;
         }
     }

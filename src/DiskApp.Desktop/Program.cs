@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 
 using DiskApp.Client;
+using DiskApp.Desktop.Platform.Windows;
 using DiskApp.Desktop.Shell;
 using DiskApp.Desktop.SingleInstance;
 using DiskApp.Desktop.Startup;
@@ -24,6 +25,7 @@ internal static class Program
 {
     private static readonly TimeSpan SecondInstanceTimeout = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan ServerStopTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan ServerSlowStartNotice = TimeSpan.FromSeconds(10);
 
     // Код инициализации. До запуска Avalonia нельзя использовать её API, сторонние библиотеки
     // и код, зависящий от SynchronizationContext: платформа ещё не готова.
@@ -127,6 +129,10 @@ internal static class Program
             services.AddDiskAppUi();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
+            services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));
+            services.AddSingleton<IAutoStartService>(_ => OperatingSystem.IsWindows() && Environment.ProcessPath is { } executable
+                ? new RegistryAutoStartService(executable, paths.IsPortable)
+                : new NullAutoStartService());
         });
         Log.Information("Контейнер сервера и оболочки собран через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
         return host;
@@ -135,6 +141,15 @@ internal static class Program
     private static async Task StartServerAsync(DiskAppServerHost host)
     {
         var endpoint = host.Services.GetRequiredService<InProcessServerEndpointProvider>();
+        var dispatcher = host.Services.GetRequiredService<IDispatcher>();
+        var notices = host.Services.GetRequiredService<IInfoBarService>();
+
+        // Обычно сервер готов меньше чем за секунду; если дольше (большая база проверяется на целостность) — сказать об этом.
+        using var slow = new Timer(
+            _ => dispatcher.Post(() => notices.Show("Сервер запускается дольше обычного", "Проверка и открытие базы индекса ещё идут; поиск заработает, когда они закончатся.")),
+            null,
+            ServerSlowStartNotice,
+            Timeout.InfiniteTimeSpan);
         try
         {
             await host.StartAsync().ConfigureAwait(false);
@@ -143,9 +158,10 @@ internal static class Program
         }
         catch (Exception exception)
         {
-            // Без сервера интерфейс работает на макетных данных; причина — в журнале, запросы клиента получат ошибку.
+            // Без сервера интерфейс работает на макетных данных; причина — в журнале и в уведомлении, запросы клиента получат ошибку.
             endpoint.Fail(exception);
             Log.Error(exception, "Сервер не запустился");
+            dispatcher.Post(() => notices.Show("Сервер DiskApp не запустился", exception.Message + " Подробности — в журнале.", FluentAvalonia.UI.Controls.FAInfoBarSeverity.Error));
         }
     }
 

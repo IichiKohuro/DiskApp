@@ -21,7 +21,7 @@
         Background="Transparent">
     <!-- Всплывающее окно поиска: без рамки, поверх всех окон, Acrylic (при недоступности — сплошной цвет темы),
          скруглённые углы через DWM в code-behind, тонкая обводка. Скрывается по Esc, потере фокуса и хоткею. -->
-    <Panel>
+    <Panel x:Name="Root">
         <ExperimentalAcrylicBorder x:Name="Acrylic" CornerRadius="8" IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial BackgroundSource="Digger"

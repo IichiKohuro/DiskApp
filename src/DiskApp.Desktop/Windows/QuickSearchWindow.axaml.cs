@@ -1,7 +1,11 @@
 using System.Diagnostics;
 
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Media.Transformation;
+using Avalonia.Threading;
 
 using DiskApp.Desktop.Platform.Windows;
 using DiskApp.UI.Models;
@@ -35,6 +39,11 @@ public partial class QuickSearchWindow : Window
     public bool AllowClose { get; set; }
 
     /// <summary>
+    /// Без анимации появления: настройка «уменьшить движение» в приложении или выключенные эффекты анимации Windows.
+    /// </summary>
+    public bool ReduceMotion { get; set; }
+
+    /// <summary>
     /// Показывает окно на мониторе с точкой <paramref name="anchor"/> (обычно курсор) или на основном,
     /// активирует его и ставит фокус в поле запроса.
     /// </summary>
@@ -57,7 +66,9 @@ public partial class QuickSearchWindow : Window
 
         if (!IsVisible)
         {
+            PrepareShowAnimation();
             Show();
+            PlayShowAnimation();
         }
 
         Activate();
@@ -136,6 +147,47 @@ public partial class QuickSearchWindow : Window
             e.Cancel = true;
             Hide();
         }
+    }
+
+    private static readonly TimeSpan ShowDuration = TimeSpan.FromMilliseconds(150);
+    private static readonly TransformOperations Lifted = TransformOperations.Parse("translateY(-8px)");
+    private static readonly TransformOperations Resting = TransformOperations.Parse("translateY(0px)");
+
+    /// <summary>
+    /// Появление (PLAN.md, этап 6.8): содержимое проявляется и опускается на 8 px за 150 мс. Анимируется содержимое, а не окно:
+    /// прозрачность всего окна у Avalonia на Windows не анимируется. При «уменьшить движение» окно появляется сразу.
+    /// </summary>
+    private void PrepareShowAnimation()
+    {
+        Root.Transitions = null;
+        if (ReduceMotion)
+        {
+            Root.Opacity = 1;
+            Root.RenderTransform = null;
+            return;
+        }
+
+        Root.Opacity = 0;
+        Root.RenderTransform = Lifted;
+    }
+
+    private void PlayShowAnimation()
+    {
+        if (ReduceMotion)
+        {
+            return;
+        }
+
+        Root.Transitions =
+        [
+            new DoubleTransition { Property = OpacityProperty, Duration = ShowDuration, Easing = new CubicEaseOut() },
+            new TransformOperationsTransition { Property = RenderTransformProperty, Duration = ShowDuration, Easing = new CubicEaseOut() },
+        ];
+        Dispatcher.UIThread.Post(() =>
+        {
+            Root.Opacity = 1;
+            Root.RenderTransform = Resting;
+        }, DispatcherPriority.Render);
     }
 
     private void UpdateBackdrop()
