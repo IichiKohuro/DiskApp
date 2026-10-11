@@ -60,7 +60,8 @@ public sealed class SearchGoldenTests : IAsyncLifetime
     {
         _context = await CreateAsync();
         await SeedAsync(_context);
-        _service = _context.Service();
+        // Эталонам нужен полный результат: под нагрузкой параллельных тестов предел запроса 500 мс давал частичный счёт.
+        _service = _context.Service(new SearchOptions { QueryTimeout = TimeSpan.FromSeconds(30) });
     }
 
     public async ValueTask DisposeAsync()
