@@ -122,6 +122,7 @@ public sealed partial class BrowseViewModel : PageViewModel
     private readonly IFileActions _actions;
     private readonly IDialogService? _dialogs;
     private readonly IInfoBarService? _notices;
+    private readonly IOperationsCoordinator? _operations;
     private readonly Func<DateTimeOffset> _clock;
     private readonly Stack<string> _back = new();
     private readonly Stack<string> _forward = new();
@@ -134,15 +135,23 @@ public sealed partial class BrowseViewModel : PageViewModel
     /// <summary>
     /// Создаёт страницу приложения.
     /// </summary>
-    public BrowseViewModel(IBrowseService browse, IRootsService roots, ISearchService search, IFileActions actions, IDialogService dialogs, IInfoBarService notices)
-        : this(browse, roots, search, actions, dialogs, notices, static () => DateTimeOffset.Now)
+    public BrowseViewModel(IBrowseService browse, IRootsService roots, ISearchService search, IFileActions actions, IDialogService dialogs, IInfoBarService notices, IOperationsCoordinator operations)
+        : this(browse, roots, search, actions, dialogs, notices, operations, static () => DateTimeOffset.Now)
     {
     }
 
     /// <summary>
-    /// Создаёт страницу с заданными сервисами и часами (тесты, превью).
+    /// Создаёт страницу без очереди операций (превью, тесты обзора).
     /// </summary>
     public BrowseViewModel(IBrowseService browse, IRootsService roots, ISearchService search, IFileActions actions, IDialogService? dialogs, IInfoBarService? notices, Func<DateTimeOffset> clock)
+        : this(browse, roots, search, actions, dialogs, notices, null, clock)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт страницу с заданными сервисами и часами (тесты).
+    /// </summary>
+    public BrowseViewModel(IBrowseService browse, IRootsService roots, ISearchService search, IFileActions actions, IDialogService? dialogs, IInfoBarService? notices, IOperationsCoordinator? operations, Func<DateTimeOffset> clock)
         : base(PageKeys.Browse, "Обзор", FASymbol.Folder)
     {
         ArgumentNullException.ThrowIfNull(browse);
@@ -157,7 +166,12 @@ public sealed partial class BrowseViewModel : PageViewModel
         _actions = actions;
         _dialogs = dialogs;
         _notices = notices;
+        _operations = operations;
         _clock = clock;
+        if (operations is not null)
+        {
+            operations.OperationFinished += OnOperationFinished;
+        }
 
         SelectedKind = KindOptions[0];
         SelectedSort = SortOptions[0];
@@ -400,11 +414,18 @@ public sealed partial class BrowseViewModel : PageViewModel
     [RelayCommand]
     private Task PropertiesAsync() => Single() is { } entry ? TryAsync(() => _actions.ShowPropertiesAsync(entry), "Не удалось открыть свойства") : Task.CompletedTask;
 
-    /// <summary>Скопировать выбранные файлы в буфер обмена.</summary>
+    /// <summary>Скопировать выбранные файлы: в буфер «Обзора» (для вставки) и в системный буфер обмена (для Проводника).</summary>
     [RelayCommand]
     private async Task CopyFilesAsync()
     {
         var entries = Selected();
+        if (entries.Count > 0)
+        {
+            _clipboard = [.. entries.Select(static entry => entry.FullPath)];
+            _clipboardCut = false;
+            OnPropertyChanged(nameof(HasClipboard));
+        }
+
         if (entries.Count > 0 && await TryAsync(() => _actions.CopyFilesAsync(entries), "Не удалось скопировать"))
         {
             _notices?.Show("Скопировано", Formatting.Count(entries.Count, "элемент", "элемента", "элементов") + " — вставьте в Проводнике.", FAInfoBarSeverity.Success);

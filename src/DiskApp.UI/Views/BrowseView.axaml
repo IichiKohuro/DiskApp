@@ -32,6 +32,21 @@
                 <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="Обновить (F5)">
                     <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
                 </Button>
+                <Button Classes="tool" ToolTip.Tip="Создать папку (Ctrl+Shift+N) или файл">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:SymbolIcon Symbol="Add" FontSize="16" />
+                        <TextBlock Text="Создать" />
+                    </StackPanel>
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuItem Header="Папку" Command="{Binding NewFolderCommand}" InputGesture="Ctrl+Shift+N" />
+                            <Separator />
+                            <MenuItem Header="Текстовый документ (.txt)" Command="{Binding NewFileCommand}" CommandParameter="{Binding FileTemplates[0]}" />
+                            <MenuItem Header="Заметку Markdown (.md)" Command="{Binding NewFileCommand}" CommandParameter="{Binding FileTemplates[1]}" />
+                            <MenuItem Header="JSON (.json)" Command="{Binding NewFileCommand}" CommandParameter="{Binding FileTemplates[2]}" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                </Button>
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="8,0,0,0">
                 <TextBox Width="140" PlaceholderText="Фильтр в папке" Text="{Binding Filter, Mode=TwoWay}" />
@@ -156,8 +171,12 @@
             <MenuItem Header="Открыть" Command="{Binding OpenItemCommand}" CommandParameter="{Binding Selection[0]}" />
             <MenuItem Header="Показать в Проводнике" Command="{Binding RevealCommand}" />
             <Separator />
-            <MenuItem Header="Копировать" Command="{Binding CopyFilesCommand}" />
+            <MenuItem Header="Вырезать" Command="{Binding CutCommand}" InputGesture="Ctrl+X" />
+            <MenuItem Header="Копировать" Command="{Binding CopyFilesCommand}" InputGesture="Ctrl+C" />
+            <MenuItem Header="Вставить" Command="{Binding PasteFromAppCommand}" InputGesture="Ctrl+V" IsEnabled="{Binding HasClipboard}" />
             <MenuItem Header="Копировать путь" Command="{Binding CopyPathCommand}" />
+            <Separator />
+            <MenuItem Header="Новая папка" Command="{Binding NewFolderCommand}" InputGesture="Ctrl+Shift+N" />
             <Separator />
             <MenuItem Header="Закрепить или открепить" Command="{Binding TogglePinCommand}" />
             <MenuItem Header="Переименовать…" Command="{Binding RenameCommand}" />

@@ -16,7 +16,7 @@ namespace DiskApp.UI.ViewModels;
 /// возврат результата (`Ctrl+Z` — последняя операция), диалог конфликта имён, уведомление «Отменить» после
 /// операций, начатых в интерфейсе, сводка для полосы главного окна и подсказки трея.
 /// </summary>
-public sealed partial class OperationsViewModel : PageViewModel
+public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoordinator
 {
     private readonly IOperationsService _operations;
     private readonly IDialogService? _dialogs;
@@ -44,6 +44,9 @@ public sealed partial class OperationsViewModel : PageViewModel
         Initialization = LoadAsync();
     }
 
+    /// <inheritdoc />
+    public event EventHandler<OperationInfo>? OperationFinished;
+
     /// <summary>Первая загрузка списка.</summary>
     public Task Initialization { get; }
 
@@ -68,9 +71,7 @@ public sealed partial class OperationsViewModel : PageViewModel
     /// <summary>Списка нет: пустое состояние.</summary>
     public bool IsEmpty => Items.Count == 0;
 
-    /// <summary>
-    /// Ставит операцию в очередь от имени интерфейса: её конфликты спрашиваются, итог показывается уведомлением.
-    /// </summary>
+    /// <inheritdoc />
     public async Task<OperationInfo?> EnqueueAsync(NewOperation operation)
     {
         ArgumentNullException.ThrowIfNull(operation);
@@ -88,10 +89,7 @@ public sealed partial class OperationsViewModel : PageViewModel
         }
     }
 
-    /// <summary>
-    /// Отменяет результат последней операции сеанса, которую можно отменить (<c>Ctrl+Z</c>).
-    /// </summary>
-    /// <returns><c>true</c>, если было что отменять.</returns>
+    /// <inheritdoc />
     public async Task<bool> UndoLastAsync()
     {
         if (_lastUndoable is not { } id || Items.FirstOrDefault(item => item.Info.Id == id) is not { CanUndo: true } item)
@@ -192,6 +190,11 @@ public sealed partial class OperationsViewModel : PageViewModel
         if (wasActive && !info.IsActive && _started.Remove(info.Id))
         {
             Notify(item);
+        }
+
+        if (wasActive && !info.IsActive)
+        {
+            OperationFinished?.Invoke(this, info);
         }
 
         UpdateSummary();
