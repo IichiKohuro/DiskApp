@@ -26,28 +26,47 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     private const int NumberedResults = 9;
 
     private readonly ISearchService _search;
+    private readonly IFileActions _actions;
     private readonly Func<DateTimeOffset> _clock;
     private CancellationTokenSource? _pending;
     private IndexStatus? _status;
 
     /// <summary>
-    /// Создаёт ViewModel и сразу загружает недавние файлы (<see cref="PendingRefresh"/>).
+    /// Создаёт ViewModel с макетными действиями над файлами (превью) и сразу загружает подборку (<see cref="PendingRefresh"/>).
     /// </summary>
     public QuickSearchViewModel(ISearchService search)
-        : this(search, static () => DateTimeOffset.Now)
+        : this(search, new SampleFileActions(), static () => DateTimeOffset.Now)
     {
     }
 
     /// <summary>
-    /// Создаёт ViewModel с заданными часами (для тестов и превью).
+    /// Создаёт ViewModel приложения и сразу загружает подборку (<see cref="PendingRefresh"/>).
+    /// </summary>
+    public QuickSearchViewModel(ISearchService search, IFileActions actions)
+        : this(search, actions, static () => DateTimeOffset.Now)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт ViewModel с заданными часами и макетными действиями (для тестов).
     /// </summary>
     public QuickSearchViewModel(ISearchService search, Func<DateTimeOffset> clock)
+        : this(search, new SampleFileActions(), clock)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт ViewModel с заданными действиями и часами (для тестов).
+    /// </summary>
+    public QuickSearchViewModel(ISearchService search, IFileActions actions, Func<DateTimeOffset> clock)
         : base(PageKeys.Search, "Поиск", FASymbol.Find)
     {
         ArgumentNullException.ThrowIfNull(search);
+        ArgumentNullException.ThrowIfNull(actions);
         ArgumentNullException.ThrowIfNull(clock);
 
         _search = search;
+        _actions = actions;
         _clock = clock;
 
         Query = string.Empty;
@@ -81,7 +100,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
     /// <summary>Индекс выбранного результата в <see cref="Results"/>; −1, если список пуст.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedResult), nameof(SelectedRow))]
+    [NotifyPropertyChangedFor(nameof(SelectedResult), nameof(SelectedRow), nameof(PinMenuText))]
     public partial int SelectedIndex { get; set; }
 
     /// <summary>Строка состояния: количество результатов и время, либо подсказка.</summary>
@@ -282,7 +301,11 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         pending?.Dispose();
     }
 
-    partial void OnQueryChanged(string value) => PendingRefresh = RefreshAsync();
+    partial void OnQueryChanged(string value)
+    {
+        OnQueryEdited();
+        PendingRefresh = RefreshAsync();
+    }
 
     private void ShowError(string message)
     {
@@ -356,7 +379,6 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
         // Список перестроен: выделение в нём сброшено, даже если индекс прежний — оповестить явно.
         SelectedIndex = Results.Count > 0 ? 0 : -1;
-        OnPropertyChanged(nameof(SelectedResult));
-        OnPropertyChanged(nameof(SelectedRow));
+        NotifySelectionChanged();
     }
 }

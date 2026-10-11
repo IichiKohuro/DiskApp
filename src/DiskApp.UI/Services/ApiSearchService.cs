@@ -21,6 +21,7 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
     private const int PageSize = 50;
     private const int RecentCount = 20;
     private const int SectionCount = 8;
+    private const int HistoryCount = 50;
 
     private readonly IDiskAppApi _api = api ?? throw new ArgumentNullException(nameof(api));
     private readonly ConcurrentDictionary<long, RootInfo> _roots = new();
@@ -75,6 +76,13 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
         }
 
         return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> GetHistoryAsync(CancellationToken cancellationToken)
+    {
+        var history = await _api.GetHistoryAsync(HistoryCount, cancellationToken).ConfigureAwait(false);
+        return [.. history.Select(static item => item.Query)];
     }
 
     /// <inheritdoc />

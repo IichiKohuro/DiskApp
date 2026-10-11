@@ -16,6 +16,7 @@ public sealed class SampleSearchService : ISearchService
 
     private readonly IReadOnlyList<FileEntry> _entries;
     private readonly List<FileEntry> _recent;
+    private readonly List<string> _history = ["отчёт", "бюджет", "договор"];
     private readonly Func<DateTimeOffset> _clock;
     private readonly object _gate = new();
 
@@ -107,6 +108,16 @@ public sealed class SampleSearchService : ISearchService
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyList<string>> GetHistoryAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        lock (_gate)
+        {
+            return Task.FromResult<IReadOnlyList<string>>([.. _history]);
+        }
+    }
+
+    /// <inheritdoc />
     public Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -123,6 +134,12 @@ public sealed class SampleSearchService : ISearchService
         {
             _recent.RemoveAll(item => string.Equals(item.FullPath, entry.FullPath, StringComparison.OrdinalIgnoreCase));
             _recent.Insert(0, entry);
+
+            if (query is { Length: > 0 })
+            {
+                _history.RemoveAll(item => string.Equals(item, query, StringComparison.OrdinalIgnoreCase));
+                _history.Insert(0, query);
+            }
         }
 
         return Task.CompletedTask;

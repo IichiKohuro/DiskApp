@@ -3,15 +3,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:input="using:DiskApp.UI.Input"
              xmlns:vm="using:DiskApp.UI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="460"
              x:Class="DiskApp.UI.Views.QuickSearchView"
              x:DataType="vm:QuickSearchViewModel"
              Design.DataContext="{x:Static vm:DesignData.QuickSearch}">
     <!-- Содержимое быстрого поиска: поле ввода, список результатов (при пустом запросе — по секциям) или «ничего
-         не найдено», строка состояния. Клавиши обрабатываются в code-behind на этапе туннелирования, чтобы стрелки
-         управляли списком, а фокус оставался в поле ввода. -->
-    <Grid RowDefinitions="Auto,*,Auto">
+         не найдено», панель переименования и подтверждения корзины, уведомление об итоге действия, строка состояния.
+         Клавиши разбирает карта QuickSearchKeyMap в code-behind на этапе туннелирования, чтобы стрелки управляли
+         списком, а фокус оставался в поле ввода. -->
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
         <TextBox Grid.Row="0"
                  x:Name="QueryBox"
                  Classes="search"
@@ -33,7 +36,106 @@
                      SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
                      ItemTemplate="{StaticResource ResultRowTemplate}"
                      SelectionMode="Single"
-                     IsVisible="{Binding ShowResults}" />
+                     IsVisible="{Binding ShowResults}">
+                <ListBox.ContextFlyout>
+                    <!-- Подписи клавиш — текстом из QuickSearchKeyMap: стандартная подпись Avalonia называет Enter «Return». -->
+                    <MenuFlyout>
+                        <MenuItem Command="{Binding OpenCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Открыть" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.OpenText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="Open" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Command="{Binding RevealCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Показать в папке" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RevealText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="FolderOpen" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Command="{Binding OpenWithCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Открыть с помощью…" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.OpenWithText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="WindowNew" /></MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Command="{Binding CopyFilesCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Копировать" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.CopyFilesText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="Copy" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Command="{Binding CopyPathCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Копировать путь" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.CopyPathText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="DocumentCopy" /></MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Command="{Binding TogglePinCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="{Binding PinMenuText}" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.TogglePinText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="Pin" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Command="{Binding BeginRenameCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Переименовать" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RenameText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="Rename" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Command="{Binding BeginDeleteCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="В корзину" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.DeleteText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="Delete" /></MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem Command="{Binding RunAsAdminCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Запустить от имени администратора" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RunAsAdminText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="Shield" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Command="{Binding PropertiesCommand}">
+                            <MenuItem.Header>
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Text="Свойства" />
+                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.PropertiesText}" />
+                                </Grid>
+                            </MenuItem.Header>
+                            <MenuItem.Icon><ic:SymbolIcon Symbol="Info" /></MenuItem.Icon>
+                        </MenuItem>
+                    </MenuFlyout>
+                </ListBox.ContextFlyout>
+            </ListBox>
             <StackPanel IsVisible="{Binding ShowEmptyState}"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -46,13 +148,51 @@
             </StackPanel>
         </Panel>
 
-        <DockPanel Grid.Row="2" Margin="6,8,6,0">
+        <!-- Панель действия: новое имя (F2) или подтверждение корзины (Del). Enter — да, Esc — отмена. -->
+        <Border Grid.Row="2"
+                Margin="0,8,0,0"
+                Padding="12,10"
+                CornerRadius="6"
+                Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                IsVisible="{Binding HasPendingAction}">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Text="{Binding PendingPrompt}" />
+                <StackPanel Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                            Orientation="Horizontal"
+                            Spacing="6"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Bottom">
+                    <Button Classes="accent"
+                            Content="{Binding PendingConfirmText}"
+                            Command="{Binding ConfirmPendingActionCommand}" />
+                    <Button Content="Отмена" Command="{Binding CancelPendingActionCommand}" />
+                </StackPanel>
+                <TextBox Grid.Row="1" Grid.Column="0"
+                         x:Name="RenameBox"
+                         Margin="0,8,0,0"
+                         Text="{Binding RenameText, Mode=TwoWay}"
+                         IsVisible="{Binding IsRenaming}" />
+            </Grid>
+        </Border>
+
+        <ui:FAInfoBar Grid.Row="3"
+                      Margin="0,8,0,0"
+                      IsOpen="{Binding IsNoticeOpen, Mode=TwoWay}"
+                      Title="{Binding NoticeTitle}"
+                      Message="{Binding NoticeMessage}"
+                      Severity="{Binding NoticeSeverity}"
+                      IsClosable="True" />
+
+        <DockPanel Grid.Row="4" Margin="6,8,6,0">
             <TextBlock DockPanel.Dock="Right"
                        Classes="tertiary"
                        FontSize="12"
                        Margin="12,0,0,0"
                        VerticalAlignment="Center"
-                       Text="↑↓ выбрать · Enter открыть · Esc закрыть" />
+                       Text="Enter открыть · Ctrl+Enter папка · Tab меню · Esc закрыть" />
             <Button DockPanel.Dock="Right"
                     Margin="8,0,0,0"
                     Padding="10,2"

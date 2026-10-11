@@ -115,6 +115,7 @@ public partial class QuickSearchWindow : Window
         {
             _viewModel.CloseRequested -= OnCloseRequested;
             _viewModel.FileOpened -= OnFileOpened;
+            _viewModel.DismissRequested -= OnCloseRequested;
         }
 
         _viewModel = DataContext as QuickSearchViewModel;
@@ -123,6 +124,7 @@ public partial class QuickSearchWindow : Window
         {
             _viewModel.CloseRequested += OnCloseRequested;
             _viewModel.FileOpened += OnFileOpened;
+            _viewModel.DismissRequested += OnCloseRequested;
         }
     }
 

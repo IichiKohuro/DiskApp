@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace DiskApp.UI.Text;
 
 /// <summary>
@@ -53,6 +55,66 @@ public static class PathText
     }
 
     private static bool IsDriveLetter(string text) => text.Length == 2 && text[1] == ':' && char.IsLetter(text[0]);
+
+    /// <summary>
+    /// Путь с другим именем в той же папке; разделитель — тот же, что в исходном пути.
+    /// </summary>
+    public static string WithFileName(string path, string newName)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(newName);
+
+        var trimmed = path.TrimEnd(Separators);
+        var index = trimmed.LastIndexOfAny(Separators);
+        return index < 0 ? newName : trimmed[..(index + 1)] + newName;
+    }
+
+    /// <summary>
+    /// Длина имени без расширения — сколько выделить при переименовании, чтобы расширение осталось нетронутым.
+    /// Для имён без расширения и вида <c>.gitignore</c> — всё имя.
+    /// </summary>
+    public static int StemLength(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+
+        var dot = name.LastIndexOf('.');
+        return dot <= 0 ? name.Length : dot;
+    }
+
+    /// <summary>
+    /// Проверяет новое имя файла или папки по правилам Windows; возвращает текст ошибки или <c>null</c>, если имя годится.
+    /// </summary>
+    public static string? ValidateFileName(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+
+        if (name.Trim().Length == 0)
+        {
+            return "Имя не может быть пустым.";
+        }
+
+        if (name.AsSpan().IndexOfAny(InvalidNameChars) >= 0 || name.Any(char.IsControl))
+        {
+            return "Имя не может содержать символы \\ / : * ? \" < > |.";
+        }
+
+        if (name.EndsWith('.') || name.EndsWith(' '))
+        {
+            return "Имя не может заканчиваться точкой или пробелом.";
+        }
+
+        var stem = name.Split('.')[0].ToUpperInvariant();
+        return ReservedNames.Contains(stem) ? $"«{name}» — зарезервированное имя Windows." : null;
+    }
+
+    private static readonly SearchValues<char> InvalidNameChars = SearchValues.Create("\\/:*?\"<>|");
+
+    private static readonly HashSet<string> ReservedNames =
+    [
+        "CON", "PRN", "AUX", "NUL",
+        "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+    ];
 
     /// <summary>
     /// Расширение без точки в нижнем регистре; пусто, если его нет или имя начинается с точки (<c>.gitignore</c>).

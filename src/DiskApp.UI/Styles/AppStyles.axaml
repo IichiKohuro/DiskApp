@@ -56,6 +56,14 @@
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="CornerRadius" Value="4" />
     </Style>
+    <!-- Подпись клавиши в пункте меню: справа, приглушённая -->
+    <Style Selector="TextBlock.gesture">
+        <Setter Property="Margin" Value="32,0,0,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+    </Style>
+
     <!-- Строка-заголовок секции: не выбирается и не реагирует на мышь -->
     <Style Selector="ListBox.results ListBoxItem.header">
         <Setter Property="Padding" Value="6,2" />

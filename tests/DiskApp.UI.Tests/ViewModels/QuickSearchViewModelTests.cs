@@ -375,6 +375,8 @@ public sealed class QuickSearchViewModelTests
 
         public Task<IReadOnlyList<ResultSection>> GetSuggestionsAsync(CancellationToken cancellationToken) => _inner.GetSuggestionsAsync(cancellationToken);
 
+        public Task<IReadOnlyList<string>> GetHistoryAsync(CancellationToken cancellationToken) => _inner.GetHistoryAsync(cancellationToken);
+
         public Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken)
             => Status is { } status ? Task.FromResult(status) : _inner.GetIndexStatusAsync(cancellationToken);
 

@@ -18,6 +18,7 @@ public static class UiServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<ISearchService, SampleSearchService>();
+        services.AddSingleton<IFileActions, SampleFileActions>();
         services.AddSingleton<IThemeService, AppThemeService>();
         services.AddSingleton<HotkeyStatus>();
         services.AddSingleton<IDispatcher, AvaloniaDispatcher>();

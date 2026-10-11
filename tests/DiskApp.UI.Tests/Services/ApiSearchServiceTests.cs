@@ -1,5 +1,3 @@
-using System.Reflection;
-
 using DiskApp.Client;
 using DiskApp.Contracts.Entries;
 using DiskApp.Contracts.Library;
@@ -25,7 +23,7 @@ public sealed class ApiSearchServiceTests
     public async Task Search_Response_MapsEntriesRootLabelsAndApproximateTotal()
     {
         // Arrange
-        var (api, fake) = FakeApi.Create();
+        var (api, fake) = FakeDiskAppApi.Create();
         fake.Roots = [Root(1, "Документы")];
         fake.Search = _ => Response([Entry(10, "report.pdf", ContractKind.Pdf) with { NameHighlights = [new TextRangeDto(0, 6)] }], total: 2000, approximate: true);
         var service = new ApiSearchService(api);
@@ -52,7 +50,7 @@ public sealed class ApiSearchServiceTests
     public async Task Search_KnownRoots_DoesNotRequestRootsAgain()
     {
         // Arrange
-        var (api, fake) = FakeApi.Create();
+        var (api, fake) = FakeDiskAppApi.Create();
         fake.Status = new IndexStatusDto(IndexerState.Idle, false, [RootStatus(1, "Документы")], TotalEntries: 5);
         fake.Search = _ => Response([Entry(1, "a.txt", ContractKind.Document)], total: 1, approximate: false);
         var service = new ApiSearchService(api);
@@ -70,7 +68,7 @@ public sealed class ApiSearchServiceTests
     public async Task GetRecent_OpenedFiles_ReturnsThemWithoutSearch()
     {
         // Arrange
-        var (api, fake) = FakeApi.Create();
+        var (api, fake) = FakeDiskAppApi.Create();
         fake.Roots = [Root(1, "Документы")];
         fake.Recent = [Entry(5, "opened.txt", ContractKind.Document)];
         var service = new ApiSearchService(api);
@@ -87,7 +85,7 @@ public sealed class ApiSearchServiceTests
     public async Task GetRecent_NothingOpenedYet_FallsBackToServerSelection()
     {
         // Arrange
-        var (api, fake) = FakeApi.Create();
+        var (api, fake) = FakeDiskAppApi.Create();
         fake.Roots = [Root(1, "Документы")];
         fake.Search = _ => Response([Entry(3, "plan.docx", ContractKind.Document)], total: 1, approximate: false);
         var service = new ApiSearchService(api);
@@ -105,7 +103,7 @@ public sealed class ApiSearchServiceTests
     public async Task GetSuggestions_Server_ReturnsRecentPinnedAndModifiedFilesInPlanOrder()
     {
         // Arrange
-        var (api, fake) = FakeApi.Create();
+        var (api, fake) = FakeDiskAppApi.Create();
         fake.Roots = [Root(1, "Документы", offline: true)];
         fake.Recent = [Entry(1, "opened.txt", ContractKind.Document)];
         fake.Pinned = [Entry(2, "pinned.pdf", ContractKind.Pdf)];
@@ -130,7 +128,7 @@ public sealed class ApiSearchServiceTests
     public async Task GetSuggestions_EmptySections_AreSkipped()
     {
         // Arrange
-        var (api, fake) = FakeApi.Create();
+        var (api, fake) = FakeDiskAppApi.Create();
         fake.Search = _ => Response([], total: 0, approximate: false);
         var service = new ApiSearchService(api);
 
@@ -156,7 +154,7 @@ public sealed class ApiSearchServiceTests
     public async Task GetIndexStatus_Indexing_ReportsTotalsRootsAndLatestScan()
     {
         // Arrange
-        var (api, fake) = FakeApi.Create();
+        var (api, fake) = FakeDiskAppApi.Create();
         var latest = new DateTimeOffset(2026, 10, 11, 8, 0, 0, TimeSpan.Zero);
         fake.Status = new IndexStatusDto(IndexerState.Indexing, false,
             [RootStatus(1, "Документы", latest.AddHours(-3)) with { Progress = new IndexProgressDto(1, IndexPhase.Enumerating, 700, 650, null, 100, 7) }, RootStatus(2, "Проекты", latest)],
@@ -180,7 +178,7 @@ public sealed class ApiSearchServiceTests
     public async Task Open_Entry_PassesIdAndQueryToServer()
     {
         // Arrange
-        var (api, fake) = FakeApi.Create();
+        var (api, fake) = FakeDiskAppApi.Create();
         var service = new ApiSearchService(api);
         var entry = ApiSearchService.ToEntry(Entry(42, "a.txt", ContractKind.Document), "Документы");
 
@@ -225,58 +223,4 @@ public sealed class ApiSearchServiceTests
 
     private static SearchResponse Response(IReadOnlyList<EntryDto> items, long total, bool approximate)
         => new(items, total, approximate, NextCursor: null, ElapsedMs: 12, IsPartial: false, IncludesFuzzy: false, Warnings: [], Tokens: []);
-
-    /// <summary>
-    /// Подделка клиента API: отвечает на вызовы, нужные поиску окон; остальные — ошибка теста.
-    /// </summary>
-    public class FakeApi : DispatchProxy
-    {
-        public List<string> Calls { get; } = [];
-
-        public Func<SearchRequest, SearchResponse> Search { get; set; } = _ => throw new InvalidOperationException("Поиск не задан.");
-
-        public IReadOnlyList<RootDto> Roots { get; set; } = [];
-
-        public IReadOnlyList<EntryDto> Recent { get; set; } = [];
-
-        public IReadOnlyList<EntryDto> Pinned { get; set; } = [];
-
-        public IndexStatusDto Status { get; set; } = new(IndexerState.Idle, false, []);
-
-        public SearchRequest? LastRequest { get; private set; }
-
-        public (long Id, string? Query)? Opened { get; private set; }
-
-        public static (IDiskAppApi Api, FakeApi Fake) Create()
-        {
-            var api = DispatchProxy.Create<IDiskAppApi, FakeApi>();
-            return (api, (FakeApi)(object)api);
-        }
-
-        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
-        {
-            ArgumentNullException.ThrowIfNull(targetMethod);
-            ArgumentNullException.ThrowIfNull(args);
-            Calls.Add(targetMethod.Name);
-            switch (targetMethod.Name)
-            {
-                case nameof(IDiskAppApi.SearchAsync):
-                    LastRequest = (SearchRequest)args[0]!;
-                    return Task.FromResult(Search(LastRequest));
-                case nameof(IDiskAppApi.GetRootsAsync):
-                    return Task.FromResult(Roots);
-                case nameof(IDiskAppApi.GetRecentAsync):
-                    return Task.FromResult(Recent);
-                case nameof(IDiskAppApi.GetPinnedAsync):
-                    return Task.FromResult(Pinned);
-                case nameof(IDiskAppApi.GetIndexStatusAsync):
-                    return Task.FromResult(Status);
-                case nameof(IDiskAppApi.OpenAsync):
-                    Opened = ((long)args[0]!, (string?)args[1]);
-                    return Task.CompletedTask;
-                default:
-                    throw new NotSupportedException(targetMethod.Name);
-            }
-        }
-    }
 }

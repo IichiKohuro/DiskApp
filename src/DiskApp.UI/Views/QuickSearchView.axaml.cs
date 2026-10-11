@@ -1,7 +1,11 @@
+using System.ComponentModel;
+
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 
+using DiskApp.UI.Input;
 using DiskApp.UI.Models;
 using DiskApp.UI.ViewModels;
 
@@ -9,14 +13,14 @@ namespace DiskApp.UI.Views;
 
 /// <summary>
 /// Содержимое быстрого поиска, общее для всплывающего окна и страницы «Поиск».
-/// Клавиатура: <c>↑</c>/<c>↓</c>, <c>PgUp</c>/<c>PgDn</c>, <c>Enter</c>, <c>Esc</c>, <c>Ctrl+1…9</c>.
+/// Клавиши разбирает <see cref="QuickSearchKeyMap"/>; меню строки — по правой кнопке, <c>Tab</c> или <c>Shift+F10</c>.
 /// </summary>
 public partial class QuickSearchView : UserControl
 {
-    private const int PageStep = 10;
+    private QuickSearchViewModel? _subscribed;
 
     /// <summary>
-    /// Создаёт представление и подключает обработку клавиш и двойного щелчка.
+    /// Создаёт представление и подключает обработку клавиш, двойного щелчка и контекстного меню.
     /// </summary>
     public QuickSearchView()
     {
@@ -24,6 +28,10 @@ public partial class QuickSearchView : UserControl
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
         ResultsList.DoubleTapped += OnResultDoubleTapped;
         ResultsList.ContainerPrepared += OnContainerPrepared;
+        if (ResultsList.ContextFlyout is { } menu)
+        {
+            menu.Closed += (_, _) => FocusQueryKeepingText();
+        }
     }
 
     private QuickSearchViewModel? ViewModel => DataContext as QuickSearchViewModel;
@@ -37,6 +45,46 @@ public partial class QuickSearchView : UserControl
         QueryBox.SelectAll();
     }
 
+    /// <inheritdoc />
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        if (_subscribed is not null)
+        {
+            _subscribed.PropertyChanged -= OnViewModelPropertyChanged;
+        }
+
+        _subscribed = ViewModel;
+        if (_subscribed is not null)
+        {
+            _subscribed.PropertyChanged += OnViewModelPropertyChanged;
+        }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(QuickSearchViewModel.PendingAction) || ViewModel is not { } viewModel)
+        {
+            return;
+        }
+
+        // Поле имени появляется после применения привязок: фокус и выделение имени без расширения — следующим кадром.
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (viewModel.IsRenaming)
+            {
+                RenameBox.Focus();
+                RenameBox.SelectionStart = 0;
+                RenameBox.SelectionEnd = viewModel.RenameSelectionLength;
+            }
+            else
+            {
+                FocusQueryKeepingText();
+            }
+        });
+    }
+
     private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
     {
         if (ViewModel is not { } viewModel)
@@ -44,44 +92,68 @@ public partial class QuickSearchView : UserControl
             return;
         }
 
-        var handled = true;
-        switch (e.Key)
+        if (viewModel.HasPendingAction)
         {
-            case Key.Down:
-                viewModel.MoveSelection(1);
-                break;
-            case Key.Up:
-                viewModel.MoveSelection(-1);
-                break;
-            case Key.PageDown:
-                viewModel.MoveSelection(PageStep);
-                break;
-            case Key.PageUp:
-                viewModel.MoveSelection(-PageStep);
-                break;
-            case Key.Enter:
-                _ = viewModel.OpenSelectedAsync();
-                break;
-            case Key.Escape:
-                viewModel.Escape();
-                break;
-            case >= Key.D1 and <= Key.D9 when e.KeyModifiers.HasFlag(KeyModifiers.Control):
-                if (viewModel.SelectNumber(e.Key - Key.D0))
-                {
-                    _ = viewModel.OpenSelectedAsync();
-                }
+            if (e.Key == Key.Enter && e.KeyModifiers == KeyModifiers.None)
+            {
+                e.Handled = true;
+                _ = viewModel.ConfirmPendingActionAsync();
+                return;
+            }
 
-                break;
-            default:
-                handled = false;
-                break;
+            if (e.Key == Key.Escape)
+            {
+                e.Handled = true;
+                viewModel.CancelPendingAction();
+                return;
+            }
+
+            if (viewModel.IsRenaming)
+            {
+                // Остальные клавиши — полю нового имени.
+                return;
+            }
+
+            // Подтверждение корзины: любая другая клавиша закрывает панель и работает как обычно.
+            viewModel.CancelPendingAction();
         }
 
-        if (handled)
+        var text = QueryBox.Text ?? string.Empty;
+        var box = new QueryBoxState(
+            IsEmpty: text.Length == 0,
+            HasSelection: QueryBox.SelectionStart != QueryBox.SelectionEnd,
+            CaretAtEnd: QueryBox.CaretIndex >= text.Length);
+        if (QuickSearchKeyMap.Resolve(e.Key, e.KeyModifiers, box) is not { } key)
         {
-            e.Handled = true;
-            ScrollToSelection(viewModel);
+            return;
         }
+
+        e.Handled = true;
+        if (key.Command == QuickSearchCommand.ContextMenu)
+        {
+            ShowContextMenu(viewModel);
+            return;
+        }
+
+        _ = ExecuteAsync(viewModel, key);
+    }
+
+    private async Task ExecuteAsync(QuickSearchViewModel viewModel, QuickSearchKey key)
+    {
+        await viewModel.ExecuteAsync(key.Command, key.Number);
+        ScrollToSelection(viewModel);
+    }
+
+    private void ShowContextMenu(QuickSearchViewModel viewModel)
+    {
+        if (viewModel.SelectedRow is not { } row || ResultsList.ContextFlyout is not { } menu)
+        {
+            return;
+        }
+
+        ResultsList.ScrollIntoView(row);
+        var target = ResultsList.ContainerFromItem(row) ?? (Control)ResultsList;
+        menu.ShowAt(target);
     }
 
     // Первая строка — к началу списка, чтобы над ней был виден заголовок секции.
@@ -95,6 +167,12 @@ public partial class QuickSearchView : UserControl
         {
             ResultsList.ScrollIntoView(row);
         }
+    }
+
+    private void FocusQueryKeepingText()
+    {
+        QueryBox.Focus();
+        QueryBox.CaretIndex = QueryBox.Text?.Length ?? 0;
     }
 
     // Контейнеры переиспользуются при прокрутке: класс заголовка ставится и снимается каждый раз.

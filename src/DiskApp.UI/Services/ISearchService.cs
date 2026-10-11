@@ -25,6 +25,11 @@ public interface ISearchService
     Task<IReadOnlyList<ResultSection>> GetSuggestionsAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// История запросов, из которых открывали файлы, самые свежие первыми.
+    /// </summary>
+    Task<IReadOnlyList<string>> GetHistoryAsync(CancellationToken cancellationToken);
+
+    /// <summary>
     /// Состояние индекса.
     /// </summary>
     Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken);

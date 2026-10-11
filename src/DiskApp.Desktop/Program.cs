@@ -130,6 +130,8 @@ internal static class Program
 
             // Окна работают с настоящим индексом через клиент API, а не с макетом.
             services.AddSingleton<ISearchService, ApiSearchService>();
+            services.AddSingleton<IFileActions, ApiFileActions>();
+            services.AddSingleton<IClipboardService, ShellClipboardService>();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));
