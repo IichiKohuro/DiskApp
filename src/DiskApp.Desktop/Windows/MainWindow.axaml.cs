@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Platform;
 
 using DiskApp.Desktop.Platform.Windows;
@@ -24,7 +25,7 @@ public partial class MainWindow : FAAppWindow
         InitializeComponent();
 
         TitleBar.ExtendsContentIntoTitleBar = true;
-        TitleBar.Height = 32;
+        TitleBar.Height = 40;
 
         if (LoadIcon() is { } icon)
         {
@@ -44,6 +45,21 @@ public partial class MainWindow : FAAppWindow
 
     /// <summary>Крестик при выключенной настройке «в трей»: оболочка решает, выходить ли из приложения.</summary>
     public event EventHandler? ExitRequested;
+
+    /// <inheritdoc />
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        // Ctrl+E — поиск в заголовке, как в Проводнике.
+        if (e.Key == Key.E && e.KeyModifiers == KeyModifiers.Control)
+        {
+            HeaderSearch.Focus();
+            HeaderSearch.SelectAll();
+            e.Handled = true;
+            return;
+        }
+
+        base.OnKeyDown(e);
+    }
 
     /// <inheritdoc />
     protected override void OnClosing(WindowClosingEventArgs e)

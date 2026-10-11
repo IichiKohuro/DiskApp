@@ -482,6 +482,7 @@ public sealed partial class QuickSearchViewModel
         OnPropertyChanged(nameof(SelectedResult));
         OnPropertyChanged(nameof(SelectedRow));
         OnPropertyChanged(nameof(PinMenuText));
+        OnPropertyChanged(nameof(SelectedDetails));
     }
 
     private void OnQueryEdited()

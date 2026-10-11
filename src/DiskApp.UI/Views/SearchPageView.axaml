@@ -8,14 +8,23 @@
              x:Class="DiskApp.UI.Views.SearchPageView"
              x:DataType="vm:QuickSearchViewModel"
              Design.DataContext="{x:Static vm:DesignData.QuickSearch}">
-    <!-- Страница «Поиск» главного окна: то же содержимое, что во всплывающем окне, в карточке. -->
-    <Grid Margin="{StaticResource PagePadding}" RowDefinitions="Auto,*" MaxWidth="{StaticResource PageMaxWidth}">
-        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+    <!-- Страница «Поиск» главного окна: то же содержимое, что во всплывающем окне, в карточке, и панель сведений
+         о выбранном файле справа. На узком окне панель уходит, остаётся список. -->
+    <Grid Margin="{StaticResource PagePadding}" RowDefinitions="Auto,*" ColumnDefinitions="*,Auto">
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="4" Margin="0,0,0,16">
             <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="Поиск" />
             <TextBlock Classes="secondary" Text="То же окно, что всплывает по горячей клавише, только внутри главного окна: запрос сохраняется между ними." />
         </StackPanel>
-        <Border Grid.Row="1" Classes="card" Padding="12">
+        <Border Grid.Row="1" Grid.Column="0" Classes="card" Padding="12">
             <views:QuickSearchView x:Name="Search" />
+        </Border>
+        <Border Grid.Row="1" Grid.Column="1"
+                x:Name="DetailsCard"
+                Classes="card"
+                Width="300"
+                Margin="12,0,0,0"
+                Padding="16">
+            <views:DetailsPane />
         </Border>
     </Grid>
 </UserControl>

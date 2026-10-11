@@ -22,4 +22,13 @@ public partial class SearchPageView : UserControl
         base.OnLoaded(e);
         Search.FocusQuery();
     }
+
+    /// <inheritdoc />
+    protected override void OnSizeChanged(SizeChangedEventArgs e)
+    {
+        base.OnSizeChanged(e);
+
+        // Панели сведений нужно место: на узком окне остаётся только список.
+        DetailsCard.IsVisible = e.NewSize.Width >= 900;
+    }
 }

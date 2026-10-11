@@ -30,6 +30,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     private readonly Func<DateTimeOffset> _clock;
     private CancellationTokenSource? _pending;
     private IndexStatus? _status;
+    private FileDetails? _details;
 
     /// <summary>
     /// Создаёт ViewModel с макетными действиями над файлами (превью) и сразу загружает подборку (<see cref="PendingRefresh"/>).
@@ -100,7 +101,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
     /// <summary>Индекс выбранного результата в <see cref="Results"/>; −1, если список пуст.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedResult), nameof(SelectedRow), nameof(PinMenuText))]
+    [NotifyPropertyChangedFor(nameof(SelectedResult), nameof(SelectedRow), nameof(PinMenuText), nameof(SelectedDetails))]
     public partial int SelectedIndex { get; set; }
 
     /// <summary>Строка состояния: количество результатов и время, либо подсказка.</summary>
@@ -125,6 +126,21 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
     /// <summary>Выбранная строка или <c>null</c>.</summary>
     public SearchHit? SelectedResult => SelectedIndex >= 0 && SelectedIndex < Results.Count ? Results[SelectedIndex] : null;
+
+    /// <summary>Сведения о выбранном файле для панели справа от результатов.</summary>
+    public FileDetails? SelectedDetails
+    {
+        get
+        {
+            var entry = SelectedResult?.Entry;
+            if (!ReferenceEquals(_details?.Entry, entry))
+            {
+                _details = entry is null ? null : new FileDetails(entry);
+            }
+
+            return _details;
+        }
+    }
 
     /// <summary>
     /// Выбранная строка списка для привязки <c>SelectedItem</c>: заголовки секций не выбираются, сброс выделения

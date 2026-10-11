@@ -94,6 +94,42 @@
         <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
     </Style>
 
+    <!-- Свойства файла в панели сведений: подпись слева, значение справа -->
+    <Style Selector="Grid.details > TextBlock.label">
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        <Setter Property="Margin" Value="0,3,16,3" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+    <Style Selector="Grid.details > :is(TextBlock).value">
+        <Setter Property="Margin" Value="0,3" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+
+    <!-- Точка состояния индекса в панели навигации -->
+    <Style Selector="Ellipse.health">
+        <Setter Property="Fill" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+    </Style>
+    <Style Selector="Ellipse.health.indexing">
+        <Setter Property="Fill" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+    </Style>
+    <Style Selector="Ellipse.health.warning">
+        <Setter Property="Fill" Value="{DynamicResource SystemFillColorCautionBrush}" />
+    </Style>
+    <Style Selector="Ellipse.health.error">
+        <Setter Property="Fill" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+    </Style>
+    <Style Selector="Ellipse.health.starting">
+        <Setter Property="Fill" Value="{DynamicResource TextFillColorTertiaryBrush}" />
+    </Style>
+
+    <!-- Поле поиска в заголовке главного окна -->
+    <Style Selector="TextBox.header-search">
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="CornerRadius" Value="6" />
+    </Style>
+
     <!-- Подпись клавиши в пункте меню: справа, приглушённая -->
     <Style Selector="TextBlock.gesture">
         <Setter Property="Margin" Value="32,0,0,0" />

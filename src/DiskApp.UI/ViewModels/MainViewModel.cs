@@ -15,6 +15,8 @@ namespace DiskApp.UI.ViewModels;
 public sealed partial class MainViewModel : ViewModelBase
 {
     private readonly ISearchService _search;
+    private readonly QuickSearchViewModel _quickSearch;
+    private bool _healthFromServer;
     private readonly Func<DateTimeOffset> _clock;
 
     /// <summary>
@@ -37,6 +39,7 @@ public sealed partial class MainViewModel : ViewModelBase
         ArgumentNullException.ThrowIfNull(clock);
 
         _search = searchService;
+        _quickSearch = search;
         _clock = clock;
 
         Pages =
@@ -155,9 +158,14 @@ public sealed partial class MainViewModel : ViewModelBase
     {
         var status = await _search.GetIndexStatusAsync(CancellationToken.None);
 
-        IsIndexing = status.IsIndexing;
         IndexStatusText = status.Describe(_clock());
-        IndexStatusShort = status.IsIndexing ? Capitalize(status.DescribeIndexing()) : "Индекс актуален";
+
+        // Когда состояние приходит событиями сервера (ApplyIndexHealth), оно точнее разового запроса.
+        if (!_healthFromServer)
+        {
+            IsIndexing = status.IsIndexing;
+            IndexStatusShort = status.IsIndexing ? Capitalize(status.DescribeIndexing()) : "Индекс актуален";
+        }
 
         if (Pages.FirstOrDefault(page => page.Key == PageKeys.Inbox) is { } inbox)
         {

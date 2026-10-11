@@ -413,6 +413,25 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         _ = StartHubAsync(hub);
     }
 
+    // Главное окно показывает то же состояние, что и трей: точка в панели навигации и подпись под ней.
+    private void UpdateMainStatus()
+    {
+        var health = _trayStatus.State switch
+        {
+            TrayState.Starting => IndexHealth.Starting,
+            TrayState.Idle => IndexHealth.Idle,
+            TrayState.Indexing => IndexHealth.Indexing,
+            TrayState.Paused => IndexHealth.Paused,
+            TrayState.Offline => IndexHealth.Offline,
+            _ => IndexHealth.Error,
+        };
+        const string prefix = "DiskApp — ";
+        var text = _trayStatus.ToolTip;
+        text = text.StartsWith(prefix, StringComparison.Ordinal) ? text[prefix.Length..] : text;
+        text = text.Length > 0 ? char.ToUpperInvariant(text[0]) + text[1..] : text;
+        _services.GetRequiredService<MainViewModel>().ApplyIndexHealth(health, text, text);
+    }
+
     private async Task StartHubAsync(DiskAppHubConnection hub)
     {
         try
@@ -432,6 +451,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
     private void UpdateTray()
     {
+        UpdateMainStatus();
         if (_tray is null)
         {
             return;
