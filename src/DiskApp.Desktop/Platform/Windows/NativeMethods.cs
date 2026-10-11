@@ -109,6 +109,10 @@ internal static unsafe partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool UnregisterHotKey(nint window, int id);
 
+    /// <summary>Интервал двойного щелчка из настроек мыши Windows, мс.</summary>
+    [LibraryImport("user32.dll")]
+    public static partial uint GetDoubleClickTime();
+
     [LibraryImport("user32.dll", SetLastError = true)]
     public static partial ushort RegisterClassExW(WndClassEx* windowClass);
 

@@ -300,6 +300,14 @@ public sealed partial class SettingsViewModel
     [ObservableProperty]
     public partial string QuickSearchHotkey { get; set; } = string.Empty;
 
+    /// <summary>Сочетание главного окна из настроек.</summary>
+    [ObservableProperty]
+    public partial string MainWindowHotkey { get; set; } = string.Empty;
+
+    /// <summary>Сочетание окна Drag&amp;Drop из настроек.</summary>
+    [ObservableProperty]
+    public partial string DropWindowHotkey { get; set; } = string.Empty;
+
     /// <summary>
     /// Перечитывает настройки и показывает их, ничего не сохраняя.
     /// </summary>
@@ -345,6 +353,8 @@ public sealed partial class SettingsViewModel
             ShowDate = settings.Popup.ShowDate;
             QuickSearchHotkey = settings.Hotkeys.QuickSearch;
             QuickSwitchHotkey = settings.Hotkeys.QuickSwitch;
+            MainWindowHotkey = settings.Hotkeys.MainWindow;
+            DropWindowHotkey = settings.Hotkeys.DropWindow;
 
             Fuzzy = settings.Search.Fuzzy;
             ShowSuggestionsOnEmpty = settings.Search.ShowSuggestionsOnEmpty;

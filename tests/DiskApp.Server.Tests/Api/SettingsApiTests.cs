@@ -82,7 +82,7 @@ public sealed class SettingsApiTests
              "popup":{"monitor":"Primary","hideOnDeactivate":false,"showSize":false},
              "add":{"inboxPath":"{{{inbox}}}"},
              "experimental":{"quickSwitch":true},
-             "hotkeys":{"quickSwitch":"Ctrl+Alt+Q"},
+             "hotkeys":{"quickSwitch":"Ctrl+Alt+Q","mainWindow":"Ctrl+Alt+W","dropWindow":"Ctrl+Alt+J"},
              "diagnostics":{"logLevel":"Debug"}}
             """);
         var settings = await context.GetAsync(ApiRoutes.V1.Settings, DiskAppJsonContext.Default.SettingsDto);
@@ -101,6 +101,8 @@ public sealed class SettingsApiTests
         settings.Add.InboxPath.ShouldBe(context.Files.FullPath);
         settings.Experimental.QuickSwitch.ShouldBeTrue();
         settings.Hotkeys.QuickSwitch.ShouldBe("Ctrl+Alt+Q");
+        settings.Hotkeys.MainWindow.ShouldBe("Ctrl+Alt+W");
+        settings.Hotkeys.DropWindow.ShouldBe("Ctrl+Alt+J");
         settings.Diagnostics.LogLevel.ShouldBe("Debug");
     }
 
@@ -113,6 +115,8 @@ public sealed class SettingsApiTests
     [InlineData("""{"appearance":{"accentColor":"red"}}""", "appearance.accentColor")]
     [InlineData("""{"diagnostics":{"logLevel":"Verbose"}}""", "diagnostics.logLevel")]
     [InlineData("""{"add":{"inboxPath":"relative\\path"}}""", "add.inboxPath")]
+    [InlineData("""{"hotkeys":{"mainWindow":" "}}""", "hotkeys.mainWindow")]
+    [InlineData("""{"hotkeys":{"dropWindow":""}}""", "hotkeys.dropWindow")]
     public async Task Patch_InvalidInput_Returns400AndKeepsSettings(string json, string field)
     {
         // Arrange

@@ -801,8 +801,8 @@
   <data name="DesktopShell.SaveDialogNotFound" xml:space="preserve">
     <value>Диалог сохранения не найден</value>
   </data>
-  <data name="DesktopShell.SearchOpensWithAClickOn" xml:space="preserve">
-    <value>. Поиск открывается щелчком по иконке в трее; сочетание можно сменить в настройках.</value>
+  <data name="DesktopShell.SearchOpensFromTrayMenu" xml:space="preserve">
+    <value>. Быстрый поиск открывается из меню значка в трее; сочетание можно сменить в настройках.</value>
   </data>
   <data name="DesktopShell.Settings" xml:space="preserve">
     <value>Настройки</value>
@@ -836,12 +836,6 @@
   </data>
   <data name="DesktopShell.TheShortcutIsTakenByAnother" xml:space="preserve">
     <value>сочетание занято другим приложением.</value>
-  </data>
-  <data name="DesktopShell.ThisShortcutAlreadyBelongsToQuick" xml:space="preserve">
-    <value>это сочетание уже у Quick Switch.</value>
-  </data>
-  <data name="DesktopShell.ThisShortcutAlreadyBelongsToQuick2" xml:space="preserve">
-    <value>это сочетание уже у быстрого поиска.</value>
   </data>
   <data name="DetailsPane.SelectAFileInTheList" xml:space="preserve">
     <value>Выберите файл в списке — здесь появятся его сведения и действия</value>
@@ -2448,14 +2442,8 @@
   <data name="Settings.SizeOfTextAndControlsIn" xml:space="preserve">
     <value>Размер текста и элементов главного окна и окна поиска</value>
   </data>
-  <data name="Settings.SortTheInbox" xml:space="preserve">
-    <value>Разбор входящих</value>
-  </data>
   <data name="Settings.SortingCollectionFolders" xml:space="preserve">
     <value>Разбор папок-накопителей</value>
-  </data>
-  <data name="Settings.SortingSessionForDownloadsComingIn" xml:space="preserve">
-    <value>Сессия разбора «Загрузок» — появится на этапе 17</value>
   </data>
   <data name="Settings.StartMinimized" xml:space="preserve">
     <value>Запускаться свёрнутым</value>
@@ -3011,5 +2999,62 @@
   </data>
   <data name="Sorting.InsertTokenTip" xml:space="preserve">
     <value>Вставить в шаблон имя, дату, время, теги, папку или номер</value>
+  </data>
+  <data name="DesktopShell.DropWindow" xml:space="preserve">
+    <value>Окно Drag&amp;Drop</value>
+  </data>
+  <data name="DesktopShell.TargetQuickSearch" xml:space="preserve">
+    <value>быстрый поиск</value>
+  </data>
+  <data name="DesktopShell.TargetMainWindow" xml:space="preserve">
+    <value>главное окно</value>
+  </data>
+  <data name="DesktopShell.TargetDropWindow" xml:space="preserve">
+    <value>окно Drag&amp;Drop</value>
+  </data>
+  <data name="DesktopShell.ShortcutBelongsTo" xml:space="preserve">
+    <value>это сочетание уже назначено: {0}.</value>
+  </data>
+  <data name="DesktopShell.MainWindowOpensWithDoubleClick" xml:space="preserve">
+    <value>. Главное окно открывается двойным щелчком по значку в трее; сочетание можно сменить в настройках.</value>
+  </data>
+  <data name="DesktopShell.DropWindowOpensWithClick" xml:space="preserve">
+    <value>. Окно Drag&amp;Drop открывается щелчком по значку в трее; сочетание можно сменить в настройках.</value>
+  </data>
+  <data name="Drop.WindowTitle" xml:space="preserve">
+    <value>DiskApp — Drag&amp;Drop</value>
+  </data>
+  <data name="Drop.Title" xml:space="preserve">
+    <value>Бросить файлы</value>
+  </data>
+  <data name="Drop.Close" xml:space="preserve">
+    <value>Закрыть (Esc)</value>
+  </data>
+  <data name="Drop.InboxTitle" xml:space="preserve">
+    <value>Перетащите файлы сюда</value>
+  </data>
+  <data name="Drop.InboxText" xml:space="preserve">
+    <value>Они попадут в основную папку-накопитель</value>
+  </data>
+  <data name="Drop.TrayHint" xml:space="preserve">
+    <value>Щелчок по значку в трее теперь открывает это окно. Главное окно — двойным щелчком, быстрый поиск — {0}.</value>
+  </data>
+  <data name="Drop.TrayHintNoHotkey" xml:space="preserve">
+    <value>Щелчок по значку в трее теперь открывает это окно. Главное окно — двойным щелчком, быстрый поиск — в меню значка.</value>
+  </data>
+  <data name="Settings.Hotkeys" xml:space="preserve">
+    <value>Горячие клавиши</value>
+  </data>
+  <data name="Settings.MainWindowHotkey" xml:space="preserve">
+    <value>Главное окно</value>
+  </data>
+  <data name="Settings.MainWindowHotkeyText" xml:space="preserve">
+    <value>Показать или спрятать главное окно. Его открывает и двойной щелчок по значку в трее.</value>
+  </data>
+  <data name="Settings.DropWindowHotkey" xml:space="preserve">
+    <value>Окно Drag&amp;Drop</value>
+  </data>
+  <data name="Settings.DropWindowHotkeyText" xml:space="preserve">
+    <value>Показать или спрятать окно, куда можно бросить файлы. Его открывает и щелчок по значку в трее.</value>
   </data>
 </root>

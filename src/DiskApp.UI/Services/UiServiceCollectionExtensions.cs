@@ -51,6 +51,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<OperationsViewModel>();
         services.AddSingleton<IOperationsCoordinator>(static provider => provider.GetRequiredService<OperationsViewModel>());
         services.AddSingleton<QuickSearchViewModel>();
+        services.AddSingleton<DropWindowViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddTransient<OnboardingViewModel>();
 

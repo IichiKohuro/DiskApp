@@ -254,6 +254,12 @@ public sealed record HotkeySettings
 
     /// <summary>Quick Switch в диалогах «Сохранить» и «Открыть»; действует, только если функция включена.</summary>
     public string QuickSwitch { get; set; } = "Ctrl+Alt+G";
+
+    /// <summary>Показать или спрятать главное окно (PLAN.md, этап 18.1, ADR-0011).</summary>
+    public string MainWindow { get; set; } = "Ctrl+Alt+O";
+
+    /// <summary>Показать или спрятать окно Drag&amp;Drop (PLAN.md, этап 18.1, ADR-0011).</summary>
+    public string DropWindow { get; set; } = "Ctrl+Alt+B";
 }
 
 /// <summary>

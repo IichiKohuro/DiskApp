@@ -1,11 +1,7 @@
 using System.Diagnostics;
 
 using Avalonia;
-using Avalonia.Animation;
-using Avalonia.Animation.Easings;
 using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Media.Transformation;
 using Avalonia.Threading;
 
 using DiskApp.Desktop.Platform.Windows;
@@ -50,9 +46,7 @@ public partial class QuickSearchWindow : Window
     /// </summary>
     public void ApplyAppearance(DiskApp.Core.Settings.BackdropMode backdrop, double scale, bool compact)
     {
-        TransparencyLevelHint = backdrop == DiskApp.Core.Settings.BackdropMode.Solid
-            ? [WindowTransparencyLevel.None]
-            : [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.Blur, WindowTransparencyLevel.None];
+        TransparencyLevelHint = PopupChrome.TransparencyFor(backdrop);
         var unit = Math.Abs(scale - 1.0) < 0.01;
         Scaler.LayoutTransform = unit ? null : new Avalonia.Media.ScaleTransform(scale, scale);
         Width = Math.Round(BaseWidth * scale);
@@ -203,65 +197,15 @@ public partial class QuickSearchWindow : Window
         }
     }
 
-    private static readonly TimeSpan ShowDuration = TimeSpan.FromMilliseconds(150);
-    private static readonly TransformOperations Lifted = TransformOperations.Parse("translateY(-8px)");
-    private static readonly TransformOperations Resting = TransformOperations.Parse("translateY(0px)");
-
     /// <summary>
     /// Появление (PLAN.md, этап 6.8): содержимое проявляется и опускается на 8 px за 150 мс. Анимируется содержимое, а не окно:
     /// прозрачность всего окна у Avalonia на Windows не анимируется. При «уменьшить движение» окно появляется сразу.
     /// </summary>
-    private void PrepareShowAnimation()
-    {
-        Root.Transitions = null;
-        if (ReduceMotion)
-        {
-            Root.Opacity = 1;
-            Root.RenderTransform = null;
-            return;
-        }
+    private void PrepareShowAnimation() => PopupChrome.PrepareShow(Root, ReduceMotion, offset: -8);
 
-        Root.Opacity = 0;
-        Root.RenderTransform = Lifted;
-    }
+    private void PlayShowAnimation() => PopupChrome.PlayShow(Root, ReduceMotion);
 
-    private void PlayShowAnimation()
-    {
-        if (ReduceMotion)
-        {
-            return;
-        }
-
-        Root.Transitions =
-        [
-            new DoubleTransition { Property = OpacityProperty, Duration = ShowDuration, Easing = new CubicEaseOut() },
-            new TransformOperationsTransition { Property = RenderTransformProperty, Duration = ShowDuration, Easing = new CubicEaseOut() },
-        ];
-        Dispatcher.UIThread.Post(() =>
-        {
-            Root.Opacity = 1;
-            Root.RenderTransform = Resting;
-        }, DispatcherPriority.Render);
-    }
-
-    private void UpdateBackdrop()
-    {
-        // Уровень прозрачности меняется ещё при загрузке разметки, до присвоения именованных полей.
-        if (Acrylic is null)
-        {
-            return;
-        }
-
-        var level = ActualTransparencyLevel;
-        Acrylic.IsVisible = level.Equals(WindowTransparencyLevel.AcrylicBlur) || level.Equals(WindowTransparencyLevel.Blur);
-        Solid.IsVisible = !Acrylic.IsVisible;
-
-        // Запасной фон окна не следит за темой: после смены темы на ходу он оставался прежним.
-        if (this.TryFindResource("SolidBackgroundFillColorBaseBrush", ActualThemeVariant, out var brush) && brush is IBrush solid)
-        {
-            TransparencyBackgroundFallback = solid;
-        }
-    }
+    private void UpdateBackdrop() => PopupChrome.UpdateBackdrop(this, Acrylic, Solid);
 
     private void OnDeactivated(object? sender, EventArgs e)
     {

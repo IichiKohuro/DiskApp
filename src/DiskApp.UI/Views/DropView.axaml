@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="220"
+             x:Class="DiskApp.UI.Views.DropView"
+             x:DataType="vm:DropWindowViewModel">
+    <!-- Окно Drag&Drop у значка в трее (PLAN.md, этап 18, ADR-0011): заголовок с кнопкой закрытия, область
+         «Бросить в накопитель» и разовая подсказка о новом поведении значка; Esc — в окне. Приём файлов — этап 18.2. -->
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Classes="tool" Command="{Binding CloseCommand}"
+                    AutomationProperties.Name="{loc:Str Drop.Close}" ToolTip.Tip="{loc:Str Drop.Close}">
+                <ic:SymbolIcon Symbol="Dismiss" FontSize="14" />
+            </Button>
+            <TextBlock Text="{loc:Str Drop.Title}" Theme="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+        </DockPanel>
+        <Panel Grid.Row="1" x:Name="InboxZone" MinHeight="120">
+            <Rectangle StrokeDashArray="4,3" StrokeThickness="1.5" RadiusX="8" RadiusY="8"
+                       Stroke="{DynamicResource ControlStrongStrokeColorDefaultBrush}" />
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6" Margin="16">
+                <ic:SymbolIcon Symbol="ArrowDownload" FontSize="32" HorizontalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                <TextBlock Text="{loc:Str Drop.InboxTitle}" Theme="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock Classes="secondary" Text="{loc:Str Drop.InboxText}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" FontSize="12" />
+            </StackPanel>
+        </Panel>
+        <TextBlock Grid.Row="2" Classes="secondary" Text="{Binding Hint}" IsVisible="{Binding HasHint}" TextWrapping="Wrap" FontSize="12" />
+    </Grid>
+</UserControl>

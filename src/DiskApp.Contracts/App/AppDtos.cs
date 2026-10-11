@@ -115,6 +115,12 @@ public sealed record HotkeySettingsDto
 
     /// <summary>Quick Switch в диалогах «Сохранить» и «Открыть».</summary>
     public string QuickSwitch { get; set; } = string.Empty;
+
+    /// <summary>Главное окно, например <c>Ctrl+Alt+O</c>.</summary>
+    public string MainWindow { get; set; } = string.Empty;
+
+    /// <summary>Окно Drag&amp;Drop, например <c>Ctrl+Alt+B</c>.</summary>
+    public string DropWindow { get; set; } = string.Empty;
 }
 
 /// <summary>Добавление файлов.</summary>

@@ -2,7 +2,9 @@
   "hotkeys": {
     "quickSearch": "Ctrl+Alt+D",
     "triage": "Ctrl+Alt+I",
-    "quickSwitch": "Ctrl+Alt+G"
+    "quickSwitch": "Ctrl+Alt+G",
+    "mainWindow": "Ctrl+Alt+O",
+    "dropWindow": "Ctrl+Alt+B"
   },
   "appearance": {
     "theme": "System",

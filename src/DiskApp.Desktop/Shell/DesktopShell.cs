@@ -39,6 +39,8 @@ namespace DiskApp.Desktop.Shell;
 internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 {
     private const int SearchHotkeyId = 1;
+    private const int MainWindowHotkeyId = 3;
+    private const int DropWindowHotkeyId = 4;
     private const int ProbeHotkeyId = 99;
     private const string IconUri = "avares://DiskApp/Assets/DiskApp.ico";
     private static readonly TimeSpan OperationsCheckTimeout = TimeSpan.FromSeconds(2);
@@ -58,16 +60,19 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     private NativeMenuItem? _searchItem;
     private NativeMenuItem? _pauseItem;
     private NativeMenuItem? _openItem;
+    private NativeMenuItem? _dropItem;
     private NativeMenuItem? _settingsItem;
     private NativeMenuItem? _exitItem;
+    private TrayClickRecognizer? _trayClicks;
     private MessageWindow? _messageWindow;
-    private GlobalHotkey? _hotkey;
-    private Hotkey? _activeHotkey;
-    private string? _registeredSetting;
+    private ShellHotkey? _searchHotkey;
+    private ShellHotkey? _mainHotkey;
+    private ShellHotkey? _dropHotkey;
     private IDisposable? _settingsSubscription;
     private InstanceServer? _instanceServer;
     private MainWindow? _mainWindow;
     private QuickSearchWindow? _quickSearch;
+    private DropWindow? _dropWindow;
     private bool _exiting;
     private bool _whatsNewPending;
     private bool _safeMode;
@@ -107,6 +112,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         // Иконки в шаблонах строк берутся из общего кэша: элементы шаблонов создаёт Avalonia, а не контейнер.
         DiskApp.UI.Controls.FileIcon.Cache = _services.GetService<IIconCache>();
         _quickSearch = new QuickSearchWindow { DataContext = _services.GetRequiredService<QuickSearchViewModel>() };
+        _dropWindow = new DropWindow { DataContext = _services.GetRequiredService<DropWindowViewModel>() };
         ApplySettings(_services.GetRequiredService<ISettingsStore<AppSettings>>().Current);
 
         RegisterHotkey();
@@ -125,8 +131,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _instanceServer = new InstanceServer(_names.Pipe, OnSecondInstanceArguments, _log);
         _instanceServer.Start();
 
-        // Окно поиска прогревается, когда старт уже позади: на критическом пути трея его нет (этап 10.2).
+        // Окна поиска и Drag&Drop прогреваются, когда старт уже позади: на критическом пути трея их нет (этап 10.2).
         DispatcherTimer.RunOnce(() => _quickSearch?.Prewarm(), TimeSpan.FromSeconds(3));
+        DispatcherTimer.RunOnce(() => _dropWindow?.Prewarm(), TimeSpan.FromSeconds(4));
 
         ApplyArguments(startup, initialLaunch: true);
         if (!startup.Exit)
@@ -149,9 +156,11 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             }
         }
 
-        _log.Information("Оболочка запущена через {StartupMs} мс: хоткей {HotkeyState}, аргументы {Arguments}",
+        _log.Information("Оболочка запущена через {StartupMs} мс: хоткеи поиска {SearchHotkey}, главного окна {MainHotkey}, окна Drag&Drop {DropHotkey}, аргументы {Arguments}",
             StartupTimer.Milliseconds,
-            _activeHotkey?.DisplayText ?? "не зарегистрирован",
+            _searchHotkey?.Active?.DisplayText ?? "не зарегистрирован",
+            _mainHotkey?.Active?.DisplayText ?? "не зарегистрирован",
+            _dropHotkey?.Active?.DisplayText ?? "не зарегистрирован",
             startup);
     }
 
@@ -184,17 +193,20 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             return L.T("DesktopShell.GlobalShortcutsWorkOnlyOnWindows");
         }
 
-        var quickSwitch = _services.GetService<QuickSwitchController>();
-        var current = target == HotkeyTarget.QuickSearch ? _activeHotkey : quickSwitch?.RegisteredHotkey;
-        var other = target == HotkeyTarget.QuickSearch ? quickSwitch?.RegisteredHotkey : _activeHotkey;
-        if (hotkey == current)
+        if (hotkey == ActiveFor(target))
         {
             return null;
         }
 
-        if (hotkey == other)
+        // Сочетание другой функции DiskApp — и действующее, и выбранное в настройках: выключенный Quick Switch иначе не
+        // смог бы включиться.
+        var hotkeys = _services.GetRequiredService<ISettingsStore<AppSettings>>().Current.Hotkeys;
+        foreach (var other in Enum.GetValues<HotkeyTarget>().Where(other => other != target))
         {
-            return target == HotkeyTarget.QuickSearch ? L.T("DesktopShell.ThisShortcutAlreadyBelongsToQuick") : L.T("DesktopShell.ThisShortcutAlreadyBelongsToQuick2");
+            if (hotkey == ActiveFor(other) || (Hotkey.TryParse(ConfiguredFor(hotkeys, other), out var configured) && hotkey == configured))
+            {
+                return L.F("DesktopShell.ShortcutBelongsTo", TargetName(other));
+            }
         }
 
         if (HotkeyKeys.ToVirtualKey(hotkey.Key) is not { } virtualKey)
@@ -210,6 +222,53 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         NativeMethods.UnregisterHotKey(_messageWindow.Handle, ProbeHotkeyId);
         return null;
+    }
+
+    /// <summary>Действующее сочетание функции; <c>null</c>, если не зарегистрировано.</summary>
+    private Hotkey? ActiveFor(HotkeyTarget target) => target switch
+    {
+        HotkeyTarget.QuickSearch => _searchHotkey?.Active,
+        HotkeyTarget.MainWindow => _mainHotkey?.Active,
+        HotkeyTarget.DropWindow => _dropHotkey?.Active,
+        _ => OperatingSystem.IsWindows() ? _services.GetService<QuickSwitchController>()?.RegisteredHotkey : null,
+    };
+
+    private static string ConfiguredFor(HotkeySettings hotkeys, HotkeyTarget target) => target switch
+    {
+        HotkeyTarget.QuickSearch => hotkeys.QuickSearch,
+        HotkeyTarget.MainWindow => hotkeys.MainWindow,
+        HotkeyTarget.DropWindow => hotkeys.DropWindow,
+        _ => hotkeys.QuickSwitch,
+    };
+
+    private static string TargetName(HotkeyTarget target) => target switch
+    {
+        HotkeyTarget.QuickSearch => L.T("DesktopShell.TargetQuickSearch"),
+        HotkeyTarget.MainWindow => L.T("DesktopShell.TargetMainWindow"),
+        HotkeyTarget.DropWindow => L.T("DesktopShell.TargetDropWindow"),
+        _ => "Quick Switch",
+    };
+
+    /// <summary>
+    /// Сочетания других функций DiskApp — выбранные в настройках и действующие: запасные варианты их не отнимают.
+    /// </summary>
+    private HashSet<Hotkey> ReservedFor(HotkeyTarget target, HotkeySettings hotkeys)
+    {
+        var reserved = new HashSet<Hotkey>();
+        foreach (var other in Enum.GetValues<HotkeyTarget>().Where(other => other != target))
+        {
+            if (Hotkey.TryParse(ConfiguredFor(hotkeys, other), out var configured))
+            {
+                reserved.Add(configured);
+            }
+
+            if (ActiveFor(other) is { } active)
+            {
+                reserved.Add(active);
+            }
+        }
+
+        return reserved;
     }
 
     /// <inheritdoc />
@@ -534,6 +593,12 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             _quickSearch.Close();
         }
 
+        if (_dropWindow is not null)
+        {
+            _dropWindow.AllowClose = true;
+            _dropWindow.Close();
+        }
+
         Dispose();
         _lifetime.Shutdown();
     }
@@ -546,11 +611,15 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _instanceServer?.Dispose();
         _instanceServer = null;
 
+        _searchHotkey?.Dispose();
+        _searchHotkey = null;
+        _mainHotkey?.Dispose();
+        _mainHotkey = null;
+        _dropHotkey?.Dispose();
+        _dropHotkey = null;
+
         if (OperatingSystem.IsWindows())
         {
-            _hotkey?.Dispose();
-            _hotkey = null;
-
             // Quick Switch освобождает контейнер, и раньше оболочки: она создана первой. Обращаться к контейнеру здесь
             // нельзя — при остановке хоста он уже освобождён, и исключение роняло процесс на выходе (найдено в 9.5).
             _messageWindow?.Dispose();
@@ -644,11 +713,15 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     {
         var menu = new NativeMenu();
 
-        _openItem = new NativeMenuItem(L.T("DesktopShell.OpenDiskApp"));
+        _openItem = new NativeMenuItem(L.T("DesktopShell.OpenDiskApp")) { Gesture = _mainHotkey?.Active?.ToGesture() };
         _openItem.Click += (_, _) => ShowMainWindow();
         menu.Items.Add(_openItem);
 
-        _searchItem = new NativeMenuItem(L.T("DesktopShell.QuickSearch")) { Gesture = _activeHotkey?.ToGesture() };
+        _dropItem = new NativeMenuItem(L.T("DesktopShell.DropWindow")) { Gesture = _dropHotkey?.Active?.ToGesture() };
+        _dropItem.Click += (_, _) => ShowDropWindow();
+        menu.Items.Add(_dropItem);
+
+        _searchItem = new NativeMenuItem(L.T("DesktopShell.QuickSearch")) { Gesture = _searchHotkey?.Active?.ToGesture() };
         _searchItem.Click += (_, _) => ShowQuickSearch();
         menu.Items.Add(_searchItem);
 
@@ -675,7 +748,14 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             Menu = menu,
             IsVisible = true,
         };
-        _tray.Clicked += (_, _) => ToggleQuickSearch();
+        // Щелчок — окно Drag&Drop, двойной щелчок — главное окно (этап 18.1, ADR-0011). Avalonia поднимает Clicked на каждое
+        // отпускание кнопки, поэтому щелчок ждёт интервал двойного щелчка.
+        _trayClicks = new TrayClickRecognizer(
+            DoubleClickInterval(),
+            static (delay, action) => DispatcherTimer.RunOnce(action, delay),
+            ToggleDropWindow,
+            ShowMainWindow);
+        _tray.Clicked += (_, _) => _trayClicks.OnClicked();
 
         if (Application.Current is { } application)
         {
@@ -686,12 +766,13 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     /// <summary>Подписи меню трея и подсказка — на новом языке после его смены (этап 9.2).</summary>
     private void RelabelTray()
     {
-        if (_openItem is null || _searchItem is null || _settingsItem is null || _exitItem is null)
+        if (_openItem is null || _dropItem is null || _searchItem is null || _settingsItem is null || _exitItem is null)
         {
             return;
         }
 
         _openItem.Header = L.T("DesktopShell.OpenDiskApp");
+        _dropItem.Header = L.T("DesktopShell.DropWindow");
         _searchItem.Header = L.T("DesktopShell.QuickSearch");
         _settingsItem.Header = L.T("DesktopShell.Settings");
         _exitItem.Header = L.T("DesktopShell.Exit");
@@ -699,8 +780,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     }
 
     /// <summary>
-    /// Регистрирует сочетание быстрого поиска из настроек, а если оно занято — первое свободное из запасных (ADR-0006);
-    /// итог — в <see cref="HotkeyStatus"/>. Изменение сочетания в настройках перерегистрирует его без перезапуска.
+    /// Регистрирует сочетания быстрого поиска, главного окна и окна Drag&amp;Drop из настроек, а если сочетание занято —
+    /// первое свободное из запасных (ADR-0006, ADR-0011); итог — в <see cref="HotkeyStatus"/>. Изменение сочетания в
+    /// настройках перерегистрирует его без перезапуска.
     /// </summary>
     private void RegisterHotkey()
     {
@@ -708,8 +790,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         if (!OperatingSystem.IsWindows())
         {
-            status.IsRegistered = false;
-            status.Message = L.T("DesktopShell.GlobalHotkeysWorkOnlyOnWindows");
+            SetAllHotkeysUnavailable(status, L.T("DesktopShell.GlobalHotkeysWorkOnlyOnWindows"));
             return;
         }
 
@@ -719,8 +800,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         }
         catch (Win32Exception exception)
         {
-            status.IsRegistered = false;
-            status.Message = L.F("DesktopShell.CouldNotCreateTheWindowThat", exception.Message);
+            SetAllHotkeysUnavailable(status, L.F("DesktopShell.CouldNotCreateTheWindowThat", exception.Message));
             _log.Warning(exception, "Окно сообщений для горячей клавиши не создано");
             return;
         }
@@ -738,86 +818,65 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         }
 
         var settings = _services.GetRequiredService<ISettingsStore<AppSettings>>();
-        RegisterQuickSearchHotkey(settings.Current.Hotkeys.QuickSearch);
+        _searchHotkey = new ShellHotkey(SearchHotkeyId, HotkeyTarget.QuickSearch, ToggleQuickSearch, _log);
+        _mainHotkey = new ShellHotkey(MainWindowHotkeyId, HotkeyTarget.MainWindow, ToggleMainWindow, _log);
+        _dropHotkey = new ShellHotkey(DropWindowHotkeyId, HotkeyTarget.DropWindow, ToggleDropWindow, _log);
+
+        RegisterShellHotkey(_searchHotkey, settings.Current.Hotkeys);
         if (!_safeMode)
         {
             _services.GetService<QuickSwitchController>()?.Attach(_messageWindow, OnQuickSwitchPressed);
         }
+
+        RegisterShellHotkey(_mainHotkey, settings.Current.Hotkeys);
+        RegisterShellHotkey(_dropHotkey, settings.Current.Hotkeys);
         _settingsSubscription = settings.Subscribe(changed => Dispatcher.UIThread.Post(() =>
         {
             ApplySettings(changed);
             _ = _services.GetRequiredService<SettingsViewModel>().LoadSettingsAsync();
-            if (OperatingSystem.IsWindows() && !_safeMode)
+            if (!OperatingSystem.IsWindows() || _exiting)
+            {
+                return;
+            }
+
+            if (!_safeMode)
             {
                 _services.GetService<QuickSwitchController>()?.Reconfigure();
             }
 
-            if (OperatingSystem.IsWindows() && !_exiting && !string.Equals(changed.Hotkeys.QuickSearch, _registeredSetting, StringComparison.Ordinal))
+            foreach (var slot in new[] { _searchHotkey, _mainHotkey, _dropHotkey })
             {
-                RegisterQuickSearchHotkey(changed.Hotkeys.QuickSearch);
+                if (slot is not null && !string.Equals(ConfiguredFor(changed.Hotkeys, slot.Target), slot.Configured, StringComparison.Ordinal))
+                {
+                    RegisterShellHotkey(slot, changed.Hotkeys);
+                }
             }
         }));
     }
 
-    [SupportedOSPlatform("windows")]
-    private void RegisterQuickSearchHotkey(string configured)
+    private static void SetAllHotkeysUnavailable(HotkeyStatus status, string message)
     {
-        var status = _services.GetRequiredService<HotkeyStatus>();
-        _hotkey?.Dispose();
-        _hotkey = null;
-        _activeHotkey = null;
-        _registeredSetting = configured;
+        status.Set(HotkeyTarget.QuickSearch, string.Empty, message);
+        status.Set(HotkeyTarget.MainWindow, string.Empty, message);
+        status.Set(HotkeyTarget.DropWindow, string.Empty, message);
+    }
 
-        var recognized = Hotkey.TryParse(configured, out var preferred);
-        preferred ??= Hotkey.DefaultQuickSearch;
-        var candidates = new[] { preferred }.Concat(Hotkey.QuickSearchFallbacks).Distinct().ToArray();
-        var failures = new List<string>();
-        foreach (var candidate in candidates)
+    [SupportedOSPlatform("windows")]
+    private void RegisterShellHotkey(ShellHotkey slot, HotkeySettings hotkeys)
+    {
+        var message = slot.Register(_messageWindow!, ConfiguredFor(hotkeys, slot.Target), ReservedFor(slot.Target, hotkeys));
+        _services.GetRequiredService<HotkeyStatus>().Set(slot.Target, slot.Active?.DisplayText ?? string.Empty, message);
+
+        var item = slot.Target switch
         {
-            if (HotkeyKeys.ToVirtualKey(candidate.Key) is not { } virtualKey)
-            {
-                failures.Add(L.F("DesktopShell.TheKeyIsNotSupported2", candidate.DisplayText));
-                continue;
-            }
-
-            try
-            {
-                _hotkey = GlobalHotkey.Register(_messageWindow!, SearchHotkeyId, (uint)candidate.Modifiers, virtualKey);
-            }
-            catch (Win32Exception exception)
-            {
-                failures.Add($"{candidate.DisplayText} — {exception.Message}");
-                _log.Debug("Сочетание {Hotkey} не зарегистрировано: {Reason}", candidate.DisplayText, exception.Message);
-                continue;
-            }
-
-            _hotkey.Pressed += (_, _) => ToggleQuickSearch();
-            _activeHotkey = candidate;
-            status.QuickSearchText = candidate.DisplayText;
-            status.IsRegistered = true;
-            status.Message = !recognized
-                ? L.F("DesktopShell.TheShortcutInSettingsIsNot", configured, candidate.DisplayText)
-                : candidate == preferred
-                    ? string.Empty
-                    : L.F("DesktopShell.IsTakenByAnotherAppSo", preferred.DisplayText, candidate.DisplayText);
-
-            if (status.Message.Length > 0)
-            {
-                _log.Warning("Запасное сочетание: {Message}", status.Message);
-            }
-
-            if (_searchItem is not null)
-            {
-                _searchItem.Gesture = candidate.ToGesture();
-            }
-
-            return;
+            HotkeyTarget.MainWindow => _openItem,
+            HotkeyTarget.DropWindow => _dropItem,
+            _ => _searchItem,
+        };
+        if (item is not null)
+        {
+            item.Gesture = slot.Active?.ToGesture();
         }
-
-        status.IsRegistered = false;
-        status.Message = L.T("DesktopShell.NoShortcutCouldBeRegistered") + string.Join("; ", failures)
-            + L.T("DesktopShell.SearchOpensWithAClickOn");
-        _log.Warning("Горячая клавиша недоступна: {Message}", status.Message);
     }
 
     /// <summary>
@@ -1010,6 +1069,45 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     }
 
     /// <summary>
+    /// Хоткей главного окна (этап 18.1): активное окно прячется в трей, иначе показывается и выходит вперёд.
+    /// </summary>
+    private void ToggleMainWindow()
+    {
+        if (_mainWindow is { IsVisible: true, IsActive: true } window && window.WindowState != WindowState.Minimized)
+        {
+            SavePlacement(window);
+            window.Hide();
+            return;
+        }
+
+        ShowMainWindow();
+    }
+
+    /// <summary>Щелчок по значку в трее или хоткей (этап 18.1): окно Drag&amp;Drop показывается или прячется.</summary>
+    private void ToggleDropWindow() => _dropWindow?.Toggle(DropAnchor());
+
+    /// <summary>Пункт меню трея: окно Drag&amp;Drop показывается, даже если уже открыто.</summary>
+    private void ShowDropWindow() => _dropWindow?.ShowNear(DropAnchor());
+
+    /// <summary>
+    /// По курсору выбирается монитор и место окна Drag&amp;Drop: при щелчке по значку курсор на панели задач.
+    /// </summary>
+    private PixelPoint DropAnchor()
+        => (OperatingSystem.IsWindows() ? WindowEffects.GetCursorPosition() : null)
+            ?? _dropWindow?.Screens.Primary?.Bounds.BottomRight
+            ?? default;
+
+    /// <summary>
+    /// Интервал двойного щелчка из настроек мыши Windows, в разумных пределах: от него зависит, как быстро откликается
+    /// одиночный щелчок по значку.
+    /// </summary>
+    private static TimeSpan DoubleClickInterval()
+    {
+        var milliseconds = OperatingSystem.IsWindows() ? NativeMethods.GetDoubleClickTime() : 500u;
+        return TimeSpan.FromMilliseconds(Math.Clamp(milliseconds, 200u, 900u));
+    }
+
+    /// <summary>
     /// Обычный показ поиска отменяет незавершённый выбор папки для диалога: окно могли закрыть щелчком мимо.
     /// </summary>
     private void LeaveFolderPick()
@@ -1160,6 +1258,12 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             _quickSearch.ReduceMotion = reduce;
             _quickSearch.HideOnDeactivate = settings.Popup.HideOnDeactivate;
             _quickSearch.ApplyAppearance(EffectiveBackdrop(appearance), scale, appearance.Compact);
+        }
+
+        if (_dropWindow is not null)
+        {
+            _dropWindow.ReduceMotion = reduce;
+            _dropWindow.ApplyAppearance(EffectiveBackdrop(appearance), scale, appearance.Compact);
         }
 
         _mainWindow?.ApplyAppearance(EffectiveBackdrop(appearance), scale, appearance.Compact);

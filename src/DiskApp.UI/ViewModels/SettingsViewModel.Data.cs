@@ -31,7 +31,7 @@ public sealed partial class SettingsViewModel
 
     /// <summary>Какое сочетание сейчас записывается; <c>null</c> — никакое.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsRecordingQuickSearch), nameof(IsRecordingQuickSwitch))]
+    [NotifyPropertyChangedFor(nameof(IsRecordingQuickSearch), nameof(IsRecordingQuickSwitch), nameof(IsRecordingMainWindow), nameof(IsRecordingDropWindow))]
     public partial HotkeyTarget? RecordingTarget { get; set; }
 
     /// <summary>Записывается сочетание быстрого поиска.</summary>
@@ -39,6 +39,12 @@ public sealed partial class SettingsViewModel
 
     /// <summary>Записывается сочетание Quick Switch.</summary>
     public bool IsRecordingQuickSwitch => RecordingTarget == HotkeyTarget.QuickSwitch;
+
+    /// <summary>Записывается сочетание главного окна.</summary>
+    public bool IsRecordingMainWindow => RecordingTarget == HotkeyTarget.MainWindow;
+
+    /// <summary>Записывается сочетание окна Drag&amp;Drop.</summary>
+    public bool IsRecordingDropWindow => RecordingTarget == HotkeyTarget.DropWindow;
 
     /// <summary>Почему записанное сочетание не принято; пусто — всё хорошо.</summary>
     [ObservableProperty]
@@ -165,15 +171,25 @@ public sealed partial class SettingsViewModel
 
         RecordingTarget = null;
         HotkeyNote = string.Empty;
-        if (target == HotkeyTarget.QuickSearch)
+        var text = hotkey.ToString();
+        switch (target)
         {
-            QuickSearchHotkey = hotkey.ToString();
-            Save("hotkeys", "quickSearch", hotkey.ToString());
-        }
-        else
-        {
-            QuickSwitchHotkey = hotkey.ToString();
-            Save("hotkeys", "quickSwitch", hotkey.ToString());
+            case HotkeyTarget.QuickSearch:
+                QuickSearchHotkey = text;
+                Save("hotkeys", "quickSearch", text);
+                break;
+            case HotkeyTarget.MainWindow:
+                MainWindowHotkey = text;
+                Save("hotkeys", "mainWindow", text);
+                break;
+            case HotkeyTarget.DropWindow:
+                DropWindowHotkey = text;
+                Save("hotkeys", "dropWindow", text);
+                break;
+            default:
+                QuickSwitchHotkey = text;
+                Save("hotkeys", "quickSwitch", text);
+                break;
         }
     }
 
@@ -205,8 +221,7 @@ public sealed partial class SettingsViewModel
 
     /// <summary>Вернуть сочетание по умолчанию.</summary>
     [RelayCommand]
-    private void ResetHotkey(HotkeyTarget target)
-        => ApplyHotkey(target, target == HotkeyTarget.QuickSearch ? Hotkey.DefaultQuickSearch : Hotkey.DefaultQuickSwitch);
+    private void ResetHotkey(HotkeyTarget target) => ApplyHotkey(target, Hotkey.DefaultFor(target));
 
     /// <summary>Перечитывает сведения о данных.</summary>
     private async Task RefreshDataAsync()

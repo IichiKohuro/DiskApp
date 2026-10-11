@@ -103,7 +103,8 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         Categories =
         [
             new SettingsCategory("appearance", L.T("Settings.Appearance"), FASymbol.ColorBackground),
-            new SettingsCategory("quick", L.T("Settings.QuickSearch"), FASymbol.Keyboard),
+            new SettingsCategory("hotkeys", L.T("Settings.Hotkeys"), FASymbol.Keyboard),
+            new SettingsCategory("quick", L.T("Settings.QuickSearch"), FASymbol.View),
             new SettingsCategory("search", L.T("Settings.Search"), FASymbol.Find),
             new SettingsCategory("index", L.T("Settings.Index"), FASymbol.Folder),
             new SettingsCategory("behavior", L.T("Settings.Behavior"), FASymbol.Settings),
@@ -185,11 +186,8 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
     [ObservableProperty]
     public partial bool RemindAboutInbox { get; set; }
 
-    /// <summary>Действующее сочетание быстрого поиска (решение 15 плана, ADR-0006; настраиваемым станет в этапе 6.5).</summary>
+    /// <summary>Действующие глобальные сочетания: быстрый поиск, главное окно, окно Drag&amp;Drop (ADR-0006, ADR-0011).</summary>
     public HotkeyStatus Hotkeys { get; }
-
-    /// <summary>Горячая клавиша разбора входящих.</summary>
-    public string InboxHotkeyText { get; } = "Ctrl + Alt + I";
 
     /// <summary>Расписание напоминаний.</summary>
     public string ReminderText { get; } = L.T("Settings.DailyAt1800AndWhen");

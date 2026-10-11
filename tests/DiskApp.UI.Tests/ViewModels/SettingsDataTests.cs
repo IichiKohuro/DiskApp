@@ -59,6 +59,43 @@ public sealed class SettingsDataTests : IDisposable
     }
 
     [Fact]
+    public async Task RecordKey_MainWindow_SavesItsOwnSetting()
+    {
+        // Arrange
+        var page = await CreateAsync();
+        page.StartRecordingCommand.Execute(HotkeyTarget.MainWindow);
+
+        // Act
+        page.IsRecordingMainWindow.ShouldBeTrue();
+        page.RecordKey(Key.K, KeyModifiers.Control | KeyModifiers.Alt);
+        await page.PendingSave;
+
+        // Assert
+        page.MainWindowHotkey.ShouldBe("Ctrl+Alt+K");
+        var saved = (await _settings.GetAsync(TestContext.Current.CancellationToken)).Hotkeys;
+        saved.MainWindow.ShouldBe("Ctrl+Alt+K");
+        saved.QuickSearch.ShouldBe("Ctrl+Alt+D", "другие сочетания не меняются");
+        saved.DropWindow.ShouldBe("Ctrl+Alt+B");
+    }
+
+    [Fact]
+    public async Task ResetHotkey_DropWindow_RestoresDefault()
+    {
+        // Arrange
+        var page = await CreateAsync();
+        page.ApplyHotkey(HotkeyTarget.DropWindow, new Hotkey(HotkeyModifiers.Control | HotkeyModifiers.Alt, "J"));
+        await page.PendingSave;
+
+        // Act
+        page.ResetHotkeyCommand.Execute(HotkeyTarget.DropWindow);
+        await page.PendingSave;
+
+        // Assert
+        page.DropWindowHotkey.ShouldBe("Ctrl+Alt+B");
+        (await _settings.GetAsync(TestContext.Current.CancellationToken)).Hotkeys.DropWindow.ShouldBe("Ctrl+Alt+B");
+    }
+
+    [Fact]
     public async Task RecordKey_WithoutCtrlAltWin_ExplainsAndKeepsRecording()
     {
         // Arrange

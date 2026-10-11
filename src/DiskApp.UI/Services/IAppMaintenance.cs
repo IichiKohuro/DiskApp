@@ -112,6 +112,12 @@ public enum HotkeyTarget
 
     /// <summary>Quick Switch.</summary>
     QuickSwitch,
+
+    /// <summary>Главное окно (PLAN.md, этап 18.1).</summary>
+    MainWindow,
+
+    /// <summary>Окно Drag&amp;Drop (PLAN.md, этап 18.1).</summary>
+    DropWindow,
 }
 
 /// <summary>

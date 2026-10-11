@@ -74,4 +74,37 @@ public sealed class HotkeyTests
         Hotkey.DefaultQuickSearch.ToString().ShouldBe("Ctrl+Alt+D");
         Hotkey.QuickSearchFallbacks.Distinct().Count().ShouldBe(Hotkey.QuickSearchFallbacks.Count);
     }
+
+    [Fact]
+    public void DefaultFor_EveryTargetHasItsOwnShortcut()
+    {
+        // Arrange
+        var targets = Enum.GetValues<HotkeyTarget>();
+
+        // Act
+        var defaults = targets.Select(Hotkey.DefaultFor).ToArray();
+
+        // Assert
+        Hotkey.DefaultFor(HotkeyTarget.MainWindow).ToString().ShouldBe("Ctrl+Alt+O");
+        Hotkey.DefaultFor(HotkeyTarget.DropWindow).ToString().ShouldBe("Ctrl+Alt+B");
+        defaults.Distinct().Count().ShouldBe(targets.Length);
+    }
+
+    [Theory]
+    [InlineData(HotkeyTarget.QuickSearch)]
+    [InlineData(HotkeyTarget.MainWindow)]
+    [InlineData(HotkeyTarget.DropWindow)]
+    public void FallbacksFor_StartWithDefaultAndDoNotTouchOtherDefaults(HotkeyTarget target)
+    {
+        // Arrange
+        var others = Enum.GetValues<HotkeyTarget>().Where(other => other != target).Select(Hotkey.DefaultFor).ToHashSet();
+
+        // Act
+        var fallbacks = Hotkey.FallbacksFor(target);
+
+        // Assert
+        fallbacks[0].ShouldBe(Hotkey.DefaultFor(target));
+        fallbacks.Distinct().Count().ShouldBe(fallbacks.Count);
+        fallbacks.ShouldNotContain(fallback => others.Contains(fallback));
+    }
 }

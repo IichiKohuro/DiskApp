@@ -13,6 +13,9 @@ public static class Tips
 
     /// <summary>Перетаскивание папок — на главной.</summary>
     public const string Drop = "drop";
+
+    /// <summary>Новое поведение значка в трее — в окне Drag&amp;Drop (PLAN.md, этап 18.1).</summary>
+    public const string TrayClicks = "trayClicks";
 }
 
 /// <summary>

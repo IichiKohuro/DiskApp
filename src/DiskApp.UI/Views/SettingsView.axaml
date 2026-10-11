@@ -108,13 +108,13 @@
                     </ui:FASettingsExpander>
                 </StackPanel>
 
-                <!-- Быстрый поиск -->
-                <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=quick}">
-                    <TextBlock Classes="section" Text="{loc:Str Settings.QuickSearch}" />
-                    <ui:FASettingsExpander Header="{loc:Str Settings.Hotkey}"
+                <!-- Горячие клавиши (этап 18.1): быстрый поиск, главное окно, окно Drag&Drop, Quick Switch -->
+                <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=hotkeys}">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Hotkeys}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.QuickSearch}"
                                            Description="{loc:Str Settings.ShowOrHideTheQuickSearch}"
                                            IsExpanded="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Keyboard" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Find" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <WrapPanel ItemSpacing="8" LineSpacing="8">
                                 <Border Classes="chip" Padding="10,4" IsVisible="{Binding !IsRecordingQuickSearch}">
@@ -129,6 +129,46 @@
                         </ui:FASettingsExpander.Footer>
                         <ui:FASettingsExpanderItem AutomationProperties.Name="{Binding Hotkeys.Message}" IsVisible="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                             <TextBlock Text="{Binding Hotkeys.Message}" TextWrapping="Wrap" />
+                        </ui:FASettingsExpanderItem>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.MainWindowHotkey}"
+                                           Description="{loc:Str Settings.MainWindowHotkeyText}"
+                                           IsExpanded="{Binding Hotkeys.MainWindowMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Home" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <WrapPanel ItemSpacing="8" LineSpacing="8">
+                                <Border Classes="chip" Padding="10,4" IsVisible="{Binding !IsRecordingMainWindow}">
+                                    <TextBlock Text="{Binding Hotkeys.MainWindowText}" FontSize="13" />
+                                </Border>
+                                <Border Classes="chip accent" Padding="10,4" IsVisible="{Binding IsRecordingMainWindow}">
+                                    <TextBlock Text="{loc:Str Settings.PressTheShortcutEscCancels}" FontSize="13" />
+                                </Border>
+                                <Button Content="{loc:Str Settings.Change}" Command="{Binding StartRecordingCommand}" CommandParameter="{x:Static svc:HotkeyTarget.MainWindow}" />
+                                <Button Content="{loc:Str Settings.Default}" Command="{Binding ResetHotkeyCommand}" CommandParameter="{x:Static svc:HotkeyTarget.MainWindow}" />
+                            </WrapPanel>
+                        </ui:FASettingsExpander.Footer>
+                        <ui:FASettingsExpanderItem AutomationProperties.Name="{Binding Hotkeys.MainWindowMessage}" IsVisible="{Binding Hotkeys.MainWindowMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock Text="{Binding Hotkeys.MainWindowMessage}" TextWrapping="Wrap" />
+                        </ui:FASettingsExpanderItem>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.DropWindowHotkey}"
+                                           Description="{loc:Str Settings.DropWindowHotkeyText}"
+                                           IsExpanded="{Binding Hotkeys.DropWindowMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Download" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <WrapPanel ItemSpacing="8" LineSpacing="8">
+                                <Border Classes="chip" Padding="10,4" IsVisible="{Binding !IsRecordingDropWindow}">
+                                    <TextBlock Text="{Binding Hotkeys.DropWindowText}" FontSize="13" />
+                                </Border>
+                                <Border Classes="chip accent" Padding="10,4" IsVisible="{Binding IsRecordingDropWindow}">
+                                    <TextBlock Text="{loc:Str Settings.PressTheShortcutEscCancels}" FontSize="13" />
+                                </Border>
+                                <Button Content="{loc:Str Settings.Change}" Command="{Binding StartRecordingCommand}" CommandParameter="{x:Static svc:HotkeyTarget.DropWindow}" />
+                                <Button Content="{loc:Str Settings.Default}" Command="{Binding ResetHotkeyCommand}" CommandParameter="{x:Static svc:HotkeyTarget.DropWindow}" />
+                            </WrapPanel>
+                        </ui:FASettingsExpander.Footer>
+                        <ui:FASettingsExpanderItem AutomationProperties.Name="{Binding Hotkeys.DropWindowMessage}" IsVisible="{Binding Hotkeys.DropWindowMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                            <TextBlock Text="{Binding Hotkeys.DropWindowMessage}" TextWrapping="Wrap" />
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
                     <ui:FASettingsExpander Header="Quick Switch" Description="{loc:Str Settings.ShortcutInTheSaveOrOpen}">
@@ -148,14 +188,11 @@
                     </ui:FASettingsExpander>
                     <TextBlock Margin="16,-2,16,6" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
                                Text="{Binding HotkeyNote}" IsVisible="{Binding HasHotkeyNote}" />
-                    <ui:FASettingsExpander Header="{loc:Str Settings.SortTheInbox}" Description="{loc:Str Settings.SortingSessionForDownloadsComingIn}">
-                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Download" /></ui:FASettingsExpander.IconSource>
-                        <ui:FASettingsExpander.Footer>
-                            <Border Classes="chip" Padding="10,4">
-                                <TextBlock Text="{Binding InboxHotkeyText}" FontSize="13" />
-                            </Border>
-                        </ui:FASettingsExpander.Footer>
-                    </ui:FASettingsExpander>
+                </StackPanel>
+
+                <!-- Быстрый поиск -->
+                <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=quick}">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.QuickSearch}" />
                     <ui:FASettingsExpander Header="{loc:Str Settings.Monitor}" Description="{loc:Str Settings.WhereToShowTheQuickSearch}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="DockLeft" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>

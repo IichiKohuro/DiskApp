@@ -101,7 +101,7 @@ public sealed class SampleSettingsService : ISettingsService
     /// <summary>Настройки нового приложения в форме API.</summary>
     public static SettingsDto Defaults() => new()
     {
-        Hotkeys = new HotkeySettingsDto { QuickSearch = "Ctrl+Alt+D", Triage = "Ctrl+Alt+I", QuickSwitch = "Ctrl+Alt+G" },
+        Hotkeys = new HotkeySettingsDto { QuickSearch = "Ctrl+Alt+D", Triage = "Ctrl+Alt+I", QuickSwitch = "Ctrl+Alt+G", MainWindow = "Ctrl+Alt+O", DropWindow = "Ctrl+Alt+B" },
         Appearance = new AppearanceSettingsDto { UseSystemAccent = true, FontScale = 1.0 },
         Indexing = new IndexingSettingsDto
         {

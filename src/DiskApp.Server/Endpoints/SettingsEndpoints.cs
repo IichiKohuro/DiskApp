@@ -177,6 +177,16 @@ internal static partial class SettingsEndpoints
             errors["hotkeys.quickSwitch"] = [L.T("Settings.ShortcutEmpty")];
         }
 
+        if (string.IsNullOrWhiteSpace(settings.Hotkeys.MainWindow))
+        {
+            errors["hotkeys.mainWindow"] = [L.T("Settings.ShortcutEmpty")];
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.Hotkeys.DropWindow))
+        {
+            errors["hotkeys.dropWindow"] = [L.T("Settings.ShortcutEmpty")];
+        }
+
         if (settings.Appearance.FontScale is < 0.9 or > 1.5 || double.IsNaN(settings.Appearance.FontScale))
         {
             errors["appearance.fontScale"] = [L.T("SettingsEndpoints.AllowedFrom09To1")];

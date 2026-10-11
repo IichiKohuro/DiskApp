@@ -155,7 +155,14 @@ internal static class DtoMapper
 
     public static SettingsDto ToDto(this AppSettings settings) => new()
     {
-        Hotkeys = new HotkeySettingsDto { QuickSearch = settings.Hotkeys.QuickSearch, Triage = settings.Hotkeys.Triage, QuickSwitch = settings.Hotkeys.QuickSwitch },
+        Hotkeys = new HotkeySettingsDto
+        {
+            QuickSearch = settings.Hotkeys.QuickSearch,
+            Triage = settings.Hotkeys.Triage,
+            QuickSwitch = settings.Hotkeys.QuickSwitch,
+            MainWindow = settings.Hotkeys.MainWindow,
+            DropWindow = settings.Hotkeys.DropWindow,
+        },
         Appearance = new AppearanceSettingsDto
         {
             Theme = (Contract.App.ThemeMode)(int)settings.Appearance.Theme,
@@ -231,7 +238,14 @@ internal static class DtoMapper
     /// </summary>
     public static AppSettings ToDomain(this SettingsDto dto, AppSettings current) => current with
     {
-        Hotkeys = current.Hotkeys with { QuickSearch = dto.Hotkeys.QuickSearch, Triage = dto.Hotkeys.Triage, QuickSwitch = dto.Hotkeys.QuickSwitch },
+        Hotkeys = current.Hotkeys with
+        {
+            QuickSearch = dto.Hotkeys.QuickSearch,
+            Triage = dto.Hotkeys.Triage,
+            QuickSwitch = dto.Hotkeys.QuickSwitch,
+            MainWindow = dto.Hotkeys.MainWindow,
+            DropWindow = dto.Hotkeys.DropWindow,
+        },
         Appearance = current.Appearance with
         {
             Theme = (Core.Settings.ThemeMode)(int)dto.Appearance.Theme,

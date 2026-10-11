@@ -801,8 +801,8 @@
   <data name="DesktopShell.SaveDialogNotFound" xml:space="preserve">
     <value>Save dialog not found</value>
   </data>
-  <data name="DesktopShell.SearchOpensWithAClickOn" xml:space="preserve">
-    <value>. Search opens with a click on the tray icon; you can change the shortcut in settings.</value>
+  <data name="DesktopShell.SearchOpensFromTrayMenu" xml:space="preserve">
+    <value>. Quick search opens from the tray icon menu; you can change the shortcut in settings.</value>
   </data>
   <data name="DesktopShell.Settings" xml:space="preserve">
     <value>Settings</value>
@@ -836,12 +836,6 @@
   </data>
   <data name="DesktopShell.TheShortcutIsTakenByAnother" xml:space="preserve">
     <value>the shortcut is taken by another app.</value>
-  </data>
-  <data name="DesktopShell.ThisShortcutAlreadyBelongsToQuick" xml:space="preserve">
-    <value>this shortcut already belongs to Quick Switch.</value>
-  </data>
-  <data name="DesktopShell.ThisShortcutAlreadyBelongsToQuick2" xml:space="preserve">
-    <value>this shortcut already belongs to quick search.</value>
   </data>
   <data name="DetailsPane.SelectAFileInTheList" xml:space="preserve">
     <value>Select a file in the list — its details and actions appear here</value>
@@ -2448,14 +2442,8 @@
   <data name="Settings.SizeOfTextAndControlsIn" xml:space="preserve">
     <value>Size of text and controls in the main window and the search window</value>
   </data>
-  <data name="Settings.SortTheInbox" xml:space="preserve">
-    <value>Sort the inbox</value>
-  </data>
   <data name="Settings.SortingCollectionFolders" xml:space="preserve">
     <value>Sorting collection folders</value>
-  </data>
-  <data name="Settings.SortingSessionForDownloadsComingIn" xml:space="preserve">
-    <value>Sorting session for Downloads — coming in stage 17</value>
   </data>
   <data name="Settings.StartMinimized" xml:space="preserve">
     <value>Start minimized</value>
@@ -3011,5 +2999,62 @@
   </data>
   <data name="Sorting.InsertTokenTip" xml:space="preserve">
     <value>Insert the name, date, time, tags, folder or number into the template</value>
+  </data>
+  <data name="DesktopShell.DropWindow" xml:space="preserve">
+    <value>Drag&amp;Drop window</value>
+  </data>
+  <data name="DesktopShell.TargetQuickSearch" xml:space="preserve">
+    <value>quick search</value>
+  </data>
+  <data name="DesktopShell.TargetMainWindow" xml:space="preserve">
+    <value>the main window</value>
+  </data>
+  <data name="DesktopShell.TargetDropWindow" xml:space="preserve">
+    <value>the Drag&amp;Drop window</value>
+  </data>
+  <data name="DesktopShell.ShortcutBelongsTo" xml:space="preserve">
+    <value>this shortcut is already assigned to {0}.</value>
+  </data>
+  <data name="DesktopShell.MainWindowOpensWithDoubleClick" xml:space="preserve">
+    <value>. The main window opens with a double-click on the tray icon; you can change the shortcut in settings.</value>
+  </data>
+  <data name="DesktopShell.DropWindowOpensWithClick" xml:space="preserve">
+    <value>. The Drag&amp;Drop window opens with a click on the tray icon; you can change the shortcut in settings.</value>
+  </data>
+  <data name="Drop.WindowTitle" xml:space="preserve">
+    <value>DiskApp — Drag&amp;Drop</value>
+  </data>
+  <data name="Drop.Title" xml:space="preserve">
+    <value>Drop files</value>
+  </data>
+  <data name="Drop.Close" xml:space="preserve">
+    <value>Close (Esc)</value>
+  </data>
+  <data name="Drop.InboxTitle" xml:space="preserve">
+    <value>Drag files here</value>
+  </data>
+  <data name="Drop.InboxText" xml:space="preserve">
+    <value>They go to the main collector folder</value>
+  </data>
+  <data name="Drop.TrayHint" xml:space="preserve">
+    <value>A click on the tray icon now opens this window. Double-click opens the main window; quick search is {0}.</value>
+  </data>
+  <data name="Drop.TrayHintNoHotkey" xml:space="preserve">
+    <value>A click on the tray icon now opens this window. Double-click opens the main window; quick search is in the icon menu.</value>
+  </data>
+  <data name="Settings.Hotkeys" xml:space="preserve">
+    <value>Shortcuts</value>
+  </data>
+  <data name="Settings.MainWindowHotkey" xml:space="preserve">
+    <value>Main window</value>
+  </data>
+  <data name="Settings.MainWindowHotkeyText" xml:space="preserve">
+    <value>Show or hide the main window. A double-click on the tray icon opens it too.</value>
+  </data>
+  <data name="Settings.DropWindowHotkey" xml:space="preserve">
+    <value>Drag&amp;Drop window</value>
+  </data>
+  <data name="Settings.DropWindowHotkeyText" xml:space="preserve">
+    <value>Show or hide the window to drop files into. A click on the tray icon opens it too.</value>
   </data>
 </root>

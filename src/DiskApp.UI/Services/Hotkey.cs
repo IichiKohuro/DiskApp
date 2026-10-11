@@ -52,6 +52,45 @@ public sealed record Hotkey(HotkeyModifiers Modifiers, string Key)
     /// <summary>Сочетание Quick Switch по умолчанию (PLAN.md, этап 8.6, ADR-0008).</summary>
     public static Hotkey DefaultQuickSwitch { get; } = new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "G");
 
+    /// <summary>Сочетание главного окна по умолчанию: «O» — «открыть» (PLAN.md, этап 18.1, ADR-0011).</summary>
+    public static Hotkey DefaultMainWindow { get; } = new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "O");
+
+    /// <summary>Сочетание окна Drag&amp;Drop по умолчанию: «B» — «бросить» (PLAN.md, этап 18.1, ADR-0011).</summary>
+    public static Hotkey DefaultDropWindow { get; } = new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "B");
+
+    /// <summary>
+    /// Сочетание по умолчанию для функции.
+    /// </summary>
+    public static Hotkey DefaultFor(HotkeyTarget target) => target switch
+    {
+        HotkeyTarget.QuickSwitch => DefaultQuickSwitch,
+        HotkeyTarget.MainWindow => DefaultMainWindow,
+        HotkeyTarget.DropWindow => DefaultDropWindow,
+        _ => DefaultQuickSearch,
+    };
+
+    /// <summary>
+    /// Запасные сочетания функции по убыванию предпочтения: берутся по очереди, если выбранное занято другим
+    /// приложением (ADR-0006, ADR-0011). У Quick Switch запасных нет: он экспериментальный и включается вручную.
+    /// </summary>
+    public static IReadOnlyList<Hotkey> FallbacksFor(HotkeyTarget target) => target switch
+    {
+        HotkeyTarget.QuickSearch => QuickSearchFallbacks,
+        HotkeyTarget.MainWindow =>
+        [
+            DefaultMainWindow,
+            new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "W"),
+            new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "M"),
+        ],
+        HotkeyTarget.DropWindow =>
+        [
+            DefaultDropWindow,
+            new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "J"),
+            new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "X"),
+        ],
+        _ => [DefaultQuickSwitch],
+    };
+
     /// <summary>Подпись для интерфейса: «Ctrl + Alt + D».</summary>
     public string DisplayText => string.Join(" + ", Parts());
 
