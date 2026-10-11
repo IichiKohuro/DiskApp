@@ -377,6 +377,8 @@ public sealed class QuickSearchViewModelTests
 
         public Task<IReadOnlyList<string>> GetHistoryAsync(CancellationToken cancellationToken) => _inner.GetHistoryAsync(cancellationToken);
 
+        public Task<IReadOnlyList<FileEntry>> GetChangedSinceAsync(TimeSpan period, CancellationToken cancellationToken) => _inner.GetChangedSinceAsync(period, cancellationToken);
+
         public Task<IReadOnlyList<QuerySuggestion>> SuggestAsync(string query, CancellationToken cancellationToken) => _inner.SuggestAsync(query, cancellationToken);
 
         public Task DeleteHistoryAsync(string query, CancellationToken cancellationToken) => _inner.DeleteHistoryAsync(query, cancellationToken);

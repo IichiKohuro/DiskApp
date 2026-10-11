@@ -133,6 +133,7 @@ internal static class Program
             services.AddSingleton<IFileActions, ApiFileActions>();
             services.AddSingleton<IClipboardService, ShellClipboardService>();
             services.AddSingleton<IIconCache, ApiIconCache>();
+            services.AddSingleton<IRootsService, ApiRootsService>();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));

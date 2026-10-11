@@ -32,6 +32,9 @@ public static class ApiRoutes
         /// <summary>Возобновить индексацию.</summary>
         public const string RootResume = RootById + "/resume";
 
+        /// <summary>Сводка корня: число файлов и папок, суммарный размер.</summary>
+        public const string RootStats = RootById + "/stats";
+
         /// <summary>Состояние индексации.</summary>
         public const string IndexStatus = Prefix + "/index/status";
 

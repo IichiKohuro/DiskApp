@@ -80,6 +80,7 @@ public sealed partial class MainViewModel
 
         var wasIndexing = IsIndexing;
         _healthFromServer = true;
+        var changed = Health != health;
         Health = health;
         IsIndexing = health == IndexHealth.Indexing;
         IndexStatusShort = shortText;
@@ -99,6 +100,12 @@ public sealed partial class MainViewModel
         else
         {
             IsIndexBarOpen = false;
+        }
+
+        // Состояние корней сменилось: карточки на главной перечитываются.
+        if (changed && Pages.OfType<HomeViewModel>().FirstOrDefault() is { } home)
+        {
+            _ = home.RefreshRootsAsync();
         }
 
         // Индексация закончилась: подписи и счётчики страниц перечитываются.

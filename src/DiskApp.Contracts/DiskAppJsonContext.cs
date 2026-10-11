@@ -26,6 +26,7 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(RootDto))]
 [JsonSerializable(typeof(IReadOnlyList<RootDto>))]
 [JsonSerializable(typeof(RootDto[]))]
+[JsonSerializable(typeof(RootStatsDto))]
 [JsonSerializable(typeof(CreateRootRequest))]
 [JsonSerializable(typeof(UpdateRootRequest))]
 [JsonSerializable(typeof(IndexStatusDto))]

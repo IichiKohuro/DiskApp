@@ -25,6 +25,15 @@ public sealed record RootDto(
     RootStatus Status,
     string? ErrorMessage);
 
+/// <summary>
+/// Сводка корня: <c>GET /api/v1/roots/{id}/stats</c>.
+/// </summary>
+/// <param name="RootId">Корень.</param>
+/// <param name="FileCount">Файлов.</param>
+/// <param name="DirectoryCount">Папок.</param>
+/// <param name="TotalSize">Суммарный размер файлов в байтах.</param>
+public sealed record RootStatsDto(long RootId, long FileCount, long DirectoryCount, long TotalSize);
+
 /// <summary>Состояние корня.</summary>
 public enum RootStatus
 {

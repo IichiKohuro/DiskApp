@@ -8,7 +8,9 @@
              x:Class="DiskApp.UI.Views.HomeView"
              x:DataType="vm:HomeViewModel"
              Design.DataContext="{x:Static vm:DesignData.Home}">
-    <!-- Главная: приветствие и состояние индекса, быстрые действия, недавние файлы, входящие, подсказка по клавишам. -->
+    <!-- Главная: приветствие и состояние индекса, быстрые действия, корни индекса с действиями и добавлением папок
+         (кнопкой или перетаскиванием папки на страницу), недавние, закреплённые и изменённые за сутки файлы,
+         входящие, подсказка по клавишам. -->
     <ScrollViewer>
         <StackPanel Margin="{StaticResource PagePadding}" Spacing="16" MaxWidth="{StaticResource PageMaxWidth}">
 
@@ -47,9 +49,70 @@
                 </Button>
             </Grid>
 
+            <!-- Корни индекса -->
+            <StackPanel Spacing="8">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" x:Name="AddRootButton" Click="OnAddRootClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:SymbolIcon Symbol="FolderAdd" FontSize="16" />
+                            <TextBlock Text="Добавить папку" />
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Text="Корни индекса" />
+                </DockPanel>
+                <Border Classes="card" IsVisible="{Binding HasNoRoots}">
+                    <StackPanel Spacing="6" HorizontalAlignment="Center">
+                        <ic:SymbolIcon Symbol="FolderAdd" FontSize="32" HorizontalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                        <TextBlock HorizontalAlignment="Center" Text="Добавьте папку или диск, по которым искать" />
+                        <TextBlock Classes="secondary" FontSize="12" HorizontalAlignment="Center" Text="Кнопкой «Добавить папку» или перетащите папку из Проводника на эту страницу" />
+                    </StackPanel>
+                </Border>
+                <ItemsControl ItemsSource="{Binding Roots}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="2" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:RootCardViewModel">
+                            <Border Classes="card root" Classes.problem="{Binding IsProblem}" Margin="0,0,8,8">
+                                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                                    <ic:SymbolIcon Grid.RowSpan="2"
+                                                   Symbol="{Binding Symbol}"
+                                                   FontSize="28"
+                                                   Margin="0,0,12,0"
+                                                   VerticalAlignment="Top"
+                                                   Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                    <TextBlock Grid.Column="1" Theme="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" Text="{Binding Info.Label}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Classes="tertiary" FontSize="12" TextTrimming="CharacterEllipsis" Text="{Binding Info.Path}" ToolTip.Tip="{Binding Info.Path}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Classes="state" Margin="0,8,0,0" FontSize="13" TextWrapping="Wrap" Text="{Binding StateText}" />
+                                    <ProgressBar Grid.Row="2" Grid.Column="1" VerticalAlignment="Bottom" Margin="0,0,0,-4" IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
+                                    <StackPanel Grid.Row="3" Grid.Column="1" Spacing="2" Margin="0,6,0,0">
+                                        <TextBlock Classes="secondary" FontSize="12" Text="{Binding SummaryText}" IsVisible="{Binding SummaryText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                        <TextBlock Classes="secondary" FontSize="12" Text="{Binding LastScanText}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,10,0,0">
+                                        <Button Command="{Binding RescanCommand}" ToolTip.Tip="Полное сканирование заново">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="14" />
+                                                <TextBlock Text="Пересканировать" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{Binding TogglePauseCommand}" IsVisible="{Binding CanPause}">
+                                            <TextBlock Text="{Binding PauseText}" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
             <Grid ColumnDefinitions="3*,16,2*">
+                <StackPanel Grid.Column="0" Spacing="16">
                 <!-- Недавние файлы -->
-                <Border Grid.Column="0" Classes="card" Padding="12">
+                <Border Classes="card" Padding="12">
                     <StackPanel Spacing="8">
                         <DockPanel Margin="4,0,4,0">
                             <Button DockPanel.Dock="Right"
@@ -59,7 +122,7 @@
                             <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="Недавние файлы" VerticalAlignment="Center" />
                         </DockPanel>
                         <ListBox x:Name="RecentList"
-                                 Classes="results"
+                                 Classes="results files"
                                  ItemsSource="{Binding RecentFiles}"
                                  ItemTemplate="{StaticResource FileHitTemplate}"
                                  SelectionMode="Single" />
@@ -71,6 +134,29 @@
                                    IsVisible="{Binding LastOpenedText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                     </StackPanel>
                 </Border>
+
+                <!-- Закреплённые -->
+                <Border Classes="card" Padding="12" IsVisible="{Binding HasPinned}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Margin="4,0" Text="Закреплённые" />
+                        <ListBox Classes="results files"
+                                 ItemsSource="{Binding PinnedFiles}"
+                                 ItemTemplate="{StaticResource FileHitTemplate}"
+                                 SelectionMode="Single" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Изменённые за сутки -->
+                <Border Classes="card" Padding="12" IsVisible="{Binding HasChangedToday}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Margin="4,0" Text="Изменённые за сутки" />
+                        <ListBox Classes="results files"
+                                 ItemsSource="{Binding ChangedToday}"
+                                 ItemTemplate="{StaticResource FileHitTemplate}"
+                                 SelectionMode="Single" />
+                    </StackPanel>
+                </Border>
+                </StackPanel>
 
                 <StackPanel Grid.Column="2" Spacing="16">
                     <!-- Входящие -->

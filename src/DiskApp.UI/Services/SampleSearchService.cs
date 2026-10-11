@@ -120,6 +120,16 @@ public sealed class SampleSearchService : ISearchService
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyList<FileEntry>> GetChangedSinceAsync(TimeSpan period, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var since = _clock() - period;
+        return Task.FromResult<IReadOnlyList<FileEntry>>([.. _entries
+            .Where(entry => entry.Kind != FileKind.Folder && entry.Modified >= since)
+            .OrderByDescending(static entry => entry.Modified)]);
+    }
+
+    /// <inheritdoc />
     public Task<IReadOnlyList<QuerySuggestion>> SuggestAsync(string query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);

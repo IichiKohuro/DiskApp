@@ -30,6 +30,11 @@ public interface ISearchService
     Task<IReadOnlyList<string>> GetHistoryAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// Файлы, изменённые за последний <paramref name="period"/>, самые свежие первыми.
+    /// </summary>
+    Task<IReadOnlyList<FileEntry>> GetChangedSinceAsync(TimeSpan period, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Подсказки к запросу: для пустого — запросы из истории, для фильтра в конце (<c>ext:p</c>) — его ключи и значения.
     /// Текст передаётся как есть, с завершающим пробелом: после пробела дополнять нечего.
     /// </summary>

@@ -55,6 +55,27 @@ public sealed class RootsApiTests
     }
 
     [Fact]
+    public async Task GetStats_IndexedRoot_ReturnsCountsAndSize()
+    {
+        // Arrange
+        await using var context = await ServerTestContext.StartAsync();
+        context.Files.CreateFile("a.txt", "12345");
+        context.Files.CreateFile(Path.Combine("sub", "b.txt"), "123");
+        var root = await context.AddRootAsync();
+
+        // Act
+        var stats = await context.GetAsync(ApiRoutes.V1.Root(root.Id) + "/stats", DiskAppJsonContext.Default.RootStatsDto);
+        var missing = await context.Client.GetAsync(ApiRoutes.V1.Root(999) + "/stats", TestContext.Current.CancellationToken);
+
+        // Assert
+        stats.RootId.ShouldBe(root.Id);
+        stats.FileCount.ShouldBe(2);
+        stats.DirectoryCount.ShouldBe(1);
+        stats.TotalSize.ShouldBe(8);
+        missing.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Post_MissingFolderOrDuplicate_Returns400Or409()
     {
         // Arrange

@@ -19,6 +19,7 @@ public static class UiServiceCollectionExtensions
 
         services.AddSingleton<ISearchService, SampleSearchService>();
         services.AddSingleton<IFileActions, SampleFileActions>();
+        services.AddSingleton<IRootsService, SampleRootsService>();
         services.AddSingleton<IThemeService, AppThemeService>();
         services.AddSingleton<HotkeyStatus>();
         services.AddSingleton<IDispatcher, AvaloniaDispatcher>();

@@ -58,6 +58,9 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
     public Task ResumeRootAsync(long id, CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Post, ApiRoutes.V1.Root(id) + "/resume", cancellationToken);
 
     /// <inheritdoc />
+    public Task<RootStatsDto> GetRootStatsAsync(long id, CancellationToken cancellationToken = default) => GetAsync(ApiRoutes.V1.Root(id) + "/stats", Json.RootStatsDto, cancellationToken);
+
+    /// <inheritdoc />
     public Task<IndexStatusDto> GetIndexStatusAsync(CancellationToken cancellationToken = default) => GetAsync(ApiRoutes.V1.IndexStatus, Json.IndexStatusDto, cancellationToken);
 
     /// <inheritdoc />

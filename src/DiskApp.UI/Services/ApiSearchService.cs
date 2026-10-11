@@ -88,6 +88,16 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<FileEntry>> GetChangedSinceAsync(TimeSpan period, CancellationToken cancellationToken)
+    {
+        // Фильтр даты сервера понимает «Nd»: «modified:1d» — за последние сутки.
+        var days = Math.Max(1, (int)Math.Ceiling(period.TotalDays));
+        var request = new SearchRequest { Q = $"modified:{days.ToString(System.Globalization.CultureInfo.InvariantCulture)}d is:file", Sort = SearchSort.Modified, Descending = true, Limit = RecentCount };
+        var response = await _api.SearchAsync(request, cancellationToken).ConfigureAwait(false);
+        return await ToEntriesAsync(response.Items, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<QuerySuggestion>> SuggestAsync(string query, CancellationToken cancellationToken)
     {
         var response = await _api.SuggestAsync(query, SuggestionCount, cancellationToken).ConfigureAwait(false);

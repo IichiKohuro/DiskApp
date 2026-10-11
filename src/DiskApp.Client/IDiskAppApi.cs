@@ -42,6 +42,9 @@ public interface IDiskAppApi
     /// <summary>Возобновить индексацию корня.</summary>
     Task ResumeRootAsync(long id, CancellationToken cancellationToken = default);
 
+    /// <summary>Сводка корня: файлы, папки, размер.</summary>
+    Task<RootStatsDto> GetRootStatsAsync(long id, CancellationToken cancellationToken = default);
+
     /// <summary>Состояние индексации.</summary>
     Task<IndexStatusDto> GetIndexStatusAsync(CancellationToken cancellationToken = default);
 

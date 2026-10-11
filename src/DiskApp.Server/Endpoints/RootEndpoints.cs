@@ -60,6 +60,11 @@ internal static class RootEndpoints
             .WithName("ResumeRoot")
             .WithSummary("Возобновить индексацию корня");
 
+        roots.MapGet(ApiRoutes.V1.RootStats, GetStatsAsync)
+            .WithName("GetRootStats")
+            .WithSummary("Сводка корня")
+            .WithDescription("Число файлов и папок корня в индексе и их суммарный размер — для карточек корней на главной.");
+
         var index = endpoints.MapGroup(string.Empty).WithTags("Index");
 
         index.MapGet(ApiRoutes.V1.IndexStatus, GetStatusAsync)
@@ -235,6 +240,17 @@ internal static class RootEndpoints
     {
         await indexer.RebuildAllAsync(cancellationToken).ConfigureAwait(false);
         return TypedResults.Accepted(ApiRoutes.V1.IndexStatus);
+    }
+
+    private static async Task<Results<Ok<RootStatsDto>, ProblemHttpResult>> GetStatsAsync(long id, IRootRepository repository, IFileIndexRepository entries, CancellationToken cancellationToken)
+    {
+        if (await repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false) is null)
+        {
+            return ApiProblems.NotFound($"Корень {id} не найден.");
+        }
+
+        var stats = await entries.GetStatsAsync(id, cancellationToken).ConfigureAwait(false);
+        return TypedResults.Ok(new RootStatsDto(id, stats.FileCount, stats.DirectoryCount, stats.TotalSize));
     }
 
     private static RootDto WithLiveStatus(Root root, Dictionary<long, RootIndexStatus> statuses)

@@ -12,35 +12,59 @@ using FluentAvalonia.UI.Controls;
 namespace DiskApp.UI.ViewModels;
 
 /// <summary>
-/// Главная страница: приветствие, состояние индекса, быстрые действия, недавние файлы и напоминание о входящих.
+/// Главная страница (PLAN.md, этап 8.2): приветствие, состояние индекса, карточки корней с действиями, недавно
+/// открытые, закреплённые и изменённые за сутки файлы, быстрые действия и добавление папок в индекс.
 /// </summary>
 public sealed partial class HomeViewModel : PageViewModel
 {
+    private const int ListCount = 6;
+
     private readonly ISearchService _search;
     private readonly IAppCommands _commands;
+    private readonly IRootsService _roots;
+    private readonly IInfoBarService? _notices;
     private readonly Func<DateTimeOffset> _clock;
 
     /// <summary>
-    /// Создаёт страницу и сразу запускает загрузку данных (<see cref="Initialization"/>).
+    /// Создаёт страницу с макетными корнями (превью) и сразу запускает загрузку данных (<see cref="Initialization"/>).
     /// </summary>
     public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys)
-        : this(search, commands, hotkeys, static () => DateTimeOffset.Now)
+        : this(search, commands, hotkeys, new SampleRootsService(), null, static () => DateTimeOffset.Now)
     {
     }
 
     /// <summary>
-    /// Создаёт страницу с заданными часами (для тестов и превью).
+    /// Создаёт страницу приложения.
+    /// </summary>
+    public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, IRootsService roots, IInfoBarService notices)
+        : this(search, commands, hotkeys, roots, notices, static () => DateTimeOffset.Now)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт страницу с заданными часами и макетными корнями (для тестов).
     /// </summary>
     public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, Func<DateTimeOffset> clock)
+        : this(search, commands, hotkeys, new SampleRootsService(), null, clock)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт страницу с заданными корнями, уведомлениями и часами (для тестов).
+    /// </summary>
+    public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, IRootsService roots, IInfoBarService? notices, Func<DateTimeOffset> clock)
         : base(PageKeys.Home, "Главная", FASymbol.Home)
     {
         ArgumentNullException.ThrowIfNull(search);
         ArgumentNullException.ThrowIfNull(commands);
         ArgumentNullException.ThrowIfNull(hotkeys);
+        ArgumentNullException.ThrowIfNull(roots);
         ArgumentNullException.ThrowIfNull(clock);
 
         _search = search;
         _commands = commands;
+        _roots = roots;
+        _notices = notices;
         _clock = clock;
         Hotkeys = hotkeys;
 
@@ -96,6 +120,24 @@ public sealed partial class HomeViewModel : PageViewModel
     /// <summary>Недавно открытые файлы, самые свежие первыми.</summary>
     public ObservableCollection<SearchHit> RecentFiles { get; } = [];
 
+    /// <summary>Закреплённые (избранное).</summary>
+    public ObservableCollection<SearchHit> PinnedFiles { get; } = [];
+
+    /// <summary>Изменённые за последние сутки.</summary>
+    public ObservableCollection<SearchHit> ChangedToday { get; } = [];
+
+    /// <summary>Корни индекса.</summary>
+    public ObservableCollection<RootCardViewModel> Roots { get; } = [];
+
+    /// <summary>Есть ли закреплённые.</summary>
+    public bool HasPinned => PinnedFiles.Count > 0;
+
+    /// <summary>Есть ли изменённые за сутки.</summary>
+    public bool HasChangedToday => ChangedToday.Count > 0;
+
+    /// <summary>Корней нет: показать приглашение добавить папку.</summary>
+    public bool HasNoRoots => Roots.Count == 0;
+
     /// <summary>
     /// Перечитывает состояние индекса и список недавних файлов.
     /// </summary>
@@ -103,6 +145,8 @@ public sealed partial class HomeViewModel : PageViewModel
     {
         var status = await _search.GetIndexStatusAsync(CancellationToken.None);
         var recent = await _search.GetRecentAsync(CancellationToken.None);
+        var sections = await _search.GetSuggestionsAsync(CancellationToken.None);
+        var changed = await _search.GetChangedSinceAsync(TimeSpan.FromDays(1), CancellationToken.None);
         var now = _clock();
 
         IndexStatusText = status.Describe(now);
@@ -114,10 +158,90 @@ public sealed partial class HomeViewModel : PageViewModel
             ? $"{Formatting.Count(status.InboxCount, "файл ждёт", "файла ждут", "файлов ждут")} разбора в «Загрузках»"
             : "Во «входящих» пусто — всё разобрано";
 
-        RecentFiles.Clear();
-        foreach (var entry in recent)
+        Fill(RecentFiles, recent, now);
+        Fill(PinnedFiles, sections.FirstOrDefault(static section => section.Title == SectionTitles.Pinned)?.Entries ?? [], now);
+        Fill(ChangedToday, changed, now);
+        OnPropertyChanged(nameof(HasPinned));
+        OnPropertyChanged(nameof(HasChangedToday));
+
+        await RefreshRootsAsync();
+    }
+
+    /// <summary>
+    /// Перечитывает корни и их сводки.
+    /// </summary>
+    public async Task RefreshRootsAsync()
+    {
+        IReadOnlyList<RootInfo> roots;
+        try
         {
-            RecentFiles.Add(new SearchHit(entry, string.Empty, 0, now));
+            roots = await _roots.GetRootsAsync();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            ReportError("Не удалось получить корни", exception);
+            return;
+        }
+
+        Roots.Clear();
+        foreach (var root in roots)
+        {
+            Roots.Add(new RootCardViewModel(root, _roots, _clock, ReportError));
+        }
+
+        OnPropertyChanged(nameof(HasNoRoots));
+        await Task.WhenAll(Roots.Select(static card => card.LoadSummaryAsync()));
+    }
+
+    /// <summary>
+    /// Добавляет папки в индекс: из выбора папки или перетаскиванием на главную.
+    /// </summary>
+    /// <returns>Сколько папок добавлено.</returns>
+    public async Task<int> AddRootsAsync(IReadOnlyList<string> paths)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+
+        var added = new List<string>();
+        var failed = new List<string>();
+        foreach (var path in paths)
+        {
+            try
+            {
+                added.Add((await _roots.AddAsync(path)).Label);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                failed.Add($"«{path}»: {exception.Message}");
+            }
+        }
+
+        if (added.Count > 0)
+        {
+            _notices?.Show("Папки добавлены в индекс", string.Join(", ", added) + ". Индексация уже идёт.", FAInfoBarSeverity.Success);
+            await RefreshRootsAsync();
+        }
+
+        if (failed.Count > 0)
+        {
+            _notices?.Show("Не все папки добавлены", string.Join("; ", failed), FAInfoBarSeverity.Warning);
+        }
+
+        return added.Count;
+    }
+
+    /// <summary>Показывает ошибку действия на главной.</summary>
+    public void ReportError(string title, Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        _notices?.Show(title, exception.Message, FAInfoBarSeverity.Error);
+    }
+
+    private static void Fill(ObservableCollection<SearchHit> target, IReadOnlyList<FileEntry> entries, DateTimeOffset now)
+    {
+        target.Clear();
+        foreach (var entry in entries.Take(ListCount))
+        {
+            target.Add(new SearchHit(entry, string.Empty, 0, now));
         }
     }
 
@@ -152,8 +276,16 @@ public sealed partial class HomeViewModel : PageViewModel
             return;
         }
 
-        await _search.OpenAsync(hit.Entry, null, CancellationToken.None);
-        LastOpenedText = $"Открыт «{hit.Entry.Name}» — в прототипе файл не запускается, это появится в этапе 7.3";
+        try
+        {
+            await _search.OpenAsync(hit.Entry, null, CancellationToken.None);
+            LastOpenedText = $"Открыт «{hit.Entry.Name}»";
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            ReportError($"Не удалось открыть «{hit.Entry.Name}»", exception);
+        }
+
         await RefreshAsync();
     }
 }
