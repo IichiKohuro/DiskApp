@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ApiProblems.BadRequest" xml:space="preserve">
+    <value>Bad request</value>
+  </data>
+  <data name="ApiProblems.Conflict" xml:space="preserve">
+    <value>Conflict</value>
+  </data>
+  <data name="ApiProblems.IsNotAvailableOnThisPlatform" xml:space="preserve">
+    <value>{0} is not available on this platform yet.</value>
+  </data>
+  <data name="ApiProblems.NotFound" xml:space="preserve">
+    <value>Not found</value>
+  </data>
+  <data name="ApiProblems.NotSupported" xml:space="preserve">
+    <value>Not supported</value>
+  </data>
+  <data name="ApiProblems.TheOperationFailed" xml:space="preserve">
+    <value>The operation failed</value>
+  </data>
+  <data name="DiskAppServerHost.AddressIsNotLoopbackNetworkAccess" xml:space="preserve">
+    <value>Address “{0}” is not loopback: network access will come with remote access (stage 13).</value>
+  </data>
+  <data name="Entries.AccessDenied" xml:space="preserve">
+    <value>Access denied</value>
+  </data>
+  <data name="Entries.EntryNotFound" xml:space="preserve">
+    <value>Entry {0} not found.</value>
+  </data>
+  <data name="Entries.FileNotFolder" xml:space="preserve">
+    <value>“{0}” is a file, not a folder.</value>
+  </data>
+  <data name="Entries.OutsideRoots" xml:space="preserve">
+    <value>Path “{0}” is outside the added roots.</value>
+  </data>
+  <data name="EntryEndpoints.ACloudFileHasNoThumbnail" xml:space="preserve">
+    <value>A cloud file “{0}” has no thumbnail.</value>
+  </data>
+  <data name="EntryEndpoints.AFolderHasNoContentUse" xml:space="preserve">
+    <value>A folder has no content: use /children.</value>
+  </data>
+  <data name="EntryEndpoints.AnAbsolutePathIsRequired" xml:space="preserve">
+    <value>An absolute path is required.</value>
+  </data>
+  <data name="EntryEndpoints.EntriesPerPageFrom1To" xml:space="preserve">
+    <value>Entries per page — from 1 to {0}.</value>
+  </data>
+  <data name="EntryEndpoints.FileAction" xml:space="preserve">
+    <value>File action</value>
+  </data>
+  <data name="EntryEndpoints.FileIsNoLongerOnDisk" xml:space="preserve">
+    <value>File “{0}” is no longer on disk.</value>
+  </data>
+  <data name="EntryEndpoints.FileIsStoredInTheCloud" xml:space="preserve">
+    <value>File “{0}” is stored in the cloud and not downloaded.</value>
+  </data>
+  <data name="EntryEndpoints.FolderIsNotInTheIndex" xml:space="preserve">
+    <value>Folder “{0}” is not in the index.</value>
+  </data>
+  <data name="EntryEndpoints.GettingIcons" xml:space="preserve">
+    <value>Getting icons</value>
+  </data>
+  <data name="EntryEndpoints.GettingThumbnails" xml:space="preserve">
+    <value>Getting thumbnails</value>
+  </data>
+  <data name="EntryEndpoints.IconSize" xml:space="preserve">
+    <value>Icon size: </value>
+  </data>
+  <data name="EntryEndpoints.ImageUnavailable" xml:space="preserve">
+    <value>Image unavailable.</value>
+  </data>
+  <data name="EntryEndpoints.NoMoreThanPathsPerRequest" xml:space="preserve">
+    <value>No more than {0} paths per request.</value>
+  </data>
+  <data name="EntryEndpoints.TheOffsetCannotBeNegative" xml:space="preserve">
+    <value>The offset cannot be negative.</value>
+  </data>
+  <data name="EntryEndpoints.ThumbnailSizeIsFrom32To" xml:space="preserve">
+    <value>Thumbnail size is from 32 to 1024.</value>
+  </data>
+  <data name="EntryEndpoints.UnknownTags" xml:space="preserve">
+    <value>Unknown tags: </value>
+  </data>
+  <data name="HealthEndpoints.TheDatabaseIsNotOpenYet" xml:space="preserve">
+    <value>The database is not open yet.</value>
+  </data>
+  <data name="Library.CollectionNotFound" xml:space="preserve">
+    <value>Collection {0} not found.</value>
+  </data>
+  <data name="Library.EntryNotFound" xml:space="preserve">
+    <value>Entry {0} not found.</value>
+  </data>
+  <data name="Library.TagExists" xml:space="preserve">
+    <value>Tag “{0}” already exists.</value>
+  </data>
+  <data name="Library.TagNotFound" xml:space="preserve">
+    <value>Tag {0} not found.</value>
+  </data>
+  <data name="LibraryEndpoints.ACollectionNameIs1To" xml:space="preserve">
+    <value>A collection name is 1 to 128 characters.</value>
+  </data>
+  <data name="LibraryEndpoints.AColorLooksLikeRRGGBB" xml:space="preserve">
+    <value>A color looks like #RRGGBB.</value>
+  </data>
+  <data name="LibraryEndpoints.ASavedQueryNeedsASearch" xml:space="preserve">
+    <value>A saved query needs a search string.</value>
+  </data>
+  <data name="LibraryEndpoints.ATagNameIs1To" xml:space="preserve">
+    <value>A tag name is 1 to 64 characters.</value>
+  </data>
+  <data name="LibraryEndpoints.EntriesAreNotAddedToA" xml:space="preserve">
+    <value>Entries are not added to a saved query.</value>
+  </data>
+  <data name="LibraryEndpoints.EntriesFrom1To200" xml:space="preserve">
+    <value>Entries — from 1 to 200.</value>
+  </data>
+  <data name="LibraryEndpoints.EntryIsNotInFavorites" xml:space="preserve">
+    <value>Entry {0} is not in favorites.</value>
+  </data>
+  <data name="LibraryEndpoints.PassEveryFavoriteExactlyOnce" xml:space="preserve">
+    <value>Pass every favorite exactly once.</value>
+  </data>
+  <data name="LibraryEndpoints.ThisIsASavedQueryIts" xml:space="preserve">
+    <value>This is a saved query: its results come from searching its Query string.</value>
+  </data>
+  <data name="LibraryEndpoints.UnknownEntries" xml:space="preserve">
+    <value>Unknown entries: </value>
+  </data>
+  <data name="LocalSecurityMiddleware.ASessionTokenIsRequiredIn" xml:space="preserve">
+    <value>A session token is required in the header </value>
+  </data>
+  <data name="LocalSecurityMiddleware.AuthorizationRequired" xml:space="preserve">
+    <value>Authorization required</value>
+  </data>
+  <data name="LocalSecurityMiddleware.RequestsAreAcceptedOnlyAtThe" xml:space="preserve">
+    <value>Requests are accepted only at the loopback address.</value>
+  </data>
+  <data name="LocalSecurityMiddleware.RequestsFromThirdPartyPagesAre" xml:space="preserve">
+    <value>Requests from third-party pages are forbidden.</value>
+  </data>
+  <data name="OperationEndpoints.FolderIsOutsideTheAddedRoots" xml:space="preserve">
+    <value>Folder “{0}” is outside the added roots.</value>
+  </data>
+  <data name="OperationEndpoints.FolderNotFound" xml:space="preserve">
+    <value>Folder “{0}” not found.</value>
+  </data>
+  <data name="OperationEndpoints.ForUploadsChooseKeepBothSkipOr" xml:space="preserve">
+    <value>For uploads choose KeepBoth, Skip or Overwrite.</value>
+  </data>
+  <data name="OperationEndpoints.MultipartFormDataIsRequired" xml:space="preserve">
+    <value>multipart/form-data is required.</value>
+  </data>
+  <data name="OperationEndpoints.OperationNotFound" xml:space="preserve">
+    <value>Operation {0} not found.</value>
+  </data>
+  <data name="OperationEndpoints.PathIsOutsideTheAddedRoots" xml:space="preserve">
+    <value>Path “{0}” is outside the added roots.</value>
+  </data>
+  <data name="OperationEndpoints.PathMustBeAbsolute" xml:space="preserve">
+    <value>Path “{0}” must be absolute.</value>
+  </data>
+  <data name="OperationEndpoints.ReplacingFilesThroughTheRecycleBin" xml:space="preserve">
+    <value>Replacing files through the Recycle Bin</value>
+  </data>
+  <data name="OperationEndpoints.SpecifyTheAbsoluteFolderPath" xml:space="preserve">
+    <value>Specify the absolute folder path.</value>
+  </data>
+  <data name="Operations.AccessDenied" xml:space="preserve">
+    <value>Access denied</value>
+  </data>
+  <data name="RootEndpoints.FolderNotFoundOrUnavailable" xml:space="preserve">
+    <value>Folder “{0}” not found or unavailable.</value>
+  </data>
+  <data name="RootEndpoints.TheLabelCannotBeEmpty" xml:space="preserve">
+    <value>The label cannot be empty.</value>
+  </data>
+  <data name="Roots.DepthNegative" xml:space="preserve">
+    <value>Depth cannot be negative.</value>
+  </data>
+  <data name="Roots.NotConnected" xml:space="preserve">
+    <value>Root {0} is not connected to indexing.</value>
+  </data>
+  <data name="Roots.NotFound" xml:space="preserve">
+    <value>Root {0} not found.</value>
+  </data>
+  <data name="SearchEndpoints.EntriesFrom1To1000" xml:space="preserve">
+    <value>Entries — from 1 to 1,000.</value>
+  </data>
+  <data name="SearchEndpoints.PageSizeIsFrom1To" xml:space="preserve">
+    <value>Page size is from 1 to {0}.</value>
+  </data>
+  <data name="SearchEndpoints.SpecifyAQuery" xml:space="preserve">
+    <value>Specify a query.</value>
+  </data>
+  <data name="SearchEndpoints.SuggestionsFrom1To50" xml:space="preserve">
+    <value>Suggestions — from 1 to 50.</value>
+  </data>
+  <data name="SearchEndpoints.TheCursorWasNotRecognizedTake" xml:space="preserve">
+    <value>The cursor was not recognized: take it from the previous response.</value>
+  </data>
+  <data name="SearchEndpoints.ThisQueryIsNotInThe" xml:space="preserve">
+    <value>This query is not in the history.</value>
+  </data>
+  <data name="Security.AccessDenied" xml:space="preserve">
+    <value>Access denied</value>
+  </data>
+  <data name="Settings.ShortcutEmpty" xml:space="preserve">
+    <value>The shortcut cannot be empty.</value>
+  </data>
+  <data name="Settings.TemplateEmpty" xml:space="preserve">
+    <value>The template cannot be empty.</value>
+  </data>
+  <data name="SettingsEndpoints.AColorLikeRRGGBBIsRequired" xml:space="preserve">
+    <value>A color like #RRGGBB is required.</value>
+  </data>
+  <data name="SettingsEndpoints.AFullFolderPathIsRequired" xml:space="preserve">
+    <value>A full folder path is required.</value>
+  </data>
+  <data name="SettingsEndpoints.ANonNegativeIntegerIsRequired" xml:space="preserve">
+    <value>A non-negative integer is required.</value>
+  </data>
+  <data name="SettingsEndpoints.Allowed" xml:space="preserve">
+    <value>Allowed: </value>
+  </data>
+  <data name="SettingsEndpoints.AllowedFrom09To1" xml:space="preserve">
+    <value>Allowed from 0.9 to 1.5.</value>
+  </data>
+  <data name="SettingsEndpoints.AllowedFromTo" xml:space="preserve">
+    <value>Allowed from {0} to {1}.</value>
+  </data>
+  <data name="SettingsEndpoints.EmptySettings" xml:space="preserve">
+    <value>Empty settings.</value>
+  </data>
+  <data name="SettingsEndpoints.NoMoreThanPlaces" xml:space="preserve">
+    <value>No more than {0} places.</value>
+  </data>
+  <data name="SettingsEndpoints.ThePatternCannotBeEmpty" xml:space="preserve">
+    <value>The pattern cannot be empty.</value>
+  </data>
+  <data name="SettingsEndpoints.UnknownLanguage" xml:space="preserve">
+    <value>The language is system, ru or en.</value>
+  </data>
+  <data name="SettingsEndpoints.UnknownMonitor" xml:space="preserve">
+    <value>Unknown monitor.</value>
+  </data>
+  <data name="SettingsEndpoints.UnknownSetting" xml:space="preserve">
+    <value>Unknown setting.</value>
+  </data>
+  <data name="SettingsEndpoints.ValueOfTheWrongType" xml:space="preserve">
+    <value>Value of the wrong type: </value>
+  </data>
+</root>

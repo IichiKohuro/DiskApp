@@ -1,5 +1,6 @@
-<wnd:FAAppWindow xmlns="https://github.com/avaloniaui"
+﻿<wnd:FAAppWindow xmlns="https://github.com/avaloniaui"
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:wnd="using:FluentAvalonia.UI.Windowing"
@@ -35,7 +36,7 @@
                      Classes="header-search"
                      Width="400"
                      VerticalAlignment="Center"
-                     PlaceholderText="Найти файл или папку · Ctrl+E"
+                     PlaceholderText="{loc:Str Main.FindAFileOrFolderCtrl}"
                      Text="{Binding HeaderQuery, Mode=TwoWay}">
                 <TextBox.InnerLeftContent>
                     <ic:SymbolIcon Symbol="Search"

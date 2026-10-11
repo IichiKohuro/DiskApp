@@ -1,3 +1,5 @@
+﻿using DiskApp.Server.Localization;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -44,7 +46,7 @@ public sealed class DiskAppServerHost : IAsyncDisposable
         ArgumentNullException.ThrowIfNull(options);
         if (!IsLoopbackUrl(options.Url))
         {
-            throw new ArgumentException($"Адрес «{options.Url}» не loopback: доступ из сети появится вместе с удалённым доступом (этап 13).", nameof(options));
+            throw new ArgumentException(L.F("DiskAppServerHost.AddressIsNotLoopbackNetworkAccess", options.Url), nameof(options));
         }
 
         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions

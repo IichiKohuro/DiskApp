@@ -1,3 +1,4 @@
+﻿using DiskApp.Core.Localization;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Results;
 
@@ -32,12 +33,12 @@ public static class RootValidator
 
         if (string.IsNullOrWhiteSpace(path))
         {
-            return Result.Fail<RootCandidate>(new DomainError(PathEmptyCode, "Укажите папку или диск."));
+            return Result.Fail<RootCandidate>(new DomainError(PathEmptyCode, L.T("RootValidator.ChooseAFolderOrADrive")));
         }
 
         if (!normalizer.TryNormalize(path, out var normalized))
         {
-            return Result.Fail<RootCandidate>(new DomainError(PathNotAbsoluteCode, $"Путь «{path.Trim()}» должен быть абсолютным, например D:\\Projects или \\\\server\\share."));
+            return Result.Fail<RootCandidate>(new DomainError(PathNotAbsoluteCode, L.F("RootValidator.PathMustBeAbsoluteForExample", path.Trim())));
         }
 
         var warnings = new List<RootWarning>();
@@ -45,7 +46,7 @@ public static class RootValidator
         {
             if (normalizer.Comparer.Equals(root.Path, normalized))
             {
-                return Result.Fail<RootCandidate>(new DomainError(DuplicateCode, $"Корень «{root.Label}» ({root.Path}) уже добавлен."));
+                return Result.Fail<RootCandidate>(new DomainError(DuplicateCode, L.F("RootValidator.RootIsAlreadyAdded", root.Label, root.Path)));
             }
 
             if (normalizer.IsNestedIn(normalized, root.Path))

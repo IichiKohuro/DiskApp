@@ -1,6 +1,7 @@
-using System.Runtime.Versioning;
+﻿using System.Runtime.Versioning;
 using System.Security;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 
 using Microsoft.Win32;
@@ -51,7 +52,7 @@ internal sealed class RegistryAutoStartService : IAutoStartService
 
     /// <inheritdoc />
     public string Warning
-        => _portable ? $"Портативная копия запускается из «{Path.GetDirectoryName(_executable)}»: если папку перенести, автозапуск нужно включить заново." : string.Empty;
+        => _portable ? L.F("RegistryAutoStart.ThePortableCopyRunsFromIf", Path.GetDirectoryName(_executable)) : string.Empty;
 
     /// <summary>Команда, которая пишется в реестр.</summary>
     public string Command => $"\"{_executable}\" --minimized" + (_portable ? " --portable" : string.Empty);
@@ -74,7 +75,7 @@ internal sealed class RegistryAutoStartService : IAutoStartService
         }
         catch (Exception exception) when (exception is UnauthorizedAccessException or SecurityException or IOException)
         {
-            throw new InvalidOperationException("Windows не дала изменить автозапуск: " + exception.Message, exception);
+            throw new InvalidOperationException(L.T("RegistryAutoStart.WindowsDidNotAllowChangingAutostart") + exception.Message, exception);
         }
     }
 

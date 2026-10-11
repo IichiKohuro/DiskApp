@@ -1,10 +1,11 @@
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using DiskApp.Contracts.App;
 using DiskApp.UI.Input;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 
 using RankingPreset = DiskApp.Contracts.Search.RankingPreset;
@@ -40,11 +41,14 @@ public sealed record KeyMapEntry(string Keys, string Action);
 /// <summary>Вариант выбора в настройках: значение и подпись.</summary>
 /// <typeparam name="T">Тип значения.</typeparam>
 /// <param name="Value">Значение.</param>
-/// <param name="Name">Подпись.</param>
+/// <param name="Name">Ключ строки подписи или готовый текст.</param>
 public sealed record SettingOption<T>(T Value, string Name)
 {
+    /// <summary>Подпись на текущем языке: <see cref="Name"/> — ключ строки или готовый текст («Mica», «125 %»).</summary>
+    public string Text => L.T(Name);
+
     /// <inheritdoc />
-    public override string ToString() => Name;
+    public override string ToString() => Text;
 }
 
 /// <summary>
@@ -60,7 +64,7 @@ public sealed partial class SettingsViewModel
     [
         new(BackdropMode.Mica, "Mica"),
         new(BackdropMode.Acrylic, "Acrylic"),
-        new(BackdropMode.Solid, "Без эффекта"),
+        new(BackdropMode.Solid, "Settings.NoEffect"),
     ];
 
     private static readonly string[] AccentOptions =
@@ -79,33 +83,47 @@ public sealed partial class SettingsViewModel
 
     private static readonly SettingOption<PopupMonitor>[] MonitorOptions =
     [
-        new(PopupMonitor.Cursor, "С курсором мыши"),
-        new(PopupMonitor.ActiveWindow, "С активным окном"),
-        new(PopupMonitor.Primary, "Основной"),
+        new(PopupMonitor.Cursor, "Settings.WithTheMousePointer"),
+        new(PopupMonitor.ActiveWindow, "Settings.WithTheActiveWindow"),
+        new(PopupMonitor.Primary, "Settings.Primary"),
     ];
 
     private static readonly SettingOption<RankingPreset>[] PresetOptions =
     [
-        new(RankingPreset.Balanced, "Сбалансированно"),
-        new(RankingPreset.ByName, "По имени"),
-        new(RankingPreset.Recent, "Недавнее выше"),
+        new(RankingPreset.Balanced, "Settings.Balanced"),
+        new(RankingPreset.ByName, "Settings.ByName"),
+        new(RankingPreset.Recent, "Settings.RecentFirst"),
     ];
 
     private static readonly SettingOption<int>[] ReconcileOptions =
     [
-        new(0, "Не сверять"),
-        new(60, "Каждый час"),
-        new(360, "Каждые 6 часов"),
-        new(1_440, "Раз в сутки"),
+        new(0, "Settings.Never"),
+        new(60, "Settings.EveryHour"),
+        new(360, "Settings.Every6Hours"),
+        new(1_440, "Settings.OnceADay"),
     ];
 
     private static readonly SettingOption<string>[] LogLevelOptions =
     [
-        new("Debug", "Подробно (Debug)"),
-        new("Information", "Обычно (Information)"),
-        new("Warning", "Предупреждения (Warning)"),
-        new("Error", "Только ошибки (Error)"),
+        new("Debug", "Settings.DetailedDebug"),
+        new("Information", "Settings.NormalInformation"),
+        new("Warning", "Settings.WarningsWarning"),
+        new("Error", "Settings.ErrorsOnlyError"),
     ];
+
+    private static readonly SettingOption<string>[] LanguageOptions =
+    [
+        new(Localizer.SystemLanguage, "Settings.LanguageSystem"),
+        new("ru", "Русский"),
+        new("en", "English"),
+    ];
+
+    /// <summary>Языки интерфейса.</summary>
+    public IReadOnlyList<SettingOption<string>> Languages { get; } = LanguageOptions;
+
+    /// <summary>Язык интерфейса.</summary>
+    [ObservableProperty]
+    public partial SettingOption<string> SelectedLanguage { get; set; } = LanguageOptions[0];
 
     /// <summary>Фоны окон.</summary>
     public IReadOnlyList<SettingOption<BackdropMode>> Backdrops { get; } = BackdropOptions;
@@ -134,26 +152,26 @@ public sealed partial class SettingsViewModel
     /// <summary>Клавиши окна быстрого поиска — из той же карты, что обрабатывает нажатия.</summary>
     public IReadOnlyList<KeyMapEntry> KeyMap { get; } =
     [
-        new(QuickSearchKeyMap.OpenText, "Открыть"),
-        new(QuickSearchKeyMap.RevealText, "Показать в Проводнике"),
-        new(QuickSearchKeyMap.OpenWithText, "Открыть с помощью…"),
-        new(QuickSearchKeyMap.PropertiesText, "Свойства"),
-        new(QuickSearchKeyMap.RunAsAdminText, "Запустить от имени администратора"),
-        new(QuickSearchKeyMap.CopyFilesText, "Копировать файл"),
-        new(QuickSearchKeyMap.CopyPathText, "Копировать путь"),
-        new(QuickSearchKeyMap.RenameText, "Переименовать"),
-        new(QuickSearchKeyMap.DeleteText, "В корзину (с подтверждением)"),
-        new(QuickSearchKeyMap.TogglePinText, "Закрепить или открепить"),
-        new(QuickSearchKeyMap.EditTagsText, "Теги"),
-        new("Ctrl+F", "Фильтры"),
-        new("Tab", "Дополнить фильтр или открыть меню"),
-        new("Ctrl+1…9", "Открыть строку с номером"),
-        new("↑ в пустом поле", "Предыдущие запросы"),
-        new("Esc", "Очистить запрос, затем закрыть"),
+        new(QuickSearchKeyMap.OpenText, L.T("Common.Open")),
+        new(QuickSearchKeyMap.RevealText, L.T("Common.ShowInExplorer")),
+        new(QuickSearchKeyMap.OpenWithText, L.T("Settings.OpenWith")),
+        new(QuickSearchKeyMap.PropertiesText, L.T("Common.Properties")),
+        new(QuickSearchKeyMap.RunAsAdminText, L.T("Settings.RunAsAdministrator")),
+        new(QuickSearchKeyMap.CopyFilesText, L.T("Settings.CopyFile")),
+        new(QuickSearchKeyMap.CopyPathText, L.T("Common.CopyPath")),
+        new(QuickSearchKeyMap.RenameText, L.T("Common.Rename")),
+        new(QuickSearchKeyMap.DeleteText, L.T("Settings.MoveToRecycleBinWithConfirmation")),
+        new(QuickSearchKeyMap.TogglePinText, L.T("Common.PinOrUnpin")),
+        new(QuickSearchKeyMap.EditTagsText, L.T("Common.Page.Tags")),
+        new("Ctrl+F", L.T("Settings.Filters")),
+        new("Tab", L.T("Settings.CompleteTheFilterOrOpenThe")),
+        new("Ctrl+1…9", L.T("Settings.OpenTheRowWithThatNumber")),
+        new(L.T("Settings.InAnEmptyBox"), L.T("Settings.PreviousQueries")),
+        new("Esc", L.T("Settings.ClearTheQueryThenClose")),
     ];
 
     /// <summary>Куда кладётся добавленное.</summary>
-    public string InboxText => InboxPath.Length > 0 ? InboxPath : "Первый корень индекса — пока папка не выбрана";
+    public string InboxText => InboxPath.Length > 0 ? InboxPath : L.T("Settings.TheFirstIndexRootUntilA");
 
     /// <summary>Сообщение о несохранённой настройке; пусто — всё сохранено.</summary>
     [ObservableProperty]
@@ -282,7 +300,7 @@ public sealed partial class SettingsViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Не удалось загрузить настройки: " + exception.Message;
+            SettingsNote = L.T("Settings.CouldNotLoadSettings") + exception.Message;
         }
     }
 
@@ -299,6 +317,7 @@ public sealed partial class SettingsViewModel
                 _ => AppTheme.System,
             };
             SelectedTheme = Themes.First(option => option.Theme == theme);
+            SelectedLanguage = Languages.FirstOrDefault(option => option.Value == settings.Appearance.Language) ?? Languages[0];
             SelectedBackdrop = Backdrops.FirstOrDefault(option => option.Value == settings.Appearance.Backdrop) ?? Backdrops[0];
             UseBackdropEffects = settings.Appearance.Backdrop != BackdropMode.Solid;
             UseSystemAccent = settings.Appearance.UseSystemAccent;
@@ -329,7 +348,7 @@ public sealed partial class SettingsViewModel
             IncludeSystemByDefault = settings.Indexing.IncludeSystemByDefault;
             FollowReparsePoints = settings.Indexing.FollowReparsePoints;
             SelectedReconcileInterval = ReconcileIntervals.FirstOrDefault(option => option.Value == settings.Indexing.ReconcileIntervalMinutes)
-                ?? new SettingOption<int>(settings.Indexing.ReconcileIntervalMinutes, $"Каждые {settings.Indexing.ReconcileIntervalMinutes} мин");
+                ?? new SettingOption<int>(settings.Indexing.ReconcileIntervalMinutes, L.F("Settings.EveryMin", settings.Indexing.ReconcileIntervalMinutes));
             ApplyExclusions(settings.Indexing.Exclusions);
 
             InboxPath = settings.Add.InboxPath ?? string.Empty;
@@ -365,7 +384,7 @@ public sealed partial class SettingsViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Настройка не сохранена: " + exception.Message;
+            SettingsNote = L.T("Settings.SettingNotSaved") + exception.Message;
             await LoadSettingsAsync();
         }
     }
@@ -377,6 +396,8 @@ public sealed partial class SettingsViewModel
     }
 
     partial void OnUseSystemAccentChanged(bool value) => Save("appearance", "useSystemAccent", value);
+
+    partial void OnSelectedLanguageChanged(SettingOption<string> value) => Save("appearance", "language", value.Value);
 
     partial void OnSelectedAccentColorChanged(string? value)
     {
@@ -453,7 +474,7 @@ public sealed partial class SettingsViewModel
     [RelayCommand]
     private async Task PickInboxAsync()
     {
-        if (_dialogs is null || await _dialogs.PickFolderAsync("Папка «Входящие»") is not { } folder)
+        if (_dialogs is null || await _dialogs.PickFolderAsync(L.T("Settings.InboxFolder")) is not { } folder)
         {
             return;
         }
@@ -474,7 +495,7 @@ public sealed partial class SettingsViewModel
     [RelayCommand]
     private async Task ClearHistoryAsync()
     {
-        if (_dialogs is not null && !await _dialogs.ConfirmAsync("Очистить историю", "Удалить все запросы из истории поиска?", "Очистить"))
+        if (_dialogs is not null && !await _dialogs.ConfirmAsync(L.T("Settings.ClearHistory"), L.T("Settings.DeleteAllQueriesFromTheSearch"), L.T("Settings.Clear")))
         {
             return;
         }
@@ -483,11 +504,11 @@ public sealed partial class SettingsViewModel
         {
             await _search.ClearHistoryAsync(CancellationToken.None);
             SettingsNote = string.Empty;
-            _notices?.Show("История очищена", "Запросы больше не подсказываются.", FluentAvalonia.UI.Controls.FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Settings.HistoryCleared"), L.T("Settings.QueriesAreNoLongerSuggested"), FluentAvalonia.UI.Controls.FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Историю не удалось очистить: " + exception.Message;
+            SettingsNote = L.T("Settings.HistoryWasNotCleared") + exception.Message;
         }
     }
 

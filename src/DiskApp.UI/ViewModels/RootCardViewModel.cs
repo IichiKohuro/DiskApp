@@ -1,8 +1,9 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -52,18 +53,18 @@ public sealed partial class RootCardViewModel : ObservableObject
     /// <summary>Состояние словами.</summary>
     public string StateText => Info.State switch
     {
-        RootState.Offline => "Недоступен" + (Info.Message is { Length: > 0 } message ? ": " + message : string.Empty),
-        RootState.Scanning => Info.Scanned is { } scanned ? $"Сканирование: просмотрено {Formatting.Number(scanned)}" : "Сканирование",
-        RootState.Paused => "На паузе",
-        RootState.Error => "Ошибка" + (Info.Message is { Length: > 0 } error ? ": " + error : string.Empty),
-        RootState.Disabled => "Выключен",
-        _ => "Актуален",
+        RootState.Offline => L.T("RootCard.Unavailable") + (Info.Message is { Length: > 0 } message ? ": " + message : string.Empty),
+        RootState.Scanning => Info.Scanned is { } scanned ? L.F("RootCard.ScanningScanned", Formatting.Number(scanned)) : L.T("RootCard.Scanning"),
+        RootState.Paused => L.T("RootCard.Paused"),
+        RootState.Error => L.T("Common.Error") + (Info.Message is { Length: > 0 } error ? ": " + error : string.Empty),
+        RootState.Disabled => L.T("RootCard.Disabled"),
+        _ => L.T("RootCard.UpToDate"),
     };
 
     /// <summary>Когда сканировался.</summary>
     public string LastScanText => Info.LastScan is { } scan
-        ? "Сканирован " + Formatting.RelativeTime(scan.ToLocalTime(), _clock()).ToLower(CultureInfo.CurrentCulture)
-        : "Ещё не сканировался";
+        ? L.T("RootCard.Scanned") + Formatting.RelativeTime(scan.ToLocalTime(), _clock()).ToLower(CultureInfo.CurrentCulture)
+        : L.T("RootCard.NotScannedYet");
 
     /// <summary>Индексация корня на паузе.</summary>
     public bool IsPaused => Info.State == RootState.Paused;
@@ -78,7 +79,7 @@ public sealed partial class RootCardViewModel : ObservableObject
     public bool CanPause => Info.State is RootState.Online or RootState.Scanning or RootState.Paused;
 
     /// <summary>Подпись кнопки паузы.</summary>
-    public string PauseText => IsPaused ? "Продолжить" : "Пауза";
+    public string PauseText => IsPaused ? L.T("RootCard.Resume") : L.T("RootCard.Pause");
 
     /// <summary>Значок корня: диск, папка или отключённый диск.</summary>
     public Symbol Symbol => Info.State == RootState.Offline ? Symbol.PlugDisconnected
@@ -93,7 +94,7 @@ public sealed partial class RootCardViewModel : ObservableObject
         try
         {
             var summary = await _roots.GetSummaryAsync(Info.Id);
-            SummaryText = $"{Formatting.Count(summary.FileCount, "файл", "файла", "файлов")} · {Formatting.Count(summary.DirectoryCount, "папка", "папки", "папок")} · {Formatting.Size(summary.TotalSize)}";
+            SummaryText = $"{Formatting.Count(summary.FileCount, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"))} · {Formatting.Count(summary.DirectoryCount, L.T("Common.Folder.One"), L.T("Common.Folder.Few"), L.T("Common.Folder.Many"))} · {Formatting.Size(summary.TotalSize)}";
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -112,7 +113,7 @@ public sealed partial class RootCardViewModel : ObservableObject
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _onError($"Не удалось пересканировать «{Info.Label}»", exception);
+            _onError(L.F("RootCard.CouldNotRescan", Info.Label), exception);
         }
     }
 
@@ -135,7 +136,7 @@ public sealed partial class RootCardViewModel : ObservableObject
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _onError($"Не удалось изменить паузу «{Info.Label}»", exception);
+            _onError(L.F("RootCard.CouldNotChangeThePauseOf", Info.Label), exception);
         }
     }
 }

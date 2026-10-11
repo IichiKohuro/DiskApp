@@ -1,9 +1,10 @@
-using DiskApp.Contracts;
+﻿using DiskApp.Contracts;
 using DiskApp.Contracts.App;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Indexing;
 using DiskApp.Infrastructure.Sqlite;
 using DiskApp.Server.Hosting;
+using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
@@ -29,7 +30,7 @@ internal static class HealthEndpoints
     {
         if (!state.IsDatabaseReady)
         {
-            return TypedResults.Problem("База ещё не открыта.", statusCode: StatusCodes.Status503ServiceUnavailable);
+            return TypedResults.Problem(L.T("HealthEndpoints.TheDatabaseIsNotOpenYet"), statusCode: StatusCodes.Status503ServiceUnavailable);
         }
 
         var uptime = Math.Max(0, (long)(clock.UtcNow - state.StartedUtc).TotalSeconds);

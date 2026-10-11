@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Text;
 
@@ -71,7 +72,7 @@ public sealed partial class QuickSearchViewModel
     private async Task DeleteHistoryAsync(QuerySuggestion suggestion)
     {
         ArgumentNullException.ThrowIfNull(suggestion);
-        if (await TryAsync(() => _search.DeleteHistoryAsync(suggestion.Query, CancellationToken.None), "Не удалось удалить из истории"))
+        if (await TryAsync(() => _search.DeleteHistoryAsync(suggestion.Query, CancellationToken.None), L.T("QuickSearch.CouldNotRemoveFromHistory")))
         {
             Suggestions.Remove(suggestion);
             ShowSuggestions = Suggestions.Count > 0;
@@ -83,12 +84,12 @@ public sealed partial class QuickSearchViewModel
     [RelayCommand]
     private async Task ClearHistoryAsync()
     {
-        if (await TryAsync(() => _search.ClearHistoryAsync(CancellationToken.None), "Не удалось очистить историю"))
+        if (await TryAsync(() => _search.ClearHistoryAsync(CancellationToken.None), L.T("QuickSearch.CouldNotClearHistory")))
         {
             Suggestions.Clear();
             ShowSuggestions = false;
             _history = null;
-            ShowNotice("История очищена", "Прошлые запросы больше не предлагаются.", FAInfoBarSeverity.Success);
+            ShowNotice(L.T("QuickSearch.HistoryCleared"), L.T("QuickSearch.PreviousQueriesAreNoLongerSuggested"), FAInfoBarSeverity.Success);
         }
     }
 
@@ -98,18 +99,18 @@ public sealed partial class QuickSearchViewModel
 
     private static ObservableCollection<FilterChip> CreateFilterChips() =>
     [
-        new("Документы", "type:document", FilterGroup.Kind),
+        new(L.T("QuickSearch.Documents"), "type:document", FilterGroup.Kind),
         new("PDF", "type:pdf", FilterGroup.Kind),
-        new("Изображения", "type:image", FilterGroup.Kind),
-        new("Видео", "type:video", FilterGroup.Kind),
-        new("Аудио", "type:audio", FilterGroup.Kind),
-        new("Архивы", "type:archive", FilterGroup.Kind),
-        new("Код", "type:code", FilterGroup.Kind),
-        new("Папки", "type:folder", FilterGroup.Kind),
-        new("Сегодня", "modified:today", FilterGroup.Date),
-        new("Неделя", "modified:week", FilterGroup.Date),
-        new("Месяц", "modified:month", FilterGroup.Date),
-        new("Год", "modified:year", FilterGroup.Date),
+        new(L.T("QuickSearch.Images"), "type:image", FilterGroup.Kind),
+        new(L.T("QuickSearch.Videos"), "type:video", FilterGroup.Kind),
+        new(L.T("QuickSearch.Audio"), "type:audio", FilterGroup.Kind),
+        new(L.T("QuickSearch.Archives"), "type:archive", FilterGroup.Kind),
+        new(L.T("QuickSearch.Code"), "type:code", FilterGroup.Kind),
+        new(L.T("QuickSearch.Folders"), "type:folder", FilterGroup.Kind),
+        new(L.T("QuickSearch.Today"), "modified:today", FilterGroup.Date),
+        new(L.T("QuickSearch.Week"), "modified:week", FilterGroup.Date),
+        new(L.T("QuickSearch.Month"), "modified:month", FilterGroup.Date),
+        new(L.T("QuickSearch.Year"), "modified:year", FilterGroup.Date),
     ];
 
     private void ReplaceQuery(string query)
@@ -174,7 +175,7 @@ public sealed partial class QuickSearchViewModel
         }
 
         IsShowingHistory = query.Trim().Length == 0;
-        SuggestionsTitle = IsShowingHistory ? "История" : "Подсказки";
+        SuggestionsTitle = IsShowingHistory ? L.T("QuickSearch.History") : L.T("QuickSearch.Suggestions");
         ShowSuggestions = Suggestions.Count > 0;
     }
 
@@ -190,6 +191,6 @@ public sealed partial class QuickSearchViewModel
         ShowResults = false;
         ShowEmptyState = false;
         ShowHelp = true;
-        StatusText = "Синтаксис запроса и клавиши · Esc — закрыть подсказку";
+        StatusText = L.T("QuickSearch.QuerySyntaxAndKeysEscCloses");
     }
 }

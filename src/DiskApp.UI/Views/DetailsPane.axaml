@@ -1,5 +1,6 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ic="using:FluentIcons.Avalonia"
@@ -19,7 +20,7 @@
                    VerticalAlignment="Center"
                    TextAlignment="Center"
                    TextWrapping="Wrap"
-                   Text="Выберите файл в списке — здесь появятся его сведения и действия"
+                   Text="{loc:Str DetailsPane.SelectAFileInTheList}"
                    IsVisible="{Binding SelectedDetails, Converter={x:Static ObjectConverters.IsNull}}" />
         <ScrollViewer IsVisible="{Binding SelectedDetails, Converter={x:Static ObjectConverters.IsNotNull}}">
             <StackPanel Spacing="12" DataContext="{Binding SelectedDetails}" x:DataType="m:FileDetails">
@@ -29,19 +30,19 @@
                     <Button Classes="accent" HorizontalAlignment="Stretch" Command="{Binding OpenCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="Open" FontSize="16" />
-                            <TextBlock Text="Открыть" />
+                            <TextBlock Text="{loc:Str Common.Open}" />
                         </StackPanel>
                     </Button>
                     <Button HorizontalAlignment="Stretch" Command="{Binding RevealCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="FolderOpen" FontSize="16" />
-                            <TextBlock Text="Показать в папке" />
+                            <TextBlock Text="{loc:Str DetailsPane.ShowInFolder}" />
                         </StackPanel>
                     </Button>
                     <Button HorizontalAlignment="Stretch" Command="{Binding CopyPathCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="DocumentCopy" FontSize="16" />
-                            <TextBlock Text="Копировать путь" />
+                            <TextBlock Text="{loc:Str Common.CopyPath}" />
                         </StackPanel>
                     </Button>
                     <Button HorizontalAlignment="Stretch" Command="{Binding TogglePinCommand}">
@@ -53,7 +54,7 @@
                     <Button HorizontalAlignment="Stretch" Command="{Binding PropertiesCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="Info" FontSize="16" />
-                            <TextBlock Text="Свойства" />
+                            <TextBlock Text="{loc:Str Common.Properties}" />
                         </StackPanel>
                     </Button>
                 </StackPanel>

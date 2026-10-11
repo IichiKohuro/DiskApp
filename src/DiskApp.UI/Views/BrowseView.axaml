@@ -1,5 +1,6 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ic="using:FluentIcons.Avalonia"
@@ -20,35 +21,35 @@
         <!-- Панель команд -->
         <DockPanel Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
-                <Button Classes="tool" Command="{Binding GoBackCommand}" IsEnabled="{Binding CanGoBack}" ToolTip.Tip="Назад (Alt+←)">
+                <Button Classes="tool" Command="{Binding GoBackCommand}" IsEnabled="{Binding CanGoBack}" ToolTip.Tip="{loc:Str Browse.BackAlt}">
                     <ic:SymbolIcon Symbol="ArrowLeft" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding GoForwardCommand}" IsEnabled="{Binding CanGoForward}" ToolTip.Tip="Вперёд (Alt+→)">
+                <Button Classes="tool" Command="{Binding GoForwardCommand}" IsEnabled="{Binding CanGoForward}" ToolTip.Tip="{loc:Str Browse.ForwardAlt}">
                     <ic:SymbolIcon Symbol="ArrowRight" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding GoUpCommand}" IsEnabled="{Binding CanGoUp}" ToolTip.Tip="На уровень выше (Alt+↑)">
+                <Button Classes="tool" Command="{Binding GoUpCommand}" IsEnabled="{Binding CanGoUp}" ToolTip.Tip="{loc:Str Browse.UpOneLevelAlt}">
                     <ic:SymbolIcon Symbol="ArrowUp" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="Обновить (F5)">
+                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Str Common.RefreshF5}">
                     <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
                 </Button>
-                <Button Classes="tool" ToolTip.Tip="Создать папку (Ctrl+Shift+N) или файл">
+                <Button Classes="tool" ToolTip.Tip="{loc:Str Browse.CreateAFolderCtrlShiftN}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <ic:SymbolIcon Symbol="Add" FontSize="16" />
-                        <TextBlock Text="Создать" />
+                        <TextBlock Text="{loc:Str Common.Create}" />
                     </StackPanel>
                     <Button.Flyout>
                         <MenuFlyout>
-                            <MenuItem Header="Папку" Command="{Binding NewFolderCommand}" InputGesture="Ctrl+Shift+N" />
+                            <MenuItem Header="{loc:Str Browse.Folder}" Command="{Binding NewFolderCommand}" InputGesture="Ctrl+Shift+N" />
                             <Separator />
-                            <MenuItem Header="Текстовый документ (.txt)" Command="{Binding NewFileCommand}" CommandParameter="{Binding FileTemplates[0]}" />
-                            <MenuItem Header="Заметку Markdown (.md)" Command="{Binding NewFileCommand}" CommandParameter="{Binding FileTemplates[1]}" />
+                            <MenuItem Header="{loc:Str Browse.TextDocumentTxt}" Command="{Binding NewFileCommand}" CommandParameter="{Binding FileTemplates[0]}" />
+                            <MenuItem Header="{loc:Str Browse.MarkdownNoteMd}" Command="{Binding NewFileCommand}" CommandParameter="{Binding FileTemplates[1]}" />
                             <MenuItem Header="JSON (.json)" Command="{Binding NewFileCommand}" CommandParameter="{Binding FileTemplates[2]}" />
                         </MenuFlyout>
                     </Button.Flyout>
                 </Button>
             </StackPanel>
-            <TextBox x:Name="AddressBox" Text="{Binding AddressText, Mode=TwoWay}" PlaceholderText="Путь к папке внутри корней · Ctrl+L">
+            <TextBox x:Name="AddressBox" Text="{Binding AddressText, Mode=TwoWay}" PlaceholderText="{loc:Str Browse.FolderPathInsideTheRootsCtrl}">
                 <TextBox.KeyBindings>
                     <KeyBinding Gesture="Enter" Command="{Binding GoToAddressCommand}" />
                 </TextBox.KeyBindings>
@@ -58,13 +59,13 @@
         <!-- Крошки -->
         <DockPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="8,0,0,8" VerticalAlignment="Center">
-                <TextBox Width="140" PlaceholderText="Фильтр в папке" Text="{Binding Filter, Mode=TwoWay}" />
-                <ComboBox Width="120" ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind, Mode=TwoWay}" ToolTip.Tip="Вид файлов" />
-                <ComboBox Width="140" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort, Mode=TwoWay}" ToolTip.Tip="Сортировка" />
-                <ToggleButton Classes="tool" IsChecked="{Binding Descending, Mode=TwoWay}" ToolTip.Tip="По убыванию">
+                <TextBox Width="140" PlaceholderText="{loc:Str Browse.FilterInFolder}" Text="{Binding Filter, Mode=TwoWay}" />
+                <ComboBox Width="120" ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.FileKind}" />
+                <ComboBox Width="140" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Sort}" />
+                <ToggleButton Classes="tool" IsChecked="{Binding Descending, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Descending}">
                     <ic:SymbolIcon Symbol="ArrowSortDown" FontSize="16" />
                 </ToggleButton>
-                <ToggleButton Classes="tool" IsChecked="{Binding IsTiles, Mode=TwoWay}" ToolTip.Tip="Плитка">
+                <ToggleButton Classes="tool" IsChecked="{Binding IsTiles, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Tiles}">
                     <ic:SymbolIcon Symbol="Grid" FontSize="16" />
                 </ToggleButton>
             </StackPanel>
@@ -149,15 +150,15 @@
                            TextWrapping="Wrap"
                            TextAlignment="Center"
                            VerticalAlignment="Center"
-                           Text="Выберите один файл — здесь появятся его сведения"
+                           Text="{loc:Str Browse.SelectOneFileItsDetailsAppear}"
                            IsVisible="{Binding SelectedDetails, Converter={x:Static ObjectConverters.IsNull}}" />
                 <ScrollViewer IsVisible="{Binding SelectedDetails, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <StackPanel Spacing="12">
                         <views:FileDetailsView DataContext="{Binding SelectedDetails}" />
-                        <Button Classes="accent" HorizontalAlignment="Stretch" Content="Открыть" Command="{Binding OpenItemCommand}" CommandParameter="{Binding Selection[0]}" />
-                        <Button HorizontalAlignment="Stretch" Content="Показать в Проводнике" Command="{Binding RevealCommand}" />
-                        <Button HorizontalAlignment="Stretch" Content="Копировать путь" Command="{Binding CopyPathCommand}" />
-                        <Button HorizontalAlignment="Stretch" Content="Свойства" Command="{Binding PropertiesCommand}" />
+                        <Button Classes="accent" HorizontalAlignment="Stretch" Content="{loc:Str Common.Open}" Command="{Binding OpenItemCommand}" CommandParameter="{Binding Selection[0]}" />
+                        <Button HorizontalAlignment="Stretch" Content="{loc:Str Common.ShowInExplorer}" Command="{Binding RevealCommand}" />
+                        <Button HorizontalAlignment="Stretch" Content="{loc:Str Common.CopyPath}" Command="{Binding CopyPathCommand}" />
+                        <Button HorizontalAlignment="Stretch" Content="{loc:Str Common.Properties}" Command="{Binding PropertiesCommand}" />
                     </StackPanel>
                 </ScrollViewer>
             </Panel>
@@ -169,22 +170,22 @@
 
     <UserControl.ContextFlyout>
         <MenuFlyout>
-            <MenuItem Header="Открыть" Command="{Binding OpenItemCommand}" CommandParameter="{Binding Selection[0]}" />
-            <MenuItem Header="Показать в Проводнике" Command="{Binding RevealCommand}" />
+            <MenuItem Header="{loc:Str Common.Open}" Command="{Binding OpenItemCommand}" CommandParameter="{Binding Selection[0]}" />
+            <MenuItem Header="{loc:Str Common.ShowInExplorer}" Command="{Binding RevealCommand}" />
             <Separator />
-            <MenuItem Header="Вырезать" Command="{Binding CutCommand}" InputGesture="Ctrl+X" />
-            <MenuItem Header="Копировать" Command="{Binding CopyFilesCommand}" InputGesture="Ctrl+C" />
-            <MenuItem Header="Вставить" Command="{Binding PasteFromAppCommand}" InputGesture="Ctrl+V" IsEnabled="{Binding HasClipboard}" />
-            <MenuItem Header="Копировать путь" Command="{Binding CopyPathCommand}" />
+            <MenuItem Header="{loc:Str Browse.Cut2}" Command="{Binding CutCommand}" InputGesture="Ctrl+X" />
+            <MenuItem Header="{loc:Str Common.Copy}" Command="{Binding CopyFilesCommand}" InputGesture="Ctrl+C" />
+            <MenuItem Header="{loc:Str Browse.Paste}" Command="{Binding PasteFromAppCommand}" InputGesture="Ctrl+V" IsEnabled="{Binding HasClipboard}" />
+            <MenuItem Header="{loc:Str Common.CopyPath}" Command="{Binding CopyPathCommand}" />
             <Separator />
-            <MenuItem Header="Новая папка" Command="{Binding NewFolderCommand}" InputGesture="Ctrl+Shift+N" />
+            <MenuItem Header="{loc:Str Browse.NewFolder}" Command="{Binding NewFolderCommand}" InputGesture="Ctrl+Shift+N" />
             <Separator />
-            <MenuItem Header="Закрепить или открепить" Command="{Binding TogglePinCommand}" InputGesture="Ctrl+D" />
-            <MenuItem Header="Теги…" Command="{Binding EditTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditTags}" />
-            <MenuItem Header="Переименовать…" Command="{Binding RenameCommand}" />
-            <MenuItem Header="В корзину…" Command="{Binding DeleteCommand}" />
+            <MenuItem Header="{loc:Str Common.PinOrUnpin}" Command="{Binding TogglePinCommand}" InputGesture="Ctrl+D" />
+            <MenuItem Header="{loc:Str Common.TagsEllipsis}" Command="{Binding EditTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditTags}" />
+            <MenuItem Header="{loc:Str Common.RenameEllipsis}" Command="{Binding RenameCommand}" />
+            <MenuItem Header="{loc:Str Browse.MoveToRecycleBin}" Command="{Binding DeleteCommand}" />
             <Separator />
-            <MenuItem Header="Свойства" Command="{Binding PropertiesCommand}" />
+            <MenuItem Header="{loc:Str Common.Properties}" Command="{Binding PropertiesCommand}" />
         </MenuFlyout>
     </UserControl.ContextFlyout>
 </UserControl>

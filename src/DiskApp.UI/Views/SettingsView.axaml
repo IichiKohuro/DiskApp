@@ -1,5 +1,6 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
@@ -13,7 +14,7 @@
     <!-- Настройки в стиле «Параметров» Windows 11 (PLAN.md, этап 9.1): разделы слева, SettingsExpander справа.
          Каждое изменение сохраняется сразу и применяется без перезапуска; отклонённое значение возвращается с пояснением. -->
     <Grid Margin="16,12,16,8" RowDefinitions="Auto,*" ColumnDefinitions="220,*">
-        <TextBlock Grid.ColumnSpan="2" Theme="{StaticResource TitleLargeTextBlockStyle}" Text="Настройки" Margin="0,0,0,12" />
+        <TextBlock Grid.ColumnSpan="2" Theme="{StaticResource TitleLargeTextBlockStyle}" Text="{loc:Str Settings.Settings}" Margin="0,0,0,12" />
 
         <ListBox x:Name="CategoriesList" Grid.Row="1" Classes="settings-nav" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
             <ListBox.ItemTemplate>
@@ -28,29 +29,35 @@
 
         <ScrollViewer Grid.Row="1" Grid.Column="1" Margin="16,0,0,0">
             <StackPanel Spacing="4" MaxWidth="{StaticResource PageMaxWidth}" Margin="0,0,12,16">
-                <ui:FAInfoBar IsOpen="{Binding HasSettingsNote}" IsClosable="False" Severity="Warning" Title="Настройки" Message="{Binding SettingsNote}" Margin="0,0,0,8" />
+                <ui:FAInfoBar IsOpen="{Binding HasSettingsNote}" IsClosable="False" Severity="Warning" Title="{loc:Str Settings.Settings}" Message="{Binding SettingsNote}" Margin="0,0,0,8" />
 
                 <!-- Внешний вид -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=appearance}">
-                    <TextBlock Classes="section" Text="Внешний вид" />
-                    <ui:FASettingsExpander Header="Тема" Description="Светлая, тёмная или как в системе">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Appearance}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Language}" Description="{loc:Str Settings.LanguageDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Globe" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" MinWidth="190" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Theme}" Description="{loc:Str Settings.LightDarkOrAsInWindows}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="DarkTheme" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" MinWidth="190" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Фон окон" Description="Mica в главном окне и Acrylic в окне поиска или сплошной цвет темы">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.WindowBackground}" Description="{loc:Str Settings.MicaInTheMainWindowAnd}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="ColorBackground" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <ComboBox ItemsSource="{Binding Backdrops}" SelectedItem="{Binding SelectedBackdrop, Mode=TwoWay}" MinWidth="190" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Акцентный цвет" Description="Цвет Windows или свой: кнопки, выделение, подсветка совпадений" IsExpanded="{Binding !UseSystemAccent}">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.AccentColor}" Description="{loc:Str Settings.TheWindowsColorOrYourOwn}" IsExpanded="{Binding !UseSystemAccent}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="ColorFill" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding UseSystemAccent, Mode=TwoWay}" OnContent="Как в Windows" OffContent="Свой" />
+                            <ToggleSwitch IsChecked="{Binding UseSystemAccent, Mode=TwoWay}" OnContent="{loc:Str Settings.LanguageSystem}" OffContent="{loc:Str Settings.Custom}" />
                         </ui:FASettingsExpander.Footer>
-                        <ui:FASettingsExpanderItem Content="Свой цвет" IsEnabled="{Binding !UseSystemAccent}">
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.CustomColor}" IsEnabled="{Binding !UseSystemAccent}">
                             <ui:FASettingsExpanderItem.Footer>
                                 <ItemsControl ItemsSource="{Binding AccentChoices}">
                                     <ItemsControl.ItemsPanel>
@@ -71,31 +78,31 @@
                             </ui:FASettingsExpanderItem.Footer>
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Масштаб" Description="Размер текста и элементов главного окна и окна поиска">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Scale}" Description="{loc:Str Settings.SizeOfTextAndControlsIn}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="FontSize" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <ComboBox ItemsSource="{Binding FontScales}" SelectedItem="{Binding SelectedFontScale, Mode=TwoWay}" MinWidth="190" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Компактные списки" Description="Строки результатов ниже — на экране помещается больше файлов">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.CompactLists}" Description="{loc:Str Settings.LowerResultRowsMoreFilesFit}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="List" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding Compact, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding Compact, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Уменьшить движение" Description="Без анимаций появления окон и переходов; также включается системной настройкой Windows">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.ReduceMotion}" Description="{loc:Str Settings.NoAnimationsForWindowsAndTransitions}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Pause" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding ReduceMotion, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding ReduceMotion, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
                 </StackPanel>
 
                 <!-- Быстрый поиск -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=quick}">
-                    <TextBlock Classes="section" Text="Быстрый поиск" />
-                    <ui:FASettingsExpander Header="Горячая клавиша"
-                                           Description="Показать или скрыть окно быстрого поиска из любого приложения"
+                    <TextBlock Classes="section" Text="{loc:Str Settings.QuickSearch}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Hotkey}"
+                                           Description="{loc:Str Settings.ShowOrHideTheQuickSearch}"
                                            IsExpanded="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Keyboard" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
@@ -104,17 +111,17 @@
                                     <TextBlock Text="{Binding Hotkeys.QuickSearchText}" FontSize="13" />
                                 </Border>
                                 <Border Classes="chip accent" Padding="10,4" IsVisible="{Binding IsRecordingQuickSearch}">
-                                    <TextBlock Text="Нажмите сочетание… Esc — отмена" FontSize="13" />
+                                    <TextBlock Text="{loc:Str Settings.PressTheShortcutEscCancels}" FontSize="13" />
                                 </Border>
-                                <Button Content="Изменить" Command="{Binding StartRecordingCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSearch}" />
-                                <Button Content="По умолчанию" Command="{Binding ResetHotkeyCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSearch}" />
+                                <Button Content="{loc:Str Settings.Change}" Command="{Binding StartRecordingCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSearch}" />
+                                <Button Content="{loc:Str Settings.Default}" Command="{Binding ResetHotkeyCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSearch}" />
                             </StackPanel>
                         </ui:FASettingsExpander.Footer>
                         <ui:FASettingsExpanderItem IsVisible="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                             <TextBlock Text="{Binding Hotkeys.Message}" TextWrapping="Wrap" />
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Quick Switch" Description="Сочетание в окне «Сохранить» или «Открыть»; действует, если Quick Switch включён в «Интеграциях»">
+                    <ui:FASettingsExpander Header="Quick Switch" Description="{loc:Str Settings.ShortcutInTheSaveOrOpen}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Folder" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <StackPanel Orientation="Horizontal" Spacing="8">
@@ -122,16 +129,16 @@
                                     <TextBlock Text="{Binding QuickSwitchHotkeyText}" FontSize="13" />
                                 </Border>
                                 <Border Classes="chip accent" Padding="10,4" IsVisible="{Binding IsRecordingQuickSwitch}">
-                                    <TextBlock Text="Нажмите сочетание… Esc — отмена" FontSize="13" />
+                                    <TextBlock Text="{loc:Str Settings.PressTheShortcutEscCancels}" FontSize="13" />
                                 </Border>
-                                <Button Content="Изменить" Command="{Binding StartRecordingCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSwitch}" />
-                                <Button Content="По умолчанию" Command="{Binding ResetHotkeyCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSwitch}" />
+                                <Button Content="{loc:Str Settings.Change}" Command="{Binding StartRecordingCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSwitch}" />
+                                <Button Content="{loc:Str Settings.Default}" Command="{Binding ResetHotkeyCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSwitch}" />
                             </StackPanel>
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
                     <TextBlock Margin="16,-2,16,6" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
                                Text="{Binding HotkeyNote}" IsVisible="{Binding HasHotkeyNote}" />
-                    <ui:FASettingsExpander Header="Разбор входящих" Description="Сессия разбора «Загрузок» — появится на этапе 17">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.SortTheInbox}" Description="{loc:Str Settings.SortingSessionForDownloadsComingIn}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Download" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <Border Classes="chip" Padding="10,4">
@@ -139,31 +146,31 @@
                             </Border>
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Монитор" Description="Где показывать окно быстрого поиска">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Monitor}" Description="{loc:Str Settings.WhereToShowTheQuickSearch}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="DockLeft" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <ComboBox ItemsSource="{Binding PopupMonitors}" SelectedItem="{Binding SelectedPopupMonitor, Mode=TwoWay}" MinWidth="190" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Прятать при потере фокуса" Description="Щелчок в другом окне закрывает поиск; иначе — только Esc и горячая клавиша">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.HideWhenFocusIsLost}" Description="{loc:Str Settings.AClickInAnotherWindowCloses}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="View" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding HideOnDeactivate, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding HideOnDeactivate, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Подробности в строках" Description="Что показывать рядом с именем файла" IsExpanded="True">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.RowDetails}" Description="{loc:Str Settings.WhatToShowNextToThe}" IsExpanded="True">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Document" /></ui:FASettingsExpander.IconSource>
-                        <ui:FASettingsExpanderItem Content="Папка">
-                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding ShowPath, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" /></ui:FASettingsExpanderItem.Footer>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.Folder}">
+                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding ShowPath, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" /></ui:FASettingsExpanderItem.Footer>
                         </ui:FASettingsExpanderItem>
-                        <ui:FASettingsExpanderItem Content="Размер">
-                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding ShowSize, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" /></ui:FASettingsExpanderItem.Footer>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.Size}">
+                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding ShowSize, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" /></ui:FASettingsExpanderItem.Footer>
                         </ui:FASettingsExpanderItem>
-                        <ui:FASettingsExpanderItem Content="Дата изменения">
-                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding ShowDate, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" /></ui:FASettingsExpanderItem.Footer>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.DateModified}">
+                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding ShowDate, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" /></ui:FASettingsExpanderItem.Footer>
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Клавиши окна поиска" Description="Что делают клавиши, пока открыто окно быстрого поиска" ItemsSource="{Binding KeyMap}">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.SearchWindowKeys}" Description="{loc:Str Settings.WhatKeysDoWhileTheQuick}" ItemsSource="{Binding KeyMap}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Keyboard" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.ItemTemplate>
                             <DataTemplate x:DataType="vm:KeyMapEntry">
@@ -180,37 +187,37 @@
 
                 <!-- Поиск -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=search}">
-                    <TextBlock Classes="section" Text="Поиск" />
-                    <ui:FASettingsExpander Header="Нечёткий поиск" Description="Если точных совпадений мало, находить имена с опечаткой: «reprot» → «report»">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Search}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.FuzzySearch}" Description="{loc:Str Settings.WhenThereAreFewExactMatches}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Find" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding Fuzzy, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding Fuzzy, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Подборка при пустом запросе" Description="Недавно открытые, закреплённые и изменённые файлы, пока ничего не введено">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.PicksForAnEmptyQuery}" Description="{loc:Str Settings.RecentlyOpenedPinnedAndChangedFiles}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Clock" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding ShowSuggestionsOnEmpty, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding ShowSuggestionsOnEmpty, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Порядок результатов" Description="Что важнее: совпадение имени, свежесть или баланс с частотой открытия">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.ResultOrder}" Description="{loc:Str Settings.WhatMattersMoreANameMatch}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Sort" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <ComboBox ItemsSource="{Binding RankingPresets}" SelectedItem="{Binding SelectedRankingPreset, Mode=TwoWay}" MinWidth="190" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Кандидатов до ранжирования" Description="Больше — точнее порядок на огромных индексах, но медленнее; 2 000 держит ответ в пределах 50 мс">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.CandidatesBeforeRanking}" Description="{loc:Str Settings.MoreGivesABetterOrderOn}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Filter" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <NumericUpDown Value="{Binding CandidateLimit, Mode=TwoWay}" Minimum="100" Maximum="5000" Increment="100" FormatString="0" MinWidth="150" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="История запросов" Description="Сколько запросов помнить для подсказок по ↑; 0 — не запоминать">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.QueryHistory}" Description="{loc:Str Settings.HowManyQueriesToRememberFor}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Clock" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <NumericUpDown Value="{Binding HistoryLimit, Mode=TwoWay}" Minimum="0" Maximum="1000" Increment="10" FormatString="0" MinWidth="150" />
-                                <Button Content="Очистить…" Command="{Binding ClearHistoryCommand}" />
+                                <Button Content="{loc:Str Settings.Clear2}" Command="{Binding ClearHistoryCommand}" />
                             </StackPanel>
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
@@ -218,13 +225,13 @@
 
                 <!-- Индекс -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=index}">
-                    <TextBlock Classes="section" Text="Индекс" />
-                    <ui:FASettingsExpander Header="Корни" Description="Папки и диски, по которым идёт поиск" IsExpanded="True" ItemsSource="{Binding RootItems}">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Index}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Roots}" Description="{loc:Str Settings.FoldersAndDrivesThatAreSearched}" IsExpanded="True" ItemsSource="{Binding RootItems}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Folder" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button Content="Добавить папку…" Command="{Binding AddRootFolderCommand}" />
-                                <Button Content="Диск">
+                                <Button Content="{loc:Str Settings.AddFolder}" Command="{Binding AddRootFolderCommand}" />
+                                <Button Content="{loc:Str Settings.Drive}">
                                     <Button.Flyout>
                                         <Flyout>
                                             <ItemsControl ItemsSource="{Binding Drives}">
@@ -250,31 +257,31 @@
                                         <TextBlock Classes="tertiary" FontSize="12" Text="{Binding StateText}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                        <Button Classes="tool" ToolTip.Tip="Пересканировать"
+                                        <Button Classes="tool" ToolTip.Tip="{loc:Str Settings.Rescan2}"
                                                 Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).RescanRootCommand}" CommandParameter="{Binding}">
                                             <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="14" />
                                         </Button>
-                                        <Button Classes="tool" ToolTip.Tip="Убрать из индекса (файлы останутся)"
+                                        <Button Classes="tool" ToolTip.Tip="{loc:Str Settings.RemoveFromIndexFilesStay}"
                                                 Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).RemoveRootCommand}" CommandParameter="{Binding}">
                                             <ic:SymbolIcon Symbol="Delete" FontSize="14" />
                                         </Button>
                                     </StackPanel>
                                     <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="16" Margin="0,6,0,0">
-                                        <CheckBox Content="Скрытые" IsChecked="{Binding IncludeHidden, Mode=TwoWay}" />
-                                        <CheckBox Content="Системные" IsChecked="{Binding IncludeSystem, Mode=TwoWay}" />
+                                        <CheckBox Content="{loc:Str Settings.Hidden}" IsChecked="{Binding IncludeHidden, Mode=TwoWay}" />
+                                        <CheckBox Content="{loc:Str Settings.System}" IsChecked="{Binding IncludeSystem, Mode=TwoWay}" />
                                         <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <TextBlock Text="Глубина" VerticalAlignment="Center" />
-                                            <TextBox Text="{Binding DepthText, Mode=TwoWay}" PlaceholderText="все" Width="70" />
+                                            <TextBlock Text="{loc:Str Settings.Depth}" VerticalAlignment="Center" />
+                                            <TextBox Text="{Binding DepthText, Mode=TwoWay}" PlaceholderText="{loc:Str Settings.All}" Width="70" />
                                         </StackPanel>
                                     </StackPanel>
                                 </Grid>
                             </DataTemplate>
                         </ui:FASettingsExpander.ItemTemplate>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Исключения" Description="Что не попадает в индекс: шаблоны путей, где ** — любые папки, * — любая часть имени" IsExpanded="True">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Exclusions}" Description="{loc:Str Settings.WhatStaysOutOfTheIndex}" IsExpanded="True">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Filter" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <Button Content="По умолчанию" Command="{Binding ResetExclusionsCommand}" />
+                            <Button Content="{loc:Str Settings.Default}" Command="{Binding ResetExclusionsCommand}" />
                         </ui:FASettingsExpander.Footer>
                         <ui:FASettingsExpanderItem>
                             <StackPanel Spacing="6">
@@ -283,7 +290,7 @@
                                         <DataTemplate x:DataType="vm:ExclusionItem">
                                             <Grid ColumnDefinitions="*,Auto" Margin="0,1">
                                                 <TextBlock Text="{Binding Text}" VerticalAlignment="Center" FontFamily="Cascadia Mono, Consolas, Segoe UI" />
-                                                <Button Grid.Column="1" Classes="tool" ToolTip.Tip="Убрать правило"
+                                                <Button Grid.Column="1" Classes="tool" ToolTip.Tip="{loc:Str Settings.RemoveRule}"
                                                         Command="{Binding $parent[UserControl].((vm:SettingsViewModel)DataContext).RemoveExclusionCommand}" CommandParameter="{Binding}">
                                                     <ic:SymbolIcon Symbol="Dismiss" FontSize="12" />
                                                 </Button>
@@ -292,27 +299,27 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                    <TextBox x:Name="NewExclusionBox" PlaceholderText="Например, **/bin/** или *.tmp" Text="{Binding NewExclusion, Mode=TwoWay}" />
-                                    <Button Grid.Column="1" Content="Добавить" Command="{Binding AddExclusionCommand}" />
+                                    <TextBox x:Name="NewExclusionBox" PlaceholderText="{loc:Str Settings.ForExampleBinOrTmp}" Text="{Binding NewExclusion, Mode=TwoWay}" />
+                                    <Button Grid.Column="1" Content="{loc:Str Settings.Add}" Command="{Binding AddExclusionCommand}" />
                                 </Grid>
                                 <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
                                            Text="{Binding ExclusionError}" IsVisible="{Binding HasExclusionError}" />
                             </StackPanel>
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Новые корни" Description="Что индексировать у добавляемых папок и дисков">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.NewRoots}" Description="{loc:Str Settings.WhatToIndexInFoldersAnd}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="NewFolder" /></ui:FASettingsExpander.IconSource>
-                        <ui:FASettingsExpanderItem Content="Скрытые файлы и папки">
-                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding IncludeHiddenByDefault, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" /></ui:FASettingsExpanderItem.Footer>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.HiddenFilesAndFolders}">
+                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding IncludeHiddenByDefault, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" /></ui:FASettingsExpanderItem.Footer>
                         </ui:FASettingsExpanderItem>
-                        <ui:FASettingsExpanderItem Content="Системные файлы и папки">
-                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding IncludeSystemByDefault, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" /></ui:FASettingsExpanderItem.Footer>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.SystemFilesAndFolders}">
+                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding IncludeSystemByDefault, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" /></ui:FASettingsExpanderItem.Footer>
                         </ui:FASettingsExpanderItem>
-                        <ui:FASettingsExpanderItem Content="Заходить в junction и символические ссылки (с защитой от циклов)">
-                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding FollowReparsePoints, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" /></ui:FASettingsExpanderItem.Footer>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.EnterJunctionsAndSymbolicLinksProtected}">
+                            <ui:FASettingsExpanderItem.Footer><ToggleSwitch IsChecked="{Binding FollowReparsePoints, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" /></ui:FASettingsExpanderItem.Footer>
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Сверка с диском" Description="Изменения ловит наблюдатель; сверка находит пропущенное, например после работы без DiskApp">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.DiskReconciliation}" Description="{loc:Str Settings.TheWatcherCatchesChangesReconciliationFinds}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Sync" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <ComboBox ItemsSource="{Binding ReconcileIntervals}" SelectedItem="{Binding SelectedReconcileInterval, Mode=TwoWay}" MinWidth="190" />
@@ -322,68 +329,68 @@
 
                 <!-- Поведение -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=behavior}">
-                    <TextBlock Classes="section" Text="Поведение" />
-                    <ui:FASettingsExpander Header="Запускать вместе с Windows" Description="Свёрнутым в трей, чтобы горячая клавиша работала сразу после входа"
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Behavior}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.StartWithWindows}" Description="{loc:Str Settings.MinimizedToTheTraySoThe}"
                                            IsExpanded="{Binding HasAutoStartNote}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Play" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding StartWithWindows, Mode=TwoWay}" IsEnabled="{Binding IsAutoStartSupported}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding StartWithWindows, Mode=TwoWay}" IsEnabled="{Binding IsAutoStartSupported}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                         <ui:FASettingsExpanderItem IsVisible="{Binding HasAutoStartNote}">
                             <TextBlock Text="{Binding AutoStartNote}" TextWrapping="Wrap" />
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Запускаться свёрнутым" Description="При запуске вместе с Windows главное окно не показывается — только значок в трее">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.StartMinimized}" Description="{loc:Str Settings.WhenStartingWithWindowsTheMain}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Remove" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding StartMinimized, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding StartMinimized, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Закрывать главное окно в трей" Description="Крестик прячет окно; выход — из меню трея">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.CloseTheMainWindowToThe}" Description="{loc:Str Settings.TheCloseButtonHidesTheWindow}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Dismiss" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding CloseToTray, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding CloseToTray, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Спрашивать при выходе во время операций" Description="Если идёт копирование или перемещение, выход сначала спросит">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.AskOnExitWhileOperationsRun}" Description="{loc:Str Settings.IfCopyingOrMovingIsIn}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Help" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding ConfirmExitDuringOperations, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding ConfirmExitDuringOperations, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
                 </StackPanel>
 
                 <!-- Интеграции -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=integrations}">
-                    <TextBlock Classes="section" Text="Интеграции" />
-                    <ui:FASettingsExpander Header="«Отправить» → DiskApp" Description="Ярлык в меню «Отправить»: выбранные файлы кладутся в папку, которую вы выберете">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Integrations}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.SendToDiskApp}" Description="{loc:Str Settings.AShortcutInTheSendTo}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Send" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding SendToEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding SendToEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Контекстное меню" Description="«Добавить в DiskApp» для файлов, «Открыть в DiskApp» и «Добавить в индекс» для папок">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.ContextMenu}" Description="{loc:Str Settings.AddToDiskAppForFilesOpen}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="List" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding ContextMenuEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding ContextMenuEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Ссылки diskapp://" Description="Ссылка diskapp://search?q=… открывает поиск с запросом">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.DiskappLinks}" Description="{loc:Str Settings.ADiskappSearchQLinkOpens}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Link" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding ProtocolEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding ProtocolEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Ярлык на рабочем столе" Description="Значок DiskApp на рабочем столе открывает главное окно">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.DesktopShortcut}" Description="{loc:Str Settings.ADiskAppIconOnTheDesktop}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Home" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding DesktopShortcutEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding DesktopShortcutEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
                     <ui:FASettingsExpander Header="Quick Switch" Description="{Binding QuickSwitchDescription}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Folder" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ToggleSwitch IsChecked="{Binding QuickSwitchEnabled, Mode=TwoWay}" IsEnabled="{Binding IsQuickSwitchSupported}" OnContent="Вкл" OffContent="Выкл" />
+                            <ToggleSwitch IsChecked="{Binding QuickSwitchEnabled, Mode=TwoWay}" IsEnabled="{Binding IsQuickSwitchSupported}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
                     <TextBlock Margin="16,-2,16,6" TextWrapping="Wrap" Opacity="0.75" FontSize="12" Text="{Binding IntegrationNote}" IsVisible="{Binding HasIntegrationNote}" />
@@ -391,96 +398,96 @@
 
                 <!-- Входящие -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=inbox}">
-                    <TextBlock Classes="section" Text="Входящие" />
-                    <ui:FASettingsExpander Header="Папка «Входящие»" Description="Куда по умолчанию кладётся добавленное: перетаскивание на главную, «Отправить», буфер обмена" IsExpanded="True">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Inbox}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.InboxFolder}" Description="{loc:Str Settings.WhereAddedItemsGoByDefault}" IsExpanded="True">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Download" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button Content="Выбрать…" Command="{Binding PickInboxCommand}" />
-                                <Button Content="Первый корень" Command="{Binding ResetInboxCommand}" />
+                                <Button Content="{loc:Str Settings.Choose}" Command="{Binding PickInboxCommand}" />
+                                <Button Content="{loc:Str Settings.FirstRoot}" Command="{Binding ResetInboxCommand}" />
                             </StackPanel>
                         </ui:FASettingsExpander.Footer>
                         <ui:FASettingsExpanderItem>
                             <TextBlock TextWrapping="Wrap" Text="{Binding InboxText}" />
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Имя файла из буфера обмена" Description="Ctrl+Shift+V сохраняет текст или картинку в файл с таким именем: {date}, {time}, {title}">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.FileNameFromTheClipboard}" Description="{loc:Str Settings.CtrlShiftVSavesTextOr}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Paste" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <TextBox Text="{Binding ClipboardNameTemplate, Mode=TwoWay}" MinWidth="240" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Разбор папок-накопителей" Description="Напоминания, «не беспокоить», правила автосортировки и журнал решений появятся вместе с разбором входящих (этап 17)">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.SortingCollectionFolders}" Description="{loc:Str Settings.RemindersDoNotDisturbAutoSorting}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Alert" /></ui:FASettingsExpander.IconSource>
                     </ui:FASettingsExpander>
                 </StackPanel>
 
                 <!-- Данные -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=data}">
-                    <TextBlock Classes="section" Text="Данные" />
-                    <ui:FASettingsExpander Header="Папка данных" Description="{Binding DataDirectoryText}">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Data}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.DataFolder}" Description="{Binding DataDirectoryText}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Folder" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <Button Content="Открыть" Command="{Binding OpenDataFolderCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                            <Button Content="{loc:Str Common.Open}" Command="{Binding OpenDataFolderCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Индекс" Description="{Binding IndexSizeText}">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Index}" Description="{Binding IndexSizeText}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Library" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <Button Content="Пересобрать…" Command="{Binding RebuildIndexCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                            <Button Content="{loc:Str Settings.Rebuild2}" Command="{Binding RebuildIndexCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Кэш иконок и миниатюр" Description="{Binding CacheSizeText}">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.IconAndThumbnailCache}" Description="{Binding CacheSizeText}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Pictures" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <Button Content="Очистить…" Command="{Binding ClearCacheCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                            <Button Content="{loc:Str Settings.Clear2}" Command="{Binding ClearCacheCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Перенос настроек" Description="Сохранить настройки в файл JSON или загрузить их на другом компьютере">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.SettingsTransfer}" Description="{loc:Str Settings.SaveSettingsToAJSONFile}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Save" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button Content="Сохранить в файл…" Command="{Binding ExportSettingsCommand}" />
-                                <Button Content="Загрузить…" Command="{Binding ImportSettingsCommand}" />
+                                <Button Content="{loc:Str Settings.SaveToFile}" Command="{Binding ExportSettingsCommand}" />
+                                <Button Content="{loc:Str Settings.Load}" Command="{Binding ImportSettingsCommand}" />
                             </StackPanel>
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Журнал" Description="Подробность файла журнала; меняется сразу">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Log}" Description="{loc:Str Settings.HowDetailedTheLogFileIs}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Document" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <ComboBox ItemsSource="{Binding LogLevels}" SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}" MinWidth="220" />
-                                <Button Content="Открыть папку" Command="{Binding OpenLogsFolderCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                                <Button Content="{loc:Str Settings.OpenFolder}" Command="{Binding OpenLogsFolderCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
                             </StackPanel>
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Резервные копии" Description="Расписание, места хранения и восстановление появятся вместе с модулем резервного копирования (этап 16)">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Backups}" Description="{loc:Str Settings.ScheduleStorageLocationsAndRestoreWill}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Sync" /></ui:FASettingsExpander.IconSource>
                     </ui:FASettingsExpander>
                 </StackPanel>
 
                 <!-- О программе -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=about}">
-                    <TextBlock Classes="section" Text="О программе" />
+                    <TextBlock Classes="section" Text="{loc:Str Settings.About}" />
                     <ui:FASettingsExpander Header="DiskApp" Description="{Binding VersionText}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Help" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <HyperlinkButton Content="Репозиторий на GitHub" NavigateUri="{Binding RepositoryUri}" />
+                            <HyperlinkButton Content="{loc:Str Settings.RepositoryOnGitHub}" NavigateUri="{Binding RepositoryUri}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Обновления" Description="{Binding UpdatesText}">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Updates}" Description="{Binding UpdatesText}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Download" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <HyperlinkButton Content="Релизы" NavigateUri="{Binding ReleasesUri}" />
+                            <HyperlinkButton Content="{loc:Str Settings.Releases}" NavigateUri="{Binding ReleasesUri}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Сообщить о проблеме" Description="Опишите, что произошло; журнал — в разделе «Данные»">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.ReportAProblem}" Description="{loc:Str Settings.DescribeWhatHappenedTheLogIs}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Alert" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <HyperlinkButton Content="Issues на GitHub" NavigateUri="{Binding IssuesUri}" />
+                            <HyperlinkButton Content="{loc:Str Settings.IssuesOnGitHub}" NavigateUri="{Binding IssuesUri}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
-                    <ui:FASettingsExpander Header="Сторонние компоненты" Description="Библиотеки с открытым кодом в этой сборке; лицензии — на страницах пакетов" ItemsSource="{Binding ThirdParty}">
+                    <ui:FASettingsExpander Header="{loc:Str Settings.ThirdPartyComponents}" Description="{loc:Str Settings.OpenSourceLibrariesInThisBuild}" ItemsSource="{Binding ThirdParty}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Library" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.ItemTemplate>
                             <DataTemplate x:DataType="svc:ThirdPartyComponent">
@@ -489,7 +496,7 @@
                                         <Run Text="{Binding Name}" />
                                         <Run Text="{Binding Version}" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                     </TextBlock>
-                                    <HyperlinkButton Grid.Column="1" Content="Пакет и лицензия" NavigateUri="{Binding Link}" />
+                                    <HyperlinkButton Grid.Column="1" Content="{loc:Str Settings.PackageAndLicense}" NavigateUri="{Binding Link}" />
                                 </Grid>
                             </DataTemplate>
                         </ui:FASettingsExpander.ItemTemplate>

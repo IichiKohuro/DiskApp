@@ -1,3 +1,4 @@
+﻿using DiskApp.UI.Localization;
 using DiskApp.UI.Text;
 
 using FluentIcons.Common;
@@ -79,7 +80,7 @@ public sealed class SearchHit
     public bool IsUnavailable => Entry.IsOffline || Entry.IsCloudOnly;
 
     /// <summary>Подсказка к значку доступности.</summary>
-    public string AvailabilityText => Entry.IsOffline ? "Диск недоступен" : Entry.IsCloudOnly ? "Только в облаке: откроется после загрузки" : string.Empty;
+    public string AvailabilityText => Entry.IsOffline ? L.T("SearchHit.DriveUnavailable") : Entry.IsCloudOnly ? L.T("SearchHit.CloudOnlyOpensAfterDownload") : string.Empty;
 
     /// <summary>Значок доступности: отключённый диск или облако.</summary>
     public Symbol AvailabilitySymbol => Entry.IsOffline ? Symbol.PlugDisconnected : Symbol.Cloud;

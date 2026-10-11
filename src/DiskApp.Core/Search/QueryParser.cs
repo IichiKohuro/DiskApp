@@ -1,5 +1,7 @@
-using System.Collections.Frozen;
+﻿using System.Collections.Frozen;
 using System.Text.RegularExpressions;
+
+using DiskApp.Core.Localization;
 
 namespace DiskApp.Core.Search;
 
@@ -153,7 +155,7 @@ public static class QueryParser
                     continue;
                 }
 
-                warnings.Add($"Регулярное выражение «{pattern}» не разобрано — ищу как текст.");
+                warnings.Add(L.F("QueryParser.RegularExpressionCouldNotBeParsed", pattern));
             }
 
             if (colon > bodyStart && TryGetKey(text[bodyStart..colon], out var key))
@@ -172,7 +174,7 @@ public static class QueryParser
                     continue;
                 }
 
-                warnings.Add($"Не понял значение фильтра «{text[bodyStart..i]}» — ищу как текст.");
+                warnings.Add(L.F("QueryParser.DidNotUnderstandTheFilterValue", text[bodyStart..i]));
             }
 
             terms.Add(new SearchTerm(word, IsNegated: negated));

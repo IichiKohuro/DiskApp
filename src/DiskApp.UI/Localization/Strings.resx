@@ -1,0 +1,2442 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddFiles.Add" xml:space="preserve">
+    <value>Добавить </value>
+  </data>
+  <data name="AddFiles.Added" xml:space="preserve">
+    <value>Добавлено</value>
+  </data>
+  <data name="AddFiles.And" xml:space="preserve">
+    <value> и </value>
+  </data>
+  <data name="AddFiles.ChooseAFolder" xml:space="preserve">
+    <value>Выберите папку</value>
+  </data>
+  <data name="AddFiles.Clipboard" xml:space="preserve">
+    <value>буфер</value>
+  </data>
+  <data name="AddFiles.ClipboardIsEmpty" xml:space="preserve">
+    <value>Буфер обмена пуст</value>
+  </data>
+  <data name="AddFiles.CopyTextAPictureOrFiles" xml:space="preserve">
+    <value>Скопируйте текст, картинку или файлы.</value>
+  </data>
+  <data name="AddFiles.CouldNotAddTo" xml:space="preserve">
+    <value>Не удалось добавить в «{0}»</value>
+  </data>
+  <data name="AddFiles.CouldNotGetTheRoots" xml:space="preserve">
+    <value>Не удалось получить корни</value>
+  </data>
+  <data name="AddFiles.DefaultPlace" xml:space="preserve">
+    <value>место по умолчанию</value>
+  </data>
+  <data name="AddFiles.FilesOutsideTheIndexRootsAre" xml:space="preserve">
+    <value>Файлы вне корней индекса копируются; исходные остаются на месте.</value>
+  </data>
+  <data name="AddFiles.FindAFolderByName" xml:space="preserve">
+    <value>Найти папку по имени</value>
+  </data>
+  <data name="AddFiles.FoldersFromOutsideAreNotCopied" xml:space="preserve">
+    <value> Папки извне пока не копируются: {0}.</value>
+  </data>
+  <data name="AddFiles.Image" xml:space="preserve">
+    <value>изображение</value>
+  </data>
+  <data name="AddFiles.Inbox" xml:space="preserve">
+    <value>Входящие</value>
+  </data>
+  <data name="AddFiles.Move" xml:space="preserve">
+    <value>Переместить</value>
+  </data>
+  <data name="AddFiles.NothingToAdd" xml:space="preserve">
+    <value>Нечего добавлять</value>
+  </data>
+  <data name="AddFiles.Pinned" xml:space="preserve">
+    <value>закреплено</value>
+  </data>
+  <data name="AddFiles.Recent" xml:space="preserve">
+    <value>недавнее</value>
+  </data>
+  <data name="AddFiles.Root" xml:space="preserve">
+    <value>корень</value>
+  </data>
+  <data name="AddFiles.Text" xml:space="preserve">
+    <value>текст</value>
+  </data>
+  <data name="AddFiles.TheFilesWereNotFoundOn" xml:space="preserve">
+    <value>Файлы не найдены на диске.</value>
+  </data>
+  <data name="AddFiles.To" xml:space="preserve">
+    <value>Куда: </value>
+  </data>
+  <data name="ApiFileActions.AlreadyExistsInThisFolder" xml:space="preserve">
+    <value>«{0}» уже есть в этой папке.</value>
+  </data>
+  <data name="ApiFileActions.DeletionIsWaitingForAConflict" xml:space="preserve">
+    <value>Удаление ждёт решения по конфликту.</value>
+  </data>
+  <data name="ApiFileActions.TheOperationFailed" xml:space="preserve">
+    <value>Операция не выполнена.</value>
+  </data>
+  <data name="ApiFileActions.TheOperationIsStillRunningIts" xml:space="preserve">
+    <value>Операция ещё выполняется: её ход виден на странице «Операции».</value>
+  </data>
+  <data name="ApiFileActions.TheOperationWasCancelled" xml:space="preserve">
+    <value>Операция отменена.</value>
+  </data>
+  <data name="Browse.AFolderCannotBeMovedInto" xml:space="preserve">
+    <value>Папку нельзя перенести в неё саму.</value>
+  </data>
+  <data name="Browse.All" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="Browse.Archives" xml:space="preserve">
+    <value>Архивы</value>
+  </data>
+  <data name="Browse.Audio" xml:space="preserve">
+    <value>Аудио</value>
+  </data>
+  <data name="Browse.BackAlt" xml:space="preserve">
+    <value>Назад (Alt+←)</value>
+  </data>
+  <data name="Browse.Browse" xml:space="preserve">
+    <value>Обзор</value>
+  </data>
+  <data name="Browse.Code" xml:space="preserve">
+    <value>Код</value>
+  </data>
+  <data name="Browse.Copied" xml:space="preserve">
+    <value>Скопировано</value>
+  </data>
+  <data name="Browse.CopyOrCutFilesInBrowse" xml:space="preserve">
+    <value>Скопируйте или вырежьте файлы в «Обзоре» или в Проводнике.</value>
+  </data>
+  <data name="Browse.CouldNotChangePinning" xml:space="preserve">
+    <value>Не удалось изменить закрепление</value>
+  </data>
+  <data name="Browse.CouldNotChangeTags" xml:space="preserve">
+    <value>Не удалось изменить теги</value>
+  </data>
+  <data name="Browse.CouldNotCopy" xml:space="preserve">
+    <value>Не удалось скопировать</value>
+  </data>
+  <data name="Browse.CouldNotCopyThePath" xml:space="preserve">
+    <value>Не удалось скопировать путь</value>
+  </data>
+  <data name="Browse.CouldNotDrag" xml:space="preserve">
+    <value>Не удалось перетащить</value>
+  </data>
+  <data name="Browse.CouldNotGetTheRoots" xml:space="preserve">
+    <value>Не удалось получить корни: </value>
+  </data>
+  <data name="Browse.CouldNotMoveToTheRecycle" xml:space="preserve">
+    <value>Не удалось переместить в корзину</value>
+  </data>
+  <data name="Browse.CouldNotOpen" xml:space="preserve">
+    <value>Не удалось открыть «{0}»: {1}</value>
+  </data>
+  <data name="Browse.CouldNotOpen2" xml:space="preserve">
+    <value>Не удалось открыть «{0}»</value>
+  </data>
+  <data name="Browse.CouldNotOpenProperties" xml:space="preserve">
+    <value>Не удалось открыть свойства</value>
+  </data>
+  <data name="Browse.CouldNotRename" xml:space="preserve">
+    <value>Не удалось переименовать</value>
+  </data>
+  <data name="Browse.CouldNotShowInFolder" xml:space="preserve">
+    <value>Не удалось показать в папке</value>
+  </data>
+  <data name="Browse.CreateAFolderCtrlShiftN" xml:space="preserve">
+    <value>Создать папку (Ctrl+Shift+N) или файл</value>
+  </data>
+  <data name="Browse.Cut" xml:space="preserve">
+    <value>Вырезано</value>
+  </data>
+  <data name="Browse.Cut2" xml:space="preserve">
+    <value>Вырезать</value>
+  </data>
+  <data name="Browse.DateModified" xml:space="preserve">
+    <value>Дата изменения</value>
+  </data>
+  <data name="Browse.Descending" xml:space="preserve">
+    <value>По убыванию</value>
+  </data>
+  <data name="Browse.Documents" xml:space="preserve">
+    <value>Документы</value>
+  </data>
+  <data name="Browse.FileKind" xml:space="preserve">
+    <value>Вид файлов</value>
+  </data>
+  <data name="Browse.FilterInFolder" xml:space="preserve">
+    <value>Фильтр в папке</value>
+  </data>
+  <data name="Browse.Folder" xml:space="preserve">
+    <value>Папку</value>
+  </data>
+  <data name="Browse.FolderPathInsideTheRootsCtrl" xml:space="preserve">
+    <value>Путь к папке внутри корней · Ctrl+L</value>
+  </data>
+  <data name="Browse.Folders" xml:space="preserve">
+    <value>Папки</value>
+  </data>
+  <data name="Browse.FoldersFromOutsideAreNotCopied" xml:space="preserve">
+    <value> Папки извне пока не копируются: {0}.</value>
+  </data>
+  <data name="Browse.ForwardAlt" xml:space="preserve">
+    <value>Вперёд (Alt+→)</value>
+  </data>
+  <data name="Browse.Images" xml:space="preserve">
+    <value>Изображения</value>
+  </data>
+  <data name="Browse.MarkdownNote" xml:space="preserve">
+    <value>Заметка Markdown</value>
+  </data>
+  <data name="Browse.MarkdownNoteMd" xml:space="preserve">
+    <value>Заметку Markdown (.md)</value>
+  </data>
+  <data name="Browse.MoveToRecycleBin" xml:space="preserve">
+    <value>В корзину…</value>
+  </data>
+  <data name="Browse.MoveToTheRecycleBinYou" xml:space="preserve">
+    <value>Переместить {0} в корзину? Их можно будет вернуть из корзины Windows.</value>
+  </data>
+  <data name="Browse.MovedToTheRecycleBin" xml:space="preserve">
+    <value>Перемещено в корзину</value>
+  </data>
+  <data name="Browse.Name" xml:space="preserve">
+    <value>Имя</value>
+  </data>
+  <data name="Browse.NameInFolder" xml:space="preserve">
+    <value>Имя в папке «{0}»</value>
+  </data>
+  <data name="Browse.NewFile" xml:space="preserve">
+    <value>Новый файл</value>
+  </data>
+  <data name="Browse.NewFolder" xml:space="preserve">
+    <value>Новая папка</value>
+  </data>
+  <data name="Browse.NewNameFor" xml:space="preserve">
+    <value>Новое имя для «{0}»</value>
+  </data>
+  <data name="Browse.NoRootsYetAddAFolder" xml:space="preserve">
+    <value>Корней пока нет — добавьте папку на главной</value>
+  </data>
+  <data name="Browse.NothingToPaste" xml:space="preserve">
+    <value>Нечего вставить</value>
+  </data>
+  <data name="Browse.NowhereToMove" xml:space="preserve">
+    <value>Некуда переносить</value>
+  </data>
+  <data name="Browse.Of" xml:space="preserve">
+    <value> из {0}</value>
+  </data>
+  <data name="Browse.OperationsUnavailable" xml:space="preserve">
+    <value>Операции недоступны</value>
+  </data>
+  <data name="Browse.Paste" xml:space="preserve">
+    <value>Вставить</value>
+  </data>
+  <data name="Browse.PasteInFileExplorer" xml:space="preserve">
+    <value> — вставьте в Проводнике.</value>
+  </data>
+  <data name="Browse.PasteIntoTheTargetFolderCtrl" xml:space="preserve">
+    <value> — вставьте в нужную папку (Ctrl+V).</value>
+  </data>
+  <data name="Browse.PathCopied" xml:space="preserve">
+    <value>Путь скопирован</value>
+  </data>
+  <data name="Browse.Pinned" xml:space="preserve">
+    <value>Закреплено</value>
+  </data>
+  <data name="Browse.SelectOneFileItsDetailsAppear" xml:space="preserve">
+    <value>Выберите один файл — здесь появятся его сведения</value>
+  </data>
+  <data name="Browse.Selected" xml:space="preserve">
+    <value> · выбрано {0}</value>
+  </data>
+  <data name="Browse.ShowingTheFirst" xml:space="preserve">
+    <value> · показаны первые</value>
+  </data>
+  <data name="Browse.Size" xml:space="preserve">
+    <value>Размер</value>
+  </data>
+  <data name="Browse.Sort" xml:space="preserve">
+    <value>Сортировка</value>
+  </data>
+  <data name="Browse.Spreadsheets" xml:space="preserve">
+    <value>Таблицы</value>
+  </data>
+  <data name="Browse.TagsSaved" xml:space="preserve">
+    <value>Теги сохранены</value>
+  </data>
+  <data name="Browse.TextDocument" xml:space="preserve">
+    <value>Текстовый документ</value>
+  </data>
+  <data name="Browse.TextDocumentTxt" xml:space="preserve">
+    <value>Текстовый документ (.txt)</value>
+  </data>
+  <data name="Browse.TheServerOperationQueueIsNot" xml:space="preserve">
+    <value>Очередь операций сервера не подключена.</value>
+  </data>
+  <data name="Browse.ThisNameWillNotWork" xml:space="preserve">
+    <value>Такое имя не подходит</value>
+  </data>
+  <data name="Browse.Tiles" xml:space="preserve">
+    <value>Плитка</value>
+  </data>
+  <data name="Browse.Type" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="Browse.Unpinned" xml:space="preserve">
+    <value>Откреплено</value>
+  </data>
+  <data name="Browse.UpOneLevelAlt" xml:space="preserve">
+    <value>На уровень выше (Alt+↑)</value>
+  </data>
+  <data name="Browse.Videos" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="Collections.ChooseACollection" xml:space="preserve">
+    <value>Выберите коллекцию</value>
+  </data>
+  <data name="Collections.Collection" xml:space="preserve">
+    <value>Коллекцию</value>
+  </data>
+  <data name="Collections.CollectionDeleted" xml:space="preserve">
+    <value>Коллекция удалена</value>
+  </data>
+  <data name="Collections.CollectionTxt" xml:space="preserve">
+    <value>Коллекция.txt</value>
+  </data>
+  <data name="Collections.CopyPaths" xml:space="preserve">
+    <value>Копировать пути</value>
+  </data>
+  <data name="Collections.CouldNotAdd" xml:space="preserve">
+    <value>Не удалось добавить</value>
+  </data>
+  <data name="Collections.CouldNotChangeTags" xml:space="preserve">
+    <value>Не удалось изменить теги</value>
+  </data>
+  <data name="Collections.CouldNotChangeTheCollection" xml:space="preserve">
+    <value>Не удалось изменить коллекцию</value>
+  </data>
+  <data name="Collections.CouldNotChangeTheOrder" xml:space="preserve">
+    <value>Не удалось изменить порядок</value>
+  </data>
+  <data name="Collections.CouldNotCopyThePaths" xml:space="preserve">
+    <value>Не удалось скопировать пути</value>
+  </data>
+  <data name="Collections.CouldNotCreateTheCollection" xml:space="preserve">
+    <value>Не удалось создать коллекцию</value>
+  </data>
+  <data name="Collections.CouldNotDeleteTheCollection" xml:space="preserve">
+    <value>Не удалось удалить коллекцию</value>
+  </data>
+  <data name="Collections.CouldNotLoadCollections" xml:space="preserve">
+    <value>Не удалось загрузить коллекции: </value>
+  </data>
+  <data name="Collections.CouldNotLoadEntries" xml:space="preserve">
+    <value>Не удалось загрузить записи: </value>
+  </data>
+  <data name="Collections.CouldNotOpen" xml:space="preserve">
+    <value>Не удалось открыть</value>
+  </data>
+  <data name="Collections.CouldNotReadTheList" xml:space="preserve">
+    <value>Не удалось прочитать список</value>
+  </data>
+  <data name="Collections.CouldNotRemoveTheEntry" xml:space="preserve">
+    <value>Не удалось убрать запись</value>
+  </data>
+  <data name="Collections.CouldNotSaveTheList" xml:space="preserve">
+    <value>Не удалось сохранить список</value>
+  </data>
+  <data name="Collections.CouldNotShowInFolder" xml:space="preserve">
+    <value>Не удалось показать в папке</value>
+  </data>
+  <data name="Collections.DeleteCollection" xml:space="preserve">
+    <value>Удалить коллекцию</value>
+  </data>
+  <data name="Collections.DeleteCollection2" xml:space="preserve">
+    <value>Удалить коллекцию…</value>
+  </data>
+  <data name="Collections.DeleteTheFilesStayWhereThey" xml:space="preserve">
+    <value>Удалить «{0}»? Файлы останутся на месте.</value>
+  </data>
+  <data name="Collections.Down" xml:space="preserve">
+    <value>Ниже</value>
+  </data>
+  <data name="Collections.DownAlt" xml:space="preserve">
+    <value>Ниже (Alt+↓)</value>
+  </data>
+  <data name="Collections.EditQuery" xml:space="preserve">
+    <value>Изменить запрос</value>
+  </data>
+  <data name="Collections.EditQuery2" xml:space="preserve">
+    <value>Изменить запрос…</value>
+  </data>
+  <data name="Collections.EntryAdded.Few" xml:space="preserve">
+    <value>записи добавлены</value>
+  </data>
+  <data name="Collections.EntryAdded.Many" xml:space="preserve">
+    <value>записей добавлено</value>
+  </data>
+  <data name="Collections.EntryAdded.One" xml:space="preserve">
+    <value>запись добавлена</value>
+  </data>
+  <data name="Collections.FavoritesSetsOfFilesFromDifferent" xml:space="preserve">
+    <value>Избранное, подборки файлов из разных мест и сохранённые запросы, которые обновляются сами.</value>
+  </data>
+  <data name="Collections.List" xml:space="preserve">
+    <value>Список</value>
+  </data>
+  <data name="Collections.ListOfPaths" xml:space="preserve">
+    <value>Список путей</value>
+  </data>
+  <data name="Collections.ListSaved" xml:space="preserve">
+    <value>Список сохранён</value>
+  </data>
+  <data name="Collections.LoadFromFile" xml:space="preserve">
+    <value>Загрузить из файла…</value>
+  </data>
+  <data name="Collections.LoadListOfPaths" xml:space="preserve">
+    <value>Загрузить список путей</value>
+  </data>
+  <data name="Collections.ManualCollection" xml:space="preserve">
+    <value>Ручная коллекция</value>
+  </data>
+  <data name="Collections.NewCollection" xml:space="preserve">
+    <value>Новая коллекция</value>
+  </data>
+  <data name="Collections.NewCollectionOrSavedQuery" xml:space="preserve">
+    <value>Новая коллекция или сохранённый запрос</value>
+  </data>
+  <data name="Collections.NewSavedQuery" xml:space="preserve">
+    <value>Новый сохранённый запрос</value>
+  </data>
+  <data name="Collections.Next" xml:space="preserve">
+    <value>Далее</value>
+  </data>
+  <data name="Collections.NoFavoritesYetCtrlDPins" xml:space="preserve">
+    <value>Избранного пока нет: Ctrl+D закрепляет файл в поиске и «Обзоре».</value>
+  </data>
+  <data name="Collections.NothingMatchesTheQuery" xml:space="preserve">
+    <value>По запросу ничего не найдено.</value>
+  </data>
+  <data name="Collections.OutsideTheIndex" xml:space="preserve">
+    <value> вне индекса</value>
+  </data>
+  <data name="Collections.PathsCopied" xml:space="preserve">
+    <value>Пути скопированы</value>
+  </data>
+  <data name="Collections.PinnedCtrlDInAnyList" xml:space="preserve">
+    <value>Закреплённое: Ctrl+D в любом списке</value>
+  </data>
+  <data name="Collections.Query" xml:space="preserve">
+    <value>Запрос</value>
+  </data>
+  <data name="Collections.QueryForExampleExtPdfModified" xml:space="preserve">
+    <value>Запрос, например: ext:pdf modified:7d</value>
+  </data>
+  <data name="Collections.RemoveFromList" xml:space="preserve">
+    <value>Убрать из списка</value>
+  </data>
+  <data name="Collections.RemoveFromListDelTheFile" xml:space="preserve">
+    <value>Убрать из списка (Del); файл останется</value>
+  </data>
+  <data name="Collections.RenameCollection" xml:space="preserve">
+    <value>Переименовать коллекцию</value>
+  </data>
+  <data name="Collections.SaveListOfPaths" xml:space="preserve">
+    <value>Сохранить список путей</value>
+  </data>
+  <data name="Collections.SaveToFile" xml:space="preserve">
+    <value>Сохранить в файл…</value>
+  </data>
+  <data name="Collections.SavedQuery" xml:space="preserve">
+    <value>Сохранённый запрос</value>
+  </data>
+  <data name="Collections.TheCollectionIsEmptyDropFiles" xml:space="preserve">
+    <value>Коллекция пуста: перетащите сюда файлы или загрузите список путей.</value>
+  </data>
+  <data name="Collections.Up" xml:space="preserve">
+    <value>Выше</value>
+  </data>
+  <data name="Collections.UpAlt" xml:space="preserve">
+    <value>Выше (Alt+↑)</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="Common.CancelButton" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Common.Copy" xml:space="preserve">
+    <value>Копировать</value>
+  </data>
+  <data name="Common.CopyPath" xml:space="preserve">
+    <value>Копировать путь</value>
+  </data>
+  <data name="Common.CountTo" xml:space="preserve">
+    <value>{0} в «{1}».</value>
+  </data>
+  <data name="Common.Create" xml:space="preserve">
+    <value>Создать</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Common.Done" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="Common.Entry.Few" xml:space="preserve">
+    <value>записи</value>
+  </data>
+  <data name="Common.Entry.Many" xml:space="preserve">
+    <value>записей</value>
+  </data>
+  <data name="Common.Entry.One" xml:space="preserve">
+    <value>запись</value>
+  </data>
+  <data name="Common.Error" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="Common.Favorites" xml:space="preserve">
+    <value>Избранное</value>
+  </data>
+  <data name="Common.File.Few" xml:space="preserve">
+    <value>файла</value>
+  </data>
+  <data name="Common.File.Many" xml:space="preserve">
+    <value>файлов</value>
+  </data>
+  <data name="Common.File.One" xml:space="preserve">
+    <value>файл</value>
+  </data>
+  <data name="Common.Folder.Few" xml:space="preserve">
+    <value>папки</value>
+  </data>
+  <data name="Common.Folder.Many" xml:space="preserve">
+    <value>папок</value>
+  </data>
+  <data name="Common.Folder.One" xml:space="preserve">
+    <value>папка</value>
+  </data>
+  <data name="Common.Item.Few" xml:space="preserve">
+    <value>элемента</value>
+  </data>
+  <data name="Common.Item.Many" xml:space="preserve">
+    <value>элементов</value>
+  </data>
+  <data name="Common.Item.One" xml:space="preserve">
+    <value>элемент</value>
+  </data>
+  <data name="Common.Kind.Archive" xml:space="preserve">
+    <value>Архив</value>
+  </data>
+  <data name="Common.Kind.Audio" xml:space="preserve">
+    <value>Аудио</value>
+  </data>
+  <data name="Common.Kind.Code" xml:space="preserve">
+    <value>Код</value>
+  </data>
+  <data name="Common.Kind.Document" xml:space="preserve">
+    <value>Документ</value>
+  </data>
+  <data name="Common.Kind.File" xml:space="preserve">
+    <value>Файл</value>
+  </data>
+  <data name="Common.Kind.Folder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="Common.Kind.Image" xml:space="preserve">
+    <value>Изображение</value>
+  </data>
+  <data name="Common.Kind.Presentation" xml:space="preserve">
+    <value>Презентация</value>
+  </data>
+  <data name="Common.Kind.Program" xml:space="preserve">
+    <value>Программа</value>
+  </data>
+  <data name="Common.Kind.Spreadsheet" xml:space="preserve">
+    <value>Таблица</value>
+  </data>
+  <data name="Common.Kind.Text" xml:space="preserve">
+    <value>Текст</value>
+  </data>
+  <data name="Common.Kind.Video" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="Common.Name" xml:space="preserve">
+    <value>Имя</value>
+  </data>
+  <data name="Common.Off" xml:space="preserve">
+    <value>Выкл</value>
+  </data>
+  <data name="Common.On" xml:space="preserve">
+    <value>Вкл</value>
+  </data>
+  <data name="Common.Open" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="Common.Page.Collections" xml:space="preserve">
+    <value>Коллекции</value>
+  </data>
+  <data name="Common.Page.Tags" xml:space="preserve">
+    <value>Теги</value>
+  </data>
+  <data name="Common.Path.Few" xml:space="preserve">
+    <value>пути</value>
+  </data>
+  <data name="Common.Path.Many" xml:space="preserve">
+    <value>путей</value>
+  </data>
+  <data name="Common.Path.One" xml:space="preserve">
+    <value>путь</value>
+  </data>
+  <data name="Common.PinOrUnpin" xml:space="preserve">
+    <value>Закрепить или открепить</value>
+  </data>
+  <data name="Common.Properties" xml:space="preserve">
+    <value>Свойства</value>
+  </data>
+  <data name="Common.RefreshF5" xml:space="preserve">
+    <value>Обновить (F5)</value>
+  </data>
+  <data name="Common.Rename" xml:space="preserve">
+    <value>Переименовать</value>
+  </data>
+  <data name="Common.RenameEllipsis" xml:space="preserve">
+    <value>Переименовать…</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Сохранить</value>
+  </data>
+  <data name="Common.ShowInExplorer" xml:space="preserve">
+    <value>Показать в Проводнике</value>
+  </data>
+  <data name="Common.TagsEllipsis" xml:space="preserve">
+    <value>Теги…</value>
+  </data>
+  <data name="Common.ToRecycleBin" xml:space="preserve">
+    <value>В корзину</value>
+  </data>
+  <data name="Date.Full" xml:space="preserve">
+    <value>dd.MM.yyyy</value>
+  </data>
+  <data name="DesktopDialog.AFileWithThisNameAlready" xml:space="preserve">
+    <value>Файл с таким именем уже есть</value>
+  </data>
+  <data name="DesktopDialog.Add" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="DesktopDialog.ApplyToAllConflictsOfThis" xml:space="preserve">
+    <value>Применить ко всем конфликтам этой операции</value>
+  </data>
+  <data name="DesktopDialog.CancelTheWholeOperation" xml:space="preserve">
+    <value>Отменить всю операцию</value>
+  </data>
+  <data name="DesktopDialog.Color" xml:space="preserve">
+    <value>Цвет</value>
+  </data>
+  <data name="DesktopDialog.Existing" xml:space="preserve">
+    <value>Уже есть</value>
+  </data>
+  <data name="DesktopDialog.JSONSettings" xml:space="preserve">
+    <value>Настройки JSON</value>
+  </data>
+  <data name="DesktopDialog.KeepBoth" xml:space="preserve">
+    <value>Оставить оба</value>
+  </data>
+  <data name="DesktopDialog.Modified" xml:space="preserve">
+    <value>{0}: {1}, изменён {2:dd.MM.yyyy HH:mm}</value>
+  </data>
+  <data name="DesktopDialog.New" xml:space="preserve">
+    <value>Новый</value>
+  </data>
+  <data name="DesktopDialog.Replace" xml:space="preserve">
+    <value>Заменить</value>
+  </data>
+  <data name="DesktopDialog.Skip" xml:space="preserve">
+    <value>Пропустить</value>
+  </data>
+  <data name="DesktopDialog.TagName" xml:space="preserve">
+    <value>Имя тега</value>
+  </data>
+  <data name="DesktopDialog.TextFile" xml:space="preserve">
+    <value>Текстовый файл</value>
+  </data>
+  <data name="DesktopDialog.TheFolderAlreadyHas" xml:space="preserve">
+    <value>В папке «{0}» уже есть «{1}».</value>
+  </data>
+  <data name="DesktopDialog.WhenReplacedThePreviousFileGoes" xml:space="preserve">
+    <value>При замене прежний файл уходит в корзину.</value>
+  </data>
+  <data name="DesktopShell.Added" xml:space="preserve">
+    <value>Добавлены: </value>
+  </data>
+  <data name="DesktopShell.CouldNotCreateTheWindowThat" xml:space="preserve">
+    <value>Не удалось создать окно для приёма клавиш: {0}</value>
+  </data>
+  <data name="DesktopShell.CouldNotSaveTheClipboard" xml:space="preserve">
+    <value>Не удалось сохранить буфер обмена</value>
+  </data>
+  <data name="DesktopShell.Exit" xml:space="preserve">
+    <value>Выход</value>
+  </data>
+  <data name="DesktopShell.Exit2" xml:space="preserve">
+    <value>Выйти</value>
+  </data>
+  <data name="DesktopShell.ExitDiskApp" xml:space="preserve">
+    <value>Выйти из DiskApp?</value>
+  </data>
+  <data name="DesktopShell.FallbackShortcut" xml:space="preserve">
+    <value>Запасное сочетание клавиш</value>
+  </data>
+  <data name="DesktopShell.FileOperationsAreRunningOnExit" xml:space="preserve">
+    <value>Идут файловые операции: {0}. При выходе они отменятся, недокопированные файлы удалятся.</value>
+  </data>
+  <data name="DesktopShell.GlobalHotkeysWorkOnlyOnWindows" xml:space="preserve">
+    <value>Глобальные горячие клавиши пока работают только в Windows.</value>
+  </data>
+  <data name="DesktopShell.GlobalShortcutsWorkOnlyOnWindows" xml:space="preserve">
+    <value>глобальные сочетания работают только в Windows.</value>
+  </data>
+  <data name="DesktopShell.HotkeyUnavailable" xml:space="preserve">
+    <value>Горячая клавиша недоступна</value>
+  </data>
+  <data name="DesktopShell.IndexingIsAlreadyRunning" xml:space="preserve">
+    <value>. Индексация уже идёт.</value>
+  </data>
+  <data name="DesktopShell.IndexingPauseDidNotSwitch" xml:space="preserve">
+    <value>Пауза индексации не переключилась</value>
+  </data>
+  <data name="DesktopShell.IsTakenByAnotherAppSo" xml:space="preserve">
+    <value>Сочетание {0} занято другим приложением, поэтому действует {1}. Его можно сменить в настройках.</value>
+  </data>
+  <data name="DesktopShell.NoShortcutCouldBeRegistered" xml:space="preserve">
+    <value>Ни одно сочетание не удалось зарегистрировать: </value>
+  </data>
+  <data name="DesktopShell.NotAdded" xml:space="preserve">
+    <value>Не добавлены: </value>
+  </data>
+  <data name="DesktopShell.NotAllRootsWereAdded" xml:space="preserve">
+    <value>Не все корни добавлены</value>
+  </data>
+  <data name="DesktopShell.OpenDiskApp" xml:space="preserve">
+    <value>Открыть DiskApp</value>
+  </data>
+  <data name="DesktopShell.OpenSaveAsOrOpenIn" xml:space="preserve">
+    <value>Откройте «Сохранить как» или «Открыть» в программе и нажмите {0} в нём.</value>
+  </data>
+  <data name="DesktopShell.PauseIndexing" xml:space="preserve">
+    <value>Приостановить индексацию</value>
+  </data>
+  <data name="DesktopShell.QuickSearch" xml:space="preserve">
+    <value>Быстрый поиск</value>
+  </data>
+  <data name="DesktopShell.ResumeIndexing" xml:space="preserve">
+    <value>Возобновить индексацию</value>
+  </data>
+  <data name="DesktopShell.RootsAdded" xml:space="preserve">
+    <value>Корни добавлены</value>
+  </data>
+  <data name="DesktopShell.SaveDialogNotFound" xml:space="preserve">
+    <value>Диалог сохранения не найден</value>
+  </data>
+  <data name="DesktopShell.SearchOpensWithAClickOn" xml:space="preserve">
+    <value>. Поиск открывается щелчком по иконке в трее; сочетание можно сменить в настройках.</value>
+  </data>
+  <data name="DesktopShell.Settings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="DesktopShell.TheChosenFolderWasDeletedOr" xml:space="preserve">
+    <value>Выбранная папка удалена или недоступна: индекс обновится сам.</value>
+  </data>
+  <data name="DesktopShell.TheDialogDidNotGoTo" xml:space="preserve">
+    <value>Диалог не перешёл в папку</value>
+  </data>
+  <data name="DesktopShell.TheDialogIsAlreadyClosed" xml:space="preserve">
+    <value>Диалог уже закрыт</value>
+  </data>
+  <data name="DesktopShell.TheFolderIsGone" xml:space="preserve">
+    <value>Папки больше нет</value>
+  </data>
+  <data name="DesktopShell.TheKeyIsNotSupported" xml:space="preserve">
+    <value>клавиша не поддерживается.</value>
+  </data>
+  <data name="DesktopShell.TheKeyIsNotSupported2" xml:space="preserve">
+    <value>{0} — клавиша не поддерживается</value>
+  </data>
+  <data name="DesktopShell.ThePathIsCopiedToThe" xml:space="preserve">
+    <value>Путь скопирован в буфер обмена: вставьте его в поле имени файла и нажмите Enter.</value>
+  </data>
+  <data name="DesktopShell.TheSaveOrOpenWindowClosed" xml:space="preserve">
+    <value>Окно «Сохранить» или «Открыть» закрылось, пока выбиралась папка.</value>
+  </data>
+  <data name="DesktopShell.TheShortcutInSettingsIsNot" xml:space="preserve">
+    <value>Сочетание «{0}» в настройках не распознано, поэтому действует {1}.</value>
+  </data>
+  <data name="DesktopShell.TheShortcutIsTakenByAnother" xml:space="preserve">
+    <value>сочетание занято другим приложением.</value>
+  </data>
+  <data name="DesktopShell.ThisShortcutAlreadyBelongsToQuick" xml:space="preserve">
+    <value>это сочетание уже у Quick Switch.</value>
+  </data>
+  <data name="DesktopShell.ThisShortcutAlreadyBelongsToQuick2" xml:space="preserve">
+    <value>это сочетание уже у быстрого поиска.</value>
+  </data>
+  <data name="DetailsPane.SelectAFileInTheList" xml:space="preserve">
+    <value>Выберите файл в списке — здесь появятся его сведения и действия</value>
+  </data>
+  <data name="DetailsPane.ShowInFolder" xml:space="preserve">
+    <value>Показать в папке</value>
+  </data>
+  <data name="ExclusionItem.DeeperThanLevels" xml:space="preserve">
+    <value>Глубже {0} уровней</value>
+  </data>
+  <data name="ExclusionItem.FilesLargerThanBytes" xml:space="preserve">
+    <value>Файлы больше {0} байт</value>
+  </data>
+  <data name="ExclusionItem.HiddenFilesAndFolders" xml:space="preserve">
+    <value>Скрытые файлы и папки</value>
+  </data>
+  <data name="ExclusionItem.SystemFilesAndFolders" xml:space="preserve">
+    <value>Системные файлы и папки</value>
+  </data>
+  <data name="FileDetails.Bytes" xml:space="preserve">
+    <value>{0} ({1} байт)</value>
+  </data>
+  <data name="FileDetails.CloudOnlyOpensAfterDownload" xml:space="preserve">
+    <value>Только в облаке: откроется после загрузки</value>
+  </data>
+  <data name="FileDetails.DriveUnavailable" xml:space="preserve">
+    <value>Диск недоступен</value>
+  </data>
+  <data name="FileDetails.Folder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="FileDetails.Kind" xml:space="preserve">
+    <value>Вид</value>
+  </data>
+  <data name="FileDetails.Modified" xml:space="preserve">
+    <value>Изменён</value>
+  </data>
+  <data name="FileDetails.Root" xml:space="preserve">
+    <value>Корень</value>
+  </data>
+  <data name="FileDetails.Size" xml:space="preserve">
+    <value>Размер</value>
+  </data>
+  <data name="Format.Percent" xml:space="preserve">
+    <value>{0} %</value>
+  </data>
+  <data name="GlobalHotkey.CouldNotRegisterTheHotkey" xml:space="preserve">
+    <value>Не удалось зарегистрировать горячую клавишу: {0}.</value>
+  </data>
+  <data name="GlobalHotkey.TheShortcutIsAlreadyTakenBy" xml:space="preserve">
+    <value>сочетание уже занято другим приложением</value>
+  </data>
+  <data name="GlobalHotkey.WindowsRejectedTheRegistration" xml:space="preserve">
+    <value>Windows отклонила регистрацию</value>
+  </data>
+  <data name="Home.AWhereToPutItHint" xml:space="preserve">
+    <value>Подсказка «куда положить», одна клавиша — следующий файл, любое решение можно отменить. Напоминание в 18:00.</value>
+  </data>
+  <data name="Home.AddAFolderOrADrive" xml:space="preserve">
+    <value>Добавьте папку или диск, по которым искать</value>
+  </data>
+  <data name="Home.AddFolder" xml:space="preserve">
+    <value>Добавить папку</value>
+  </data>
+  <data name="Home.BrowseFolders" xml:space="preserve">
+    <value>Обзор папок</value>
+  </data>
+  <data name="Home.ChangedInTheLastDay" xml:space="preserve">
+    <value>Изменённые за сутки</value>
+  </data>
+  <data name="Home.ClearTheQueryThenClose" xml:space="preserve">
+    <value>очистить запрос, затем закрыть</value>
+  </data>
+  <data name="Home.CouldNotAddTheFolder" xml:space="preserve">
+    <value>Не удалось добавить папку</value>
+  </data>
+  <data name="Home.CouldNotGetTheRoots" xml:space="preserve">
+    <value>Не удалось получить корни</value>
+  </data>
+  <data name="Home.CouldNotOpen" xml:space="preserve">
+    <value>Не удалось открыть «{0}»</value>
+  </data>
+  <data name="Home.FileWaits.Few" xml:space="preserve">
+    <value>файла ждут</value>
+  </data>
+  <data name="Home.FileWaits.Many" xml:space="preserve">
+    <value>файлов ждут</value>
+  </data>
+  <data name="Home.FileWaits.One" xml:space="preserve">
+    <value>файл ждёт</value>
+  </data>
+  <data name="Home.FoldersAddedToTheIndex" xml:space="preserve">
+    <value>Папки добавлены в индекс</value>
+  </data>
+  <data name="Home.FoldersToSearch" xml:space="preserve">
+    <value>Папки, по которым искать</value>
+  </data>
+  <data name="Home.FullScanAgain" xml:space="preserve">
+    <value>Полное сканирование заново</value>
+  </data>
+  <data name="Home.GoodAfternoon" xml:space="preserve">
+    <value>Добрый день</value>
+  </data>
+  <data name="Home.GoodEvening" xml:space="preserve">
+    <value>Добрый вечер</value>
+  </data>
+  <data name="Home.GoodMorning" xml:space="preserve">
+    <value>Доброе утро</value>
+  </data>
+  <data name="Home.GoodNight" xml:space="preserve">
+    <value>Доброй ночи</value>
+  </data>
+  <data name="Home.Home" xml:space="preserve">
+    <value>Главная</value>
+  </data>
+  <data name="Home.HotkeyHintSuffix" xml:space="preserve">
+    <value>, три буквы и Enter — файл открыт</value>
+  </data>
+  <data name="Home.Inbox" xml:space="preserve">
+    <value>Входящие</value>
+  </data>
+  <data name="Home.InboxIsEmptyEverythingIsSorted" xml:space="preserve">
+    <value>Во «входящих» пусто — всё разобрано</value>
+  </data>
+  <data name="Home.InboxWaiting" xml:space="preserve">
+    <value>{0} разбора в «Загрузках»</value>
+  </data>
+  <data name="Home.IndexRoots" xml:space="preserve">
+    <value>Корни индекса</value>
+  </data>
+  <data name="Home.IndexingIsAlreadyRunning" xml:space="preserve">
+    <value>. Индексация уже идёт.</value>
+  </data>
+  <data name="Home.Keys" xml:space="preserve">
+    <value>Клавиши</value>
+  </data>
+  <data name="Home.NotAllFoldersWereAdded" xml:space="preserve">
+    <value>Не все папки добавлены</value>
+  </data>
+  <data name="Home.OpenAResultByNumber" xml:space="preserve">
+    <value>открыть результат по номеру</value>
+  </data>
+  <data name="Home.OpenSearch" xml:space="preserve">
+    <value>Открыть поиск</value>
+  </data>
+  <data name="Home.Opened" xml:space="preserve">
+    <value>Открыт «{0}»</value>
+  </data>
+  <data name="Home.Pinned" xml:space="preserve">
+    <value>Закреплённые</value>
+  </data>
+  <data name="Home.QuickSearch" xml:space="preserve">
+    <value>Быстрый поиск</value>
+  </data>
+  <data name="Home.QuickSearchFromAnywhere" xml:space="preserve">
+    <value>быстрый поиск из любого места</value>
+  </data>
+  <data name="Home.RecentFiles" xml:space="preserve">
+    <value>Недавние файлы</value>
+  </data>
+  <data name="Home.Rescan" xml:space="preserve">
+    <value>Пересканировать</value>
+  </data>
+  <data name="Home.RootsTreeAndListLikeFile" xml:space="preserve">
+    <value>Корни, дерево и список — как в Проводнике, только быстрее</value>
+  </data>
+  <data name="Home.SelectAndOpen" xml:space="preserve">
+    <value>выбрать и открыть</value>
+  </data>
+  <data name="Home.ShowInFileExplorer" xml:space="preserve">
+    <value>показать в Проводнике</value>
+  </data>
+  <data name="Home.Sort" xml:space="preserve">
+    <value>Разобрать</value>
+  </data>
+  <data name="Home.SortTheInbox" xml:space="preserve">
+    <value>Разобрать входящие</value>
+  </data>
+  <data name="Home.UseAddFolderOrDragA" xml:space="preserve">
+    <value>Кнопкой «Добавить папку» или перетащите папку из Проводника на эту страницу; файлы, брошенные сюда, кладутся в выбранную папку</value>
+  </data>
+  <data name="IndexStatus.In" xml:space="preserve">
+    <value>{0} · {1} в {2}</value>
+  </data>
+  <data name="IndexStatus.InUpdated" xml:space="preserve">
+    <value>{0} в {1} · обновлён {2}</value>
+  </data>
+  <data name="IndexStatus.Indexing" xml:space="preserve">
+    <value>индексация {0}</value>
+  </data>
+  <data name="IndexStatus.Indexing2" xml:space="preserve">
+    <value>идёт индексация</value>
+  </data>
+  <data name="IndexStatus.IndexingScanned" xml:space="preserve">
+    <value>индексация: просмотрено {0}</value>
+  </data>
+  <data name="IndexStatus.Root.Few" xml:space="preserve">
+    <value>корнях</value>
+  </data>
+  <data name="IndexStatus.Root.Many" xml:space="preserve">
+    <value>корнях</value>
+  </data>
+  <data name="IndexStatus.Root.One" xml:space="preserve">
+    <value>корне</value>
+  </data>
+  <data name="Main.Details" xml:space="preserve">
+    <value>Подробнее</value>
+  </data>
+  <data name="Main.FavoritesPinnedFoldersAndSetsOf" xml:space="preserve">
+    <value>Избранное, закреплённые папки и подборки файлов из разных мест — для проектов, поездок и дел.</value>
+  </data>
+  <data name="Main.FindAFileOrFolderCtrl" xml:space="preserve">
+    <value>Найти файл или папку · Ctrl+E</value>
+  </data>
+  <data name="Main.Inbox" xml:space="preserve">
+    <value>Входящие</value>
+  </data>
+  <data name="Main.IndexIsUpToDate" xml:space="preserve">
+    <value>Индекс актуален</value>
+  </data>
+  <data name="Main.IndexingError" xml:space="preserve">
+    <value>Ошибка индексации</value>
+  </data>
+  <data name="Main.OperationsRunning" xml:space="preserve">
+    <value>Идут операции</value>
+  </data>
+  <data name="Main.SomeRootsAreUnavailable" xml:space="preserve">
+    <value>Часть корней недоступна</value>
+  </data>
+  <data name="Main.SortingDownloadsIntoDedicatedStoresA" xml:space="preserve">
+    <value>Разбор «Загрузок» по профильным складам: подсказка «куда положить», одна клавиша — следующий файл, отмена любого решения.</value>
+  </data>
+  <data name="Main.Stage17" xml:space="preserve">
+    <value>Этап 17</value>
+  </data>
+  <data name="Main.Stage8" xml:space="preserve">
+    <value>Этап 8</value>
+  </data>
+  <data name="Main.TagsAndColorsForFilesAnd" xml:space="preserve">
+    <value>Теги и цвета для файлов и папок; фильтр tag: в поиске; быстрые метки одной клавишей.</value>
+  </data>
+  <data name="Month.Short.1" xml:space="preserve">
+    <value>янв</value>
+  </data>
+  <data name="Month.Short.10" xml:space="preserve">
+    <value>окт</value>
+  </data>
+  <data name="Month.Short.11" xml:space="preserve">
+    <value>ноя</value>
+  </data>
+  <data name="Month.Short.12" xml:space="preserve">
+    <value>дек</value>
+  </data>
+  <data name="Month.Short.2" xml:space="preserve">
+    <value>фев</value>
+  </data>
+  <data name="Month.Short.3" xml:space="preserve">
+    <value>мар</value>
+  </data>
+  <data name="Month.Short.4" xml:space="preserve">
+    <value>апр</value>
+  </data>
+  <data name="Month.Short.5" xml:space="preserve">
+    <value>мая</value>
+  </data>
+  <data name="Month.Short.6" xml:space="preserve">
+    <value>июн</value>
+  </data>
+  <data name="Month.Short.7" xml:space="preserve">
+    <value>июл</value>
+  </data>
+  <data name="Month.Short.8" xml:space="preserve">
+    <value>авг</value>
+  </data>
+  <data name="Month.Short.9" xml:space="preserve">
+    <value>сен</value>
+  </data>
+  <data name="NullAutoStart.AutostartIsNotSupportedOnThis" xml:space="preserve">
+    <value>Автозапуск на этой платформе пока не поддерживается.</value>
+  </data>
+  <data name="OperationItem.Cancelled" xml:space="preserve">
+    <value>Отменена</value>
+  </data>
+  <data name="OperationItem.Copying" xml:space="preserve">
+    <value>Копирование {0}{1}</value>
+  </data>
+  <data name="OperationItem.H" xml:space="preserve">
+    <value>{0} ч</value>
+  </data>
+  <data name="OperationItem.Min" xml:space="preserve">
+    <value>{0} мин</value>
+  </data>
+  <data name="OperationItem.Moving" xml:space="preserve">
+    <value>Перемещение {0}{1}</value>
+  </data>
+  <data name="OperationItem.NewFile" xml:space="preserve">
+    <value>Новый файл{0}</value>
+  </data>
+  <data name="OperationItem.NewFolder" xml:space="preserve">
+    <value>Новая папка{0}</value>
+  </data>
+  <data name="OperationItem.Of" xml:space="preserve">
+    <value>{0} из {1}</value>
+  </data>
+  <data name="OperationItem.Queued" xml:space="preserve">
+    <value>В очереди</value>
+  </data>
+  <data name="OperationItem.Remaining" xml:space="preserve">
+    <value>осталось </value>
+  </data>
+  <data name="OperationItem.Renaming" xml:space="preserve">
+    <value>Переименование {0}</value>
+  </data>
+  <data name="OperationItem.Running" xml:space="preserve">
+    <value>Выполняется</value>
+  </data>
+  <data name="OperationItem.S" xml:space="preserve">
+    <value>/с</value>
+  </data>
+  <data name="OperationItem.S2" xml:space="preserve">
+    <value>{0} с</value>
+  </data>
+  <data name="OperationItem.To" xml:space="preserve">
+    <value> в «{0}»</value>
+  </data>
+  <data name="OperationItem.ToRecycleBin" xml:space="preserve">
+    <value>В корзину: {0}</value>
+  </data>
+  <data name="OperationItem.WaitingForADecisionAFile" xml:space="preserve">
+    <value>Ждёт решения: файл с таким именем уже есть</value>
+  </data>
+  <data name="Operations.ClearFinished" xml:space="preserve">
+    <value>Убрать завершённые</value>
+  </data>
+  <data name="Operations.CopyMoveRenameAndRecycleBin" xml:space="preserve">
+    <value>Копирование, перемещение, переименование и корзина. Ctrl+Z отменяет последнюю операцию, которую можно отменить.</value>
+  </data>
+  <data name="Operations.CopyingAndMovingFromBrowseRenaming" xml:space="preserve">
+    <value>Копирование и перемещение из «Обзора», переименование и корзина появятся здесь</value>
+  </data>
+  <data name="Operations.CouldNotCancel" xml:space="preserve">
+    <value>Не удалось отменить</value>
+  </data>
+  <data name="Operations.CouldNotSendTheDecision" xml:space="preserve">
+    <value>Не удалось передать решение</value>
+  </data>
+  <data name="Operations.CouldNotUndoTheResult" xml:space="preserve">
+    <value>Не удалось отменить результат</value>
+  </data>
+  <data name="Operations.NoOperationsYet" xml:space="preserve">
+    <value>Операций пока не было</value>
+  </data>
+  <data name="Operations.NothingToUndo" xml:space="preserve">
+    <value>Нечего отменять</value>
+  </data>
+  <data name="Operations.Operation.Few" xml:space="preserve">
+    <value>операции</value>
+  </data>
+  <data name="Operations.Operation.Many" xml:space="preserve">
+    <value>операций</value>
+  </data>
+  <data name="Operations.Operation.One" xml:space="preserve">
+    <value>операция</value>
+  </data>
+  <data name="Operations.Operations" xml:space="preserve">
+    <value>Операции</value>
+  </data>
+  <data name="Operations.RenameMoveAndCreateCanBe" xml:space="preserve">
+    <value>Отменить можно переименование, перемещение и создание.</value>
+  </data>
+  <data name="Operations.RestoreAsItWas" xml:space="preserve">
+    <value>Вернуть как было</value>
+  </data>
+  <data name="Operations.TheOperationFailed" xml:space="preserve">
+    <value>Операция не выполнена</value>
+  </data>
+  <data name="Operations.TheOperationWasNotStarted" xml:space="preserve">
+    <value>Операция не запущена</value>
+  </data>
+  <data name="Operations.Undo" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="Operations.UndoResult" xml:space="preserve">
+    <value>Отменить результат</value>
+  </data>
+  <data name="Operations.Undone" xml:space="preserve">
+    <value>Отменено</value>
+  </data>
+  <data name="PathText.IsAReservedWindowsName" xml:space="preserve">
+    <value>«{0}» — зарезервированное имя Windows.</value>
+  </data>
+  <data name="PathText.TheNameCannotBeEmpty" xml:space="preserve">
+    <value>Имя не может быть пустым.</value>
+  </data>
+  <data name="PathText.TheNameCannotContain" xml:space="preserve">
+    <value>Имя не может содержать символы \ / : * ? " &lt; &gt; |.</value>
+  </data>
+  <data name="PathText.TheNameCannotEndWithA" xml:space="preserve">
+    <value>Имя не может заканчиваться точкой или пробелом.</value>
+  </data>
+  <data name="Program.DetailsAreInTheLog" xml:space="preserve">
+    <value> Подробности — в журнале.</value>
+  </data>
+  <data name="Program.TheDiskAppServerDidNotStart" xml:space="preserve">
+    <value>Сервер DiskApp не запустился</value>
+  </data>
+  <data name="Program.TheIndexDatabaseIsStillBeing" xml:space="preserve">
+    <value>Проверка и открытие базы индекса ещё идут; поиск заработает, когда они закончатся.</value>
+  </data>
+  <data name="Program.TheServerIsTakingLongerThan" xml:space="preserve">
+    <value>Сервер запускается дольше обычного</value>
+  </data>
+  <data name="QuickSearch.Archives" xml:space="preserve">
+    <value>Архивы</value>
+  </data>
+  <data name="QuickSearch.Audio" xml:space="preserve">
+    <value>Аудио</value>
+  </data>
+  <data name="QuickSearch.CanBeRestoredFromTheWindows" xml:space="preserve">
+    <value>«{0}» можно вернуть из корзины Windows.</value>
+  </data>
+  <data name="QuickSearch.ChooseAFolder" xml:space="preserve">
+    <value>Выберите папку</value>
+  </data>
+  <data name="QuickSearch.Clear" xml:space="preserve">
+    <value>Очистить</value>
+  </data>
+  <data name="QuickSearch.Code" xml:space="preserve">
+    <value>Код</value>
+  </data>
+  <data name="QuickSearch.Copied" xml:space="preserve">
+    <value>Скопировано</value>
+  </data>
+  <data name="QuickSearch.CouldNotAcceptTheFiles" xml:space="preserve">
+    <value>Не удалось принять файлы</value>
+  </data>
+  <data name="QuickSearch.CouldNotChangeTags" xml:space="preserve">
+    <value>Не удалось изменить теги</value>
+  </data>
+  <data name="QuickSearch.CouldNotClearHistory" xml:space="preserve">
+    <value>Не удалось очистить историю</value>
+  </data>
+  <data name="QuickSearch.CouldNotCopy" xml:space="preserve">
+    <value>Не удалось скопировать</value>
+  </data>
+  <data name="QuickSearch.CouldNotCopyThePath" xml:space="preserve">
+    <value>Не удалось скопировать путь</value>
+  </data>
+  <data name="QuickSearch.CouldNotCopyTo" xml:space="preserve">
+    <value>Не удалось скопировать в «{0}»</value>
+  </data>
+  <data name="QuickSearch.CouldNotDrag" xml:space="preserve">
+    <value>Не удалось перетащить</value>
+  </data>
+  <data name="QuickSearch.CouldNotMoveToTheRecycle" xml:space="preserve">
+    <value>Не удалось переместить в корзину</value>
+  </data>
+  <data name="QuickSearch.CouldNotOpen" xml:space="preserve">
+    <value>Не удалось открыть «{0}»: {1}</value>
+  </data>
+  <data name="QuickSearch.CouldNotOpenProperties" xml:space="preserve">
+    <value>Не удалось открыть свойства</value>
+  </data>
+  <data name="QuickSearch.CouldNotOpenTheOpenWith" xml:space="preserve">
+    <value>Не удалось открыть диалог «Открыть с помощью»</value>
+  </data>
+  <data name="QuickSearch.CouldNotPin" xml:space="preserve">
+    <value>Не удалось закрепить</value>
+  </data>
+  <data name="QuickSearch.CouldNotRemoveFromHistory" xml:space="preserve">
+    <value>Не удалось удалить из истории</value>
+  </data>
+  <data name="QuickSearch.CouldNotRename" xml:space="preserve">
+    <value>Не удалось переименовать</value>
+  </data>
+  <data name="QuickSearch.CouldNotRunAsAdministrator" xml:space="preserve">
+    <value>Не удалось запустить от имени администратора</value>
+  </data>
+  <data name="QuickSearch.CouldNotShowInFolder" xml:space="preserve">
+    <value>Не удалось показать в папке</value>
+  </data>
+  <data name="QuickSearch.CouldNotUnpin" xml:space="preserve">
+    <value>Не удалось открепить</value>
+  </data>
+  <data name="QuickSearch.DiskAppQuickSearch" xml:space="preserve">
+    <value>DiskApp — быстрый поиск</value>
+  </data>
+  <data name="QuickSearch.Documents" xml:space="preserve">
+    <value>Документы</value>
+  </data>
+  <data name="QuickSearch.DropFilesOnAFolderIn" xml:space="preserve">
+    <value>Бросьте файлы на папку в списке — они скопируются туда</value>
+  </data>
+  <data name="QuickSearch.EnterGoesToItInThe" xml:space="preserve">
+    <value>Enter — перейти в неё в диалоге сохранения; для файла — в его папку. Esc — отмена.</value>
+  </data>
+  <data name="QuickSearch.EnterOpenTabMenuHelpEsc" xml:space="preserve">
+    <value>Enter открыть · Tab меню · ? справка · Esc закрыть</value>
+  </data>
+  <data name="QuickSearch.FindAFileOrFolder" xml:space="preserve">
+    <value>Найти файл или папку…</value>
+  </data>
+  <data name="QuickSearch.FolderSkipped.Few" xml:space="preserve">
+    <value>папки пропущены</value>
+  </data>
+  <data name="QuickSearch.FolderSkipped.Many" xml:space="preserve">
+    <value>папок пропущено</value>
+  </data>
+  <data name="QuickSearch.FolderSkipped.One" xml:space="preserve">
+    <value>папка пропущена</value>
+  </data>
+  <data name="QuickSearch.Folders" xml:space="preserve">
+    <value>Папки</value>
+  </data>
+  <data name="QuickSearch.FoldersNotCopiedByDrag" xml:space="preserve">
+    <value> {0}: папки перетаскиванием пока не копируются.</value>
+  </data>
+  <data name="QuickSearch.History" xml:space="preserve">
+    <value>История</value>
+  </data>
+  <data name="QuickSearch.HistoryCleared" xml:space="preserve">
+    <value>История очищена</value>
+  </data>
+  <data name="QuickSearch.Images" xml:space="preserve">
+    <value>Изображения</value>
+  </data>
+  <data name="QuickSearch.InTheIndex" xml:space="preserve">
+    <value> в индексе</value>
+  </data>
+  <data name="QuickSearch.Month" xml:space="preserve">
+    <value>Месяц</value>
+  </data>
+  <data name="QuickSearch.MoveToTheRecycleBin" xml:space="preserve">
+    <value>Переместить «{0}» в корзину?</value>
+  </data>
+  <data name="QuickSearch.MovedToTheRecycleBin" xml:space="preserve">
+    <value>Перемещено в корзину</value>
+  </data>
+  <data name="QuickSearch.Ms" xml:space="preserve">
+    <value> · {0} мс</value>
+  </data>
+  <data name="QuickSearch.NewNameFor" xml:space="preserve">
+    <value>Новое имя для «{0}»</value>
+  </data>
+  <data name="QuickSearch.NoConnectionToTheSearchServer" xml:space="preserve">
+    <value>Нет связи с сервером поиска: </value>
+  </data>
+  <data name="QuickSearch.NothingFound" xml:space="preserve">
+    <value>Ничего не найдено</value>
+  </data>
+  <data name="QuickSearch.NothingFoundTryAnotherWordOr" xml:space="preserve">
+    <value>Ничего не найдено — попробуйте другое слово или часть имени</value>
+  </data>
+  <data name="QuickSearch.NothingToCopy" xml:space="preserve">
+    <value>Нечего копировать</value>
+  </data>
+  <data name="QuickSearch.OnlyFilesAreCopiedByDrag" xml:space="preserve">
+    <value>Перетаскиванием копируются только файлы.</value>
+  </data>
+  <data name="QuickSearch.OpenWith" xml:space="preserve">
+    <value>Открыть с помощью…</value>
+  </data>
+  <data name="QuickSearch.PasteItInFileExplorerOr" xml:space="preserve">
+    <value>«{0}» — вставьте в Проводнике или в письме.</value>
+  </data>
+  <data name="QuickSearch.PathCopied" xml:space="preserve">
+    <value>Путь скопирован</value>
+  </data>
+  <data name="QuickSearch.Pin" xml:space="preserve">
+    <value>Закрепить</value>
+  </data>
+  <data name="QuickSearch.Pinned" xml:space="preserve">
+    <value>Закреплено</value>
+  </data>
+  <data name="QuickSearch.PreviousQueriesAreNoLongerSuggested" xml:space="preserve">
+    <value>Прошлые запросы больше не предлагаются.</value>
+  </data>
+  <data name="QuickSearch.QuerySyntaxAndKeysEscCloses" xml:space="preserve">
+    <value>Синтаксис запроса и клавиши · Esc — закрыть подсказку</value>
+  </data>
+  <data name="QuickSearch.RemoveFromHistory" xml:space="preserve">
+    <value>Удалить из истории</value>
+  </data>
+  <data name="QuickSearch.Renamed" xml:space="preserve">
+    <value>Переименовано</value>
+  </data>
+  <data name="QuickSearch.Result.Few" xml:space="preserve">
+    <value>результата</value>
+  </data>
+  <data name="QuickSearch.Result.Many" xml:space="preserve">
+    <value>результатов</value>
+  </data>
+  <data name="QuickSearch.Result.One" xml:space="preserve">
+    <value>результат</value>
+  </data>
+  <data name="QuickSearch.Retry" xml:space="preserve">
+    <value>Повторить</value>
+  </data>
+  <data name="QuickSearch.RunAsAdministrator" xml:space="preserve">
+    <value>Запустить от имени администратора</value>
+  </data>
+  <data name="QuickSearch.Search" xml:space="preserve">
+    <value>Поиск</value>
+  </data>
+  <data name="QuickSearch.ShowInFolder" xml:space="preserve">
+    <value>Показать в папке</value>
+  </data>
+  <data name="QuickSearch.StartTypingAName" xml:space="preserve">
+    <value>{0} · начните вводить имя</value>
+  </data>
+  <data name="QuickSearch.Suggestions" xml:space="preserve">
+    <value>Подсказки</value>
+  </data>
+  <data name="QuickSearch.TagsSaved" xml:space="preserve">
+    <value>Теги сохранены</value>
+  </data>
+  <data name="QuickSearch.ThisNameWillNotWork" xml:space="preserve">
+    <value>Такое имя не подходит</value>
+  </data>
+  <data name="QuickSearch.Today" xml:space="preserve">
+    <value>Сегодня</value>
+  </data>
+  <data name="QuickSearch.TypeToSeeFiltersAndKeys" xml:space="preserve">
+    <value>Введите ?, чтобы увидеть фильтры и клавиши</value>
+  </data>
+  <data name="QuickSearch.Unpin" xml:space="preserve">
+    <value>Открепить</value>
+  </data>
+  <data name="QuickSearch.Unpinned" xml:space="preserve">
+    <value>Откреплено</value>
+  </data>
+  <data name="QuickSearch.Videos" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="QuickSearch.Week" xml:space="preserve">
+    <value>Неделя</value>
+  </data>
+  <data name="QuickSearch.Year" xml:space="preserve">
+    <value>Год</value>
+  </data>
+  <data name="QuickSwitchController.QuickSwitchIsNotOn" xml:space="preserve">
+    <value>Quick Switch не включён: {0} — {1}</value>
+  </data>
+  <data name="QuickSwitchController.TheKeyIsNotSupportedFor" xml:space="preserve">
+    <value>Клавиша {0} не поддерживается для Quick Switch.</value>
+  </data>
+  <data name="RegistryAutoStart.ThePortableCopyRunsFromIf" xml:space="preserve">
+    <value>Портативная копия запускается из «{0}»: если папку перенести, автозапуск нужно включить заново.</value>
+  </data>
+  <data name="RegistryAutoStart.WindowsDidNotAllowChangingAutostart" xml:space="preserve">
+    <value>Windows не дала изменить автозапуск: </value>
+  </data>
+  <data name="RootCard.CouldNotChangeThePauseOf" xml:space="preserve">
+    <value>Не удалось изменить паузу «{0}»</value>
+  </data>
+  <data name="RootCard.CouldNotRescan" xml:space="preserve">
+    <value>Не удалось пересканировать «{0}»</value>
+  </data>
+  <data name="RootCard.Disabled" xml:space="preserve">
+    <value>Выключен</value>
+  </data>
+  <data name="RootCard.NotScannedYet" xml:space="preserve">
+    <value>Ещё не сканировался</value>
+  </data>
+  <data name="RootCard.Pause" xml:space="preserve">
+    <value>Пауза</value>
+  </data>
+  <data name="RootCard.Paused" xml:space="preserve">
+    <value>На паузе</value>
+  </data>
+  <data name="RootCard.Resume" xml:space="preserve">
+    <value>Продолжить</value>
+  </data>
+  <data name="RootCard.Scanned" xml:space="preserve">
+    <value>Сканирован </value>
+  </data>
+  <data name="RootCard.Scanning" xml:space="preserve">
+    <value>Сканирование</value>
+  </data>
+  <data name="RootCard.ScanningScanned" xml:space="preserve">
+    <value>Сканирование: просмотрено {0}</value>
+  </data>
+  <data name="RootCard.Unavailable" xml:space="preserve">
+    <value>Недоступен</value>
+  </data>
+  <data name="RootCard.UpToDate" xml:space="preserve">
+    <value>Актуален</value>
+  </data>
+  <data name="RootSettingsItem.Available" xml:space="preserve">
+    <value>Доступен</value>
+  </data>
+  <data name="RootSettingsItem.Disabled" xml:space="preserve">
+    <value>Выключен</value>
+  </data>
+  <data name="RootSettingsItem.Indexing" xml:space="preserve">
+    <value>Индексируется</value>
+  </data>
+  <data name="RootSettingsItem.Paused" xml:space="preserve">
+    <value>На паузе</value>
+  </data>
+  <data name="RootSettingsItem.Unavailable" xml:space="preserve">
+    <value>Недоступен</value>
+  </data>
+  <data name="SampleBrowse.PathIsOutsideTheAddedRoots" xml:space="preserve">
+    <value>Путь «{0}» вне добавленных корней.</value>
+  </data>
+  <data name="SampleLibrary.PassEveryFavoriteExactlyOnce" xml:space="preserve">
+    <value>Передайте все записи избранного по одному разу.</value>
+  </data>
+  <data name="SampleLibrary.TagAlreadyExists" xml:space="preserve">
+    <value>Тег «{0}» уже есть.</value>
+  </data>
+  <data name="SearchHelp.AllWordsInTheNameIn" xml:space="preserve">
+    <value>все слова в имени, в любом порядке; регистр и «ё» не важны</value>
+  </data>
+  <data name="SearchHelp.AnnualReport" xml:space="preserve">
+    <value>"годовой отчёт"</value>
+  </data>
+  <data name="SearchHelp.ClearTheQueryThenCloseThe" xml:space="preserve">
+    <value>очистить запрос, затем закрыть окно</value>
+  </data>
+  <data name="SearchHelp.CompleteTheFilterFromTheHint" xml:space="preserve">
+    <value>дополнить фильтр по подсказке или открыть меню строки</value>
+  </data>
+  <data name="SearchHelp.CopyFilePath" xml:space="preserve">
+    <value>копировать файл / путь</value>
+  </data>
+  <data name="SearchHelp.CreatedSameAsModified" xml:space="preserve">
+    <value>создан — так же, как modified</value>
+  </data>
+  <data name="SearchHelp.Draft" xml:space="preserve">
+    <value>-черновик</value>
+  </data>
+  <data name="SearchHelp.ExactPhrase" xml:space="preserve">
+    <value>точная фраза</value>
+  </data>
+  <data name="SearchHelp.ExcludeAWordWorksWithFilters" xml:space="preserve">
+    <value>исключить слово; работает и с фильтрами: -ext:tmp</value>
+  </data>
+  <data name="SearchHelp.Extension" xml:space="preserve">
+    <value>расширение</value>
+  </data>
+  <data name="SearchHelp.Filters" xml:space="preserve">
+    <value>Фильтры</value>
+  </data>
+  <data name="SearchHelp.FoldersHiddenCloudIsCloud" xml:space="preserve">
+    <value>папки, скрытые, облачные (is:cloud)</value>
+  </data>
+  <data name="SearchHelp.InAFolderWithThisName" xml:space="preserve">
+    <value>в папке с таким именем или по пути</value>
+  </data>
+  <data name="SearchHelp.InAnEmptyBox" xml:space="preserve">
+    <value>↑ в пустом поле</value>
+  </data>
+  <data name="SearchHelp.InAnIndexRoot" xml:space="preserve">
+    <value>в корне индекса</value>
+  </data>
+  <data name="SearchHelp.InProjects" xml:space="preserve">
+    <value>in:Проекты</value>
+  </data>
+  <data name="SearchHelp.Keys" xml:space="preserve">
+    <value>Клавиши</value>
+  </data>
+  <data name="SearchHelp.KindDocumentPdfImageVideoAudio" xml:space="preserve">
+    <value>вид: document, pdf, image, video, audio, archive, code, folder (и по-русски: фото, видео, папки)</value>
+  </data>
+  <data name="SearchHelp.ModifiedTodayYesterdayWeekMonthYear" xml:space="preserve">
+    <value>изменён: today, yesterday, week, month, year, 3d, 2w, 2026-03, &gt;2026-01-01</value>
+  </data>
+  <data name="SearchHelp.OpenCtrl19OpensThe" xml:space="preserve">
+    <value>открыть; Ctrl+1…9 — открыть строку с номером</value>
+  </data>
+  <data name="SearchHelp.OpenWith" xml:space="preserve">
+    <value>открыть с помощью</value>
+  </data>
+  <data name="SearchHelp.Pin" xml:space="preserve">
+    <value>закрепить</value>
+  </data>
+  <data name="SearchHelp.PreviousQueries" xml:space="preserve">
+    <value>прошлые запросы</value>
+  </data>
+  <data name="SearchHelp.Properties" xml:space="preserve">
+    <value>свойства</value>
+  </data>
+  <data name="SearchHelp.Query" xml:space="preserve">
+    <value>Запрос</value>
+  </data>
+  <data name="SearchHelp.RenameToRecycleBin" xml:space="preserve">
+    <value>переименовать / в корзину</value>
+  </data>
+  <data name="SearchHelp.Report2026" xml:space="preserve">
+    <value>отчёт 2026</value>
+  </data>
+  <data name="SearchHelp.RootDocuments" xml:space="preserve">
+    <value>root:Документы</value>
+  </data>
+  <data name="SearchHelp.ShowInFolder" xml:space="preserve">
+    <value>показать в папке</value>
+  </data>
+  <data name="SearchHelp.ShowOrHideFilterChips" xml:space="preserve">
+    <value>показать или скрыть чипы фильтров</value>
+  </data>
+  <data name="SearchHelp.Size10mb1g500kb1mb5mb" xml:space="preserve">
+    <value>размер: 10mb, &gt;1g, &lt;500kb, 1mb..5mb, empty</value>
+  </data>
+  <data name="SearchHelp.TagFavorites" xml:space="preserve">
+    <value>тег; избранное</value>
+  </data>
+  <data name="SearchHelp.TagWorkFavYes" xml:space="preserve">
+    <value>tag:работа  fav:yes</value>
+  </data>
+  <data name="SearchHit.CloudOnlyOpensAfterDownload" xml:space="preserve">
+    <value>Только в облаке: откроется после загрузки</value>
+  </data>
+  <data name="SearchHit.DriveUnavailable" xml:space="preserve">
+    <value>Диск недоступен</value>
+  </data>
+  <data name="SearchPage.Search" xml:space="preserve">
+    <value>Поиск</value>
+  </data>
+  <data name="SearchPage.TheSameWindowThatPopsUp" xml:space="preserve">
+    <value>То же окно, что всплывает по горячей клавише, только внутри главного окна: запрос сохраняется между ними.</value>
+  </data>
+  <data name="Sections.Pinned" xml:space="preserve">
+    <value>Закреплённые</value>
+  </data>
+  <data name="Sections.RecentlyModified" xml:space="preserve">
+    <value>Недавно изменённые</value>
+  </data>
+  <data name="Sections.RecentlyOpened" xml:space="preserve">
+    <value>Недавно открытые</value>
+  </data>
+  <data name="Settings.AClickInAnotherWindowCloses" xml:space="preserve">
+    <value>Щелчок в другом окне закрывает поиск; иначе — только Esc и горячая клавиша</value>
+  </data>
+  <data name="Settings.ADiskAppIconOnTheDesktop" xml:space="preserve">
+    <value>Значок DiskApp на рабочем столе открывает главное окно</value>
+  </data>
+  <data name="Settings.ADiskappSearchQLinkOpens" xml:space="preserve">
+    <value>Ссылка diskapp://search?q=… открывает поиск с запросом</value>
+  </data>
+  <data name="Settings.AShortcutInTheSendTo" xml:space="preserve">
+    <value>Ярлык в меню «Отправить»: выбранные файлы кладутся в папку, которую вы выберете</value>
+  </data>
+  <data name="Settings.About" xml:space="preserve">
+    <value>О программе</value>
+  </data>
+  <data name="Settings.AccentColor" xml:space="preserve">
+    <value>Акцентный цвет</value>
+  </data>
+  <data name="Settings.Add" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="Settings.AddFolder" xml:space="preserve">
+    <value>Добавить папку…</value>
+  </data>
+  <data name="Settings.AddToDiskAppForFilesOpen" xml:space="preserve">
+    <value>«Добавить в DiskApp» для файлов, «Открыть в DiskApp» и «Добавить в индекс» для папок</value>
+  </data>
+  <data name="Settings.All" xml:space="preserve">
+    <value>все</value>
+  </data>
+  <data name="Settings.Appearance" xml:space="preserve">
+    <value>Внешний вид</value>
+  </data>
+  <data name="Settings.AsInWindows" xml:space="preserve">
+    <value>Как в системе</value>
+  </data>
+  <data name="Settings.AskOnExitWhileOperationsRun" xml:space="preserve">
+    <value>Спрашивать при выходе во время операций</value>
+  </data>
+  <data name="Settings.AtLeastOneOfCtrlAlt" xml:space="preserve">
+    <value>Нужен хотя бы один из Ctrl, Alt или Win — иначе сочетание перехватит обычный ввод.</value>
+  </data>
+  <data name="Settings.Backups" xml:space="preserve">
+    <value>Резервные копии</value>
+  </data>
+  <data name="Settings.Balanced" xml:space="preserve">
+    <value>Сбалансированно</value>
+  </data>
+  <data name="Settings.Behavior" xml:space="preserve">
+    <value>Поведение</value>
+  </data>
+  <data name="Settings.ByName" xml:space="preserve">
+    <value>По имени</value>
+  </data>
+  <data name="Settings.CacheCleared" xml:space="preserve">
+    <value>Кэш очищен</value>
+  </data>
+  <data name="Settings.CacheNotCleared" xml:space="preserve">
+    <value>Кэш не очищен: </value>
+  </data>
+  <data name="Settings.CandidatesBeforeRanking" xml:space="preserve">
+    <value>Кандидатов до ранжирования</value>
+  </data>
+  <data name="Settings.Change" xml:space="preserve">
+    <value>Изменить</value>
+  </data>
+  <data name="Settings.CheckingForAndInstallingUpdatesWill" xml:space="preserve">
+    <value>Проверка и установка обновлений появятся вместе с установщиком (этап 11). Сейчас новая версия скачивается со страницы релизов.</value>
+  </data>
+  <data name="Settings.Choose" xml:space="preserve">
+    <value>Выбрать…</value>
+  </data>
+  <data name="Settings.ChooseAFolderInDiskAppAnd" xml:space="preserve">
+    <value>выбор папки в DiskApp, и диалог переходит в неё</value>
+  </data>
+  <data name="Settings.Clear" xml:space="preserve">
+    <value>Очистить</value>
+  </data>
+  <data name="Settings.Clear2" xml:space="preserve">
+    <value>Очистить…</value>
+  </data>
+  <data name="Settings.ClearCache" xml:space="preserve">
+    <value>Очистить кэш</value>
+  </data>
+  <data name="Settings.ClearHistory" xml:space="preserve">
+    <value>Очистить историю</value>
+  </data>
+  <data name="Settings.ClearTheQueryThenClose" xml:space="preserve">
+    <value>Очистить запрос, затем закрыть</value>
+  </data>
+  <data name="Settings.CloseTheMainWindowToThe" xml:space="preserve">
+    <value>Закрывать главное окно в трей</value>
+  </data>
+  <data name="Settings.CompactLists" xml:space="preserve">
+    <value>Компактные списки</value>
+  </data>
+  <data name="Settings.CompleteTheFilterOrOpenThe" xml:space="preserve">
+    <value>Дополнить фильтр или открыть меню</value>
+  </data>
+  <data name="Settings.ContextMenu" xml:space="preserve">
+    <value>Контекстное меню</value>
+  </data>
+  <data name="Settings.CopyFile" xml:space="preserve">
+    <value>Копировать файл</value>
+  </data>
+  <data name="Settings.CouldNotLoadSettings" xml:space="preserve">
+    <value>Не удалось загрузить настройки: </value>
+  </data>
+  <data name="Settings.CouldNotLoadTheRoots" xml:space="preserve">
+    <value>Не удалось загрузить корни: </value>
+  </data>
+  <data name="Settings.CouldNotRescan" xml:space="preserve">
+    <value>Не удалось пересканировать: </value>
+  </data>
+  <data name="Settings.CtrlShiftVSavesTextOr" xml:space="preserve">
+    <value>Ctrl+Shift+V сохраняет текст или картинку в файл с таким именем: {date}, {time}, {title}</value>
+  </data>
+  <data name="Settings.Custom" xml:space="preserve">
+    <value>Свой</value>
+  </data>
+  <data name="Settings.CustomColor" xml:space="preserve">
+    <value>Свой цвет</value>
+  </data>
+  <data name="Settings.DailyAt1800AndWhen" xml:space="preserve">
+    <value>Ежедневно в 18:00 и когда накопится 10 файлов</value>
+  </data>
+  <data name="Settings.Dark" xml:space="preserve">
+    <value>Тёмная</value>
+  </data>
+  <data name="Settings.Data" xml:space="preserve">
+    <value>Данные</value>
+  </data>
+  <data name="Settings.DataFolder" xml:space="preserve">
+    <value>Папка данных</value>
+  </data>
+  <data name="Settings.Database" xml:space="preserve">
+    <value>База </value>
+  </data>
+  <data name="Settings.DateModified" xml:space="preserve">
+    <value>Дата изменения</value>
+  </data>
+  <data name="Settings.Default" xml:space="preserve">
+    <value>По умолчанию</value>
+  </data>
+  <data name="Settings.DeleteAllQueriesFromTheSearch" xml:space="preserve">
+    <value>Удалить все запросы из истории поиска?</value>
+  </data>
+  <data name="Settings.DeleteSavedIconsAndThumbnailsThey" xml:space="preserve">
+    <value>Удалить сохранённые иконки и миниатюры? Они загрузятся заново при показе файлов.</value>
+  </data>
+  <data name="Settings.Depth" xml:space="preserve">
+    <value>Глубина</value>
+  </data>
+  <data name="Settings.DepthIsANumberFrom1" xml:space="preserve">
+    <value>Глубина — число от 1 до 256 или пусто, чтобы обходить все уровни.</value>
+  </data>
+  <data name="Settings.DescribeWhatHappenedTheLogIs" xml:space="preserve">
+    <value>Опишите, что произошло; журнал — в разделе «Данные»</value>
+  </data>
+  <data name="Settings.DesktopShortcut" xml:space="preserve">
+    <value>Ярлык на рабочем столе</value>
+  </data>
+  <data name="Settings.DetailedDebug" xml:space="preserve">
+    <value>Подробно (Debug)</value>
+  </data>
+  <data name="Settings.DiskReconciliation" xml:space="preserve">
+    <value>Сверка с диском</value>
+  </data>
+  <data name="Settings.DiskappLinks" xml:space="preserve">
+    <value>Ссылки diskapp://</value>
+  </data>
+  <data name="Settings.Drive" xml:space="preserve">
+    <value>Диск</value>
+  </data>
+  <data name="Settings.EnterAPatternForExampleBin" xml:space="preserve">
+    <value>Введите шаблон, например **/bin/** или *.tmp.</value>
+  </data>
+  <data name="Settings.EnterJunctionsAndSymbolicLinksProtected" xml:space="preserve">
+    <value>Заходить в junction и символические ссылки (с защитой от циклов)</value>
+  </data>
+  <data name="Settings.ErrorsOnlyError" xml:space="preserve">
+    <value>Только ошибки (Error)</value>
+  </data>
+  <data name="Settings.Every6Hours" xml:space="preserve">
+    <value>Каждые 6 часов</value>
+  </data>
+  <data name="Settings.EveryHour" xml:space="preserve">
+    <value>Каждый час</value>
+  </data>
+  <data name="Settings.EveryMin" xml:space="preserve">
+    <value>Каждые {0} мин</value>
+  </data>
+  <data name="Settings.Exclusions" xml:space="preserve">
+    <value>Исключения</value>
+  </data>
+  <data name="Settings.ExperimentalInTheSaveOrOpen" xml:space="preserve">
+    <value>Экспериментально. {0} в окне «Сохранить» или «Открыть» любой программы — </value>
+  </data>
+  <data name="Settings.FileNameFromTheClipboard" xml:space="preserve">
+    <value>Имя файла из буфера обмена</value>
+  </data>
+  <data name="Settings.Filters" xml:space="preserve">
+    <value>Фильтры</value>
+  </data>
+  <data name="Settings.FirstRoot" xml:space="preserve">
+    <value>Первый корень</value>
+  </data>
+  <data name="Settings.Folder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="Settings.FolderForTheIndex" xml:space="preserve">
+    <value>Папка для индекса</value>
+  </data>
+  <data name="Settings.FoldersAndDrivesThatAreSearched" xml:space="preserve">
+    <value>Папки и диски, по которым идёт поиск</value>
+  </data>
+  <data name="Settings.ForExampleBinOrTmp" xml:space="preserve">
+    <value>Например, **/bin/** или *.tmp</value>
+  </data>
+  <data name="Settings.FuzzySearch" xml:space="preserve">
+    <value>Нечёткий поиск</value>
+  </data>
+  <data name="Settings.Hidden" xml:space="preserve">
+    <value>Скрытые</value>
+  </data>
+  <data name="Settings.HiddenFilesAndFolders" xml:space="preserve">
+    <value>Скрытые файлы и папки</value>
+  </data>
+  <data name="Settings.HideWhenFocusIsLost" xml:space="preserve">
+    <value>Прятать при потере фокуса</value>
+  </data>
+  <data name="Settings.HistoryCleared" xml:space="preserve">
+    <value>История очищена</value>
+  </data>
+  <data name="Settings.HistoryWasNotCleared" xml:space="preserve">
+    <value>Историю не удалось очистить: </value>
+  </data>
+  <data name="Settings.Hotkey" xml:space="preserve">
+    <value>Горячая клавиша</value>
+  </data>
+  <data name="Settings.HowDetailedTheLogFileIs" xml:space="preserve">
+    <value>Подробность файла журнала; меняется сразу</value>
+  </data>
+  <data name="Settings.HowManyQueriesToRememberFor" xml:space="preserve">
+    <value>Сколько запросов помнить для подсказок по ↑; 0 — не запоминать</value>
+  </data>
+  <data name="Settings.IconAndThumbnailCache" xml:space="preserve">
+    <value>Кэш иконок и миниатюр</value>
+  </data>
+  <data name="Settings.IconsAndThumbnailsWillLoadAgain" xml:space="preserve">
+    <value>Иконки и миниатюры загрузятся заново.</value>
+  </data>
+  <data name="Settings.IfCopyingOrMovingIsIn" xml:space="preserve">
+    <value>Если идёт копирование или перемещение, выход сначала спросит</value>
+  </data>
+  <data name="Settings.InAnEmptyBox" xml:space="preserve">
+    <value>↑ в пустом поле</value>
+  </data>
+  <data name="Settings.Inbox" xml:space="preserve">
+    <value>Входящие</value>
+  </data>
+  <data name="Settings.InboxFolder" xml:space="preserve">
+    <value>Папка «Входящие»</value>
+  </data>
+  <data name="Settings.Index" xml:space="preserve">
+    <value>Индекс</value>
+  </data>
+  <data name="Settings.IndexNotRebuilt" xml:space="preserve">
+    <value>Индекс не пересобран: </value>
+  </data>
+  <data name="Settings.Integrations" xml:space="preserve">
+    <value>Интеграции</value>
+  </data>
+  <data name="Settings.IsBeingIndexedSearchFindsFiles" xml:space="preserve">
+    <value>«{0}» индексируется: поиск находит файлы по мере обхода.</value>
+  </data>
+  <data name="Settings.IsQueued" xml:space="preserve">
+    <value>«{0}» поставлен в очередь.</value>
+  </data>
+  <data name="Settings.IssuesOnGitHub" xml:space="preserve">
+    <value>Issues на GitHub</value>
+  </data>
+  <data name="Settings.Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Settings.LanguageDescription" xml:space="preserve">
+    <value>Язык интерфейса; меняется сразу</value>
+  </data>
+  <data name="Settings.LanguageSystem" xml:space="preserve">
+    <value>Как в Windows</value>
+  </data>
+  <data name="Settings.Light" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
+  <data name="Settings.LightDarkOrAsInWindows" xml:space="preserve">
+    <value>Светлая, тёмная или как в системе</value>
+  </data>
+  <data name="Settings.Load" xml:space="preserve">
+    <value>Загрузить…</value>
+  </data>
+  <data name="Settings.LoadSettings" xml:space="preserve">
+    <value>Загрузить настройки</value>
+  </data>
+  <data name="Settings.Log" xml:space="preserve">
+    <value>Журнал</value>
+  </data>
+  <data name="Settings.LowerResultRowsMoreFilesFit" xml:space="preserve">
+    <value>Строки результатов ниже — на экране помещается больше файлов</value>
+  </data>
+  <data name="Settings.MicaInTheMainWindowAnd" xml:space="preserve">
+    <value>Mica в главном окне и Acrylic в окне поиска или сплошной цвет темы</value>
+  </data>
+  <data name="Settings.MinimizedToTheTraySoThe" xml:space="preserve">
+    <value>Свёрнутым в трей, чтобы горячая клавиша работала сразу после входа</value>
+  </data>
+  <data name="Settings.Monitor" xml:space="preserve">
+    <value>Монитор</value>
+  </data>
+  <data name="Settings.MoreGivesABetterOrderOn" xml:space="preserve">
+    <value>Больше — точнее порядок на огромных индексах, но медленнее; 2 000 держит ответ в пределах 50 мс</value>
+  </data>
+  <data name="Settings.MoveToRecycleBinWithConfirmation" xml:space="preserve">
+    <value>В корзину (с подтверждением)</value>
+  </data>
+  <data name="Settings.Never" xml:space="preserve">
+    <value>Не сверять</value>
+  </data>
+  <data name="Settings.NewRoots" xml:space="preserve">
+    <value>Новые корни</value>
+  </data>
+  <data name="Settings.NoAnimationsForWindowsAndTransitions" xml:space="preserve">
+    <value>Без анимаций появления окон и переходов; также включается системной настройкой Windows</value>
+  </data>
+  <data name="Settings.NoEffect" xml:space="preserve">
+    <value>Без эффекта</value>
+  </data>
+  <data name="Settings.NormalInformation" xml:space="preserve">
+    <value>Обычно (Information)</value>
+  </data>
+  <data name="Settings.OnceADay" xml:space="preserve">
+    <value>Раз в сутки</value>
+  </data>
+  <data name="Settings.OpenFolder" xml:space="preserve">
+    <value>Открыть папку</value>
+  </data>
+  <data name="Settings.OpenSourceLibrariesInThisBuild" xml:space="preserve">
+    <value>Библиотеки с открытым кодом в этой сборке; лицензии — на страницах пакетов</value>
+  </data>
+  <data name="Settings.OpenTheRowWithThatNumber" xml:space="preserve">
+    <value>Открыть строку с номером</value>
+  </data>
+  <data name="Settings.OpenWith" xml:space="preserve">
+    <value>Открыть с помощью…</value>
+  </data>
+  <data name="Settings.PackageAndLicense" xml:space="preserve">
+    <value>Пакет и лицензия</value>
+  </data>
+  <data name="Settings.PicksForAnEmptyQuery" xml:space="preserve">
+    <value>Подборка при пустом запросе</value>
+  </data>
+  <data name="Settings.PressTheShortcutEscCancels" xml:space="preserve">
+    <value>Нажмите сочетание… Esc — отмена</value>
+  </data>
+  <data name="Settings.PreviousQueries" xml:space="preserve">
+    <value>Предыдущие запросы</value>
+  </data>
+  <data name="Settings.Primary" xml:space="preserve">
+    <value>Основной</value>
+  </data>
+  <data name="Settings.ProgressIsShownInTheMain" xml:space="preserve">
+    <value>Ход виден в строке состояния главного окна.</value>
+  </data>
+  <data name="Settings.QueriesAreNoLongerSuggested" xml:space="preserve">
+    <value>Запросы больше не подсказываются.</value>
+  </data>
+  <data name="Settings.QueryHistory" xml:space="preserve">
+    <value>История запросов</value>
+  </data>
+  <data name="Settings.QuickSearch" xml:space="preserve">
+    <value>Быстрый поиск</value>
+  </data>
+  <data name="Settings.Rebuild" xml:space="preserve">
+    <value>Пересобрать</value>
+  </data>
+  <data name="Settings.Rebuild2" xml:space="preserve">
+    <value>Пересобрать…</value>
+  </data>
+  <data name="Settings.RebuildIndex" xml:space="preserve">
+    <value>Пересобрать индекс</value>
+  </data>
+  <data name="Settings.RebuildingTheIndex" xml:space="preserve">
+    <value>Пересборка индекса</value>
+  </data>
+  <data name="Settings.RecentFirst" xml:space="preserve">
+    <value>Недавнее выше</value>
+  </data>
+  <data name="Settings.RecentlyOpenedPinnedAndChangedFiles" xml:space="preserve">
+    <value>Недавно открытые, закреплённые и изменённые файлы, пока ничего не введено</value>
+  </data>
+  <data name="Settings.ReduceMotion" xml:space="preserve">
+    <value>Уменьшить движение</value>
+  </data>
+  <data name="Settings.Releases" xml:space="preserve">
+    <value>Релизы</value>
+  </data>
+  <data name="Settings.RemindersDoNotDisturbAutoSorting" xml:space="preserve">
+    <value>Напоминания, «не беспокоить», правила автосортировки и журнал решений появятся вместе с разбором входящих (этап 17)</value>
+  </data>
+  <data name="Settings.Remove" xml:space="preserve">
+    <value>Убрать</value>
+  </data>
+  <data name="Settings.RemoveFromIndex" xml:space="preserve">
+    <value>Убрать из индекса</value>
+  </data>
+  <data name="Settings.RemoveFromIndexFilesStay" xml:space="preserve">
+    <value>Убрать из индекса (файлы останутся)</value>
+  </data>
+  <data name="Settings.RemoveFromTheIndexFilesOn" xml:space="preserve">
+    <value>Убрать «{0}» из индекса? Файлы на диске не тронутся, но искаться не будут.</value>
+  </data>
+  <data name="Settings.RemoveRule" xml:space="preserve">
+    <value>Убрать правило</value>
+  </data>
+  <data name="Settings.ReportAProblem" xml:space="preserve">
+    <value>Сообщить о проблеме</value>
+  </data>
+  <data name="Settings.RepositoryOnGitHub" xml:space="preserve">
+    <value>Репозиторий на GitHub</value>
+  </data>
+  <data name="Settings.Rescan" xml:space="preserve">
+    <value>Пересканирование</value>
+  </data>
+  <data name="Settings.Rescan2" xml:space="preserve">
+    <value>Пересканировать</value>
+  </data>
+  <data name="Settings.ResultOrder" xml:space="preserve">
+    <value>Порядок результатов</value>
+  </data>
+  <data name="Settings.RootAdded" xml:space="preserve">
+    <value>Корень добавлен</value>
+  </data>
+  <data name="Settings.RootNotAdded" xml:space="preserve">
+    <value>Корень не добавлен: </value>
+  </data>
+  <data name="Settings.RootNotChanged" xml:space="preserve">
+    <value>Корень не изменён: </value>
+  </data>
+  <data name="Settings.RootNotRemoved" xml:space="preserve">
+    <value>Корень не убран: </value>
+  </data>
+  <data name="Settings.Roots" xml:space="preserve">
+    <value>Корни</value>
+  </data>
+  <data name="Settings.RowDetails" xml:space="preserve">
+    <value>Подробности в строках</value>
+  </data>
+  <data name="Settings.RulesWereNotReset" xml:space="preserve">
+    <value>Правила не сброшены: </value>
+  </data>
+  <data name="Settings.RunAsAdministrator" xml:space="preserve">
+    <value>Запустить от имени администратора</value>
+  </data>
+  <data name="Settings.SaveSettings" xml:space="preserve">
+    <value>Сохранить настройки</value>
+  </data>
+  <data name="Settings.SaveSettingsToAJSONFile" xml:space="preserve">
+    <value>Сохранить настройки в файл JSON или загрузить их на другом компьютере</value>
+  </data>
+  <data name="Settings.SaveToFile" xml:space="preserve">
+    <value>Сохранить в файл…</value>
+  </data>
+  <data name="Settings.Scale" xml:space="preserve">
+    <value>Масштаб</value>
+  </data>
+  <data name="Settings.ScheduleStorageLocationsAndRestoreWill" xml:space="preserve">
+    <value>Расписание, места хранения и восстановление появятся вместе с модулем резервного копирования (этап 16)</value>
+  </data>
+  <data name="Settings.Search" xml:space="preserve">
+    <value>Поиск</value>
+  </data>
+  <data name="Settings.SearchWindowKeys" xml:space="preserve">
+    <value>Клавиши окна поиска</value>
+  </data>
+  <data name="Settings.SendToDiskApp" xml:space="preserve">
+    <value>«Отправить» → DiskApp</value>
+  </data>
+  <data name="Settings.SettingNotSaved" xml:space="preserve">
+    <value>Настройка не сохранена: </value>
+  </data>
+  <data name="Settings.Settings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="Settings.SettingsLoaded" xml:space="preserve">
+    <value>Настройки загружены</value>
+  </data>
+  <data name="Settings.SettingsSaved" xml:space="preserve">
+    <value>Настройки сохранены</value>
+  </data>
+  <data name="Settings.SettingsTransfer" xml:space="preserve">
+    <value>Перенос настроек</value>
+  </data>
+  <data name="Settings.SettingsWereNotLoaded" xml:space="preserve">
+    <value>Настройки не загружены: </value>
+  </data>
+  <data name="Settings.SettingsWereNotSavedToThe" xml:space="preserve">
+    <value>Настройки не сохранены в файл: </value>
+  </data>
+  <data name="Settings.ShortcutInTheSaveOrOpen" xml:space="preserve">
+    <value>Сочетание в окне «Сохранить» или «Открыть»; действует, если Quick Switch включён в «Интеграциях»</value>
+  </data>
+  <data name="Settings.ShowOrHideTheQuickSearch" xml:space="preserve">
+    <value>Показать или скрыть окно быстрого поиска из любого приложения</value>
+  </data>
+  <data name="Settings.Size" xml:space="preserve">
+    <value>Размер</value>
+  </data>
+  <data name="Settings.SizeOfTextAndControlsIn" xml:space="preserve">
+    <value>Размер текста и элементов главного окна и окна поиска</value>
+  </data>
+  <data name="Settings.SortTheInbox" xml:space="preserve">
+    <value>Разбор входящих</value>
+  </data>
+  <data name="Settings.SortingCollectionFolders" xml:space="preserve">
+    <value>Разбор папок-накопителей</value>
+  </data>
+  <data name="Settings.SortingSessionForDownloadsComingIn" xml:space="preserve">
+    <value>Сессия разбора «Загрузок» — появится на этапе 17</value>
+  </data>
+  <data name="Settings.StartMinimized" xml:space="preserve">
+    <value>Запускаться свёрнутым</value>
+  </data>
+  <data name="Settings.StartWithWindows" xml:space="preserve">
+    <value>Запускать вместе с Windows</value>
+  </data>
+  <data name="Settings.System" xml:space="preserve">
+    <value>Системные</value>
+  </data>
+  <data name="Settings.SystemFilesAndFolders" xml:space="preserve">
+    <value>Системные файлы и папки</value>
+  </data>
+  <data name="Settings.TheCloseButtonHidesTheWindow" xml:space="preserve">
+    <value>Крестик прячет окно; выход — из меню трея</value>
+  </data>
+  <data name="Settings.TheFileHasNoDiskAppSettings" xml:space="preserve">
+    <value>В файле нет настроек DiskApp.</value>
+  </data>
+  <data name="Settings.TheFirstIndexRootUntilA" xml:space="preserve">
+    <value>Первый корень индекса — пока папка не выбрана</value>
+  </data>
+  <data name="Settings.TheIndexOfAllRootsWill" xml:space="preserve">
+    <value>Индекс всех корней построится заново. Файлы не трогаются, но пока идёт обход, поиск находит не всё. Избранное, теги и коллекции сохранятся для найденных снова файлов.</value>
+  </data>
+  <data name="Settings.ThePatternHasACharacterNot" xml:space="preserve">
+    <value>В шаблоне есть символ, недопустимый в путях Windows: &lt; &gt; " |.</value>
+  </data>
+  <data name="Settings.TheWatcherCatchesChangesReconciliationFinds" xml:space="preserve">
+    <value>Изменения ловит наблюдатель; сверка находит пропущенное, например после работы без DiskApp</value>
+  </data>
+  <data name="Settings.TheWindowsColorOrYourOwn" xml:space="preserve">
+    <value>Цвет Windows или свой: кнопки, выделение, подсветка совпадений</value>
+  </data>
+  <data name="Settings.Theme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Settings.ThereAreNeverMoreThanTwo" xml:space="preserve">
+    <value>Больше двух звёздочек подряд не бывает: ** — любые папки, * — любая часть имени.</value>
+  </data>
+  <data name="Settings.ThirdPartyComponents" xml:space="preserve">
+    <value>Сторонние компоненты</value>
+  </data>
+  <data name="Settings.ThisKeyWillNotWorkUse" xml:space="preserve">
+    <value>Эта клавиша не подходит: возьмите букву, цифру, F1–F24, пробел или клавиши навигации.</value>
+  </data>
+  <data name="Settings.ThisRuleAlreadyExists" xml:space="preserve">
+    <value>Такое правило уже есть.</value>
+  </data>
+  <data name="Settings.Updates" xml:space="preserve">
+    <value>Обновления</value>
+  </data>
+  <data name="Settings.VersionAlpha" xml:space="preserve">
+    <value>Версия {0} · альфа</value>
+  </data>
+  <data name="Settings.WarningsWarning" xml:space="preserve">
+    <value>Предупреждения (Warning)</value>
+  </data>
+  <data name="Settings.WhatKeysDoWhileTheQuick" xml:space="preserve">
+    <value>Что делают клавиши, пока открыто окно быстрого поиска</value>
+  </data>
+  <data name="Settings.WhatMattersMoreANameMatch" xml:space="preserve">
+    <value>Что важнее: совпадение имени, свежесть или баланс с частотой открытия</value>
+  </data>
+  <data name="Settings.WhatStaysOutOfTheIndex" xml:space="preserve">
+    <value>Что не попадает в индекс: шаблоны путей, где ** — любые папки, * — любая часть имени</value>
+  </data>
+  <data name="Settings.WhatToIndexInFoldersAnd" xml:space="preserve">
+    <value>Что индексировать у добавляемых папок и дисков</value>
+  </data>
+  <data name="Settings.WhatToShowNextToThe" xml:space="preserve">
+    <value>Что показывать рядом с именем файла</value>
+  </data>
+  <data name="Settings.WhenStartingWithWindowsTheMain" xml:space="preserve">
+    <value>При запуске вместе с Windows главное окно не показывается — только значок в трее</value>
+  </data>
+  <data name="Settings.WhenThereAreFewExactMatches" xml:space="preserve">
+    <value>Если точных совпадений мало, находить имена с опечаткой: «reprot» → «report»</value>
+  </data>
+  <data name="Settings.WhereAddedItemsGoByDefault" xml:space="preserve">
+    <value>Куда по умолчанию кладётся добавленное: перетаскивание на главную, «Отправить», буфер обмена</value>
+  </data>
+  <data name="Settings.WhereToShowTheQuickSearch" xml:space="preserve">
+    <value>Где показывать окно быстрого поиска</value>
+  </data>
+  <data name="Settings.WindowBackground" xml:space="preserve">
+    <value>Фон окон</value>
+  </data>
+  <data name="Settings.WithTheActiveWindow" xml:space="preserve">
+    <value>С активным окном</value>
+  </data>
+  <data name="Settings.WithTheMousePointer" xml:space="preserve">
+    <value>С курсором мыши</value>
+  </data>
+  <data name="SettingsData.IndexSize" xml:space="preserve">
+    <value>{0} · база {1}</value>
+  </data>
+  <data name="ShellClipboard.ClipboardUnavailableNoOSShell" xml:space="preserve">
+    <value>Буфер обмена недоступен: нет оболочки ОС.</value>
+  </data>
+  <data name="ShellIntegration.AddToDiskApp" xml:space="preserve">
+    <value>Добавить в DiskApp</value>
+  </data>
+  <data name="ShellIntegration.AddToDiskAppIndex" xml:space="preserve">
+    <value>Добавить в индекс DiskApp</value>
+  </data>
+  <data name="ShellIntegration.OpenInDiskApp" xml:space="preserve">
+    <value>Открыть в DiskApp</value>
+  </data>
+  <data name="ShellIntegration.PutFilesIntoADiskAppFolder" xml:space="preserve">
+    <value>Положить файлы в выбранную папку DiskApp</value>
+  </data>
+  <data name="ShellIntegration.SearchAndSortFiles" xml:space="preserve">
+    <value>Поиск и разбор файлов</value>
+  </data>
+  <data name="ShellIntegration.WindowsDidNotAllowChangingThe" xml:space="preserve">
+    <value>Windows не дала изменить интеграцию: </value>
+  </data>
+  <data name="Size.B" xml:space="preserve">
+    <value>Б</value>
+  </data>
+  <data name="Size.GB" xml:space="preserve">
+    <value>ГБ</value>
+  </data>
+  <data name="Size.KB" xml:space="preserve">
+    <value>КБ</value>
+  </data>
+  <data name="Size.MB" xml:space="preserve">
+    <value>МБ</value>
+  </data>
+  <data name="Size.TB" xml:space="preserve">
+    <value>ТБ</value>
+  </data>
+  <data name="TagPicker.Add" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="TagPicker.CouldNotLoadTags" xml:space="preserve">
+    <value>Не удалось загрузить теги: </value>
+  </data>
+  <data name="TagPicker.File.Few" xml:space="preserve">
+    <value>файлов</value>
+  </data>
+  <data name="TagPicker.File.Many" xml:space="preserve">
+    <value>файлов</value>
+  </data>
+  <data name="TagPicker.File.One" xml:space="preserve">
+    <value>файла</value>
+  </data>
+  <data name="TagPicker.NewTag" xml:space="preserve">
+    <value>Новый тег</value>
+  </data>
+  <data name="TagPicker.NoTagsYetTypeAName" xml:space="preserve">
+    <value>Тегов пока нет. Введите имя ниже — тег получит цвет и сразу отметится.</value>
+  </data>
+  <data name="TagPicker.TagsFor" xml:space="preserve">
+    <value>Теги для «{0}»</value>
+  </data>
+  <data name="TagPicker.TagsFor2" xml:space="preserve">
+    <value>Теги для </value>
+  </data>
+  <data name="Tags.ChooseATag" xml:space="preserve">
+    <value>Выберите тег</value>
+  </data>
+  <data name="Tags.CouldNotChangeTags" xml:space="preserve">
+    <value>Не удалось изменить теги</value>
+  </data>
+  <data name="Tags.CouldNotChangeTheTag" xml:space="preserve">
+    <value>Не удалось изменить тег</value>
+  </data>
+  <data name="Tags.CouldNotCreateTheTag" xml:space="preserve">
+    <value>Не удалось создать тег</value>
+  </data>
+  <data name="Tags.CouldNotDeleteTheTag" xml:space="preserve">
+    <value>Не удалось удалить тег</value>
+  </data>
+  <data name="Tags.CouldNotFindFiles" xml:space="preserve">
+    <value>Не удалось найти файлы: </value>
+  </data>
+  <data name="Tags.CouldNotLoadTags" xml:space="preserve">
+    <value>Не удалось загрузить теги: </value>
+  </data>
+  <data name="Tags.CouldNotOpen" xml:space="preserve">
+    <value>Не удалось открыть</value>
+  </data>
+  <data name="Tags.CouldNotShowInFolder" xml:space="preserve">
+    <value>Не удалось показать в папке</value>
+  </data>
+  <data name="Tags.CreateATagHereOrTag" xml:space="preserve">
+    <value>Создайте тег здесь или отметьте файл в поиске: Ctrl+T</value>
+  </data>
+  <data name="Tags.DeleteTag" xml:space="preserve">
+    <value>Удалить тег</value>
+  </data>
+  <data name="Tags.DeleteTagFilesStay" xml:space="preserve">
+    <value>Удалить тег (файлы останутся)</value>
+  </data>
+  <data name="Tags.DeleteTagItIsRemovedFrom" xml:space="preserve">
+    <value>Удалить тег «{0}»? Он снимется со всех файлов, сами файлы останутся.</value>
+  </data>
+  <data name="Tags.EditTag" xml:space="preserve">
+    <value>Изменить тег</value>
+  </data>
+  <data name="Tags.FilesTagged" xml:space="preserve">
+    <value>Файлы с тегом «{0}»</value>
+  </data>
+  <data name="Tags.LabelsForFilesFromDifferentPlaces" xml:space="preserve">
+    <value>Метки для файлов из разных мест. Ctrl+T в поиске и «Обзоре» — отметить; tag:имя в запросе — найти.</value>
+  </data>
+  <data name="Tags.NewTag" xml:space="preserve">
+    <value>Новый тег</value>
+  </data>
+  <data name="Tags.NoFilesHaveThisTagTag" xml:space="preserve">
+    <value>Файлов с этим тегом нет. Отметьте файлы в поиске или «Обзоре»: Ctrl+T.</value>
+  </data>
+  <data name="Tags.NoTagsYet" xml:space="preserve">
+    <value>Тегов пока нет</value>
+  </data>
+  <data name="Tags.RenameOrChangeColor" xml:space="preserve">
+    <value>Переименовать или сменить цвет</value>
+  </data>
+  <data name="Tags.TagDeleted" xml:space="preserve">
+    <value>Тег удалён</value>
+  </data>
+  <data name="Time.Ago" xml:space="preserve">
+    <value>{0} назад</value>
+  </data>
+  <data name="Time.Day.Few" xml:space="preserve">
+    <value>дня</value>
+  </data>
+  <data name="Time.Day.Many" xml:space="preserve">
+    <value>дней</value>
+  </data>
+  <data name="Time.Day.One" xml:space="preserve">
+    <value>день</value>
+  </data>
+  <data name="Time.Hour.Few" xml:space="preserve">
+    <value>часа</value>
+  </data>
+  <data name="Time.Hour.Many" xml:space="preserve">
+    <value>часов</value>
+  </data>
+  <data name="Time.Hour.One" xml:space="preserve">
+    <value>час</value>
+  </data>
+  <data name="Time.JustNow" xml:space="preserve">
+    <value>только что</value>
+  </data>
+  <data name="Time.Minute.Few" xml:space="preserve">
+    <value>минуты</value>
+  </data>
+  <data name="Time.Minute.Many" xml:space="preserve">
+    <value>минут</value>
+  </data>
+  <data name="Time.Minute.One" xml:space="preserve">
+    <value>минуту</value>
+  </data>
+  <data name="Time.Yesterday" xml:space="preserve">
+    <value>вчера</value>
+  </data>
+  <data name="TrayStatus.DiskAppIndexIsUpToDate" xml:space="preserve">
+    <value>DiskApp — индекс актуален</value>
+  </data>
+  <data name="TrayStatus.DiskAppIndexing" xml:space="preserve">
+    <value>DiskApp — индексация</value>
+  </data>
+  <data name="TrayStatus.DiskAppIndexingError" xml:space="preserve">
+    <value>DiskApp — ошибка индексации: </value>
+  </data>
+  <data name="TrayStatus.DiskAppIndexingPaused" xml:space="preserve">
+    <value>DiskApp — индексация на паузе</value>
+  </data>
+  <data name="TrayStatus.DiskAppStarting" xml:space="preserve">
+    <value>DiskApp — запускается…</value>
+  </data>
+  <data name="TrayStatus.DiskAppTheServerDidNotStart" xml:space="preserve">
+    <value>DiskApp — сервер не запустился</value>
+  </data>
+  <data name="TrayStatus.DiskAppUnavailable" xml:space="preserve">
+    <value>DiskApp — недоступно: </value>
+  </data>
+  <data name="TrayStatus.Entries" xml:space="preserve">
+    <value> записей</value>
+  </data>
+</root>

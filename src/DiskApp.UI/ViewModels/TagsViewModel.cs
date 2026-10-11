@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -37,7 +38,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
     /// Создаёт страницу с заданными часами (тесты, превью).
     /// </summary>
     public TagsViewModel(ILibraryService library, ISearchService search, IFileActions actions, IDialogService? dialogs, IInfoBarService? notices, ITagEditor? tagEditor, Func<DateTimeOffset> clock)
-        : base(PageKeys.Tags, "Теги", FASymbol.Tag)
+        : base(PageKeys.Tags, "Common.Page.Tags", FASymbol.Tag)
     {
         ArgumentNullException.ThrowIfNull(library);
         ArgumentNullException.ThrowIfNull(search);
@@ -98,7 +99,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
     public bool IsEmpty => Tags.Count == 0 && !IsLoading;
 
     /// <summary>Заголовок правой части.</summary>
-    public string FilesTitle => SelectedTag is { } tag ? $"Файлы с тегом «{tag.Name}»" : "Выберите тег";
+    public string FilesTitle => SelectedTag is { } tag ? L.F("Tags.FilesTagged", tag.Name) : L.T("Tags.ChooseATag");
 
     /// <summary>Завершается, когда загружены теги и файлы выбранного.</summary>
     public Task PendingLoad { get; private set; } = Task.CompletedTask;
@@ -110,6 +111,9 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
     public void OnNavigatedFrom()
     {
     }
+
+    /// <inheritdoc />
+    protected override Task RelocalizeAsync() => RefreshAsync();
 
     /// <summary>Перечитывает теги и файлы выбранного тега.</summary>
     [RelayCommand]
@@ -132,7 +136,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Error = "Не удалось загрузить теги: " + exception.Message;
+            Error = L.T("Tags.CouldNotLoadTags") + exception.Message;
         }
         finally
         {
@@ -179,13 +183,13 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
             }
 
             FilesText = result.TotalCount == 0
-                ? "Файлов с этим тегом нет. Отметьте файлы в поиске или «Обзоре»: Ctrl+T."
-                : Formatting.Count(result.TotalCount, "файл", "файла", "файлов");
+                ? L.T("Tags.NoFilesHaveThisTagTag")
+                : Formatting.Count(result.TotalCount, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"));
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             Files.Clear();
-            FilesText = "Не удалось найти файлы: " + exception.Message;
+            FilesText = L.T("Tags.CouldNotFindFiles") + exception.Message;
         }
     }
 
@@ -199,7 +203,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         }
 
         var color = TagPalette.Next(Tags.Select(static tag => tag.Color));
-        if (await _dialogs.EditTagAsync("Новый тег", string.Empty, color, "Создать") is not { } input)
+        if (await _dialogs.EditTagAsync(L.T("Tags.NewTag"), string.Empty, color, L.T("Common.Create")) is not { } input)
         {
             return;
         }
@@ -212,7 +216,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось создать тег", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Tags.CouldNotCreateTheTag"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -227,7 +231,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
             return;
         }
 
-        if (await _dialogs.EditTagAsync("Изменить тег", tag.Name, tag.Color, "Сохранить") is not { } input)
+        if (await _dialogs.EditTagAsync(L.T("Tags.EditTag"), tag.Name, tag.Color, L.T("Common.Save")) is not { } input)
         {
             return;
         }
@@ -239,7 +243,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось изменить тег", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Tags.CouldNotChangeTheTag"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -252,7 +256,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
             return;
         }
 
-        if (!await _dialogs.ConfirmAsync("Удалить тег", $"Удалить тег «{tag.Name}»? Он снимется со всех файлов, сами файлы останутся.", "Удалить"))
+        if (!await _dialogs.ConfirmAsync(L.T("Tags.DeleteTag"), L.F("Tags.DeleteTagItIsRemovedFrom", tag.Name), L.T("Common.Delete")))
         {
             return;
         }
@@ -262,11 +266,11 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
             await _library.DeleteTagAsync(tag.Id);
             SelectedTag = null;
             await RefreshAsync();
-            _notices?.Show("Тег удалён", $"«{tag.Name}»", FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Tags.TagDeleted"), $"«{tag.Name}»", FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось удалить тег", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Tags.CouldNotDeleteTheTag"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -285,7 +289,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось открыть", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Tags.CouldNotOpen"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -304,7 +308,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось показать в папке", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Tags.CouldNotShowInFolder"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -326,7 +330,7 @@ public sealed partial class TagsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось изменить теги", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Tags.CouldNotChangeTags"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 }

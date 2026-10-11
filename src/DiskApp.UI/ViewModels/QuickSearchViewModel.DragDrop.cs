@@ -1,7 +1,8 @@
-using Avalonia.Input;
+﻿using Avalonia.Input;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Text;
 
@@ -52,20 +53,20 @@ public sealed partial class QuickSearchViewModel
         }
 
         var foldersNote = skippedFolders > 0
-            ? $" {Formatting.Count(skippedFolders, "папка пропущена", "папки пропущены", "папок пропущено")}: папки перетаскиванием пока не копируются."
+            ? L.F("QuickSearch.FoldersNotCopiedByDrag", Formatting.Count(skippedFolders, L.T("QuickSearch.FolderSkipped.One"), L.T("QuickSearch.FolderSkipped.Few"), L.T("QuickSearch.FolderSkipped.Many")))
             : string.Empty;
         if (files.Count == 0)
         {
-            ShowNotice("Нечего копировать", "Перетаскиванием копируются только файлы." + foldersNote, FAInfoBarSeverity.Warning);
+            ShowNotice(L.T("QuickSearch.NothingToCopy"), L.T("QuickSearch.OnlyFilesAreCopiedByDrag") + foldersNote, FAInfoBarSeverity.Warning);
             return;
         }
 
         var saved = 0;
-        if (await TryAsync(async () => saved = await _actions.CopyIntoAsync(files, folder.Entry), $"Не удалось скопировать в «{folder.Entry.Name}»"))
+        if (await TryAsync(async () => saved = await _actions.CopyIntoAsync(files, folder.Entry), L.F("QuickSearch.CouldNotCopyTo", folder.Entry.Name)))
         {
             ShowNotice(
-                "Скопировано",
-                $"{Formatting.Count(saved, "файл", "файла", "файлов")} в «{folder.Entry.Name}».{foldersNote}",
+                L.T("QuickSearch.Copied"),
+                L.F("Common.CountTo", Formatting.Count(saved, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")), folder.Entry.Name) + foldersNote,
                 skippedFolders > 0 ? FAInfoBarSeverity.Warning : FAInfoBarSeverity.Success);
         }
     }

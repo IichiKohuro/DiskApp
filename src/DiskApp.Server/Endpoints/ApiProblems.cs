@@ -1,4 +1,5 @@
-using DiskApp.Core.Results;
+﻿using DiskApp.Core.Results;
+using DiskApp.Server.Localization;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -12,26 +13,26 @@ namespace DiskApp.Server.Endpoints;
 internal static class ApiProblems
 {
     public static ProblemHttpResult NotFound(string detail)
-        => TypedResults.Problem(detail, statusCode: StatusCodes.Status404NotFound, title: "Не найдено");
+        => TypedResults.Problem(detail, statusCode: StatusCodes.Status404NotFound, title: L.T("ApiProblems.NotFound"));
 
     public static ValidationProblem Invalid(string field, string message)
-        => TypedResults.ValidationProblem(new Dictionary<string, string[]>(StringComparer.Ordinal) { [field] = [message] }, title: "Неверный запрос");
+        => TypedResults.ValidationProblem(new Dictionary<string, string[]>(StringComparer.Ordinal) { [field] = [message] }, title: L.T("ApiProblems.BadRequest"));
 
     public static ValidationProblem Invalid(IReadOnlyDictionary<string, string[]> errors)
-        => TypedResults.ValidationProblem(errors, title: "Неверный запрос");
+        => TypedResults.ValidationProblem(errors, title: L.T("ApiProblems.BadRequest"));
 
     public static ProblemHttpResult Domain(DomainError error, int statusCode = StatusCodes.Status400BadRequest)
         => TypedResults.Problem(
             error.Message,
             statusCode: statusCode,
-            title: statusCode == StatusCodes.Status409Conflict ? "Конфликт" : "Операция не выполнена",
+            title: statusCode == StatusCodes.Status409Conflict ? L.T("ApiProblems.Conflict") : L.T("ApiProblems.TheOperationFailed"),
             extensions: new Dictionary<string, object?>(StringComparer.Ordinal) { ["code"] = error.Code });
 
     public static ProblemHttpResult Conflict(string code, string detail) => Domain(new DomainError(code, detail), StatusCodes.Status409Conflict);
 
     public static ProblemHttpResult Unavailable(string feature)
         => TypedResults.Problem(
-            $"{feature} пока недоступно на этой платформе.",
+            L.F("ApiProblems.IsNotAvailableOnThisPlatform", feature),
             statusCode: StatusCodes.Status501NotImplemented,
-            title: "Не поддерживается");
+            title: L.T("ApiProblems.NotSupported"));
 }

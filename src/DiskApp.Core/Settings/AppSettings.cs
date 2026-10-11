@@ -187,6 +187,9 @@ public sealed record AppearanceSettings
 
     /// <summary>Компактный режим: строки списков ниже, отступы меньше.</summary>
     public bool Compact { get; set; }
+
+    /// <summary>Язык интерфейса: <c>system</c> (по языку Windows), <c>ru</c> или <c>en</c> (этап 9.2).</summary>
+    public string Language { get; set; } = "system";
 }
 
 /// <summary>

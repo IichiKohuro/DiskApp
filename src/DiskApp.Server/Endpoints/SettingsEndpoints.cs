@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -8,6 +8,7 @@ using DiskApp.Contracts.App;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Settings;
 using DiskApp.Server.Hosting;
+using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
@@ -26,7 +27,7 @@ internal static partial class SettingsEndpoints
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex HexColor();
 
-    private static readonly string[] UnknownSetting = ["Неизвестная настройка."];
+    private static readonly string[] UnknownSetting = [L.T("SettingsEndpoints.UnknownSetting")];
 
     /// <summary>
     /// Контекст сериализации со всеми полями, включая <c>null</c>: иначе поле без значения (свой акцент, папка «Входящие»)
@@ -77,12 +78,12 @@ internal static partial class SettingsEndpoints
         }
         catch (JsonException exception)
         {
-            return ApiProblems.Invalid(exception.Path ?? "settings", "Значение не того типа: " + exception.Message);
+            return ApiProblems.Invalid(exception.Path ?? "settings", L.T("SettingsEndpoints.ValueOfTheWrongType") + exception.Message);
         }
 
         if (merged is null)
         {
-            return ApiProblems.Invalid("settings", "Пустые настройки.");
+            return ApiProblems.Invalid("settings", L.T("SettingsEndpoints.EmptySettings"));
         }
 
         var errors = Validate(merged);
@@ -144,7 +145,7 @@ internal static partial class SettingsEndpoints
         {
             if (value < min || value > max)
             {
-                errors[name] = [$"Допустимо от {min} до {max}."];
+                errors[name] = [L.F("SettingsEndpoints.AllowedFromTo", min, max)];
             }
         }
 
@@ -159,47 +160,52 @@ internal static partial class SettingsEndpoints
 
         if (string.IsNullOrWhiteSpace(settings.Hotkeys.QuickSearch))
         {
-            errors["hotkeys.quickSearch"] = ["Сочетание не может быть пустым."];
+            errors["hotkeys.quickSearch"] = [L.T("Settings.ShortcutEmpty")];
         }
 
         if (string.IsNullOrWhiteSpace(settings.Hotkeys.QuickSwitch))
         {
-            errors["hotkeys.quickSwitch"] = ["Сочетание не может быть пустым."];
+            errors["hotkeys.quickSwitch"] = [L.T("Settings.ShortcutEmpty")];
         }
 
         if (settings.Appearance.FontScale is < 0.9 or > 1.5 || double.IsNaN(settings.Appearance.FontScale))
         {
-            errors["appearance.fontScale"] = ["Допустимо от 0,9 до 1,5."];
+            errors["appearance.fontScale"] = [L.T("SettingsEndpoints.AllowedFrom09To1")];
         }
 
         if (settings.Appearance.AccentColor is { } accent && !HexColor().IsMatch(accent))
         {
-            errors["appearance.accentColor"] = ["Нужен цвет вида #RRGGBB."];
+            errors["appearance.accentColor"] = [L.T("SettingsEndpoints.AColorLikeRRGGBBIsRequired")];
+        }
+
+        if (settings.Appearance.Language is not ("system" or "ru" or "en"))
+        {
+            errors["appearance.language"] = [L.T("SettingsEndpoints.UnknownLanguage")];
         }
 
         if (!Enum.IsDefined(settings.Popup.Monitor))
         {
-            errors["popup.monitor"] = ["Неизвестный монитор."];
+            errors["popup.monitor"] = [L.T("SettingsEndpoints.UnknownMonitor")];
         }
 
         if (!DiagnosticsSettings.LogLevels.Contains(settings.Diagnostics.LogLevel, StringComparer.Ordinal))
         {
-            errors["diagnostics.logLevel"] = ["Допустимо: " + string.Join(", ", DiagnosticsSettings.LogLevels) + "."];
+            errors["diagnostics.logLevel"] = [L.T("SettingsEndpoints.Allowed") + string.Join(", ", DiagnosticsSettings.LogLevels) + "."];
         }
 
         if (string.IsNullOrWhiteSpace(settings.Add.ClipboardNameTemplate))
         {
-            errors["add.clipboardNameTemplate"] = ["Шаблон не может быть пустым."];
+            errors["add.clipboardNameTemplate"] = [L.T("Settings.TemplateEmpty")];
         }
 
         if (settings.Add.InboxPath is { Length: > 0 } inbox && !Path.IsPathFullyQualified(inbox))
         {
-            errors["add.inboxPath"] = ["Нужен полный путь к папке."];
+            errors["add.inboxPath"] = [L.T("SettingsEndpoints.AFullFolderPathIsRequired")];
         }
 
         if (settings.Add.RecentTargets.Count > AddSettings.RecentLimit)
         {
-            errors["add.recentTargets"] = [$"Не больше {AddSettings.RecentLimit} мест."];
+            errors["add.recentTargets"] = [L.F("SettingsEndpoints.NoMoreThanPlaces", AddSettings.RecentLimit)];
         }
 
         for (var i = 0; i < settings.Indexing.Exclusions.Count; i++)
@@ -214,7 +220,7 @@ internal static partial class SettingsEndpoints
 
             if (invalid)
             {
-                errors[$"indexing.exclusions[{i}].pattern"] = [rule.Kind == ExclusionKind.Glob ? "Шаблон не может быть пустым." : "Нужно целое неотрицательное число."];
+                errors[$"indexing.exclusions[{i}].pattern"] = [rule.Kind == ExclusionKind.Glob ? L.T("SettingsEndpoints.ThePatternCannotBeEmpty") : L.T("SettingsEndpoints.ANonNegativeIntegerIsRequired")];
             }
         }
 

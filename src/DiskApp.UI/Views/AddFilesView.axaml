@@ -1,5 +1,6 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ic="using:FluentIcons.Avalonia"
@@ -11,10 +12,10 @@
          найденные), копировать или переместить. Кнопки — у диалога. -->
     <StackPanel Spacing="10" Width="480">
         <TextBlock TextWrapping="Wrap">
-            <Run Text="Добавить " />
+            <Run Text="{loc:Str AddFiles.Add}" />
             <Run FontWeight="SemiBold" Text="{Binding SourcesText}" />
         </TextBlock>
-        <TextBox x:Name="QueryBox" PlaceholderText="Найти папку по имени" Text="{Binding Query, Mode=TwoWay}">
+        <TextBox x:Name="QueryBox" PlaceholderText="{loc:Str AddFiles.FindAFolderByName}" Text="{Binding Query, Mode=TwoWay}">
             <TextBox.InnerLeftContent>
                 <ic:SymbolIcon Symbol="Search" FontSize="14" Margin="8,0,0,0" VerticalAlignment="Center" />
             </TextBox.InnerLeftContent>
@@ -38,10 +39,10 @@
         </ListBox>
         <TextBlock Classes="secondary" FontSize="12" TextTrimming="CharacterEllipsis" Text="{Binding TargetText}" />
         <StackPanel Orientation="Horizontal" Spacing="16">
-            <RadioButton GroupName="AddMode" Content="Копировать" IsChecked="{Binding !Move}" />
-            <RadioButton GroupName="AddMode" Content="Переместить" IsChecked="{Binding Move, Mode=TwoWay}" IsEnabled="{Binding CanMove}" />
+            <RadioButton GroupName="AddMode" Content="{loc:Str Common.Copy}" IsChecked="{Binding !Move}" />
+            <RadioButton GroupName="AddMode" Content="{loc:Str AddFiles.Move}" IsChecked="{Binding Move, Mode=TwoWay}" IsEnabled="{Binding CanMove}" />
         </StackPanel>
         <TextBlock Classes="tertiary" FontSize="11" TextWrapping="Wrap" IsVisible="{Binding !CanMove}"
-                   Text="Файлы вне корней индекса копируются; исходные остаются на месте." />
+                   Text="{loc:Str AddFiles.FilesOutsideTheIndexRootsAre}" />
     </StackPanel>
 </UserControl>

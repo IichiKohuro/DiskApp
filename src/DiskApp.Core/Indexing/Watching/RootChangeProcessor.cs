@@ -1,7 +1,8 @@
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Domain;
+using DiskApp.Core.Localization;
 
 namespace DiskApp.Core.Indexing.Watching;
 
@@ -187,7 +188,7 @@ public sealed class RootChangeProcessor : IAsyncDisposable
         var batch = _coalescer.Drain();
         if (batch.Overflowed)
         {
-            _onRequest(new RootRequest(_root.Id, RootRequestKind.Reconcile, string.Empty, "Переполнение буфера событий файловой системы."));
+            _onRequest(new RootRequest(_root.Id, RootRequestKind.Reconcile, string.Empty, L.T("RootChangeProcessor.FileSystemEventBufferOverflow")));
             return;
         }
 
@@ -202,12 +203,12 @@ public sealed class RootChangeProcessor : IAsyncDisposable
             AppliedBatches++;
             foreach (var directory in result.NewDirectories)
             {
-                _onRequest(new RootRequest(_root.Id, RootRequestKind.Reconcile, directory, "Новая папка: сверка содержимого."));
+                _onRequest(new RootRequest(_root.Id, RootRequestKind.Reconcile, directory, L.T("RootChangeProcessor.NewFolderReconcilingItsContents")));
             }
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _onRequest(new RootRequest(_root.Id, RootRequestKind.Reconcile, string.Empty, "Ошибка применения изменений: " + exception.Message));
+            _onRequest(new RootRequest(_root.Id, RootRequestKind.Reconcile, string.Empty, L.T("RootChangeProcessor.ErrorApplyingChanges") + exception.Message));
         }
     }
 }

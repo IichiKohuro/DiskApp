@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -57,7 +58,7 @@ public sealed partial class TagPickerViewModel : ViewModelBase
 
         Entries = entries;
         _library = library;
-        TargetText = entries.Count == 1 ? $"Теги для «{entries[0].Name}»" : "Теги для " + Formatting.Count(entries.Count, "файла", "файлов", "файлов");
+        TargetText = entries.Count == 1 ? L.F("TagPicker.TagsFor", entries[0].Name) : L.T("TagPicker.TagsFor2") + Formatting.Count(entries.Count, L.T("TagPicker.File.One"), L.T("TagPicker.File.Few"), L.T("TagPicker.File.Many"));
     }
 
     /// <summary>Файлы, которым назначаются теги.</summary>
@@ -104,7 +105,7 @@ public sealed partial class TagPickerViewModel : ViewModelBase
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Error = "Не удалось загрузить теги: " + exception.Message;
+            Error = L.T("TagPicker.CouldNotLoadTags") + exception.Message;
         }
 
         OnPropertyChanged(nameof(IsEmpty));

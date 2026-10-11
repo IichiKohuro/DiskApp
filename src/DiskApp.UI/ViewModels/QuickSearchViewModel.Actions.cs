@@ -1,7 +1,8 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using DiskApp.UI.Input;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -86,10 +87,10 @@ public sealed partial class QuickSearchViewModel
     public bool IsConfirmingDelete => PendingAction == PendingAction.ConfirmDelete;
 
     /// <summary>Подпись кнопки подтверждения в панели действия.</summary>
-    public string PendingConfirmText => IsRenaming ? "Переименовать" : "В корзину";
+    public string PendingConfirmText => IsRenaming ? L.T("Common.Rename") : L.T("Common.ToRecycleBin");
 
     /// <summary>Подпись пункта меню закрепления для выбранного файла.</summary>
-    public string PinMenuText => SelectedResult?.IsFavorite == true ? "Открепить" : "Закрепить";
+    public string PinMenuText => SelectedResult?.IsFavorite == true ? L.T("QuickSearch.Unpin") : L.T("QuickSearch.Pin");
 
     /// <summary>
     /// Выполняет команду клавиши или меню над выбранной строкой.
@@ -191,19 +192,19 @@ public sealed partial class QuickSearchViewModel
 
     /// <summary>Показать выбранный файл в Проводнике.</summary>
     [RelayCommand]
-    private Task RevealAsync() => RunShellActionAsync(static (actions, entry) => actions.RevealAsync(entry), "Не удалось показать в папке");
+    private Task RevealAsync() => RunShellActionAsync(static (actions, entry) => actions.RevealAsync(entry), L.T("QuickSearch.CouldNotShowInFolder"));
 
     /// <summary>«Открыть с помощью» для выбранного файла.</summary>
     [RelayCommand]
-    private Task OpenWithAsync() => RunShellActionAsync(static (actions, entry) => actions.OpenWithAsync(entry), "Не удалось открыть диалог «Открыть с помощью»");
+    private Task OpenWithAsync() => RunShellActionAsync(static (actions, entry) => actions.OpenWithAsync(entry), L.T("QuickSearch.CouldNotOpenTheOpenWith"));
 
     /// <summary>Свойства выбранного файла.</summary>
     [RelayCommand]
-    private Task PropertiesAsync() => RunShellActionAsync(static (actions, entry) => actions.ShowPropertiesAsync(entry), "Не удалось открыть свойства");
+    private Task PropertiesAsync() => RunShellActionAsync(static (actions, entry) => actions.ShowPropertiesAsync(entry), L.T("QuickSearch.CouldNotOpenProperties"));
 
     /// <summary>Запустить выбранный файл от имени администратора.</summary>
     [RelayCommand]
-    private Task RunAsAdminAsync() => RunShellActionAsync(static (actions, entry) => actions.RunAsAdminAsync(entry), "Не удалось запустить от имени администратора");
+    private Task RunAsAdminAsync() => RunShellActionAsync(static (actions, entry) => actions.RunAsAdminAsync(entry), L.T("QuickSearch.CouldNotRunAsAdministrator"));
 
     /// <summary>Скопировать выбранный файл в буфер обмена.</summary>
     [RelayCommand]
@@ -214,9 +215,9 @@ public sealed partial class QuickSearchViewModel
             return;
         }
 
-        if (await TryAsync(() => _actions.CopyFilesAsync([hit.Entry]), "Не удалось скопировать"))
+        if (await TryAsync(() => _actions.CopyFilesAsync([hit.Entry]), L.T("QuickSearch.CouldNotCopy")))
         {
-            ShowNotice("Скопировано", $"«{hit.Entry.Name}» — вставьте в Проводнике или в письме.", FAInfoBarSeverity.Success);
+            ShowNotice(L.T("QuickSearch.Copied"), L.F("QuickSearch.PasteItInFileExplorerOr", hit.Entry.Name), FAInfoBarSeverity.Success);
         }
     }
 
@@ -229,9 +230,9 @@ public sealed partial class QuickSearchViewModel
             return;
         }
 
-        if (await TryAsync(() => _actions.CopyPathsAsync([hit.Entry]), "Не удалось скопировать путь"))
+        if (await TryAsync(() => _actions.CopyPathsAsync([hit.Entry]), L.T("QuickSearch.CouldNotCopyThePath")))
         {
-            ShowNotice("Путь скопирован", hit.Entry.FullPath, FAInfoBarSeverity.Success);
+            ShowNotice(L.T("QuickSearch.PathCopied"), hit.Entry.FullPath, FAInfoBarSeverity.Success);
         }
     }
 
@@ -247,7 +248,7 @@ public sealed partial class QuickSearchViewModel
         _pendingEntry = hit.Entry;
         RenameText = hit.Entry.Name;
         RenameSelectionLength = PathText.StemLength(hit.Entry.Name);
-        PendingPrompt = $"Новое имя для «{hit.Entry.Name}»";
+        PendingPrompt = L.F("QuickSearch.NewNameFor", hit.Entry.Name);
         PendingAction = PendingAction.Rename;
     }
 
@@ -261,7 +262,7 @@ public sealed partial class QuickSearchViewModel
         }
 
         _pendingEntry = hit.Entry;
-        PendingPrompt = $"Переместить «{hit.Entry.Name}» в корзину?";
+        PendingPrompt = L.F("QuickSearch.MoveToTheRecycleBin", hit.Entry.Name);
         PendingAction = PendingAction.ConfirmDelete;
     }
 
@@ -276,10 +277,10 @@ public sealed partial class QuickSearchViewModel
 
         var favorite = !hit.Entry.IsFavorite;
         FileEntry? updated = null;
-        if (await TryAsync(async () => updated = await _actions.SetFavoriteAsync(hit.Entry, favorite), favorite ? "Не удалось закрепить" : "Не удалось открепить"))
+        if (await TryAsync(async () => updated = await _actions.SetFavoriteAsync(hit.Entry, favorite), favorite ? L.T("QuickSearch.CouldNotPin") : L.T("QuickSearch.CouldNotUnpin")))
         {
             ReplaceEntry(hit, updated!);
-            ShowNotice(favorite ? "Закреплено" : "Откреплено", $"«{hit.Entry.Name}»", FAInfoBarSeverity.Success);
+            ShowNotice(favorite ? L.T("QuickSearch.Pinned") : L.T("QuickSearch.Unpinned"), $"«{hit.Entry.Name}»", FAInfoBarSeverity.Success);
         }
     }
 
@@ -296,10 +297,10 @@ public sealed partial class QuickSearchViewModel
         }
 
         IReadOnlyList<FileEntry>? updated = null;
-        if (await TryAsync(async () => updated = await _tagEditor.EditAsync([hit.Entry]), "Не удалось изменить теги") && updated is { Count: > 0 })
+        if (await TryAsync(async () => updated = await _tagEditor.EditAsync([hit.Entry]), L.T("QuickSearch.CouldNotChangeTags")) && updated is { Count: > 0 })
         {
             ReplaceEntry(hit, updated[0]);
-            ShowNotice("Теги сохранены", $"«{hit.Entry.Name}»", FAInfoBarSeverity.Success);
+            ShowNotice(L.T("QuickSearch.TagsSaved"), $"«{hit.Entry.Name}»", FAInfoBarSeverity.Success);
         }
     }
 
@@ -353,12 +354,12 @@ public sealed partial class QuickSearchViewModel
     {
         if (PathText.ValidateFileName(newName.Trim()) is { } error)
         {
-            ShowNotice("Такое имя не подходит", error, FAInfoBarSeverity.Warning);
+            ShowNotice(L.T("QuickSearch.ThisNameWillNotWork"), error, FAInfoBarSeverity.Warning);
             return;
         }
 
         FileEntry? renamed = null;
-        if (await TryAsync(async () => renamed = await _actions.RenameAsync(entry, newName), "Не удалось переименовать"))
+        if (await TryAsync(async () => renamed = await _actions.RenameAsync(entry, newName), L.T("QuickSearch.CouldNotRename")))
         {
             CancelPendingAction();
             if (FindHit(entry) is { } hit)
@@ -366,20 +367,20 @@ public sealed partial class QuickSearchViewModel
                 ReplaceEntry(hit, renamed!);
             }
 
-            ShowNotice("Переименовано", $"«{entry.Name}» → «{renamed!.Name}»", FAInfoBarSeverity.Success);
+            ShowNotice(L.T("QuickSearch.Renamed"), $"«{entry.Name}» → «{renamed!.Name}»", FAInfoBarSeverity.Success);
         }
     }
 
     private async Task DeleteAsync(FileEntry entry)
     {
-        if (await TryAsync(() => _actions.MoveToRecycleBinAsync([entry]), "Не удалось переместить в корзину"))
+        if (await TryAsync(() => _actions.MoveToRecycleBinAsync([entry]), L.T("QuickSearch.CouldNotMoveToTheRecycle")))
         {
             if (FindHit(entry) is { } hit)
             {
                 RemoveHit(hit);
             }
 
-            ShowNotice("Перемещено в корзину", $"«{entry.Name}» можно вернуть из корзины Windows.", FAInfoBarSeverity.Success);
+            ShowNotice(L.T("QuickSearch.MovedToTheRecycleBin"), L.F("QuickSearch.CanBeRestoredFromTheWindows", entry.Name), FAInfoBarSeverity.Success);
         }
     }
 

@@ -1,6 +1,7 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 using DiskApp.Core.Domain;
+using DiskApp.Core.Localization;
 using DiskApp.Core.Paths;
 
 namespace DiskApp.Core.Search;
@@ -188,7 +189,7 @@ public static class SearchPlanner
                     AddRoot(filter.Value, negated, roots, paths, warnings);
                     break;
                 default:
-                    warnings.Add($"Фильтр «{QueryParser.CanonicalKey(filter.Key)}:{filter.Value}» не применён.");
+                    warnings.Add(L.F("FilterBuilder.FilterWasNotApplied", QueryParser.CanonicalKey(filter.Key), filter.Value));
                     break;
             }
         }
@@ -207,7 +208,7 @@ public static class SearchPlanner
                     }
                 }
 
-                warnings.Add($"Папка «{value}» не входит ни в один корень.");
+                warnings.Add(L.F("FilterBuilder.FolderIsNotInAnyRoot", value));
                 if (!negated)
                 {
                     AddDistinct(IncludeRoots, -1L);
@@ -242,7 +243,7 @@ public static class SearchPlanner
 
             if (matched.Count == 0)
             {
-                warnings.Add($"Корень «{value}» не найден.");
+                warnings.Add(L.F("FilterBuilder.RootNotFound", value));
                 if (!negated)
                 {
                     AddDistinct(IncludeRoots, -1L);

@@ -1,10 +1,11 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text.Json.Nodes;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using DiskApp.Contracts.App;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 
@@ -40,12 +41,12 @@ public sealed partial class RootSettingsItem : ObservableObject
     /// <summary>Подпись состояния: «Доступен», «Недоступен: диск E: не подключён».</summary>
     public string StateText => Root.State switch
     {
-        RootState.Offline => "Недоступен" + (Root.Message is { Length: > 0 } message ? ": " + message : string.Empty),
-        RootState.Scanning => "Индексируется",
-        RootState.Paused => "На паузе",
-        RootState.Disabled => "Выключен",
-        RootState.Error => "Ошибка" + (Root.Message is { Length: > 0 } error ? ": " + error : string.Empty),
-        _ => "Доступен",
+        RootState.Offline => L.T("RootSettingsItem.Unavailable") + (Root.Message is { Length: > 0 } message ? ": " + message : string.Empty),
+        RootState.Scanning => L.T("RootSettingsItem.Indexing"),
+        RootState.Paused => L.T("RootSettingsItem.Paused"),
+        RootState.Disabled => L.T("RootSettingsItem.Disabled"),
+        RootState.Error => L.T("Common.Error") + (Root.Message is { Length: > 0 } error ? ": " + error : string.Empty),
+        _ => L.T("RootSettingsItem.Available"),
     };
 
     /// <summary>Скрытые файлы.</summary>
@@ -114,10 +115,10 @@ public sealed record ExclusionItem(ExclusionKind Kind, string Pattern)
     public string Text => Kind switch
     {
         ExclusionKind.Glob => Pattern,
-        ExclusionKind.Hidden => "Скрытые файлы и папки",
-        ExclusionKind.System => "Системные файлы и папки",
-        ExclusionKind.Size => $"Файлы больше {Pattern} байт",
-        ExclusionKind.Depth => $"Глубже {Pattern} уровней",
+        ExclusionKind.Hidden => L.T("ExclusionItem.HiddenFilesAndFolders"),
+        ExclusionKind.System => L.T("ExclusionItem.SystemFilesAndFolders"),
+        ExclusionKind.Size => L.F("ExclusionItem.FilesLargerThanBytes", Pattern),
+        ExclusionKind.Depth => L.F("ExclusionItem.DeeperThanLevels", Pattern),
         _ => Pattern,
     };
 }
@@ -163,17 +164,17 @@ public sealed partial class SettingsViewModel
         var trimmed = pattern.Trim();
         if (trimmed.Length == 0)
         {
-            return "Введите шаблон, например **/bin/** или *.tmp.";
+            return L.T("Settings.EnterAPatternForExampleBin");
         }
 
         if (trimmed.IndexOfAny(['<', '>', '"', '|', '\0']) >= 0)
         {
-            return "В шаблоне есть символ, недопустимый в путях Windows: < > \" |.";
+            return L.T("Settings.ThePatternHasACharacterNot");
         }
 
         if (trimmed.Contains("***", StringComparison.Ordinal))
         {
-            return "Больше двух звёздочек подряд не бывает: ** — любые папки, * — любая часть имени.";
+            return L.T("Settings.ThereAreNeverMoreThanTwo");
         }
 
         return null;
@@ -214,7 +215,7 @@ public sealed partial class SettingsViewModel
         var pattern = NewExclusion.Trim().Replace('\\', '/');
         if (Exclusions.Any(rule => rule.Kind == ExclusionKind.Glob && string.Equals(rule.Pattern, pattern, StringComparison.OrdinalIgnoreCase)))
         {
-            ExclusionError = "Такое правило уже есть.";
+            ExclusionError = L.T("Settings.ThisRuleAlreadyExists");
             return;
         }
 
@@ -254,7 +255,7 @@ public sealed partial class SettingsViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Правила не сброшены: " + exception.Message;
+            SettingsNote = L.T("Settings.RulesWereNotReset") + exception.Message;
         }
     }
 
@@ -312,7 +313,7 @@ public sealed partial class SettingsViewModel
     {
         if (!item.TryGetDepth(out var depth))
         {
-            SettingsNote = "Глубина — число от 1 до 256 или пусто, чтобы обходить все уровни.";
+            SettingsNote = L.T("Settings.DepthIsANumberFrom1");
             return;
         }
 
@@ -324,7 +325,7 @@ public sealed partial class SettingsViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Корень не изменён: " + exception.Message;
+            SettingsNote = L.T("Settings.RootNotChanged") + exception.Message;
             item.Update(item.Root);
         }
     }
@@ -333,7 +334,7 @@ public sealed partial class SettingsViewModel
     [RelayCommand]
     private async Task AddRootFolderAsync()
     {
-        if (_dialogs is null || await _dialogs.PickFolderAsync("Папка для индекса") is not { } folder)
+        if (_dialogs is null || await _dialogs.PickFolderAsync(L.T("Settings.FolderForTheIndex")) is not { } folder)
         {
             return;
         }
@@ -351,11 +352,11 @@ public sealed partial class SettingsViewModel
         {
             var root = await _roots.AddAsync(path);
             await LoadRootsAsync();
-            _notices?.Show("Корень добавлен", $"«{root.Label}» индексируется: поиск находит файлы по мере обхода.", FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Settings.RootAdded"), L.F("Settings.IsBeingIndexedSearchFindsFiles", root.Label), FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Корень не добавлен: " + exception.Message;
+            SettingsNote = L.T("Settings.RootNotAdded") + exception.Message;
         }
     }
 
@@ -367,11 +368,11 @@ public sealed partial class SettingsViewModel
         try
         {
             await _roots.RescanAsync(item.Root.Id);
-            _notices?.Show("Пересканирование", $"«{item.Root.Label}» поставлен в очередь.", FAInfoBarSeverity.Informational);
+            _notices?.Show(L.T("Settings.Rescan"), L.F("Settings.IsQueued", item.Root.Label), FAInfoBarSeverity.Informational);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Не удалось пересканировать: " + exception.Message;
+            SettingsNote = L.T("Settings.CouldNotRescan") + exception.Message;
         }
     }
 
@@ -381,7 +382,7 @@ public sealed partial class SettingsViewModel
     {
         ArgumentNullException.ThrowIfNull(item);
         if (_dialogs is not null
-            && !await _dialogs.ConfirmAsync("Убрать из индекса", $"Убрать «{item.Root.Path}» из индекса? Файлы на диске не тронутся, но искаться не будут.", "Убрать"))
+            && !await _dialogs.ConfirmAsync(L.T("Settings.RemoveFromIndex"), L.F("Settings.RemoveFromTheIndexFilesOn", item.Root.Path), L.T("Settings.Remove")))
         {
             return;
         }
@@ -393,7 +394,7 @@ public sealed partial class SettingsViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Корень не убран: " + exception.Message;
+            SettingsNote = L.T("Settings.RootNotRemoved") + exception.Message;
         }
     }
 }

@@ -1,7 +1,8 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Text;
 
@@ -34,12 +35,12 @@ public sealed partial class OperationItemViewModel : ObservableObject
     /// <summary>Состояние словами.</summary>
     public string StateText => Info.State switch
     {
-        FileOperationState.Queued => "В очереди",
-        FileOperationState.Running => Info.Fraction is { } fraction ? Formatting.Percent(fraction) : "Выполняется",
-        FileOperationState.WaitingDecision => "Ждёт решения: файл с таким именем уже есть",
-        FileOperationState.Completed => "Готово",
-        FileOperationState.Failed => "Ошибка",
-        _ => "Отменена",
+        FileOperationState.Queued => L.T("OperationItem.Queued"),
+        FileOperationState.Running => Info.Fraction is { } fraction ? Formatting.Percent(fraction) : L.T("OperationItem.Running"),
+        FileOperationState.WaitingDecision => L.T("OperationItem.WaitingForADecisionAFile"),
+        FileOperationState.Completed => L.T("Common.Done"),
+        FileOperationState.Failed => L.T("Common.Error"),
+        _ => L.T("OperationItem.Cancelled"),
     };
 
     /// <summary>Подробности: объём, скорость, оставшееся время или сообщение об ошибке.</summary>
@@ -55,21 +56,21 @@ public sealed partial class OperationItemViewModel : ObservableObject
             var parts = new List<string>();
             if (Info.TotalBytes > 0)
             {
-                parts.Add($"{Formatting.Size(Info.ProcessedBytes)} из {Formatting.Size(Info.TotalBytes)}");
+                parts.Add(L.F("OperationItem.Of", Formatting.Size(Info.ProcessedBytes), Formatting.Size(Info.TotalBytes)));
             }
             else if (Info.TotalItems > 0)
             {
-                parts.Add($"{Info.ProcessedItems} из {Formatting.Count(Info.TotalItems, "элемента", "элементов", "элементов")}");
+                parts.Add(L.F("OperationItem.Of", Info.ProcessedItems, Formatting.Count(Info.TotalItems, L.T("Common.Item.Few"), L.T("Common.Item.Many"), L.T("Common.Item.Many"))));
             }
 
             if (Info.State == FileOperationState.Running && Info.BytesPerSecond > 0)
             {
-                parts.Add(Formatting.Size((long)Info.BytesPerSecond) + "/с");
+                parts.Add(Formatting.Size((long)Info.BytesPerSecond) + L.T("OperationItem.S"));
             }
 
             if (Info.State == FileOperationState.Running && Info.RemainingSeconds is { } remaining)
             {
-                parts.Add("осталось " + Remaining(remaining));
+                parts.Add(L.T("OperationItem.Remaining") + Remaining(remaining));
             }
 
             if (Info.State == FileOperationState.Running && Info.CurrentPath is { Length: > 0 } current)
@@ -121,23 +122,23 @@ public sealed partial class OperationItemViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(info);
 
         var count = info.Sources.Count;
-        var what = count == 1 ? $"«{PathText.FileName(info.Sources[0])}»" : Formatting.Count(count, "элемента", "элементов", "элементов");
-        var where = info.Destination is { Length: > 0 } destination ? $" в «{PathText.FileName(destination)}»" : string.Empty;
+        var what = count == 1 ? $"«{PathText.FileName(info.Sources[0])}»" : Formatting.Count(count, L.T("Common.Item.Few"), L.T("Common.Item.Many"), L.T("Common.Item.Many"));
+        var where = info.Destination is { Length: > 0 } destination ? L.F("OperationItem.To", PathText.FileName(destination)) : string.Empty;
         return info.Kind switch
         {
-            FileOperationKind.Copy => $"Копирование {what}{where}",
-            FileOperationKind.Move => $"Перемещение {what}{where}",
-            FileOperationKind.Rename => $"Переименование {what}",
-            FileOperationKind.Delete => $"В корзину: {what}",
-            FileOperationKind.CreateFolder => $"Новая папка{where}",
-            _ => $"Новый файл{where}",
+            FileOperationKind.Copy => L.F("OperationItem.Copying", what, where),
+            FileOperationKind.Move => L.F("OperationItem.Moving", what, where),
+            FileOperationKind.Rename => L.F("OperationItem.Renaming", what),
+            FileOperationKind.Delete => L.F("OperationItem.ToRecycleBin", what),
+            FileOperationKind.CreateFolder => L.F("OperationItem.NewFolder", where),
+            _ => L.F("OperationItem.NewFile", where),
         };
     }
 
     private static string Remaining(double seconds) => seconds switch
     {
-        < 60 => $"{Math.Max(1, (int)Math.Round(seconds)).ToString(CultureInfo.CurrentCulture)} с",
-        < 3600 => $"{(int)Math.Round(seconds / 60)} мин",
-        _ => $"{(seconds / 3600).ToString("0.#", CultureInfo.CurrentCulture)} ч",
+        < 60 => L.F("OperationItem.S2", Math.Max(1, (int)Math.Round(seconds)).ToString(CultureInfo.CurrentCulture)),
+        < 3600 => L.F("OperationItem.Min", (int)Math.Round(seconds / 60)),
+        _ => L.F("OperationItem.H", (seconds / 3600).ToString("0.#", CultureInfo.CurrentCulture)),
     };
 }

@@ -1,5 +1,6 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="using:DiskApp.UI.Controls"
@@ -13,25 +14,25 @@
     <Grid Margin="16,12,16,8" RowDefinitions="Auto,*,Auto" ColumnDefinitions="260,*">
         <DockPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Bottom">
-                <Button Classes="tool" Command="{Binding CreateTagCommand}" ToolTip.Tip="Новый тег">
+                <Button Classes="tool" Command="{Binding CreateTagCommand}" ToolTip.Tip="{loc:Str Tags.NewTag}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <ic:SymbolIcon Symbol="Add" FontSize="16" />
-                        <TextBlock Text="Новый тег" />
+                        <TextBlock Text="{loc:Str Tags.NewTag}" />
                     </StackPanel>
                 </Button>
-                <Button Classes="tool" Command="{Binding EditTagCommand}" ToolTip.Tip="Переименовать или сменить цвет">
+                <Button Classes="tool" Command="{Binding EditTagCommand}" ToolTip.Tip="{loc:Str Tags.RenameOrChangeColor}">
                     <ic:SymbolIcon Symbol="Edit" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding DeleteTagCommand}" ToolTip.Tip="Удалить тег (файлы останутся)">
+                <Button Classes="tool" Command="{Binding DeleteTagCommand}" ToolTip.Tip="{loc:Str Tags.DeleteTagFilesStay}">
                     <ic:SymbolIcon Symbol="Delete" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="Обновить (F5)">
+                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Str Common.RefreshF5}">
                     <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
                 </Button>
             </StackPanel>
             <StackPanel Spacing="4">
-                <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="Теги" />
-                <TextBlock Classes="secondary" TextWrapping="Wrap" Text="Метки для файлов из разных мест. Ctrl+T в поиске и «Обзоре» — отметить; tag:имя в запросе — найти." />
+                <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="{loc:Str Common.Page.Tags}" />
+                <TextBlock Classes="secondary" TextWrapping="Wrap" Text="{loc:Str Tags.LabelsForFilesFromDifferentPlaces}" />
             </StackPanel>
         </DockPanel>
 
@@ -50,8 +51,8 @@
                 </ListBox>
                 <StackPanel Spacing="8" Margin="12" VerticalAlignment="Center" IsVisible="{Binding IsEmpty}">
                     <ic:SymbolIcon Symbol="TagMultiple" FontSize="32" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                    <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" Text="Тегов пока нет" />
-                    <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Text="Создайте тег здесь или отметьте файл в поиске: Ctrl+T" />
+                    <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" Text="{loc:Str Tags.NoTagsYet}" />
+                    <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" Text="{loc:Str Tags.CreateATagHereOrTag}" />
                 </StackPanel>
             </Panel>
         </Border>
@@ -67,9 +68,9 @@
                          ItemTemplate="{StaticResource FileHitTemplate}">
                     <ListBox.ContextFlyout>
                         <MenuFlyout>
-                            <MenuItem Header="Открыть" Command="{Binding OpenFileCommand}" CommandParameter="{x:Null}" InputGesture="Enter" />
-                            <MenuItem Header="Показать в Проводнике" Command="{Binding RevealFileCommand}" />
-                            <MenuItem Header="Теги…" Command="{Binding EditFileTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditFileTags}" />
+                            <MenuItem Header="{loc:Str Common.Open}" Command="{Binding OpenFileCommand}" CommandParameter="{x:Null}" InputGesture="Enter" />
+                            <MenuItem Header="{loc:Str Common.ShowInExplorer}" Command="{Binding RevealFileCommand}" />
+                            <MenuItem Header="{loc:Str Common.TagsEllipsis}" Command="{Binding EditFileTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditFileTags}" />
                         </MenuFlyout>
                     </ListBox.ContextFlyout>
                 </ListBox>

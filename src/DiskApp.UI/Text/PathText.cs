@@ -1,4 +1,6 @@
-using System.Buffers;
+﻿using System.Buffers;
+
+using DiskApp.UI.Localization;
 
 namespace DiskApp.UI.Text;
 
@@ -90,21 +92,21 @@ public static class PathText
 
         if (name.Trim().Length == 0)
         {
-            return "Имя не может быть пустым.";
+            return L.T("PathText.TheNameCannotBeEmpty");
         }
 
         if (name.AsSpan().IndexOfAny(InvalidNameChars) >= 0 || name.Any(char.IsControl))
         {
-            return "Имя не может содержать символы \\ / : * ? \" < > |.";
+            return L.T("PathText.TheNameCannotContain");
         }
 
         if (name.EndsWith('.') || name.EndsWith(' '))
         {
-            return "Имя не может заканчиваться точкой или пробелом.";
+            return L.T("PathText.TheNameCannotEndWithA");
         }
 
         var stem = name.Split('.')[0].ToUpperInvariant();
-        return ReservedNames.Contains(stem) ? $"«{name}» — зарезервированное имя Windows." : null;
+        return ReservedNames.Contains(stem) ? L.F("PathText.IsAReservedWindowsName", name) : null;
     }
 
     private static readonly SearchValues<char> InvalidNameChars = SearchValues.Create("\\/:*?\"<>|");

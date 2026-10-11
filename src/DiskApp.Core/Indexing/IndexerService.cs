@@ -1,8 +1,9 @@
-using DiskApp.Core.Abstractions;
+﻿using DiskApp.Core.Abstractions;
 using DiskApp.Core.Domain;
 using DiskApp.Core.Events;
 using DiskApp.Core.FileSystem;
 using DiskApp.Core.Indexing.Watching;
+using DiskApp.Core.Localization;
 using DiskApp.Core.Repositories;
 
 using Microsoft.Extensions.Logging;
@@ -230,10 +231,10 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
     }
 
     /// <summary>Ставит полное сканирование корня.</summary>
-    public bool RescanRoot(long rootId) => Enqueue(new IndexTask(rootId, IndexTaskKind.FullScan, string.Empty, "Пересканирование по запросу"));
+    public bool RescanRoot(long rootId) => Enqueue(new IndexTask(rootId, IndexTaskKind.FullScan, string.Empty, L.T("Indexer.RescanOnRequest")));
 
     /// <summary>Ставит сверку корня или поддерева.</summary>
-    public bool ReconcileRoot(long rootId, string relPath = "") => Enqueue(new IndexTask(rootId, IndexTaskKind.Reconcile, relPath, "Сверка по запросу"));
+    public bool ReconcileRoot(long rootId, string relPath = "") => Enqueue(new IndexTask(rootId, IndexTaskKind.Reconcile, relPath, L.T("Indexer.ReconciliationOnRequest")));
 
     /// <summary>
     /// Папки изменились снаружи индексатора (файловая операция): каждая сверяется в самом глубоком корне, который её содержит.
@@ -257,7 +258,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
                 .MaxBy(static candidate => candidate.Path.Length);
             if (root is not null && paths.TryGetRelativePath(root.Path, normalized, out var relPath))
             {
-                Enqueue(new IndexTask(root.Id, IndexTaskKind.Reconcile, relPath, "Файловая операция"));
+                Enqueue(new IndexTask(root.Id, IndexTaskKind.Reconcile, relPath, L.T("Indexer.FileOperation")));
             }
         }
     }
@@ -270,7 +271,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
         foreach (var session in Sessions())
         {
             await _entries.DeleteByRootAsync(session.Root.Id, cancellationToken).ConfigureAwait(false);
-            Enqueue(new IndexTask(session.Root.Id, IndexTaskKind.FullScan, string.Empty, "Пересборка индекса"));
+            Enqueue(new IndexTask(session.Root.Id, IndexTaskKind.FullScan, string.Empty, L.T("Indexer.IndexRebuild")));
         }
     }
 
@@ -419,7 +420,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
         if (!_lister.DirectoryExists(root.Path))
         {
-            await GoOfflineAsync(session, "Корень недоступен при запуске.").ConfigureAwait(false);
+            await GoOfflineAsync(session, L.T("Indexer.TheRootIsUnavailableAtStartup")).ConfigureAwait(false);
             return;
         }
 
@@ -472,8 +473,8 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
         var needsFullScan = session.Root.LastScanUtc is null || (initial && _options.ForceFullScan);
         Enqueue(needsFullScan
-            ? new IndexTask(session.Root.Id, IndexTaskKind.FullScan, string.Empty, session.Root.LastScanUtc is null ? "Первое сканирование" : "Индекс восстановлен")
-            : new IndexTask(session.Root.Id, IndexTaskKind.Reconcile, string.Empty, initial ? "Сверка при запуске" : "Корень снова доступен"));
+            ? new IndexTask(session.Root.Id, IndexTaskKind.FullScan, string.Empty, session.Root.LastScanUtc is null ? L.T("Indexer.FirstScan") : L.T("Indexer.IndexRestored"))
+            : new IndexTask(session.Root.Id, IndexTaskKind.Reconcile, string.Empty, initial ? L.T("Indexer.ReconciliationAtStartup") : L.T("Indexer.TheRootIsAvailableAgain")));
     }
 
     private void StartWatcher(RootSession session)
@@ -560,7 +561,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
         }
 
         StartWatcher(session);
-        Enqueue(new IndexTask(rootId, IndexTaskKind.Reconcile, string.Empty, "Наблюдатель перезапущен: " + reason));
+        Enqueue(new IndexTask(rootId, IndexTaskKind.Reconcile, string.Empty, L.T("Indexer.WatcherRestarted") + reason));
     }
 
     private bool Enqueue(IndexTask task)
@@ -667,7 +668,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
             if (outcome.Status == ScanOutcomeStatus.RootMissing)
             {
-                await GoOfflineAsync(session, "Корень пропал во время индексации.").ConfigureAwait(false);
+                await GoOfflineAsync(session, L.T("Indexer.TheRootDisappearedDuringIndexing")).ConfigureAwait(false);
             }
             else
             {
@@ -763,7 +764,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
                 var interval = session.IsNetwork ? _options.ReconcileInterval / 4 : _options.ReconcileInterval;
                 if (interval > TimeSpan.Zero && session.Root.LastScanUtc is { } last && now - last >= interval)
                 {
-                    Enqueue(new IndexTask(session.Root.Id, IndexTaskKind.Reconcile, string.Empty, "Плановая сверка"));
+                    Enqueue(new IndexTask(session.Root.Id, IndexTaskKind.Reconcile, string.Empty, L.T("Indexer.ScheduledReconciliation")));
                 }
             }
         }

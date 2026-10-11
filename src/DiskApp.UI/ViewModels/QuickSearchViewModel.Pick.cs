@@ -1,5 +1,6 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 
 namespace DiskApp.UI.ViewModels;
@@ -25,7 +26,7 @@ public sealed partial class QuickSearchViewModel
         _onFolderPicked = onPicked;
         IsPickingFolder = true;
         Query = "type:folder ";
-        ShowNotice("Выберите папку", "Enter — перейти в неё в диалоге сохранения; для файла — в его папку. Esc — отмена.", FluentAvalonia.UI.Controls.FAInfoBarSeverity.Informational);
+        ShowNotice(L.T("QuickSearch.ChooseAFolder"), L.T("QuickSearch.EnterGoesToItInThe"), FluentAvalonia.UI.Controls.FAInfoBarSeverity.Informational);
     }
 
     /// <summary>

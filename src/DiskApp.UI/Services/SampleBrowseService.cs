@@ -1,3 +1,4 @@
+﻿using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 
 namespace DiskApp.UI.Services;
@@ -34,7 +35,7 @@ public sealed class SampleBrowseService : IBrowseService
 
         var folder = path.TrimEnd('\\', '/');
         var root = SampleData.Roots.FirstOrDefault(candidate => folder.StartsWith(candidate, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidOperationException($"Путь «{path}» вне добавленных корней.");
+            ?? throw new InvalidOperationException(L.F("SampleBrowse.PathIsOutsideTheAddedRoots", path));
 
         var children = new Dictionary<string, FileEntry>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in _entries)

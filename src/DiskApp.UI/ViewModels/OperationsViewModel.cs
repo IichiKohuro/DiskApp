@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -30,7 +31,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
     /// Создаёт страницу; без диалогов конфликты отменяют операцию, без уведомлений итог виден только в списке (тесты, превью).
     /// </summary>
     public OperationsViewModel(IOperationsService operations, IDispatcher dispatcher, IDialogService? dialogs = null, IInfoBarService? notices = null)
-        : base(PageKeys.Operations, "Операции", FASymbol.Sync)
+        : base(PageKeys.Operations, "Operations.Operations", FASymbol.Sync)
     {
         ArgumentNullException.ThrowIfNull(operations);
         ArgumentNullException.ThrowIfNull(dispatcher);
@@ -84,7 +85,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Операция не запущена", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Operations.TheOperationWasNotStarted"), exception.Message, FAInfoBarSeverity.Error);
             return null;
         }
     }
@@ -94,7 +95,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
     {
         if (_lastUndoable is not { } id || Items.FirstOrDefault(item => item.Info.Id == id) is not { CanUndo: true } item)
         {
-            _notices?.Show("Нечего отменять", "Отменить можно переименование, перемещение и создание.", FAInfoBarSeverity.Informational);
+            _notices?.Show(L.T("Operations.NothingToUndo"), L.T("Operations.RenameMoveAndCreateCanBe"), FAInfoBarSeverity.Informational);
             return false;
         }
 
@@ -113,7 +114,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось отменить", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Operations.CouldNotCancel"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -132,11 +133,11 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
             }
 
             Upsert(undo);
-            _notices?.Show("Отменено", OperationItemViewModel.Describe(item.Info), FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Operations.Undone"), OperationItemViewModel.Describe(item.Info), FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось отменить результат", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Operations.CouldNotUndoTheResult"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -207,13 +208,13 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         switch (info.State)
         {
             case FileOperationState.Completed when item.CanUndo:
-                _notices?.Show("Готово", title, FAInfoBarSeverity.Success, "Отменить", () => _ = UndoAsync(item));
+                _notices?.Show(L.T("Common.Done"), title, FAInfoBarSeverity.Success, L.T("Operations.Undo"), () => _ = UndoAsync(item));
                 break;
             case FileOperationState.Completed:
-                _notices?.Show("Готово", title, FAInfoBarSeverity.Success);
+                _notices?.Show(L.T("Common.Done"), title, FAInfoBarSeverity.Success);
                 break;
             case FileOperationState.Failed:
-                _notices?.Show("Операция не выполнена", title + (info.Message is { Length: > 0 } message ? ": " + message : string.Empty), FAInfoBarSeverity.Error);
+                _notices?.Show(L.T("Operations.TheOperationFailed"), title + (info.Message is { Length: > 0 } message ? ": " + message : string.Empty), FAInfoBarSeverity.Error);
                 break;
         }
     }
@@ -234,7 +235,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось передать решение", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Operations.CouldNotSendTheDecision"), exception.Message, FAInfoBarSeverity.Error);
         }
         finally
         {
@@ -249,7 +250,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         BadgeValue = active.Count;
         var fractions = active.Select(static item => item.Info.Fraction).OfType<double>().ToList();
         Summary = active.Count == 0 ? string.Empty
-            : Formatting.Count(active.Count, "операция", "операции", "операций")
+            : Formatting.Count(active.Count, L.T("Operations.Operation.One"), L.T("Operations.Operation.Few"), L.T("Operations.Operation.Many"))
                 + (fractions.Count > 0 ? " · " + Formatting.Percent(fractions.Average()) : string.Empty);
         OnPropertyChanged(nameof(HasFinished));
         OnPropertyChanged(nameof(IsEmpty));

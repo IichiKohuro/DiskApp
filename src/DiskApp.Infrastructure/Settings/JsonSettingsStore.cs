@@ -1,9 +1,10 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
 
 using DiskApp.Core.Abstractions;
+using DiskApp.Core.Localization;
 
 namespace DiskApp.Infrastructure.Settings;
 
@@ -76,7 +77,7 @@ public sealed class JsonSettingsStore<T> : ISettingsStore<T>
         try
         {
             using var stream = File.OpenRead(Path);
-            document = JsonNode.Parse(stream) as JsonObject ?? throw new JsonException("Корень файла настроек должен быть объектом.");
+            document = JsonNode.Parse(stream) as JsonObject ?? throw new JsonException(L.T("JsonSettingsStore.TheRootOfTheSettingsFile"));
         }
         catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
         {
@@ -102,7 +103,7 @@ public sealed class JsonSettingsStore<T> : ISettingsStore<T>
         T settings;
         try
         {
-            settings = document.Deserialize(_typeInfo) ?? throw new JsonException("Файл настроек пуст.");
+            settings = document.Deserialize(_typeInfo) ?? throw new JsonException(L.T("JsonSettingsStore.TheSettingsFileIsEmpty"));
         }
         catch (JsonException exception)
         {

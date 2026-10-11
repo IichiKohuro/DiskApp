@@ -1,5 +1,7 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+
+using DiskApp.UI.Localization;
 
 namespace DiskApp.UI.ViewModels;
 
@@ -89,7 +91,7 @@ public sealed partial class MainViewModel
         // Недоступные корни и ошибки видны полосой над страницей; закрытая пользователем полоса снова появится при смене состояния.
         if (health is IndexHealth.Offline or IndexHealth.Error)
         {
-            var title = health == IndexHealth.Offline ? "Часть корней недоступна" : "Ошибка индексации";
+            var title = health == IndexHealth.Offline ? L.T("Main.SomeRootsAreUnavailable") : L.T("Main.IndexingError");
             if (!IsIndexBarOpen || IndexBarTitle != title)
             {
                 IndexBarTitle = title;

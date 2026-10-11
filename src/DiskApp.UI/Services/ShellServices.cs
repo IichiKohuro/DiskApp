@@ -43,7 +43,7 @@ public interface IDialogService
     /// <summary>
     /// Спросить подтверждение; <c>true</c> — пользователь выбрал основное действие.
     /// </summary>
-    Task<bool> ConfirmAsync(string title, string message, string primaryText, string closeText = "Отмена");
+    Task<bool> ConfirmAsync(string title, string message, string primaryText, string? closeText = null);
 
     /// <summary>
     /// Спросить строку (новое имя файла); <c>null</c> — пользователь отказался.

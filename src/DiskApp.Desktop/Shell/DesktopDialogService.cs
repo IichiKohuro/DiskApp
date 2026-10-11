@@ -1,9 +1,9 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
-
 using DiskApp.UI.Services;
 
 using FluentAvalonia.UI.Controls;
@@ -16,7 +16,7 @@ namespace DiskApp.Desktop.Shell;
 internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogService
 {
     /// <inheritdoc />
-    public async Task<bool> ConfirmAsync(string title, string message, string primaryText, string closeText = "Отмена")
+    public async Task<bool> ConfirmAsync(string title, string message, string primaryText, string? closeText = null)
     {
         var window = mainWindow();
         var dialog = new FAContentDialog
@@ -24,7 +24,7 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
             Title = title,
             Content = message,
             PrimaryButtonText = primaryText,
-            CloseButtonText = closeText,
+            CloseButtonText = closeText ?? DiskApp.UI.Localization.L.T("Common.CancelButton"),
             DefaultButton = FAContentDialogButton.Close,
         };
 
@@ -41,7 +41,7 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
             Title = title,
             Content = new StackPanel { Spacing = 8, Children = { new TextBlock { Text = label }, input } },
             PrimaryButtonText = primaryText,
-            CloseButtonText = "Отмена",
+            CloseButtonText = L.T("Common.CancelButton"),
             DefaultButton = FAContentDialogButton.Primary,
         };
 
@@ -61,28 +61,28 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
         ArgumentNullException.ThrowIfNull(conflict);
 
         var window = mainWindow();
-        var applyToAll = new CheckBox { Content = "Применить ко всем конфликтам этой операции" };
+        var applyToAll = new CheckBox { Content = L.T("DesktopDialog.ApplyToAllConflictsOfThis") };
         var cancelled = false;
-        var cancel = new HyperlinkButton { Content = "Отменить всю операцию", Padding = new Thickness(0) };
+        var cancel = new HyperlinkButton { Content = L.T("DesktopDialog.CancelTheWholeOperation"), Padding = new Thickness(0) };
         var dialog = new FAContentDialog
         {
-            Title = "Файл с таким именем уже есть",
+            Title = L.T("DesktopDialog.AFileWithThisNameAlready"),
             Content = new StackPanel
             {
                 Spacing = 10,
                 Children =
                 {
-                    new TextBlock { Text = $"В папке «{Path.GetFileName(Path.GetDirectoryName(conflict.TargetPath))}» уже есть «{Path.GetFileName(conflict.TargetPath)}».", TextWrapping = Avalonia.Media.TextWrapping.Wrap, MaxWidth = 460 },
-                    Describe("Новый", conflict.SourceSize, conflict.SourceModified),
-                    Describe("Уже есть", conflict.TargetSize, conflict.TargetModified),
-                    new TextBlock { Text = "При замене прежний файл уходит в корзину.", Opacity = 0.7, FontSize = 12 },
+                    new TextBlock { Text = L.F("DesktopDialog.TheFolderAlreadyHas", Path.GetFileName(Path.GetDirectoryName(conflict.TargetPath)), Path.GetFileName(conflict.TargetPath)), TextWrapping = Avalonia.Media.TextWrapping.Wrap, MaxWidth = 460 },
+                    Describe(L.T("DesktopDialog.New"), conflict.SourceSize, conflict.SourceModified),
+                    Describe(L.T("DesktopDialog.Existing"), conflict.TargetSize, conflict.TargetModified),
+                    new TextBlock { Text = L.T("DesktopDialog.WhenReplacedThePreviousFileGoes"), Opacity = 0.7, FontSize = 12 },
                     applyToAll,
                     cancel,
                 },
             },
-            PrimaryButtonText = "Заменить",
-            SecondaryButtonText = "Оставить оба",
-            CloseButtonText = "Пропустить",
+            PrimaryButtonText = L.T("DesktopDialog.Replace"),
+            SecondaryButtonText = L.T("DesktopDialog.KeepBoth"),
+            CloseButtonText = L.T("DesktopDialog.Skip"),
             DefaultButton = FAContentDialogButton.Secondary,
         };
         cancel.Click += (_, _) =>
@@ -111,10 +111,10 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
         var content = new DiskApp.UI.Views.AddFilesView { DataContext = dialog };
         var box = new FAContentDialog
         {
-            Title = "Добавить",
+            Title = L.T("DesktopDialog.Add"),
             Content = content,
-            PrimaryButtonText = "Добавить",
-            CloseButtonText = "Отмена",
+            PrimaryButtonText = L.T("DesktopDialog.Add"),
+            CloseButtonText = L.T("Common.CancelButton"),
             DefaultButton = FAContentDialogButton.Primary,
             IsPrimaryButtonEnabled = dialog.CanAdd,
         };
@@ -137,10 +137,10 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
 
         var box = new FAContentDialog
         {
-            Title = "Теги",
+            Title = L.T("Common.Page.Tags"),
             Content = new DiskApp.UI.Views.TagPickerView { DataContext = dialog },
-            PrimaryButtonText = "Сохранить",
-            CloseButtonText = "Отмена",
+            PrimaryButtonText = L.T("Common.Save"),
+            CloseButtonText = L.T("Common.CancelButton"),
             DefaultButton = FAContentDialogButton.Primary,
         };
         return await box.ShowAsync(mainWindow()) == FAContentDialogResult.Primary;
@@ -149,7 +149,7 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
     /// <inheritdoc />
     public async Task<(string Name, string? Color)?> EditTagAsync(string title, string name, string? color, string primaryText)
     {
-        var input = new TextBox { Text = name, MinWidth = 320, PlaceholderText = "Имя тега" };
+        var input = new TextBox { Text = name, MinWidth = 320, PlaceholderText = L.T("DesktopDialog.TagName") };
         var palette = new ListBox
         {
             ItemsSource = TagPalette.Colors,
@@ -169,10 +169,10 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
             Content = new StackPanel
             {
                 Spacing = 8,
-                Children = { new TextBlock { Text = "Имя" }, input, new TextBlock { Text = "Цвет" }, palette },
+                Children = { new TextBlock { Text = L.T("Common.Name") }, input, new TextBlock { Text = L.T("DesktopDialog.Color") }, palette },
             },
             PrimaryButtonText = primaryText,
-            CloseButtonText = "Отмена",
+            CloseButtonText = L.T("Common.CancelButton"),
             DefaultButton = FAContentDialogButton.Primary,
             IsPrimaryButtonEnabled = name.Trim().Length > 0,
         };
@@ -214,7 +214,7 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
     }
 
     private static FilePickerFileType FileType(string extension)
-        => new(extension == "json" ? "Настройки JSON" : "Текстовый файл") { Patterns = ["*." + extension] };
+        => new(extension == "json" ? L.T("DesktopDialog.JSONSettings") : L.T("DesktopDialog.TextFile")) { Patterns = ["*." + extension] };
 
     /// <inheritdoc />
     public async Task<string?> PickFolderAsync(string title)
@@ -224,5 +224,5 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
     }
 
     private static TextBlock Describe(string label, long size, DateTimeOffset modified)
-        => new() { Text = $"{label}: {DiskApp.UI.Text.Formatting.Size(size)}, изменён {modified.ToLocalTime():dd.MM.yyyy HH:mm}" };
+        => new() { Text = L.F("DesktopDialog.Modified", label, DiskApp.UI.Text.Formatting.Size(size), modified.ToLocalTime()) };
 }

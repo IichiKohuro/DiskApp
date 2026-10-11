@@ -1,0 +1,2442 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddFiles.Add" xml:space="preserve">
+    <value>Add </value>
+  </data>
+  <data name="AddFiles.Added" xml:space="preserve">
+    <value>Added</value>
+  </data>
+  <data name="AddFiles.And" xml:space="preserve">
+    <value> and </value>
+  </data>
+  <data name="AddFiles.ChooseAFolder" xml:space="preserve">
+    <value>Choose a folder</value>
+  </data>
+  <data name="AddFiles.Clipboard" xml:space="preserve">
+    <value>clipboard</value>
+  </data>
+  <data name="AddFiles.ClipboardIsEmpty" xml:space="preserve">
+    <value>Clipboard is empty</value>
+  </data>
+  <data name="AddFiles.CopyTextAPictureOrFiles" xml:space="preserve">
+    <value>Copy text, a picture or files.</value>
+  </data>
+  <data name="AddFiles.CouldNotAddTo" xml:space="preserve">
+    <value>Could not add to “{0}”</value>
+  </data>
+  <data name="AddFiles.CouldNotGetTheRoots" xml:space="preserve">
+    <value>Could not get the roots</value>
+  </data>
+  <data name="AddFiles.DefaultPlace" xml:space="preserve">
+    <value>default place</value>
+  </data>
+  <data name="AddFiles.FilesOutsideTheIndexRootsAre" xml:space="preserve">
+    <value>Files outside the index roots are copied; the originals stay in place.</value>
+  </data>
+  <data name="AddFiles.FindAFolderByName" xml:space="preserve">
+    <value>Find a folder by name</value>
+  </data>
+  <data name="AddFiles.FoldersFromOutsideAreNotCopied" xml:space="preserve">
+    <value> Folders from outside are not copied yet: {0}.</value>
+  </data>
+  <data name="AddFiles.Image" xml:space="preserve">
+    <value>image</value>
+  </data>
+  <data name="AddFiles.Inbox" xml:space="preserve">
+    <value>Inbox</value>
+  </data>
+  <data name="AddFiles.Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="AddFiles.NothingToAdd" xml:space="preserve">
+    <value>Nothing to add</value>
+  </data>
+  <data name="AddFiles.Pinned" xml:space="preserve">
+    <value>pinned</value>
+  </data>
+  <data name="AddFiles.Recent" xml:space="preserve">
+    <value>recent</value>
+  </data>
+  <data name="AddFiles.Root" xml:space="preserve">
+    <value>root</value>
+  </data>
+  <data name="AddFiles.Text" xml:space="preserve">
+    <value>text</value>
+  </data>
+  <data name="AddFiles.TheFilesWereNotFoundOn" xml:space="preserve">
+    <value>The files were not found on disk.</value>
+  </data>
+  <data name="AddFiles.To" xml:space="preserve">
+    <value>To: </value>
+  </data>
+  <data name="ApiFileActions.AlreadyExistsInThisFolder" xml:space="preserve">
+    <value>“{0}” already exists in this folder.</value>
+  </data>
+  <data name="ApiFileActions.DeletionIsWaitingForAConflict" xml:space="preserve">
+    <value>Deletion is waiting for a conflict decision.</value>
+  </data>
+  <data name="ApiFileActions.TheOperationFailed" xml:space="preserve">
+    <value>The operation failed.</value>
+  </data>
+  <data name="ApiFileActions.TheOperationIsStillRunningIts" xml:space="preserve">
+    <value>The operation is still running: its progress is on the Operations page.</value>
+  </data>
+  <data name="ApiFileActions.TheOperationWasCancelled" xml:space="preserve">
+    <value>The operation was cancelled.</value>
+  </data>
+  <data name="Browse.AFolderCannotBeMovedInto" xml:space="preserve">
+    <value>A folder cannot be moved into itself.</value>
+  </data>
+  <data name="Browse.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Browse.Archives" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="Browse.Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Browse.BackAlt" xml:space="preserve">
+    <value>Back (Alt+←)</value>
+  </data>
+  <data name="Browse.Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="Browse.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Browse.Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Browse.CopyOrCutFilesInBrowse" xml:space="preserve">
+    <value>Copy or cut files in Browse or in File Explorer.</value>
+  </data>
+  <data name="Browse.CouldNotChangePinning" xml:space="preserve">
+    <value>Could not change pinning</value>
+  </data>
+  <data name="Browse.CouldNotChangeTags" xml:space="preserve">
+    <value>Could not change tags</value>
+  </data>
+  <data name="Browse.CouldNotCopy" xml:space="preserve">
+    <value>Could not copy</value>
+  </data>
+  <data name="Browse.CouldNotCopyThePath" xml:space="preserve">
+    <value>Could not copy the path</value>
+  </data>
+  <data name="Browse.CouldNotDrag" xml:space="preserve">
+    <value>Could not drag</value>
+  </data>
+  <data name="Browse.CouldNotGetTheRoots" xml:space="preserve">
+    <value>Could not get the roots: </value>
+  </data>
+  <data name="Browse.CouldNotMoveToTheRecycle" xml:space="preserve">
+    <value>Could not move to the Recycle Bin</value>
+  </data>
+  <data name="Browse.CouldNotOpen" xml:space="preserve">
+    <value>Could not open “{0}”: {1}</value>
+  </data>
+  <data name="Browse.CouldNotOpen2" xml:space="preserve">
+    <value>Could not open “{0}”</value>
+  </data>
+  <data name="Browse.CouldNotOpenProperties" xml:space="preserve">
+    <value>Could not open properties</value>
+  </data>
+  <data name="Browse.CouldNotRename" xml:space="preserve">
+    <value>Could not rename</value>
+  </data>
+  <data name="Browse.CouldNotShowInFolder" xml:space="preserve">
+    <value>Could not show in folder</value>
+  </data>
+  <data name="Browse.CreateAFolderCtrlShiftN" xml:space="preserve">
+    <value>Create a folder (Ctrl+Shift+N) or a file</value>
+  </data>
+  <data name="Browse.Cut" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="Browse.Cut2" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="Browse.DateModified" xml:space="preserve">
+    <value>Date modified</value>
+  </data>
+  <data name="Browse.Descending" xml:space="preserve">
+    <value>Descending</value>
+  </data>
+  <data name="Browse.Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Browse.FileKind" xml:space="preserve">
+    <value>File kind</value>
+  </data>
+  <data name="Browse.FilterInFolder" xml:space="preserve">
+    <value>Filter in folder</value>
+  </data>
+  <data name="Browse.Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Browse.FolderPathInsideTheRootsCtrl" xml:space="preserve">
+    <value>Folder path inside the roots · Ctrl+L</value>
+  </data>
+  <data name="Browse.Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Browse.FoldersFromOutsideAreNotCopied" xml:space="preserve">
+    <value> Folders from outside are not copied yet: {0}.</value>
+  </data>
+  <data name="Browse.ForwardAlt" xml:space="preserve">
+    <value>Forward (Alt+→)</value>
+  </data>
+  <data name="Browse.Images" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Browse.MarkdownNote" xml:space="preserve">
+    <value>Markdown note</value>
+  </data>
+  <data name="Browse.MarkdownNoteMd" xml:space="preserve">
+    <value>Markdown note (.md)</value>
+  </data>
+  <data name="Browse.MoveToRecycleBin" xml:space="preserve">
+    <value>Move to Recycle Bin…</value>
+  </data>
+  <data name="Browse.MoveToTheRecycleBinYou" xml:space="preserve">
+    <value>Move {0} to the Recycle Bin? You can restore them from the Windows Recycle Bin.</value>
+  </data>
+  <data name="Browse.MovedToTheRecycleBin" xml:space="preserve">
+    <value>Moved to the Recycle Bin</value>
+  </data>
+  <data name="Browse.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Browse.NameInFolder" xml:space="preserve">
+    <value>Name in folder “{0}”</value>
+  </data>
+  <data name="Browse.NewFile" xml:space="preserve">
+    <value>New file</value>
+  </data>
+  <data name="Browse.NewFolder" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="Browse.NewNameFor" xml:space="preserve">
+    <value>New name for “{0}”</value>
+  </data>
+  <data name="Browse.NoRootsYetAddAFolder" xml:space="preserve">
+    <value>No roots yet — add a folder on Home</value>
+  </data>
+  <data name="Browse.NothingToPaste" xml:space="preserve">
+    <value>Nothing to paste</value>
+  </data>
+  <data name="Browse.NowhereToMove" xml:space="preserve">
+    <value>Nowhere to move</value>
+  </data>
+  <data name="Browse.Of" xml:space="preserve">
+    <value> of {0}</value>
+  </data>
+  <data name="Browse.OperationsUnavailable" xml:space="preserve">
+    <value>Operations unavailable</value>
+  </data>
+  <data name="Browse.Paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="Browse.PasteInFileExplorer" xml:space="preserve">
+    <value> — paste in File Explorer.</value>
+  </data>
+  <data name="Browse.PasteIntoTheTargetFolderCtrl" xml:space="preserve">
+    <value> — paste into the target folder (Ctrl+V).</value>
+  </data>
+  <data name="Browse.PathCopied" xml:space="preserve">
+    <value>Path copied</value>
+  </data>
+  <data name="Browse.Pinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="Browse.SelectOneFileItsDetailsAppear" xml:space="preserve">
+    <value>Select one file — its details appear here</value>
+  </data>
+  <data name="Browse.Selected" xml:space="preserve">
+    <value> · {0} selected</value>
+  </data>
+  <data name="Browse.ShowingTheFirst" xml:space="preserve">
+    <value> · showing the first</value>
+  </data>
+  <data name="Browse.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Browse.Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="Browse.Spreadsheets" xml:space="preserve">
+    <value>Spreadsheets</value>
+  </data>
+  <data name="Browse.TagsSaved" xml:space="preserve">
+    <value>Tags saved</value>
+  </data>
+  <data name="Browse.TextDocument" xml:space="preserve">
+    <value>Text document</value>
+  </data>
+  <data name="Browse.TextDocumentTxt" xml:space="preserve">
+    <value>Text document (.txt)</value>
+  </data>
+  <data name="Browse.TheServerOperationQueueIsNot" xml:space="preserve">
+    <value>The server operation queue is not connected.</value>
+  </data>
+  <data name="Browse.ThisNameWillNotWork" xml:space="preserve">
+    <value>This name will not work</value>
+  </data>
+  <data name="Browse.Tiles" xml:space="preserve">
+    <value>Tiles</value>
+  </data>
+  <data name="Browse.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Browse.Unpinned" xml:space="preserve">
+    <value>Unpinned</value>
+  </data>
+  <data name="Browse.UpOneLevelAlt" xml:space="preserve">
+    <value>Up one level (Alt+↑)</value>
+  </data>
+  <data name="Browse.Videos" xml:space="preserve">
+    <value>Videos</value>
+  </data>
+  <data name="Collections.ChooseACollection" xml:space="preserve">
+    <value>Choose a collection</value>
+  </data>
+  <data name="Collections.Collection" xml:space="preserve">
+    <value>Collection</value>
+  </data>
+  <data name="Collections.CollectionDeleted" xml:space="preserve">
+    <value>Collection deleted</value>
+  </data>
+  <data name="Collections.CollectionTxt" xml:space="preserve">
+    <value>Collection.txt</value>
+  </data>
+  <data name="Collections.CopyPaths" xml:space="preserve">
+    <value>Copy paths</value>
+  </data>
+  <data name="Collections.CouldNotAdd" xml:space="preserve">
+    <value>Could not add</value>
+  </data>
+  <data name="Collections.CouldNotChangeTags" xml:space="preserve">
+    <value>Could not change tags</value>
+  </data>
+  <data name="Collections.CouldNotChangeTheCollection" xml:space="preserve">
+    <value>Could not change the collection</value>
+  </data>
+  <data name="Collections.CouldNotChangeTheOrder" xml:space="preserve">
+    <value>Could not change the order</value>
+  </data>
+  <data name="Collections.CouldNotCopyThePaths" xml:space="preserve">
+    <value>Could not copy the paths</value>
+  </data>
+  <data name="Collections.CouldNotCreateTheCollection" xml:space="preserve">
+    <value>Could not create the collection</value>
+  </data>
+  <data name="Collections.CouldNotDeleteTheCollection" xml:space="preserve">
+    <value>Could not delete the collection</value>
+  </data>
+  <data name="Collections.CouldNotLoadCollections" xml:space="preserve">
+    <value>Could not load collections: </value>
+  </data>
+  <data name="Collections.CouldNotLoadEntries" xml:space="preserve">
+    <value>Could not load entries: </value>
+  </data>
+  <data name="Collections.CouldNotOpen" xml:space="preserve">
+    <value>Could not open</value>
+  </data>
+  <data name="Collections.CouldNotReadTheList" xml:space="preserve">
+    <value>Could not read the list</value>
+  </data>
+  <data name="Collections.CouldNotRemoveTheEntry" xml:space="preserve">
+    <value>Could not remove the entry</value>
+  </data>
+  <data name="Collections.CouldNotSaveTheList" xml:space="preserve">
+    <value>Could not save the list</value>
+  </data>
+  <data name="Collections.CouldNotShowInFolder" xml:space="preserve">
+    <value>Could not show in folder</value>
+  </data>
+  <data name="Collections.DeleteCollection" xml:space="preserve">
+    <value>Delete collection</value>
+  </data>
+  <data name="Collections.DeleteCollection2" xml:space="preserve">
+    <value>Delete collection…</value>
+  </data>
+  <data name="Collections.DeleteTheFilesStayWhereThey" xml:space="preserve">
+    <value>Delete “{0}”? The files stay where they are.</value>
+  </data>
+  <data name="Collections.Down" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="Collections.DownAlt" xml:space="preserve">
+    <value>Down (Alt+↓)</value>
+  </data>
+  <data name="Collections.EditQuery" xml:space="preserve">
+    <value>Edit query</value>
+  </data>
+  <data name="Collections.EditQuery2" xml:space="preserve">
+    <value>Edit query…</value>
+  </data>
+  <data name="Collections.EntryAdded.Few" xml:space="preserve">
+    <value>entries added</value>
+  </data>
+  <data name="Collections.EntryAdded.Many" xml:space="preserve">
+    <value>entries added</value>
+  </data>
+  <data name="Collections.EntryAdded.One" xml:space="preserve">
+    <value>entry added</value>
+  </data>
+  <data name="Collections.FavoritesSetsOfFilesFromDifferent" xml:space="preserve">
+    <value>Favorites, sets of files from different places and saved queries that update themselves.</value>
+  </data>
+  <data name="Collections.List" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="Collections.ListOfPaths" xml:space="preserve">
+    <value>List of paths</value>
+  </data>
+  <data name="Collections.ListSaved" xml:space="preserve">
+    <value>List saved</value>
+  </data>
+  <data name="Collections.LoadFromFile" xml:space="preserve">
+    <value>Load from file…</value>
+  </data>
+  <data name="Collections.LoadListOfPaths" xml:space="preserve">
+    <value>Load list of paths</value>
+  </data>
+  <data name="Collections.ManualCollection" xml:space="preserve">
+    <value>Manual collection</value>
+  </data>
+  <data name="Collections.NewCollection" xml:space="preserve">
+    <value>New collection</value>
+  </data>
+  <data name="Collections.NewCollectionOrSavedQuery" xml:space="preserve">
+    <value>New collection or saved query</value>
+  </data>
+  <data name="Collections.NewSavedQuery" xml:space="preserve">
+    <value>New saved query</value>
+  </data>
+  <data name="Collections.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Collections.NoFavoritesYetCtrlDPins" xml:space="preserve">
+    <value>No favorites yet: Ctrl+D pins a file in search and Browse.</value>
+  </data>
+  <data name="Collections.NothingMatchesTheQuery" xml:space="preserve">
+    <value>Nothing matches the query.</value>
+  </data>
+  <data name="Collections.OutsideTheIndex" xml:space="preserve">
+    <value> outside the index</value>
+  </data>
+  <data name="Collections.PathsCopied" xml:space="preserve">
+    <value>Paths copied</value>
+  </data>
+  <data name="Collections.PinnedCtrlDInAnyList" xml:space="preserve">
+    <value>Pinned: Ctrl+D in any list</value>
+  </data>
+  <data name="Collections.Query" xml:space="preserve">
+    <value>Query</value>
+  </data>
+  <data name="Collections.QueryForExampleExtPdfModified" xml:space="preserve">
+    <value>Query, for example: ext:pdf modified:7d</value>
+  </data>
+  <data name="Collections.RemoveFromList" xml:space="preserve">
+    <value>Remove from list</value>
+  </data>
+  <data name="Collections.RemoveFromListDelTheFile" xml:space="preserve">
+    <value>Remove from list (Del); the file stays</value>
+  </data>
+  <data name="Collections.RenameCollection" xml:space="preserve">
+    <value>Rename collection</value>
+  </data>
+  <data name="Collections.SaveListOfPaths" xml:space="preserve">
+    <value>Save list of paths</value>
+  </data>
+  <data name="Collections.SaveToFile" xml:space="preserve">
+    <value>Save to file…</value>
+  </data>
+  <data name="Collections.SavedQuery" xml:space="preserve">
+    <value>Saved query</value>
+  </data>
+  <data name="Collections.TheCollectionIsEmptyDropFiles" xml:space="preserve">
+    <value>The collection is empty: drop files here or load a list of paths.</value>
+  </data>
+  <data name="Collections.Up" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="Collections.UpAlt" xml:space="preserve">
+    <value>Up (Alt+↑)</value>
+  </data>
+  <data name="Common.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common.CancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Common.Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Common.CopyPath" xml:space="preserve">
+    <value>Copy path</value>
+  </data>
+  <data name="Common.CountTo" xml:space="preserve">
+    <value>{0} to “{1}”.</value>
+  </data>
+  <data name="Common.Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="Common.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Common.Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Common.Entry.Few" xml:space="preserve">
+    <value>entries</value>
+  </data>
+  <data name="Common.Entry.Many" xml:space="preserve">
+    <value>entries</value>
+  </data>
+  <data name="Common.Entry.One" xml:space="preserve">
+    <value>entry</value>
+  </data>
+  <data name="Common.Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Common.Favorites" xml:space="preserve">
+    <value>Favorites</value>
+  </data>
+  <data name="Common.File.Few" xml:space="preserve">
+    <value>files</value>
+  </data>
+  <data name="Common.File.Many" xml:space="preserve">
+    <value>files</value>
+  </data>
+  <data name="Common.File.One" xml:space="preserve">
+    <value>file</value>
+  </data>
+  <data name="Common.Folder.Few" xml:space="preserve">
+    <value>folders</value>
+  </data>
+  <data name="Common.Folder.Many" xml:space="preserve">
+    <value>folders</value>
+  </data>
+  <data name="Common.Folder.One" xml:space="preserve">
+    <value>folder</value>
+  </data>
+  <data name="Common.Item.Few" xml:space="preserve">
+    <value>items</value>
+  </data>
+  <data name="Common.Item.Many" xml:space="preserve">
+    <value>items</value>
+  </data>
+  <data name="Common.Item.One" xml:space="preserve">
+    <value>item</value>
+  </data>
+  <data name="Common.Kind.Archive" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Common.Kind.Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="Common.Kind.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Common.Kind.Document" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="Common.Kind.File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Common.Kind.Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Common.Kind.Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="Common.Kind.Presentation" xml:space="preserve">
+    <value>Presentation</value>
+  </data>
+  <data name="Common.Kind.Program" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="Common.Kind.Spreadsheet" xml:space="preserve">
+    <value>Spreadsheet</value>
+  </data>
+  <data name="Common.Kind.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Common.Kind.Video" xml:space="preserve">
+    <value>Video</value>
+  </data>
+  <data name="Common.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Common.Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Common.On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Common.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Common.Page.Collections" xml:space="preserve">
+    <value>Collections</value>
+  </data>
+  <data name="Common.Page.Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Common.Path.Few" xml:space="preserve">
+    <value>paths</value>
+  </data>
+  <data name="Common.Path.Many" xml:space="preserve">
+    <value>paths</value>
+  </data>
+  <data name="Common.Path.One" xml:space="preserve">
+    <value>path</value>
+  </data>
+  <data name="Common.PinOrUnpin" xml:space="preserve">
+    <value>Pin or unpin</value>
+  </data>
+  <data name="Common.Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="Common.RefreshF5" xml:space="preserve">
+    <value>Refresh (F5)</value>
+  </data>
+  <data name="Common.Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Common.RenameEllipsis" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="Common.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Common.ShowInExplorer" xml:space="preserve">
+    <value>Show in File Explorer</value>
+  </data>
+  <data name="Common.TagsEllipsis" xml:space="preserve">
+    <value>Tags…</value>
+  </data>
+  <data name="Common.ToRecycleBin" xml:space="preserve">
+    <value>Move to Recycle Bin</value>
+  </data>
+  <data name="Date.Full" xml:space="preserve">
+    <value>MM/dd/yyyy</value>
+  </data>
+  <data name="DesktopDialog.AFileWithThisNameAlready" xml:space="preserve">
+    <value>A file with this name already exists</value>
+  </data>
+  <data name="DesktopDialog.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="DesktopDialog.ApplyToAllConflictsOfThis" xml:space="preserve">
+    <value>Apply to all conflicts of this operation</value>
+  </data>
+  <data name="DesktopDialog.CancelTheWholeOperation" xml:space="preserve">
+    <value>Cancel the whole operation</value>
+  </data>
+  <data name="DesktopDialog.Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="DesktopDialog.Existing" xml:space="preserve">
+    <value>Existing</value>
+  </data>
+  <data name="DesktopDialog.JSONSettings" xml:space="preserve">
+    <value>JSON settings</value>
+  </data>
+  <data name="DesktopDialog.KeepBoth" xml:space="preserve">
+    <value>Keep both</value>
+  </data>
+  <data name="DesktopDialog.Modified" xml:space="preserve">
+    <value>{0}: {1}, modified {2:g}</value>
+  </data>
+  <data name="DesktopDialog.New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="DesktopDialog.Replace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="DesktopDialog.Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="DesktopDialog.TagName" xml:space="preserve">
+    <value>Tag name</value>
+  </data>
+  <data name="DesktopDialog.TextFile" xml:space="preserve">
+    <value>Text file</value>
+  </data>
+  <data name="DesktopDialog.TheFolderAlreadyHas" xml:space="preserve">
+    <value>The folder “{0}” already has “{1}”.</value>
+  </data>
+  <data name="DesktopDialog.WhenReplacedThePreviousFileGoes" xml:space="preserve">
+    <value>When replaced, the previous file goes to the Recycle Bin.</value>
+  </data>
+  <data name="DesktopShell.Added" xml:space="preserve">
+    <value>Added: </value>
+  </data>
+  <data name="DesktopShell.CouldNotCreateTheWindowThat" xml:space="preserve">
+    <value>Could not create the window that receives keys: {0}</value>
+  </data>
+  <data name="DesktopShell.CouldNotSaveTheClipboard" xml:space="preserve">
+    <value>Could not save the clipboard</value>
+  </data>
+  <data name="DesktopShell.Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="DesktopShell.Exit2" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="DesktopShell.ExitDiskApp" xml:space="preserve">
+    <value>Exit DiskApp?</value>
+  </data>
+  <data name="DesktopShell.FallbackShortcut" xml:space="preserve">
+    <value>Fallback shortcut</value>
+  </data>
+  <data name="DesktopShell.FileOperationsAreRunningOnExit" xml:space="preserve">
+    <value>File operations are running: {0}. On exit they are cancelled and partly copied files are deleted.</value>
+  </data>
+  <data name="DesktopShell.GlobalHotkeysWorkOnlyOnWindows" xml:space="preserve">
+    <value>Global hotkeys work only on Windows for now.</value>
+  </data>
+  <data name="DesktopShell.GlobalShortcutsWorkOnlyOnWindows" xml:space="preserve">
+    <value>global shortcuts work only on Windows.</value>
+  </data>
+  <data name="DesktopShell.HotkeyUnavailable" xml:space="preserve">
+    <value>Hotkey unavailable</value>
+  </data>
+  <data name="DesktopShell.IndexingIsAlreadyRunning" xml:space="preserve">
+    <value>. Indexing is already running.</value>
+  </data>
+  <data name="DesktopShell.IndexingPauseDidNotSwitch" xml:space="preserve">
+    <value>Indexing pause did not switch</value>
+  </data>
+  <data name="DesktopShell.IsTakenByAnotherAppSo" xml:space="preserve">
+    <value>{0} is taken by another app, so {1} is used. You can change it in settings.</value>
+  </data>
+  <data name="DesktopShell.NoShortcutCouldBeRegistered" xml:space="preserve">
+    <value>No shortcut could be registered: </value>
+  </data>
+  <data name="DesktopShell.NotAdded" xml:space="preserve">
+    <value>Not added: </value>
+  </data>
+  <data name="DesktopShell.NotAllRootsWereAdded" xml:space="preserve">
+    <value>Not all roots were added</value>
+  </data>
+  <data name="DesktopShell.OpenDiskApp" xml:space="preserve">
+    <value>Open DiskApp</value>
+  </data>
+  <data name="DesktopShell.OpenSaveAsOrOpenIn" xml:space="preserve">
+    <value>Open Save As or Open in a program and press {0} there.</value>
+  </data>
+  <data name="DesktopShell.PauseIndexing" xml:space="preserve">
+    <value>Pause indexing</value>
+  </data>
+  <data name="DesktopShell.QuickSearch" xml:space="preserve">
+    <value>Quick search</value>
+  </data>
+  <data name="DesktopShell.ResumeIndexing" xml:space="preserve">
+    <value>Resume indexing</value>
+  </data>
+  <data name="DesktopShell.RootsAdded" xml:space="preserve">
+    <value>Roots added</value>
+  </data>
+  <data name="DesktopShell.SaveDialogNotFound" xml:space="preserve">
+    <value>Save dialog not found</value>
+  </data>
+  <data name="DesktopShell.SearchOpensWithAClickOn" xml:space="preserve">
+    <value>. Search opens with a click on the tray icon; you can change the shortcut in settings.</value>
+  </data>
+  <data name="DesktopShell.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="DesktopShell.TheChosenFolderWasDeletedOr" xml:space="preserve">
+    <value>The chosen folder was deleted or is unavailable: the index updates itself.</value>
+  </data>
+  <data name="DesktopShell.TheDialogDidNotGoTo" xml:space="preserve">
+    <value>The dialog did not go to the folder</value>
+  </data>
+  <data name="DesktopShell.TheDialogIsAlreadyClosed" xml:space="preserve">
+    <value>The dialog is already closed</value>
+  </data>
+  <data name="DesktopShell.TheFolderIsGone" xml:space="preserve">
+    <value>The folder is gone</value>
+  </data>
+  <data name="DesktopShell.TheKeyIsNotSupported" xml:space="preserve">
+    <value>the key is not supported.</value>
+  </data>
+  <data name="DesktopShell.TheKeyIsNotSupported2" xml:space="preserve">
+    <value>{0} — the key is not supported</value>
+  </data>
+  <data name="DesktopShell.ThePathIsCopiedToThe" xml:space="preserve">
+    <value>The path is copied to the clipboard: paste it into the file name box and press Enter.</value>
+  </data>
+  <data name="DesktopShell.TheSaveOrOpenWindowClosed" xml:space="preserve">
+    <value>The Save or Open window closed while the folder was being chosen.</value>
+  </data>
+  <data name="DesktopShell.TheShortcutInSettingsIsNot" xml:space="preserve">
+    <value>The shortcut “{0}” in settings is not recognized, so {1} is used.</value>
+  </data>
+  <data name="DesktopShell.TheShortcutIsTakenByAnother" xml:space="preserve">
+    <value>the shortcut is taken by another app.</value>
+  </data>
+  <data name="DesktopShell.ThisShortcutAlreadyBelongsToQuick" xml:space="preserve">
+    <value>this shortcut already belongs to Quick Switch.</value>
+  </data>
+  <data name="DesktopShell.ThisShortcutAlreadyBelongsToQuick2" xml:space="preserve">
+    <value>this shortcut already belongs to quick search.</value>
+  </data>
+  <data name="DetailsPane.SelectAFileInTheList" xml:space="preserve">
+    <value>Select a file in the list — its details and actions appear here</value>
+  </data>
+  <data name="DetailsPane.ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="ExclusionItem.DeeperThanLevels" xml:space="preserve">
+    <value>Deeper than {0} levels</value>
+  </data>
+  <data name="ExclusionItem.FilesLargerThanBytes" xml:space="preserve">
+    <value>Files larger than {0} bytes</value>
+  </data>
+  <data name="ExclusionItem.HiddenFilesAndFolders" xml:space="preserve">
+    <value>Hidden files and folders</value>
+  </data>
+  <data name="ExclusionItem.SystemFilesAndFolders" xml:space="preserve">
+    <value>System files and folders</value>
+  </data>
+  <data name="FileDetails.Bytes" xml:space="preserve">
+    <value>{0} ({1} bytes)</value>
+  </data>
+  <data name="FileDetails.CloudOnlyOpensAfterDownload" xml:space="preserve">
+    <value>Cloud only: opens after download</value>
+  </data>
+  <data name="FileDetails.DriveUnavailable" xml:space="preserve">
+    <value>Drive unavailable</value>
+  </data>
+  <data name="FileDetails.Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="FileDetails.Kind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="FileDetails.Modified" xml:space="preserve">
+    <value>Modified</value>
+  </data>
+  <data name="FileDetails.Root" xml:space="preserve">
+    <value>Root</value>
+  </data>
+  <data name="FileDetails.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Format.Percent" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="GlobalHotkey.CouldNotRegisterTheHotkey" xml:space="preserve">
+    <value>Could not register the hotkey: {0}.</value>
+  </data>
+  <data name="GlobalHotkey.TheShortcutIsAlreadyTakenBy" xml:space="preserve">
+    <value>the shortcut is already taken by another app</value>
+  </data>
+  <data name="GlobalHotkey.WindowsRejectedTheRegistration" xml:space="preserve">
+    <value>Windows rejected the registration</value>
+  </data>
+  <data name="Home.AWhereToPutItHint" xml:space="preserve">
+    <value>A “where to put it” hint, one key for the next file, any decision can be undone. Reminder at 18:00.</value>
+  </data>
+  <data name="Home.AddAFolderOrADrive" xml:space="preserve">
+    <value>Add a folder or a drive to search</value>
+  </data>
+  <data name="Home.AddFolder" xml:space="preserve">
+    <value>Add folder</value>
+  </data>
+  <data name="Home.BrowseFolders" xml:space="preserve">
+    <value>Browse folders</value>
+  </data>
+  <data name="Home.ChangedInTheLastDay" xml:space="preserve">
+    <value>Changed in the last day</value>
+  </data>
+  <data name="Home.ClearTheQueryThenClose" xml:space="preserve">
+    <value>clear the query, then close</value>
+  </data>
+  <data name="Home.CouldNotAddTheFolder" xml:space="preserve">
+    <value>Could not add the folder</value>
+  </data>
+  <data name="Home.CouldNotGetTheRoots" xml:space="preserve">
+    <value>Could not get the roots</value>
+  </data>
+  <data name="Home.CouldNotOpen" xml:space="preserve">
+    <value>Could not open “{0}”</value>
+  </data>
+  <data name="Home.FileWaits.Few" xml:space="preserve">
+    <value>files wait</value>
+  </data>
+  <data name="Home.FileWaits.Many" xml:space="preserve">
+    <value>files wait</value>
+  </data>
+  <data name="Home.FileWaits.One" xml:space="preserve">
+    <value>file waits</value>
+  </data>
+  <data name="Home.FoldersAddedToTheIndex" xml:space="preserve">
+    <value>Folders added to the index</value>
+  </data>
+  <data name="Home.FoldersToSearch" xml:space="preserve">
+    <value>Folders to search</value>
+  </data>
+  <data name="Home.FullScanAgain" xml:space="preserve">
+    <value>Full scan again</value>
+  </data>
+  <data name="Home.GoodAfternoon" xml:space="preserve">
+    <value>Good afternoon</value>
+  </data>
+  <data name="Home.GoodEvening" xml:space="preserve">
+    <value>Good evening</value>
+  </data>
+  <data name="Home.GoodMorning" xml:space="preserve">
+    <value>Good morning</value>
+  </data>
+  <data name="Home.GoodNight" xml:space="preserve">
+    <value>Good night</value>
+  </data>
+  <data name="Home.Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Home.HotkeyHintSuffix" xml:space="preserve">
+    <value>, three letters and Enter — the file is open</value>
+  </data>
+  <data name="Home.Inbox" xml:space="preserve">
+    <value>Inbox</value>
+  </data>
+  <data name="Home.InboxIsEmptyEverythingIsSorted" xml:space="preserve">
+    <value>Inbox is empty — everything is sorted</value>
+  </data>
+  <data name="Home.InboxWaiting" xml:space="preserve">
+    <value>{0} to sort in Downloads</value>
+  </data>
+  <data name="Home.IndexRoots" xml:space="preserve">
+    <value>Index roots</value>
+  </data>
+  <data name="Home.IndexingIsAlreadyRunning" xml:space="preserve">
+    <value>. Indexing is already running.</value>
+  </data>
+  <data name="Home.Keys" xml:space="preserve">
+    <value>Keys</value>
+  </data>
+  <data name="Home.NotAllFoldersWereAdded" xml:space="preserve">
+    <value>Not all folders were added</value>
+  </data>
+  <data name="Home.OpenAResultByNumber" xml:space="preserve">
+    <value>open a result by number</value>
+  </data>
+  <data name="Home.OpenSearch" xml:space="preserve">
+    <value>Open search</value>
+  </data>
+  <data name="Home.Opened" xml:space="preserve">
+    <value>Opened “{0}”</value>
+  </data>
+  <data name="Home.Pinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="Home.QuickSearch" xml:space="preserve">
+    <value>Quick search</value>
+  </data>
+  <data name="Home.QuickSearchFromAnywhere" xml:space="preserve">
+    <value>quick search from anywhere</value>
+  </data>
+  <data name="Home.RecentFiles" xml:space="preserve">
+    <value>Recent files</value>
+  </data>
+  <data name="Home.Rescan" xml:space="preserve">
+    <value>Rescan</value>
+  </data>
+  <data name="Home.RootsTreeAndListLikeFile" xml:space="preserve">
+    <value>Roots, tree and list — like File Explorer, only faster</value>
+  </data>
+  <data name="Home.SelectAndOpen" xml:space="preserve">
+    <value>select and open</value>
+  </data>
+  <data name="Home.ShowInFileExplorer" xml:space="preserve">
+    <value>show in File Explorer</value>
+  </data>
+  <data name="Home.Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="Home.SortTheInbox" xml:space="preserve">
+    <value>Sort the inbox</value>
+  </data>
+  <data name="Home.UseAddFolderOrDragA" xml:space="preserve">
+    <value>Use “Add folder” or drag a folder from File Explorer onto this page; files dropped here go to the folder you choose</value>
+  </data>
+  <data name="IndexStatus.In" xml:space="preserve">
+    <value>{0} · {1} in {2}</value>
+  </data>
+  <data name="IndexStatus.InUpdated" xml:space="preserve">
+    <value>{0} in {1} · updated {2}</value>
+  </data>
+  <data name="IndexStatus.Indexing" xml:space="preserve">
+    <value>indexing {0}</value>
+  </data>
+  <data name="IndexStatus.Indexing2" xml:space="preserve">
+    <value>indexing</value>
+  </data>
+  <data name="IndexStatus.IndexingScanned" xml:space="preserve">
+    <value>indexing: {0} scanned</value>
+  </data>
+  <data name="IndexStatus.Root.Few" xml:space="preserve">
+    <value>roots</value>
+  </data>
+  <data name="IndexStatus.Root.Many" xml:space="preserve">
+    <value>roots</value>
+  </data>
+  <data name="IndexStatus.Root.One" xml:space="preserve">
+    <value>root</value>
+  </data>
+  <data name="Main.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Main.FavoritesPinnedFoldersAndSetsOf" xml:space="preserve">
+    <value>Favorites, pinned folders and sets of files from different places — for projects, trips and tasks.</value>
+  </data>
+  <data name="Main.FindAFileOrFolderCtrl" xml:space="preserve">
+    <value>Find a file or folder · Ctrl+E</value>
+  </data>
+  <data name="Main.Inbox" xml:space="preserve">
+    <value>Inbox</value>
+  </data>
+  <data name="Main.IndexIsUpToDate" xml:space="preserve">
+    <value>Index is up to date</value>
+  </data>
+  <data name="Main.IndexingError" xml:space="preserve">
+    <value>Indexing error</value>
+  </data>
+  <data name="Main.OperationsRunning" xml:space="preserve">
+    <value>Operations running</value>
+  </data>
+  <data name="Main.SomeRootsAreUnavailable" xml:space="preserve">
+    <value>Some roots are unavailable</value>
+  </data>
+  <data name="Main.SortingDownloadsIntoDedicatedStoresA" xml:space="preserve">
+    <value>Sorting Downloads into dedicated stores: a “where to put it” hint, one key for the next file, undo for any decision.</value>
+  </data>
+  <data name="Main.Stage17" xml:space="preserve">
+    <value>Stage 17</value>
+  </data>
+  <data name="Main.Stage8" xml:space="preserve">
+    <value>Stage 8</value>
+  </data>
+  <data name="Main.TagsAndColorsForFilesAnd" xml:space="preserve">
+    <value>Tags and colors for files and folders; the tag: filter in search; quick labels with one key.</value>
+  </data>
+  <data name="Month.Short.1" xml:space="preserve">
+    <value>Jan</value>
+  </data>
+  <data name="Month.Short.10" xml:space="preserve">
+    <value>Oct</value>
+  </data>
+  <data name="Month.Short.11" xml:space="preserve">
+    <value>Nov</value>
+  </data>
+  <data name="Month.Short.12" xml:space="preserve">
+    <value>Dec</value>
+  </data>
+  <data name="Month.Short.2" xml:space="preserve">
+    <value>Feb</value>
+  </data>
+  <data name="Month.Short.3" xml:space="preserve">
+    <value>Mar</value>
+  </data>
+  <data name="Month.Short.4" xml:space="preserve">
+    <value>Apr</value>
+  </data>
+  <data name="Month.Short.5" xml:space="preserve">
+    <value>May</value>
+  </data>
+  <data name="Month.Short.6" xml:space="preserve">
+    <value>Jun</value>
+  </data>
+  <data name="Month.Short.7" xml:space="preserve">
+    <value>Jul</value>
+  </data>
+  <data name="Month.Short.8" xml:space="preserve">
+    <value>Aug</value>
+  </data>
+  <data name="Month.Short.9" xml:space="preserve">
+    <value>Sep</value>
+  </data>
+  <data name="NullAutoStart.AutostartIsNotSupportedOnThis" xml:space="preserve">
+    <value>Autostart is not supported on this platform yet.</value>
+  </data>
+  <data name="OperationItem.Cancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="OperationItem.Copying" xml:space="preserve">
+    <value>Copying {0}{1}</value>
+  </data>
+  <data name="OperationItem.H" xml:space="preserve">
+    <value>{0} h</value>
+  </data>
+  <data name="OperationItem.Min" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="OperationItem.Moving" xml:space="preserve">
+    <value>Moving {0}{1}</value>
+  </data>
+  <data name="OperationItem.NewFile" xml:space="preserve">
+    <value>New file{0}</value>
+  </data>
+  <data name="OperationItem.NewFolder" xml:space="preserve">
+    <value>New folder{0}</value>
+  </data>
+  <data name="OperationItem.Of" xml:space="preserve">
+    <value>{0} of {1}</value>
+  </data>
+  <data name="OperationItem.Queued" xml:space="preserve">
+    <value>Queued</value>
+  </data>
+  <data name="OperationItem.Remaining" xml:space="preserve">
+    <value>remaining </value>
+  </data>
+  <data name="OperationItem.Renaming" xml:space="preserve">
+    <value>Renaming {0}</value>
+  </data>
+  <data name="OperationItem.Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="OperationItem.S" xml:space="preserve">
+    <value>/s</value>
+  </data>
+  <data name="OperationItem.S2" xml:space="preserve">
+    <value>{0} s</value>
+  </data>
+  <data name="OperationItem.To" xml:space="preserve">
+    <value> to “{0}”</value>
+  </data>
+  <data name="OperationItem.ToRecycleBin" xml:space="preserve">
+    <value>To Recycle Bin: {0}</value>
+  </data>
+  <data name="OperationItem.WaitingForADecisionAFile" xml:space="preserve">
+    <value>Waiting for a decision: a file with this name already exists</value>
+  </data>
+  <data name="Operations.ClearFinished" xml:space="preserve">
+    <value>Clear finished</value>
+  </data>
+  <data name="Operations.CopyMoveRenameAndRecycleBin" xml:space="preserve">
+    <value>Copy, move, rename and Recycle Bin. Ctrl+Z undoes the last operation that can be undone.</value>
+  </data>
+  <data name="Operations.CopyingAndMovingFromBrowseRenaming" xml:space="preserve">
+    <value>Copying and moving from Browse, renaming and Recycle Bin will appear here</value>
+  </data>
+  <data name="Operations.CouldNotCancel" xml:space="preserve">
+    <value>Could not cancel</value>
+  </data>
+  <data name="Operations.CouldNotSendTheDecision" xml:space="preserve">
+    <value>Could not send the decision</value>
+  </data>
+  <data name="Operations.CouldNotUndoTheResult" xml:space="preserve">
+    <value>Could not undo the result</value>
+  </data>
+  <data name="Operations.NoOperationsYet" xml:space="preserve">
+    <value>No operations yet</value>
+  </data>
+  <data name="Operations.NothingToUndo" xml:space="preserve">
+    <value>Nothing to undo</value>
+  </data>
+  <data name="Operations.Operation.Few" xml:space="preserve">
+    <value>operations</value>
+  </data>
+  <data name="Operations.Operation.Many" xml:space="preserve">
+    <value>operations</value>
+  </data>
+  <data name="Operations.Operation.One" xml:space="preserve">
+    <value>operation</value>
+  </data>
+  <data name="Operations.Operations" xml:space="preserve">
+    <value>Operations</value>
+  </data>
+  <data name="Operations.RenameMoveAndCreateCanBe" xml:space="preserve">
+    <value>Rename, move and create can be undone.</value>
+  </data>
+  <data name="Operations.RestoreAsItWas" xml:space="preserve">
+    <value>Restore as it was</value>
+  </data>
+  <data name="Operations.TheOperationFailed" xml:space="preserve">
+    <value>The operation failed</value>
+  </data>
+  <data name="Operations.TheOperationWasNotStarted" xml:space="preserve">
+    <value>The operation was not started</value>
+  </data>
+  <data name="Operations.Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Operations.UndoResult" xml:space="preserve">
+    <value>Undo result</value>
+  </data>
+  <data name="Operations.Undone" xml:space="preserve">
+    <value>Undone</value>
+  </data>
+  <data name="PathText.IsAReservedWindowsName" xml:space="preserve">
+    <value>“{0}” is a reserved Windows name.</value>
+  </data>
+  <data name="PathText.TheNameCannotBeEmpty" xml:space="preserve">
+    <value>The name cannot be empty.</value>
+  </data>
+  <data name="PathText.TheNameCannotContain" xml:space="preserve">
+    <value>The name cannot contain \ / : * ? " &lt; &gt; |.</value>
+  </data>
+  <data name="PathText.TheNameCannotEndWithA" xml:space="preserve">
+    <value>The name cannot end with a dot or a space.</value>
+  </data>
+  <data name="Program.DetailsAreInTheLog" xml:space="preserve">
+    <value> Details are in the log.</value>
+  </data>
+  <data name="Program.TheDiskAppServerDidNotStart" xml:space="preserve">
+    <value>The DiskApp server did not start</value>
+  </data>
+  <data name="Program.TheIndexDatabaseIsStillBeing" xml:space="preserve">
+    <value>The index database is still being checked and opened; search will work when that finishes.</value>
+  </data>
+  <data name="Program.TheServerIsTakingLongerThan" xml:space="preserve">
+    <value>The server is taking longer than usual to start</value>
+  </data>
+  <data name="QuickSearch.Archives" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="QuickSearch.Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="QuickSearch.CanBeRestoredFromTheWindows" xml:space="preserve">
+    <value>“{0}” can be restored from the Windows Recycle Bin.</value>
+  </data>
+  <data name="QuickSearch.ChooseAFolder" xml:space="preserve">
+    <value>Choose a folder</value>
+  </data>
+  <data name="QuickSearch.Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="QuickSearch.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="QuickSearch.Copied" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="QuickSearch.CouldNotAcceptTheFiles" xml:space="preserve">
+    <value>Could not accept the files</value>
+  </data>
+  <data name="QuickSearch.CouldNotChangeTags" xml:space="preserve">
+    <value>Could not change tags</value>
+  </data>
+  <data name="QuickSearch.CouldNotClearHistory" xml:space="preserve">
+    <value>Could not clear history</value>
+  </data>
+  <data name="QuickSearch.CouldNotCopy" xml:space="preserve">
+    <value>Could not copy</value>
+  </data>
+  <data name="QuickSearch.CouldNotCopyThePath" xml:space="preserve">
+    <value>Could not copy the path</value>
+  </data>
+  <data name="QuickSearch.CouldNotCopyTo" xml:space="preserve">
+    <value>Could not copy to “{0}”</value>
+  </data>
+  <data name="QuickSearch.CouldNotDrag" xml:space="preserve">
+    <value>Could not drag</value>
+  </data>
+  <data name="QuickSearch.CouldNotMoveToTheRecycle" xml:space="preserve">
+    <value>Could not move to the Recycle Bin</value>
+  </data>
+  <data name="QuickSearch.CouldNotOpen" xml:space="preserve">
+    <value>Could not open “{0}”: {1}</value>
+  </data>
+  <data name="QuickSearch.CouldNotOpenProperties" xml:space="preserve">
+    <value>Could not open properties</value>
+  </data>
+  <data name="QuickSearch.CouldNotOpenTheOpenWith" xml:space="preserve">
+    <value>Could not open the “Open with” dialog</value>
+  </data>
+  <data name="QuickSearch.CouldNotPin" xml:space="preserve">
+    <value>Could not pin</value>
+  </data>
+  <data name="QuickSearch.CouldNotRemoveFromHistory" xml:space="preserve">
+    <value>Could not remove from history</value>
+  </data>
+  <data name="QuickSearch.CouldNotRename" xml:space="preserve">
+    <value>Could not rename</value>
+  </data>
+  <data name="QuickSearch.CouldNotRunAsAdministrator" xml:space="preserve">
+    <value>Could not run as administrator</value>
+  </data>
+  <data name="QuickSearch.CouldNotShowInFolder" xml:space="preserve">
+    <value>Could not show in folder</value>
+  </data>
+  <data name="QuickSearch.CouldNotUnpin" xml:space="preserve">
+    <value>Could not unpin</value>
+  </data>
+  <data name="QuickSearch.DiskAppQuickSearch" xml:space="preserve">
+    <value>DiskApp — quick search</value>
+  </data>
+  <data name="QuickSearch.Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="QuickSearch.DropFilesOnAFolderIn" xml:space="preserve">
+    <value>Drop files on a folder in the list to copy them there</value>
+  </data>
+  <data name="QuickSearch.EnterGoesToItInThe" xml:space="preserve">
+    <value>Enter goes to it in the save dialog; for a file — to its folder. Esc cancels.</value>
+  </data>
+  <data name="QuickSearch.EnterOpenTabMenuHelpEsc" xml:space="preserve">
+    <value>Enter open · Tab menu · ? help · Esc close</value>
+  </data>
+  <data name="QuickSearch.FindAFileOrFolder" xml:space="preserve">
+    <value>Find a file or folder…</value>
+  </data>
+  <data name="QuickSearch.FolderSkipped.Few" xml:space="preserve">
+    <value>folders skipped</value>
+  </data>
+  <data name="QuickSearch.FolderSkipped.Many" xml:space="preserve">
+    <value>folders skipped</value>
+  </data>
+  <data name="QuickSearch.FolderSkipped.One" xml:space="preserve">
+    <value>folder skipped</value>
+  </data>
+  <data name="QuickSearch.Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="QuickSearch.FoldersNotCopiedByDrag" xml:space="preserve">
+    <value> {0}: folders are not copied by drag and drop yet.</value>
+  </data>
+  <data name="QuickSearch.History" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="QuickSearch.HistoryCleared" xml:space="preserve">
+    <value>History cleared</value>
+  </data>
+  <data name="QuickSearch.Images" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="QuickSearch.InTheIndex" xml:space="preserve">
+    <value> in the index</value>
+  </data>
+  <data name="QuickSearch.Month" xml:space="preserve">
+    <value>Month</value>
+  </data>
+  <data name="QuickSearch.MoveToTheRecycleBin" xml:space="preserve">
+    <value>Move “{0}” to the Recycle Bin?</value>
+  </data>
+  <data name="QuickSearch.MovedToTheRecycleBin" xml:space="preserve">
+    <value>Moved to the Recycle Bin</value>
+  </data>
+  <data name="QuickSearch.Ms" xml:space="preserve">
+    <value> · {0} ms</value>
+  </data>
+  <data name="QuickSearch.NewNameFor" xml:space="preserve">
+    <value>New name for “{0}”</value>
+  </data>
+  <data name="QuickSearch.NoConnectionToTheSearchServer" xml:space="preserve">
+    <value>No connection to the search server: </value>
+  </data>
+  <data name="QuickSearch.NothingFound" xml:space="preserve">
+    <value>Nothing found</value>
+  </data>
+  <data name="QuickSearch.NothingFoundTryAnotherWordOr" xml:space="preserve">
+    <value>Nothing found — try another word or part of the name</value>
+  </data>
+  <data name="QuickSearch.NothingToCopy" xml:space="preserve">
+    <value>Nothing to copy</value>
+  </data>
+  <data name="QuickSearch.OnlyFilesAreCopiedByDrag" xml:space="preserve">
+    <value>Only files are copied by drag and drop.</value>
+  </data>
+  <data name="QuickSearch.OpenWith" xml:space="preserve">
+    <value>Open with…</value>
+  </data>
+  <data name="QuickSearch.PasteItInFileExplorerOr" xml:space="preserve">
+    <value>“{0}” — paste it in File Explorer or an email.</value>
+  </data>
+  <data name="QuickSearch.PathCopied" xml:space="preserve">
+    <value>Path copied</value>
+  </data>
+  <data name="QuickSearch.Pin" xml:space="preserve">
+    <value>Pin</value>
+  </data>
+  <data name="QuickSearch.Pinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="QuickSearch.PreviousQueriesAreNoLongerSuggested" xml:space="preserve">
+    <value>Previous queries are no longer suggested.</value>
+  </data>
+  <data name="QuickSearch.QuerySyntaxAndKeysEscCloses" xml:space="preserve">
+    <value>Query syntax and keys · Esc closes the hint</value>
+  </data>
+  <data name="QuickSearch.RemoveFromHistory" xml:space="preserve">
+    <value>Remove from history</value>
+  </data>
+  <data name="QuickSearch.Renamed" xml:space="preserve">
+    <value>Renamed</value>
+  </data>
+  <data name="QuickSearch.Result.Few" xml:space="preserve">
+    <value>results</value>
+  </data>
+  <data name="QuickSearch.Result.Many" xml:space="preserve">
+    <value>results</value>
+  </data>
+  <data name="QuickSearch.Result.One" xml:space="preserve">
+    <value>result</value>
+  </data>
+  <data name="QuickSearch.Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="QuickSearch.RunAsAdministrator" xml:space="preserve">
+    <value>Run as administrator</value>
+  </data>
+  <data name="QuickSearch.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="QuickSearch.ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="QuickSearch.StartTypingAName" xml:space="preserve">
+    <value>{0} · start typing a name</value>
+  </data>
+  <data name="QuickSearch.Suggestions" xml:space="preserve">
+    <value>Suggestions</value>
+  </data>
+  <data name="QuickSearch.TagsSaved" xml:space="preserve">
+    <value>Tags saved</value>
+  </data>
+  <data name="QuickSearch.ThisNameWillNotWork" xml:space="preserve">
+    <value>This name will not work</value>
+  </data>
+  <data name="QuickSearch.Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="QuickSearch.TypeToSeeFiltersAndKeys" xml:space="preserve">
+    <value>Type ? to see filters and keys</value>
+  </data>
+  <data name="QuickSearch.Unpin" xml:space="preserve">
+    <value>Unpin</value>
+  </data>
+  <data name="QuickSearch.Unpinned" xml:space="preserve">
+    <value>Unpinned</value>
+  </data>
+  <data name="QuickSearch.Videos" xml:space="preserve">
+    <value>Videos</value>
+  </data>
+  <data name="QuickSearch.Week" xml:space="preserve">
+    <value>Week</value>
+  </data>
+  <data name="QuickSearch.Year" xml:space="preserve">
+    <value>Year</value>
+  </data>
+  <data name="QuickSwitchController.QuickSwitchIsNotOn" xml:space="preserve">
+    <value>Quick Switch is not on: {0} — {1}</value>
+  </data>
+  <data name="QuickSwitchController.TheKeyIsNotSupportedFor" xml:space="preserve">
+    <value>The key {0} is not supported for Quick Switch.</value>
+  </data>
+  <data name="RegistryAutoStart.ThePortableCopyRunsFromIf" xml:space="preserve">
+    <value>The portable copy runs from “{0}”: if you move the folder, turn autostart on again.</value>
+  </data>
+  <data name="RegistryAutoStart.WindowsDidNotAllowChangingAutostart" xml:space="preserve">
+    <value>Windows did not allow changing autostart: </value>
+  </data>
+  <data name="RootCard.CouldNotChangeThePauseOf" xml:space="preserve">
+    <value>Could not change the pause of “{0}”</value>
+  </data>
+  <data name="RootCard.CouldNotRescan" xml:space="preserve">
+    <value>Could not rescan “{0}”</value>
+  </data>
+  <data name="RootCard.Disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="RootCard.NotScannedYet" xml:space="preserve">
+    <value>Not scanned yet</value>
+  </data>
+  <data name="RootCard.Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="RootCard.Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="RootCard.Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="RootCard.Scanned" xml:space="preserve">
+    <value>Scanned </value>
+  </data>
+  <data name="RootCard.Scanning" xml:space="preserve">
+    <value>Scanning</value>
+  </data>
+  <data name="RootCard.ScanningScanned" xml:space="preserve">
+    <value>Scanning: {0} scanned</value>
+  </data>
+  <data name="RootCard.Unavailable" xml:space="preserve">
+    <value>Unavailable</value>
+  </data>
+  <data name="RootCard.UpToDate" xml:space="preserve">
+    <value>Up to date</value>
+  </data>
+  <data name="RootSettingsItem.Available" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="RootSettingsItem.Disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="RootSettingsItem.Indexing" xml:space="preserve">
+    <value>Indexing</value>
+  </data>
+  <data name="RootSettingsItem.Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="RootSettingsItem.Unavailable" xml:space="preserve">
+    <value>Unavailable</value>
+  </data>
+  <data name="SampleBrowse.PathIsOutsideTheAddedRoots" xml:space="preserve">
+    <value>Path “{0}” is outside the added roots.</value>
+  </data>
+  <data name="SampleLibrary.PassEveryFavoriteExactlyOnce" xml:space="preserve">
+    <value>Pass every favorite exactly once.</value>
+  </data>
+  <data name="SampleLibrary.TagAlreadyExists" xml:space="preserve">
+    <value>Tag “{0}” already exists.</value>
+  </data>
+  <data name="SearchHelp.AllWordsInTheNameIn" xml:space="preserve">
+    <value>all words in the name, in any order; case does not matter</value>
+  </data>
+  <data name="SearchHelp.AnnualReport" xml:space="preserve">
+    <value>"annual report"</value>
+  </data>
+  <data name="SearchHelp.ClearTheQueryThenCloseThe" xml:space="preserve">
+    <value>clear the query, then close the window</value>
+  </data>
+  <data name="SearchHelp.CompleteTheFilterFromTheHint" xml:space="preserve">
+    <value>complete the filter from the hint or open the row menu</value>
+  </data>
+  <data name="SearchHelp.CopyFilePath" xml:space="preserve">
+    <value>copy file / path</value>
+  </data>
+  <data name="SearchHelp.CreatedSameAsModified" xml:space="preserve">
+    <value>created — same as modified</value>
+  </data>
+  <data name="SearchHelp.Draft" xml:space="preserve">
+    <value>-draft</value>
+  </data>
+  <data name="SearchHelp.ExactPhrase" xml:space="preserve">
+    <value>exact phrase</value>
+  </data>
+  <data name="SearchHelp.ExcludeAWordWorksWithFilters" xml:space="preserve">
+    <value>exclude a word; works with filters too: -ext:tmp</value>
+  </data>
+  <data name="SearchHelp.Extension" xml:space="preserve">
+    <value>extension</value>
+  </data>
+  <data name="SearchHelp.Filters" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="SearchHelp.FoldersHiddenCloudIsCloud" xml:space="preserve">
+    <value>folders, hidden, cloud (is:cloud)</value>
+  </data>
+  <data name="SearchHelp.InAFolderWithThisName" xml:space="preserve">
+    <value>in a folder with this name or by path</value>
+  </data>
+  <data name="SearchHelp.InAnEmptyBox" xml:space="preserve">
+    <value>↑ in an empty box</value>
+  </data>
+  <data name="SearchHelp.InAnIndexRoot" xml:space="preserve">
+    <value>in an index root</value>
+  </data>
+  <data name="SearchHelp.InProjects" xml:space="preserve">
+    <value>in:Projects</value>
+  </data>
+  <data name="SearchHelp.Keys" xml:space="preserve">
+    <value>Keys</value>
+  </data>
+  <data name="SearchHelp.KindDocumentPdfImageVideoAudio" xml:space="preserve">
+    <value>kind: document, pdf, image, video, audio, archive, code, folder (Russian words work too)</value>
+  </data>
+  <data name="SearchHelp.ModifiedTodayYesterdayWeekMonthYear" xml:space="preserve">
+    <value>modified: today, yesterday, week, month, year, 3d, 2w, 2026-03, &gt;2026-01-01</value>
+  </data>
+  <data name="SearchHelp.OpenCtrl19OpensThe" xml:space="preserve">
+    <value>open; Ctrl+1…9 opens the row with that number</value>
+  </data>
+  <data name="SearchHelp.OpenWith" xml:space="preserve">
+    <value>open with</value>
+  </data>
+  <data name="SearchHelp.Pin" xml:space="preserve">
+    <value>pin</value>
+  </data>
+  <data name="SearchHelp.PreviousQueries" xml:space="preserve">
+    <value>previous queries</value>
+  </data>
+  <data name="SearchHelp.Properties" xml:space="preserve">
+    <value>properties</value>
+  </data>
+  <data name="SearchHelp.Query" xml:space="preserve">
+    <value>Query</value>
+  </data>
+  <data name="SearchHelp.RenameToRecycleBin" xml:space="preserve">
+    <value>rename / to Recycle Bin</value>
+  </data>
+  <data name="SearchHelp.Report2026" xml:space="preserve">
+    <value>report 2026</value>
+  </data>
+  <data name="SearchHelp.RootDocuments" xml:space="preserve">
+    <value>root:Documents</value>
+  </data>
+  <data name="SearchHelp.ShowInFolder" xml:space="preserve">
+    <value>show in folder</value>
+  </data>
+  <data name="SearchHelp.ShowOrHideFilterChips" xml:space="preserve">
+    <value>show or hide filter chips</value>
+  </data>
+  <data name="SearchHelp.Size10mb1g500kb1mb5mb" xml:space="preserve">
+    <value>size: 10mb, &gt;1g, &lt;500kb, 1mb..5mb, empty</value>
+  </data>
+  <data name="SearchHelp.TagFavorites" xml:space="preserve">
+    <value>tag; favorites</value>
+  </data>
+  <data name="SearchHelp.TagWorkFavYes" xml:space="preserve">
+    <value>tag:work  fav:yes</value>
+  </data>
+  <data name="SearchHit.CloudOnlyOpensAfterDownload" xml:space="preserve">
+    <value>Cloud only: opens after download</value>
+  </data>
+  <data name="SearchHit.DriveUnavailable" xml:space="preserve">
+    <value>Drive unavailable</value>
+  </data>
+  <data name="SearchPage.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SearchPage.TheSameWindowThatPopsUp" xml:space="preserve">
+    <value>The same window that pops up with the hotkey, only inside the main window: the query is shared between them.</value>
+  </data>
+  <data name="Sections.Pinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="Sections.RecentlyModified" xml:space="preserve">
+    <value>Recently changed</value>
+  </data>
+  <data name="Sections.RecentlyOpened" xml:space="preserve">
+    <value>Recently opened</value>
+  </data>
+  <data name="Settings.AClickInAnotherWindowCloses" xml:space="preserve">
+    <value>A click in another window closes search; otherwise only Esc and the hotkey do</value>
+  </data>
+  <data name="Settings.ADiskAppIconOnTheDesktop" xml:space="preserve">
+    <value>A DiskApp icon on the desktop opens the main window</value>
+  </data>
+  <data name="Settings.ADiskappSearchQLinkOpens" xml:space="preserve">
+    <value>A diskapp://search?q=… link opens search with the query</value>
+  </data>
+  <data name="Settings.AShortcutInTheSendTo" xml:space="preserve">
+    <value>A shortcut in the Send to menu: selected files go to a folder you choose</value>
+  </data>
+  <data name="Settings.About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="Settings.AccentColor" xml:space="preserve">
+    <value>Accent color</value>
+  </data>
+  <data name="Settings.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Settings.AddFolder" xml:space="preserve">
+    <value>Add folder…</value>
+  </data>
+  <data name="Settings.AddToDiskAppForFilesOpen" xml:space="preserve">
+    <value>“Add to DiskApp” for files, “Open in DiskApp” and “Add to index” for folders</value>
+  </data>
+  <data name="Settings.All" xml:space="preserve">
+    <value>all</value>
+  </data>
+  <data name="Settings.Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Settings.AsInWindows" xml:space="preserve">
+    <value>As in Windows</value>
+  </data>
+  <data name="Settings.AskOnExitWhileOperationsRun" xml:space="preserve">
+    <value>Ask on exit while operations run</value>
+  </data>
+  <data name="Settings.AtLeastOneOfCtrlAlt" xml:space="preserve">
+    <value>At least one of Ctrl, Alt or Win is needed — otherwise the shortcut would capture normal typing.</value>
+  </data>
+  <data name="Settings.Backups" xml:space="preserve">
+    <value>Backups</value>
+  </data>
+  <data name="Settings.Balanced" xml:space="preserve">
+    <value>Balanced</value>
+  </data>
+  <data name="Settings.Behavior" xml:space="preserve">
+    <value>Behavior</value>
+  </data>
+  <data name="Settings.ByName" xml:space="preserve">
+    <value>By name</value>
+  </data>
+  <data name="Settings.CacheCleared" xml:space="preserve">
+    <value>Cache cleared</value>
+  </data>
+  <data name="Settings.CacheNotCleared" xml:space="preserve">
+    <value>Cache not cleared: </value>
+  </data>
+  <data name="Settings.CandidatesBeforeRanking" xml:space="preserve">
+    <value>Candidates before ranking</value>
+  </data>
+  <data name="Settings.Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="Settings.CheckingForAndInstallingUpdatesWill" xml:space="preserve">
+    <value>Checking for and installing updates will come with the installer (stage 11). For now, download a new version from the releases page.</value>
+  </data>
+  <data name="Settings.Choose" xml:space="preserve">
+    <value>Choose…</value>
+  </data>
+  <data name="Settings.ChooseAFolderInDiskAppAnd" xml:space="preserve">
+    <value>choose a folder in DiskApp and the dialog goes to it</value>
+  </data>
+  <data name="Settings.Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Settings.Clear2" xml:space="preserve">
+    <value>Clear…</value>
+  </data>
+  <data name="Settings.ClearCache" xml:space="preserve">
+    <value>Clear cache</value>
+  </data>
+  <data name="Settings.ClearHistory" xml:space="preserve">
+    <value>Clear history</value>
+  </data>
+  <data name="Settings.ClearTheQueryThenClose" xml:space="preserve">
+    <value>Clear the query, then close</value>
+  </data>
+  <data name="Settings.CloseTheMainWindowToThe" xml:space="preserve">
+    <value>Close the main window to the tray</value>
+  </data>
+  <data name="Settings.CompactLists" xml:space="preserve">
+    <value>Compact lists</value>
+  </data>
+  <data name="Settings.CompleteTheFilterOrOpenThe" xml:space="preserve">
+    <value>Complete the filter or open the menu</value>
+  </data>
+  <data name="Settings.ContextMenu" xml:space="preserve">
+    <value>Context menu</value>
+  </data>
+  <data name="Settings.CopyFile" xml:space="preserve">
+    <value>Copy file</value>
+  </data>
+  <data name="Settings.CouldNotLoadSettings" xml:space="preserve">
+    <value>Could not load settings: </value>
+  </data>
+  <data name="Settings.CouldNotLoadTheRoots" xml:space="preserve">
+    <value>Could not load the roots: </value>
+  </data>
+  <data name="Settings.CouldNotRescan" xml:space="preserve">
+    <value>Could not rescan: </value>
+  </data>
+  <data name="Settings.CtrlShiftVSavesTextOr" xml:space="preserve">
+    <value>Ctrl+Shift+V saves text or a picture to a file with this name: {date}, {time}, {title}</value>
+  </data>
+  <data name="Settings.Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="Settings.CustomColor" xml:space="preserve">
+    <value>Custom color</value>
+  </data>
+  <data name="Settings.DailyAt1800AndWhen" xml:space="preserve">
+    <value>Daily at 18:00 and when 10 files pile up</value>
+  </data>
+  <data name="Settings.Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="Settings.Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Settings.DataFolder" xml:space="preserve">
+    <value>Data folder</value>
+  </data>
+  <data name="Settings.Database" xml:space="preserve">
+    <value>Database </value>
+  </data>
+  <data name="Settings.DateModified" xml:space="preserve">
+    <value>Date modified</value>
+  </data>
+  <data name="Settings.Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Settings.DeleteAllQueriesFromTheSearch" xml:space="preserve">
+    <value>Delete all queries from the search history?</value>
+  </data>
+  <data name="Settings.DeleteSavedIconsAndThumbnailsThey" xml:space="preserve">
+    <value>Delete saved icons and thumbnails? They will load again when files are shown.</value>
+  </data>
+  <data name="Settings.Depth" xml:space="preserve">
+    <value>Depth</value>
+  </data>
+  <data name="Settings.DepthIsANumberFrom1" xml:space="preserve">
+    <value>Depth is a number from 1 to 256, or empty to scan all levels.</value>
+  </data>
+  <data name="Settings.DescribeWhatHappenedTheLogIs" xml:space="preserve">
+    <value>Describe what happened; the log is in the Data section</value>
+  </data>
+  <data name="Settings.DesktopShortcut" xml:space="preserve">
+    <value>Desktop shortcut</value>
+  </data>
+  <data name="Settings.DetailedDebug" xml:space="preserve">
+    <value>Detailed (Debug)</value>
+  </data>
+  <data name="Settings.DiskReconciliation" xml:space="preserve">
+    <value>Disk reconciliation</value>
+  </data>
+  <data name="Settings.DiskappLinks" xml:space="preserve">
+    <value>diskapp:// links</value>
+  </data>
+  <data name="Settings.Drive" xml:space="preserve">
+    <value>Drive</value>
+  </data>
+  <data name="Settings.EnterAPatternForExampleBin" xml:space="preserve">
+    <value>Enter a pattern, for example **/bin/** or *.tmp.</value>
+  </data>
+  <data name="Settings.EnterJunctionsAndSymbolicLinksProtected" xml:space="preserve">
+    <value>Enter junctions and symbolic links (protected from loops)</value>
+  </data>
+  <data name="Settings.ErrorsOnlyError" xml:space="preserve">
+    <value>Errors only (Error)</value>
+  </data>
+  <data name="Settings.Every6Hours" xml:space="preserve">
+    <value>Every 6 hours</value>
+  </data>
+  <data name="Settings.EveryHour" xml:space="preserve">
+    <value>Every hour</value>
+  </data>
+  <data name="Settings.EveryMin" xml:space="preserve">
+    <value>Every {0} min</value>
+  </data>
+  <data name="Settings.Exclusions" xml:space="preserve">
+    <value>Exclusions</value>
+  </data>
+  <data name="Settings.ExperimentalInTheSaveOrOpen" xml:space="preserve">
+    <value>Experimental. {0} in the Save or Open dialog of any program — </value>
+  </data>
+  <data name="Settings.FileNameFromTheClipboard" xml:space="preserve">
+    <value>File name from the clipboard</value>
+  </data>
+  <data name="Settings.Filters" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="Settings.FirstRoot" xml:space="preserve">
+    <value>First root</value>
+  </data>
+  <data name="Settings.Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Settings.FolderForTheIndex" xml:space="preserve">
+    <value>Folder for the index</value>
+  </data>
+  <data name="Settings.FoldersAndDrivesThatAreSearched" xml:space="preserve">
+    <value>Folders and drives that are searched</value>
+  </data>
+  <data name="Settings.ForExampleBinOrTmp" xml:space="preserve">
+    <value>For example, **/bin/** or *.tmp</value>
+  </data>
+  <data name="Settings.FuzzySearch" xml:space="preserve">
+    <value>Fuzzy search</value>
+  </data>
+  <data name="Settings.Hidden" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="Settings.HiddenFilesAndFolders" xml:space="preserve">
+    <value>Hidden files and folders</value>
+  </data>
+  <data name="Settings.HideWhenFocusIsLost" xml:space="preserve">
+    <value>Hide when focus is lost</value>
+  </data>
+  <data name="Settings.HistoryCleared" xml:space="preserve">
+    <value>History cleared</value>
+  </data>
+  <data name="Settings.HistoryWasNotCleared" xml:space="preserve">
+    <value>History was not cleared: </value>
+  </data>
+  <data name="Settings.Hotkey" xml:space="preserve">
+    <value>Hotkey</value>
+  </data>
+  <data name="Settings.HowDetailedTheLogFileIs" xml:space="preserve">
+    <value>How detailed the log file is; changes immediately</value>
+  </data>
+  <data name="Settings.HowManyQueriesToRememberFor" xml:space="preserve">
+    <value>How many queries to remember for ↑ suggestions; 0 — do not remember</value>
+  </data>
+  <data name="Settings.IconAndThumbnailCache" xml:space="preserve">
+    <value>Icon and thumbnail cache</value>
+  </data>
+  <data name="Settings.IconsAndThumbnailsWillLoadAgain" xml:space="preserve">
+    <value>Icons and thumbnails will load again.</value>
+  </data>
+  <data name="Settings.IfCopyingOrMovingIsIn" xml:space="preserve">
+    <value>If copying or moving is in progress, exit asks first</value>
+  </data>
+  <data name="Settings.InAnEmptyBox" xml:space="preserve">
+    <value>↑ in an empty box</value>
+  </data>
+  <data name="Settings.Inbox" xml:space="preserve">
+    <value>Inbox</value>
+  </data>
+  <data name="Settings.InboxFolder" xml:space="preserve">
+    <value>Inbox folder</value>
+  </data>
+  <data name="Settings.Index" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="Settings.IndexNotRebuilt" xml:space="preserve">
+    <value>Index not rebuilt: </value>
+  </data>
+  <data name="Settings.Integrations" xml:space="preserve">
+    <value>Integrations</value>
+  </data>
+  <data name="Settings.IsBeingIndexedSearchFindsFiles" xml:space="preserve">
+    <value>“{0}” is being indexed: search finds files as the scan goes.</value>
+  </data>
+  <data name="Settings.IsQueued" xml:space="preserve">
+    <value>“{0}” is queued.</value>
+  </data>
+  <data name="Settings.IssuesOnGitHub" xml:space="preserve">
+    <value>Issues on GitHub</value>
+  </data>
+  <data name="Settings.Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Settings.LanguageDescription" xml:space="preserve">
+    <value>Interface language; changes immediately</value>
+  </data>
+  <data name="Settings.LanguageSystem" xml:space="preserve">
+    <value>As in Windows</value>
+  </data>
+  <data name="Settings.Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Settings.LightDarkOrAsInWindows" xml:space="preserve">
+    <value>Light, dark or as in Windows</value>
+  </data>
+  <data name="Settings.Load" xml:space="preserve">
+    <value>Load…</value>
+  </data>
+  <data name="Settings.LoadSettings" xml:space="preserve">
+    <value>Load settings</value>
+  </data>
+  <data name="Settings.Log" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="Settings.LowerResultRowsMoreFilesFit" xml:space="preserve">
+    <value>Lower result rows — more files fit on the screen</value>
+  </data>
+  <data name="Settings.MicaInTheMainWindowAnd" xml:space="preserve">
+    <value>Mica in the main window and Acrylic in the search window, or a solid theme color</value>
+  </data>
+  <data name="Settings.MinimizedToTheTraySoThe" xml:space="preserve">
+    <value>Minimized to the tray, so the hotkey works right after sign-in</value>
+  </data>
+  <data name="Settings.Monitor" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
+  <data name="Settings.MoreGivesABetterOrderOn" xml:space="preserve">
+    <value>More gives a better order on huge indexes but is slower; 2,000 keeps the answer within 50 ms</value>
+  </data>
+  <data name="Settings.MoveToRecycleBinWithConfirmation" xml:space="preserve">
+    <value>Move to Recycle Bin (with confirmation)</value>
+  </data>
+  <data name="Settings.Never" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="Settings.NewRoots" xml:space="preserve">
+    <value>New roots</value>
+  </data>
+  <data name="Settings.NoAnimationsForWindowsAndTransitions" xml:space="preserve">
+    <value>No animations for windows and transitions; also turned on by the Windows setting</value>
+  </data>
+  <data name="Settings.NoEffect" xml:space="preserve">
+    <value>No effect</value>
+  </data>
+  <data name="Settings.NormalInformation" xml:space="preserve">
+    <value>Normal (Information)</value>
+  </data>
+  <data name="Settings.OnceADay" xml:space="preserve">
+    <value>Once a day</value>
+  </data>
+  <data name="Settings.OpenFolder" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="Settings.OpenSourceLibrariesInThisBuild" xml:space="preserve">
+    <value>Open-source libraries in this build; licenses are on the package pages</value>
+  </data>
+  <data name="Settings.OpenTheRowWithThatNumber" xml:space="preserve">
+    <value>Open the row with that number</value>
+  </data>
+  <data name="Settings.OpenWith" xml:space="preserve">
+    <value>Open with…</value>
+  </data>
+  <data name="Settings.PackageAndLicense" xml:space="preserve">
+    <value>Package and license</value>
+  </data>
+  <data name="Settings.PicksForAnEmptyQuery" xml:space="preserve">
+    <value>Picks for an empty query</value>
+  </data>
+  <data name="Settings.PressTheShortcutEscCancels" xml:space="preserve">
+    <value>Press the shortcut… Esc cancels</value>
+  </data>
+  <data name="Settings.PreviousQueries" xml:space="preserve">
+    <value>Previous queries</value>
+  </data>
+  <data name="Settings.Primary" xml:space="preserve">
+    <value>Primary</value>
+  </data>
+  <data name="Settings.ProgressIsShownInTheMain" xml:space="preserve">
+    <value>Progress is shown in the main window status bar.</value>
+  </data>
+  <data name="Settings.QueriesAreNoLongerSuggested" xml:space="preserve">
+    <value>Queries are no longer suggested.</value>
+  </data>
+  <data name="Settings.QueryHistory" xml:space="preserve">
+    <value>Query history</value>
+  </data>
+  <data name="Settings.QuickSearch" xml:space="preserve">
+    <value>Quick search</value>
+  </data>
+  <data name="Settings.Rebuild" xml:space="preserve">
+    <value>Rebuild</value>
+  </data>
+  <data name="Settings.Rebuild2" xml:space="preserve">
+    <value>Rebuild…</value>
+  </data>
+  <data name="Settings.RebuildIndex" xml:space="preserve">
+    <value>Rebuild index</value>
+  </data>
+  <data name="Settings.RebuildingTheIndex" xml:space="preserve">
+    <value>Rebuilding the index</value>
+  </data>
+  <data name="Settings.RecentFirst" xml:space="preserve">
+    <value>Recent first</value>
+  </data>
+  <data name="Settings.RecentlyOpenedPinnedAndChangedFiles" xml:space="preserve">
+    <value>Recently opened, pinned and changed files while nothing is typed</value>
+  </data>
+  <data name="Settings.ReduceMotion" xml:space="preserve">
+    <value>Reduce motion</value>
+  </data>
+  <data name="Settings.Releases" xml:space="preserve">
+    <value>Releases</value>
+  </data>
+  <data name="Settings.RemindersDoNotDisturbAutoSorting" xml:space="preserve">
+    <value>Reminders, do not disturb, auto-sorting rules and the decision log will come with inbox sorting (stage 17)</value>
+  </data>
+  <data name="Settings.Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Settings.RemoveFromIndex" xml:space="preserve">
+    <value>Remove from index</value>
+  </data>
+  <data name="Settings.RemoveFromIndexFilesStay" xml:space="preserve">
+    <value>Remove from index (files stay)</value>
+  </data>
+  <data name="Settings.RemoveFromTheIndexFilesOn" xml:space="preserve">
+    <value>Remove “{0}” from the index? Files on disk stay untouched but will no longer be found.</value>
+  </data>
+  <data name="Settings.RemoveRule" xml:space="preserve">
+    <value>Remove rule</value>
+  </data>
+  <data name="Settings.ReportAProblem" xml:space="preserve">
+    <value>Report a problem</value>
+  </data>
+  <data name="Settings.RepositoryOnGitHub" xml:space="preserve">
+    <value>Repository on GitHub</value>
+  </data>
+  <data name="Settings.Rescan" xml:space="preserve">
+    <value>Rescan</value>
+  </data>
+  <data name="Settings.Rescan2" xml:space="preserve">
+    <value>Rescan</value>
+  </data>
+  <data name="Settings.ResultOrder" xml:space="preserve">
+    <value>Result order</value>
+  </data>
+  <data name="Settings.RootAdded" xml:space="preserve">
+    <value>Root added</value>
+  </data>
+  <data name="Settings.RootNotAdded" xml:space="preserve">
+    <value>Root not added: </value>
+  </data>
+  <data name="Settings.RootNotChanged" xml:space="preserve">
+    <value>Root not changed: </value>
+  </data>
+  <data name="Settings.RootNotRemoved" xml:space="preserve">
+    <value>Root not removed: </value>
+  </data>
+  <data name="Settings.Roots" xml:space="preserve">
+    <value>Roots</value>
+  </data>
+  <data name="Settings.RowDetails" xml:space="preserve">
+    <value>Row details</value>
+  </data>
+  <data name="Settings.RulesWereNotReset" xml:space="preserve">
+    <value>Rules were not reset: </value>
+  </data>
+  <data name="Settings.RunAsAdministrator" xml:space="preserve">
+    <value>Run as administrator</value>
+  </data>
+  <data name="Settings.SaveSettings" xml:space="preserve">
+    <value>Save settings</value>
+  </data>
+  <data name="Settings.SaveSettingsToAJSONFile" xml:space="preserve">
+    <value>Save settings to a JSON file or load them on another computer</value>
+  </data>
+  <data name="Settings.SaveToFile" xml:space="preserve">
+    <value>Save to file…</value>
+  </data>
+  <data name="Settings.Scale" xml:space="preserve">
+    <value>Scale</value>
+  </data>
+  <data name="Settings.ScheduleStorageLocationsAndRestoreWill" xml:space="preserve">
+    <value>Schedule, storage locations and restore will come with the backup module (stage 16)</value>
+  </data>
+  <data name="Settings.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Settings.SearchWindowKeys" xml:space="preserve">
+    <value>Search window keys</value>
+  </data>
+  <data name="Settings.SendToDiskApp" xml:space="preserve">
+    <value>“Send to” → DiskApp</value>
+  </data>
+  <data name="Settings.SettingNotSaved" xml:space="preserve">
+    <value>Setting not saved: </value>
+  </data>
+  <data name="Settings.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings.SettingsLoaded" xml:space="preserve">
+    <value>Settings loaded</value>
+  </data>
+  <data name="Settings.SettingsSaved" xml:space="preserve">
+    <value>Settings saved</value>
+  </data>
+  <data name="Settings.SettingsTransfer" xml:space="preserve">
+    <value>Settings transfer</value>
+  </data>
+  <data name="Settings.SettingsWereNotLoaded" xml:space="preserve">
+    <value>Settings were not loaded: </value>
+  </data>
+  <data name="Settings.SettingsWereNotSavedToThe" xml:space="preserve">
+    <value>Settings were not saved to the file: </value>
+  </data>
+  <data name="Settings.ShortcutInTheSaveOrOpen" xml:space="preserve">
+    <value>Shortcut in the Save or Open dialog; works if Quick Switch is on in Integrations</value>
+  </data>
+  <data name="Settings.ShowOrHideTheQuickSearch" xml:space="preserve">
+    <value>Show or hide the quick search window from any app</value>
+  </data>
+  <data name="Settings.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Settings.SizeOfTextAndControlsIn" xml:space="preserve">
+    <value>Size of text and controls in the main window and the search window</value>
+  </data>
+  <data name="Settings.SortTheInbox" xml:space="preserve">
+    <value>Sort the inbox</value>
+  </data>
+  <data name="Settings.SortingCollectionFolders" xml:space="preserve">
+    <value>Sorting collection folders</value>
+  </data>
+  <data name="Settings.SortingSessionForDownloadsComingIn" xml:space="preserve">
+    <value>Sorting session for Downloads — coming in stage 17</value>
+  </data>
+  <data name="Settings.StartMinimized" xml:space="preserve">
+    <value>Start minimized</value>
+  </data>
+  <data name="Settings.StartWithWindows" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="Settings.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Settings.SystemFilesAndFolders" xml:space="preserve">
+    <value>System files and folders</value>
+  </data>
+  <data name="Settings.TheCloseButtonHidesTheWindow" xml:space="preserve">
+    <value>The close button hides the window; exit from the tray menu</value>
+  </data>
+  <data name="Settings.TheFileHasNoDiskAppSettings" xml:space="preserve">
+    <value>The file has no DiskApp settings.</value>
+  </data>
+  <data name="Settings.TheFirstIndexRootUntilA" xml:space="preserve">
+    <value>The first index root — until a folder is chosen</value>
+  </data>
+  <data name="Settings.TheIndexOfAllRootsWill" xml:space="preserve">
+    <value>The index of all roots will be built again. Files are not touched, but until the scan finishes search finds only part of them. Favorites, tags and collections are kept for files found again.</value>
+  </data>
+  <data name="Settings.ThePatternHasACharacterNot" xml:space="preserve">
+    <value>The pattern has a character not allowed in Windows paths: &lt; &gt; " |.</value>
+  </data>
+  <data name="Settings.TheWatcherCatchesChangesReconciliationFinds" xml:space="preserve">
+    <value>The watcher catches changes; reconciliation finds what was missed, for example after working without DiskApp</value>
+  </data>
+  <data name="Settings.TheWindowsColorOrYourOwn" xml:space="preserve">
+    <value>The Windows color or your own: buttons, selection, match highlighting</value>
+  </data>
+  <data name="Settings.Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Settings.ThereAreNeverMoreThanTwo" xml:space="preserve">
+    <value>There are never more than two asterisks in a row: ** means any folders, * any part of a name.</value>
+  </data>
+  <data name="Settings.ThirdPartyComponents" xml:space="preserve">
+    <value>Third-party components</value>
+  </data>
+  <data name="Settings.ThisKeyWillNotWorkUse" xml:space="preserve">
+    <value>This key will not work: use a letter, a digit, F1–F24, Space or a navigation key.</value>
+  </data>
+  <data name="Settings.ThisRuleAlreadyExists" xml:space="preserve">
+    <value>This rule already exists.</value>
+  </data>
+  <data name="Settings.Updates" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Settings.VersionAlpha" xml:space="preserve">
+    <value>Version {0} · alpha</value>
+  </data>
+  <data name="Settings.WarningsWarning" xml:space="preserve">
+    <value>Warnings (Warning)</value>
+  </data>
+  <data name="Settings.WhatKeysDoWhileTheQuick" xml:space="preserve">
+    <value>What keys do while the quick search window is open</value>
+  </data>
+  <data name="Settings.WhatMattersMoreANameMatch" xml:space="preserve">
+    <value>What matters more: a name match, freshness or a balance with how often files are opened</value>
+  </data>
+  <data name="Settings.WhatStaysOutOfTheIndex" xml:space="preserve">
+    <value>What stays out of the index: path patterns, where ** is any folders and * any part of a name</value>
+  </data>
+  <data name="Settings.WhatToIndexInFoldersAnd" xml:space="preserve">
+    <value>What to index in folders and drives being added</value>
+  </data>
+  <data name="Settings.WhatToShowNextToThe" xml:space="preserve">
+    <value>What to show next to the file name</value>
+  </data>
+  <data name="Settings.WhenStartingWithWindowsTheMain" xml:space="preserve">
+    <value>When starting with Windows the main window is not shown — only the tray icon</value>
+  </data>
+  <data name="Settings.WhenThereAreFewExactMatches" xml:space="preserve">
+    <value>When there are few exact matches, find names with a typo: “reprot” → “report”</value>
+  </data>
+  <data name="Settings.WhereAddedItemsGoByDefault" xml:space="preserve">
+    <value>Where added items go by default: dropping on Home, Send to, clipboard</value>
+  </data>
+  <data name="Settings.WhereToShowTheQuickSearch" xml:space="preserve">
+    <value>Where to show the quick search window</value>
+  </data>
+  <data name="Settings.WindowBackground" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="Settings.WithTheActiveWindow" xml:space="preserve">
+    <value>With the active window</value>
+  </data>
+  <data name="Settings.WithTheMousePointer" xml:space="preserve">
+    <value>With the mouse pointer</value>
+  </data>
+  <data name="SettingsData.IndexSize" xml:space="preserve">
+    <value>{0} · database {1}</value>
+  </data>
+  <data name="ShellClipboard.ClipboardUnavailableNoOSShell" xml:space="preserve">
+    <value>Clipboard unavailable: no OS shell.</value>
+  </data>
+  <data name="ShellIntegration.AddToDiskApp" xml:space="preserve">
+    <value>Add to DiskApp</value>
+  </data>
+  <data name="ShellIntegration.AddToDiskAppIndex" xml:space="preserve">
+    <value>Add to DiskApp index</value>
+  </data>
+  <data name="ShellIntegration.OpenInDiskApp" xml:space="preserve">
+    <value>Open in DiskApp</value>
+  </data>
+  <data name="ShellIntegration.PutFilesIntoADiskAppFolder" xml:space="preserve">
+    <value>Put files into a DiskApp folder you choose</value>
+  </data>
+  <data name="ShellIntegration.SearchAndSortFiles" xml:space="preserve">
+    <value>Search and sort files</value>
+  </data>
+  <data name="ShellIntegration.WindowsDidNotAllowChangingThe" xml:space="preserve">
+    <value>Windows did not allow changing the integration: </value>
+  </data>
+  <data name="Size.B" xml:space="preserve">
+    <value>B</value>
+  </data>
+  <data name="Size.GB" xml:space="preserve">
+    <value>GB</value>
+  </data>
+  <data name="Size.KB" xml:space="preserve">
+    <value>KB</value>
+  </data>
+  <data name="Size.MB" xml:space="preserve">
+    <value>MB</value>
+  </data>
+  <data name="Size.TB" xml:space="preserve">
+    <value>TB</value>
+  </data>
+  <data name="TagPicker.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="TagPicker.CouldNotLoadTags" xml:space="preserve">
+    <value>Could not load tags: </value>
+  </data>
+  <data name="TagPicker.File.Few" xml:space="preserve">
+    <value>files</value>
+  </data>
+  <data name="TagPicker.File.Many" xml:space="preserve">
+    <value>files</value>
+  </data>
+  <data name="TagPicker.File.One" xml:space="preserve">
+    <value>file</value>
+  </data>
+  <data name="TagPicker.NewTag" xml:space="preserve">
+    <value>New tag</value>
+  </data>
+  <data name="TagPicker.NoTagsYetTypeAName" xml:space="preserve">
+    <value>No tags yet. Type a name below — the tag gets a color and is checked right away.</value>
+  </data>
+  <data name="TagPicker.TagsFor" xml:space="preserve">
+    <value>Tags for “{0}”</value>
+  </data>
+  <data name="TagPicker.TagsFor2" xml:space="preserve">
+    <value>Tags for </value>
+  </data>
+  <data name="Tags.ChooseATag" xml:space="preserve">
+    <value>Choose a tag</value>
+  </data>
+  <data name="Tags.CouldNotChangeTags" xml:space="preserve">
+    <value>Could not change tags</value>
+  </data>
+  <data name="Tags.CouldNotChangeTheTag" xml:space="preserve">
+    <value>Could not change the tag</value>
+  </data>
+  <data name="Tags.CouldNotCreateTheTag" xml:space="preserve">
+    <value>Could not create the tag</value>
+  </data>
+  <data name="Tags.CouldNotDeleteTheTag" xml:space="preserve">
+    <value>Could not delete the tag</value>
+  </data>
+  <data name="Tags.CouldNotFindFiles" xml:space="preserve">
+    <value>Could not find files: </value>
+  </data>
+  <data name="Tags.CouldNotLoadTags" xml:space="preserve">
+    <value>Could not load tags: </value>
+  </data>
+  <data name="Tags.CouldNotOpen" xml:space="preserve">
+    <value>Could not open</value>
+  </data>
+  <data name="Tags.CouldNotShowInFolder" xml:space="preserve">
+    <value>Could not show in folder</value>
+  </data>
+  <data name="Tags.CreateATagHereOrTag" xml:space="preserve">
+    <value>Create a tag here or tag a file in search: Ctrl+T</value>
+  </data>
+  <data name="Tags.DeleteTag" xml:space="preserve">
+    <value>Delete tag</value>
+  </data>
+  <data name="Tags.DeleteTagFilesStay" xml:space="preserve">
+    <value>Delete tag (files stay)</value>
+  </data>
+  <data name="Tags.DeleteTagItIsRemovedFrom" xml:space="preserve">
+    <value>Delete tag “{0}”? It is removed from all files; the files stay.</value>
+  </data>
+  <data name="Tags.EditTag" xml:space="preserve">
+    <value>Edit tag</value>
+  </data>
+  <data name="Tags.FilesTagged" xml:space="preserve">
+    <value>Files tagged “{0}”</value>
+  </data>
+  <data name="Tags.LabelsForFilesFromDifferentPlaces" xml:space="preserve">
+    <value>Labels for files from different places. Ctrl+T in search and Browse tags; tag:name in a query finds.</value>
+  </data>
+  <data name="Tags.NewTag" xml:space="preserve">
+    <value>New tag</value>
+  </data>
+  <data name="Tags.NoFilesHaveThisTagTag" xml:space="preserve">
+    <value>No files have this tag. Tag files in search or Browse: Ctrl+T.</value>
+  </data>
+  <data name="Tags.NoTagsYet" xml:space="preserve">
+    <value>No tags yet</value>
+  </data>
+  <data name="Tags.RenameOrChangeColor" xml:space="preserve">
+    <value>Rename or change color</value>
+  </data>
+  <data name="Tags.TagDeleted" xml:space="preserve">
+    <value>Tag deleted</value>
+  </data>
+  <data name="Time.Ago" xml:space="preserve">
+    <value>{0} ago</value>
+  </data>
+  <data name="Time.Day.Few" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="Time.Day.Many" xml:space="preserve">
+    <value>days</value>
+  </data>
+  <data name="Time.Day.One" xml:space="preserve">
+    <value>day</value>
+  </data>
+  <data name="Time.Hour.Few" xml:space="preserve">
+    <value>hours</value>
+  </data>
+  <data name="Time.Hour.Many" xml:space="preserve">
+    <value>hours</value>
+  </data>
+  <data name="Time.Hour.One" xml:space="preserve">
+    <value>hour</value>
+  </data>
+  <data name="Time.JustNow" xml:space="preserve">
+    <value>just now</value>
+  </data>
+  <data name="Time.Minute.Few" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="Time.Minute.Many" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="Time.Minute.One" xml:space="preserve">
+    <value>minute</value>
+  </data>
+  <data name="Time.Yesterday" xml:space="preserve">
+    <value>yesterday</value>
+  </data>
+  <data name="TrayStatus.DiskAppIndexIsUpToDate" xml:space="preserve">
+    <value>DiskApp — index is up to date</value>
+  </data>
+  <data name="TrayStatus.DiskAppIndexing" xml:space="preserve">
+    <value>DiskApp — indexing</value>
+  </data>
+  <data name="TrayStatus.DiskAppIndexingError" xml:space="preserve">
+    <value>DiskApp — indexing error: </value>
+  </data>
+  <data name="TrayStatus.DiskAppIndexingPaused" xml:space="preserve">
+    <value>DiskApp — indexing paused</value>
+  </data>
+  <data name="TrayStatus.DiskAppStarting" xml:space="preserve">
+    <value>DiskApp — starting…</value>
+  </data>
+  <data name="TrayStatus.DiskAppTheServerDidNotStart" xml:space="preserve">
+    <value>DiskApp — the server did not start</value>
+  </data>
+  <data name="TrayStatus.DiskAppUnavailable" xml:space="preserve">
+    <value>DiskApp — unavailable: </value>
+  </data>
+  <data name="TrayStatus.Entries" xml:space="preserve">
+    <value> entries</value>
+  </data>
+</root>

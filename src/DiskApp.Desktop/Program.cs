@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -12,6 +12,7 @@ using DiskApp.Desktop.Startup;
 using DiskApp.Infrastructure;
 using DiskApp.Server;
 using DiskApp.UI;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -185,7 +186,7 @@ internal static class Program
 
         // Обычно сервер готов меньше чем за секунду; если дольше (большая база проверяется на целостность) — сказать об этом.
         using var slow = new Timer(
-            _ => dispatcher.Post(() => notices.Show("Сервер запускается дольше обычного", "Проверка и открытие базы индекса ещё идут; поиск заработает, когда они закончатся.")),
+            _ => dispatcher.Post(() => notices.Show(L.T("Program.TheServerIsTakingLongerThan"), L.T("Program.TheIndexDatabaseIsStillBeing"))),
             null,
             ServerSlowStartNotice,
             Timeout.InfiniteTimeSpan);
@@ -200,7 +201,7 @@ internal static class Program
             // Без сервера интерфейс работает на макетных данных; причина — в журнале и в уведомлении, запросы клиента получат ошибку.
             endpoint.Fail(exception);
             Log.Error(exception, "Сервер не запустился");
-            dispatcher.Post(() => notices.Show("Сервер DiskApp не запустился", exception.Message + " Подробности — в журнале.", FluentAvalonia.UI.Controls.FAInfoBarSeverity.Error));
+            dispatcher.Post(() => notices.Show(L.T("Program.TheDiskAppServerDidNotStart"), exception.Message + L.T("Program.DetailsAreInTheLog"), FluentAvalonia.UI.Controls.FAInfoBarSeverity.Error));
         }
     }
 

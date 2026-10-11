@@ -1,4 +1,4 @@
-using System.Buffers;
+﻿using System.Buffers;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Abstractions;
@@ -7,6 +7,7 @@ using System.Threading.Channels;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Events;
 using DiskApp.Core.Indexing;
+using DiskApp.Core.Localization;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Results;
 
@@ -140,12 +141,12 @@ public sealed partial class FileOperationService : IAsyncDisposable
             run = Find(id);
             if (run is null)
             {
-                return Result.Fail(new DomainError(NotFoundCode, "Операция не найдена."));
+                return Result.Fail(new DomainError(NotFoundCode, L.T("Operations.NotFound")));
             }
 
             if (IsFinished(run.State))
             {
-                return Result.Fail(new DomainError(FinishedCode, "Операция уже завершена."));
+                return Result.Fail(new DomainError(FinishedCode, L.T("FileOperation.TheOperationHasAlreadyFinished")));
             }
         }
 
@@ -167,12 +168,12 @@ public sealed partial class FileOperationService : IAsyncDisposable
             var run = Find(id);
             if (run is null)
             {
-                return Result.Fail(new DomainError(NotFoundCode, "Операция не найдена."));
+                return Result.Fail(new DomainError(NotFoundCode, L.T("Operations.NotFound")));
             }
 
             if (run.Decision is not { } decision || run.PendingConflict is null)
             {
-                return Result.Fail(new DomainError(NoConflictCode, "Операция не ждёт решения."));
+                return Result.Fail(new DomainError(NoConflictCode, L.T("FileOperation.TheOperationIsNotWaitingFor")));
             }
 
             decision.TrySetResult((resolution, applyToAll));
@@ -191,12 +192,12 @@ public sealed partial class FileOperationService : IAsyncDisposable
             var run = Find(id);
             if (run is null)
             {
-                return Result.Fail<FileOperationInfo>(new DomainError(NotFoundCode, "Операция не найдена."));
+                return Result.Fail<FileOperationInfo>(new DomainError(NotFoundCode, L.T("Operations.NotFound")));
             }
 
             if (!CanUndo(run))
             {
-                return Result.Fail<FileOperationInfo>(new DomainError(NotUndoableCode, "Эту операцию нельзя отменить."));
+                return Result.Fail<FileOperationInfo>(new DomainError(NotUndoableCode, L.T("FileOperation.ThisOperationCannotBeUndone")));
             }
 
             run.Undone = true;
@@ -272,31 +273,31 @@ public sealed partial class FileOperationService : IAsyncDisposable
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return "Имя не может быть пустым.";
+            return L.T("FileOperation.TheNameCannotBeEmpty");
         }
 
         if (name is "." or "..")
         {
-            return "Недопустимое имя.";
+            return L.T("FileOperation.InvalidName");
         }
 
         if (name.IndexOfAny(InvalidNameChars) >= 0)
         {
-            return "Имя не может содержать символы \\ / : * ? \" < > |.";
+            return L.T("FileOperation.TheNameCannotContain");
         }
 
         if (name.EndsWith('.') || name.EndsWith(' ') || name.StartsWith(' '))
         {
-            return "Имя не может начинаться с пробела и заканчиваться пробелом или точкой.";
+            return L.T("FileOperation.TheNameCannotStartWithA");
         }
 
         var dot = name.IndexOf('.', StringComparison.Ordinal);
         if (ReservedNames.Contains(dot < 0 ? name : name[..dot]))
         {
-            return $"Имя «{name}» зарезервировано Windows.";
+            return L.F("FileOperation.TheNameIsReservedByWindows", name);
         }
 
-        return name.Length > 255 ? "Имя длиннее 255 символов." : null;
+        return name.Length > 255 ? L.T("FileOperation.TheNameIsLongerThan255") : null;
     }
 
     private static bool IsFinished(OperationState state) => state is OperationState.Completed or OperationState.Failed or OperationState.Cancelled;
@@ -377,17 +378,17 @@ public sealed partial class FileOperationService : IAsyncDisposable
         {
             if (!_paths.TryNormalize(source, out var path))
             {
-                return Invalid($"Путь «{source}» должен быть абсолютным.");
+                return Invalid(L.F("Operations.PathMustBeAbsolute", source));
             }
 
             if (_paths.IsRoot(path))
             {
-                return Invalid($"С корнем диска «{path}» так работать нельзя.");
+                return Invalid(L.F("FileOperation.ThisCannotBeDoneWithThe", path));
             }
 
             if (!_fs.File.Exists(path) && !_fs.Directory.Exists(path))
             {
-                return Invalid($"«{path}» не найден.");
+                return Invalid(L.F("FileOperation.NotFound", path));
             }
 
             sources.Add(path);
@@ -395,7 +396,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
 
         if (sources.Distinct(_paths.Comparer).Count() != sources.Count)
         {
-            return Invalid("Пути повторяются.");
+            return Invalid(L.T("FileOperation.PathsRepeat"));
         }
 
         string? destination = null;
@@ -403,12 +404,12 @@ public sealed partial class FileOperationService : IAsyncDisposable
         {
             if (!_paths.TryNormalize(request.Destination, out destination))
             {
-                return Invalid($"Путь «{request.Destination}» должен быть абсолютным.");
+                return Invalid(L.F("Operations.PathMustBeAbsolute", request.Destination));
             }
 
             if (!_fs.Directory.Exists(destination))
             {
-                return Invalid($"Папка «{destination}» не найдена.");
+                return Invalid(L.F("FileOperation.FolderNotFound", destination));
             }
         }
 
@@ -417,14 +418,14 @@ public sealed partial class FileOperationService : IAsyncDisposable
             case FileOperationKind.Copy or FileOperationKind.Move:
                 if (sources.Count == 0 || destination is null)
                 {
-                    return Invalid("Укажите, что и в какую папку переносить.");
+                    return Invalid(L.T("FileOperation.SayWhatToMoveAndInto"));
                 }
 
                 foreach (var source in sources.Where(_fs.Directory.Exists))
                 {
                     if (_paths.Comparer.Equals(destination, source) || _paths.IsNestedIn(destination, source))
                     {
-                        return Invalid($"Папку «{source}» нельзя поместить в неё саму.");
+                        return Invalid(L.F("FileOperation.FolderCannotBePlacedIntoItself", source));
                     }
                 }
 
@@ -432,7 +433,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
             case FileOperationKind.Rename:
                 if (sources.Count != 1)
                 {
-                    return Invalid("Переименовать можно один файл или папку.");
+                    return Invalid(L.T("FileOperation.OnlyOneFileOrFolderCan"));
                 }
 
                 if (NameProblem(request.NewName) is { } renameProblem)
@@ -444,14 +445,14 @@ public sealed partial class FileOperationService : IAsyncDisposable
             case FileOperationKind.Delete:
                 if (sources.Count == 0)
                 {
-                    return Invalid("Укажите, что удалить.");
+                    return Invalid(L.T("FileOperation.SayWhatToDelete"));
                 }
 
                 break;
             case FileOperationKind.CreateFolder or FileOperationKind.CreateFile:
                 if (destination is null)
                 {
-                    return Invalid("Укажите папку, в которой создать.");
+                    return Invalid(L.T("FileOperation.SayInWhichFolderToCreate"));
                 }
 
                 if (NameProblem(request.NewName) is { } createProblem)
@@ -461,7 +462,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
 
                 break;
             default:
-                return Invalid("Неизвестная операция.");
+                return Invalid(L.T("FileOperation.UnknownOperation"));
         }
 
         normalized = request with { Sources = sources, Destination = destination, NewName = request.NewName?.Trim() };
@@ -498,7 +499,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
         var context = new RunContext(run, new HashSet<string>(_paths.Comparer), []);
         if (token.IsCancellationRequested)
         {
-            Finish(run, OperationState.Cancelled, "Отменена до запуска.");
+            Finish(run, OperationState.Cancelled, L.T("FileOperation.CancelledBeforeStart"));
             return;
         }
 
@@ -537,7 +538,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
-            Finish(run, OperationState.Cancelled, _stop.IsCancellationRequested ? "Остановлена при выходе из приложения." : "Отменена.");
+            Finish(run, OperationState.Cancelled, _stop.IsCancellationRequested ? L.T("FileOperation.StoppedWhenTheAppExited") : L.T("FileOperation.Cancelled"));
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
@@ -556,12 +557,12 @@ public sealed partial class FileOperationService : IAsyncDisposable
     {
         if (context.Errors.Count == 0)
         {
-            return context.Skipped > 0 ? $"Пропущено: {context.Skipped.ToString(CultureInfo.InvariantCulture)}." : null;
+            return context.Skipped > 0 ? L.F("FileOperation.Skipped", context.Skipped.ToString(CultureInfo.InvariantCulture)) : null;
         }
 
         return context.Errors.Count == 1
             ? context.Errors[0]
-            : $"Ошибок: {context.Errors.Count.ToString(CultureInfo.InvariantCulture)}. Первая: {context.Errors[0]}";
+            : L.F("FileOperation.ErrorsFirst", context.Errors.Count.ToString(CultureInfo.InvariantCulture), context.Errors[0]);
     }
 
     private void Finish(OperationRun run, OperationState state, string? message)
@@ -644,7 +645,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
         {
             if (_fs.FileInfo.New(resolved).Length != size)
             {
-                throw new IOException($"Копия «{resolved}» не совпала по размеру с источником; источник оставлен.");
+                throw new IOException(L.F("FileOperation.TheCopyOfDidNotMatch", resolved));
             }
 
             ClearReadOnly(source);
@@ -829,12 +830,12 @@ public sealed partial class FileOperationService : IAsyncDisposable
             {
                 if (!_fs.File.Exists(from) && !_fs.Directory.Exists(from))
                 {
-                    throw new IOException($"«{from}» больше нет.");
+                    throw new IOException(L.F("FileOperation.IsGone", from));
                 }
 
                 if (_fs.File.Exists(to) || (_fs.Directory.Exists(to) && !_paths.Comparer.Equals(from, to)))
                 {
-                    throw new IOException($"На месте «{to}» уже что-то есть.");
+                    throw new IOException(L.F("FileOperation.SomethingAlreadyExistsInPlaceOf", to));
                 }
 
                 _fs.Directory.CreateDirectory(_paths.GetParent(to)!);
@@ -853,7 +854,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                context.Errors.Add($"Не удалось вернуть «{from}»: {exception.Message}");
+                context.Errors.Add(L.F("FileOperation.CouldNotRestore", from, exception.Message));
             }
 
             AddProgress(run, items: 1, bytes: 0, path: null);
@@ -937,7 +938,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
                     AddProgress(run, items: 1, bytes: 0, path: null);
                     return Task.CompletedTask;
                 case ConflictPolicy.Overwrite:
-                    throw new IOException($"«{target}» уже существует.");
+                    throw new IOException(L.F("FileOperation.AlreadyExists", target));
                 default:
                     target = UniqueName(target);
                     break;
@@ -1081,7 +1082,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
     {
         if (_shell is null)
         {
-            throw new IOException("Корзина недоступна на этой платформе: удаление и замена файлов не выполняются.");
+            throw new IOException(L.T("FileOperation.TheRecycleBinIsNotAvailable"));
         }
 
         var result = await _shell.MoveToRecycleBinAsync(paths, token).ConfigureAwait(false);

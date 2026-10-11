@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 using DiskApp.Contracts;
 using DiskApp.Contracts.Entries;
@@ -6,6 +6,7 @@ using DiskApp.Contracts.Library;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Domain;
 using DiskApp.Core.Repositories;
+using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
@@ -104,7 +105,7 @@ internal static partial class LibraryEndpoints
     {
         if (await lookup.GetAsync(request.EntryId, cancellationToken).ConfigureAwait(false) is null)
         {
-            return ApiProblems.NotFound($"Запись {request.EntryId} не найдена.");
+            return ApiProblems.NotFound(L.F("Library.EntryNotFound", request.EntryId));
         }
 
         await favorites.AddAsync(request.EntryId, clock.UtcNow, cancellationToken).ConfigureAwait(false);
@@ -114,14 +115,14 @@ internal static partial class LibraryEndpoints
     private static async Task<Results<NoContent, ProblemHttpResult>> RemoveFavoriteAsync(long entryId, IFavoriteRepository favorites, CancellationToken cancellationToken)
         => await favorites.RemoveAsync(entryId, cancellationToken).ConfigureAwait(false)
             ? TypedResults.NoContent()
-            : ApiProblems.NotFound($"Записи {entryId} нет в избранном.");
+            : ApiProblems.NotFound(L.F("LibraryEndpoints.EntryIsNotInFavorites", entryId));
 
     private static async Task<Results<NoContent, ValidationProblem>> ReorderFavoritesAsync(FavoritesOrderRequest request, IFavoriteRepository favorites, CancellationToken cancellationToken)
     {
         var current = (await favorites.GetAllAsync(cancellationToken).ConfigureAwait(false)).Select(static favorite => favorite.EntryId).ToHashSet();
         if (request.EntryIds.Count != current.Count || request.EntryIds.Distinct().Count() != current.Count || !request.EntryIds.All(current.Contains))
         {
-            return ApiProblems.Invalid(nameof(request.EntryIds), "Передайте все записи избранного по одному разу.");
+            return ApiProblems.Invalid(nameof(request.EntryIds), L.T("LibraryEndpoints.PassEveryFavoriteExactlyOnce"));
         }
 
         await favorites.ReorderAsync(request.EntryIds, cancellationToken).ConfigureAwait(false);
@@ -137,7 +138,7 @@ internal static partial class LibraryEndpoints
     {
         if (limit is < 1 or > 200)
         {
-            return ApiProblems.Invalid("limit", "Записей — от 1 до 200.");
+            return ApiProblems.Invalid("limit", L.T("LibraryEndpoints.EntriesFrom1To200"));
         }
 
         var recent = await usage.GetRecentAsync(limit ?? 20, cancellationToken).ConfigureAwait(false);
@@ -163,7 +164,7 @@ internal static partial class LibraryEndpoints
 
         if (await tags.GetByNameAsync(request.Name.Trim(), cancellationToken).ConfigureAwait(false) is not null)
         {
-            return ApiProblems.Conflict("tag.duplicate", $"Тег «{request.Name.Trim()}» уже есть.");
+            return ApiProblems.Conflict("tag.duplicate", L.F("Library.TagExists", request.Name.Trim()));
         }
 
         var tag = await tags.AddAsync(request.Name.Trim(), request.Color, cancellationToken).ConfigureAwait(false);
@@ -179,12 +180,12 @@ internal static partial class LibraryEndpoints
 
         if (await tags.GetByIdAsync(id, cancellationToken).ConfigureAwait(false) is null)
         {
-            return ApiProblems.NotFound($"Тег {id} не найден.");
+            return ApiProblems.NotFound(L.F("Library.TagNotFound", id));
         }
 
         if (await tags.GetByNameAsync(request.Name.Trim(), cancellationToken).ConfigureAwait(false) is { } other && other.Id != id)
         {
-            return ApiProblems.Conflict("tag.duplicate", $"Тег «{request.Name.Trim()}» уже есть.");
+            return ApiProblems.Conflict("tag.duplicate", L.F("Library.TagExists", request.Name.Trim()));
         }
 
         var updated = new Tag(id, request.Name.Trim(), request.Color);
@@ -195,19 +196,19 @@ internal static partial class LibraryEndpoints
     private static async Task<Results<NoContent, ProblemHttpResult>> DeleteTagAsync(long id, ITagRepository tags, CancellationToken cancellationToken)
         => await tags.DeleteAsync(id, cancellationToken).ConfigureAwait(false)
             ? TypedResults.NoContent()
-            : ApiProblems.NotFound($"Тег {id} не найден.");
+            : ApiProblems.NotFound(L.F("Library.TagNotFound", id));
 
     private static ValidationProblem? ValidateTag(TagRequest request)
     {
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
         if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Trim().Length > 64)
         {
-            errors[nameof(request.Name)] = ["Имя тега — от 1 до 64 символов."];
+            errors[nameof(request.Name)] = [L.T("LibraryEndpoints.ATagNameIs1To")];
         }
 
         if (request.Color is not null && !ColorPattern().IsMatch(request.Color))
         {
-            errors[nameof(request.Color)] = ["Цвет — в виде #RRGGBB."];
+            errors[nameof(request.Color)] = [L.T("LibraryEndpoints.AColorLooksLikeRRGGBB")];
         }
 
         return errors.Count > 0 ? ApiProblems.Invalid(errors) : null;
@@ -241,13 +242,13 @@ internal static partial class LibraryEndpoints
         var updated = new Collection(id, request.Name.Trim(), request.Kind.ToDomain(), Query(request));
         return await collections.UpdateAsync(updated, cancellationToken).ConfigureAwait(false)
             ? TypedResults.Ok(updated.ToDto())
-            : ApiProblems.NotFound($"Коллекция {id} не найдена.");
+            : ApiProblems.NotFound(L.F("Library.CollectionNotFound", id));
     }
 
     private static async Task<Results<NoContent, ProblemHttpResult>> DeleteCollectionAsync(long id, ICollectionRepository collections, CancellationToken cancellationToken)
         => await collections.DeleteAsync(id, cancellationToken).ConfigureAwait(false)
             ? TypedResults.NoContent()
-            : ApiProblems.NotFound($"Коллекция {id} не найдена.");
+            : ApiProblems.NotFound(L.F("Library.CollectionNotFound", id));
 
     private static async Task<Results<Ok<IReadOnlyList<EntryDto>>, ValidationProblem, ProblemHttpResult>> GetCollectionItemsAsync(
         long id,
@@ -259,12 +260,12 @@ internal static partial class LibraryEndpoints
         var collection = await collections.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (collection is null)
         {
-            return ApiProblems.NotFound($"Коллекция {id} не найдена.");
+            return ApiProblems.NotFound(L.F("Library.CollectionNotFound", id));
         }
 
         if (collection.Kind == Core.Domain.CollectionKind.SavedQuery)
         {
-            return ApiProblems.Invalid("id", "Это сохранённый запрос: его результаты выдаёт поиск по строке Query.");
+            return ApiProblems.Invalid("id", L.T("LibraryEndpoints.ThisIsASavedQueryIts"));
         }
 
         var ids = await collections.GetItemsAsync(id, cancellationToken).ConfigureAwait(false);
@@ -281,12 +282,12 @@ internal static partial class LibraryEndpoints
         var collection = await collections.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (collection is null)
         {
-            return ApiProblems.NotFound($"Коллекция {id} не найдена.");
+            return ApiProblems.NotFound(L.F("Library.CollectionNotFound", id));
         }
 
         if (collection.Kind == Core.Domain.CollectionKind.SavedQuery)
         {
-            return ApiProblems.Invalid("id", "В сохранённый запрос записи не добавляются.");
+            return ApiProblems.Invalid("id", L.T("LibraryEndpoints.EntriesAreNotAddedToA"));
         }
 
         var desired = request.EntryIds.Distinct().ToArray();
@@ -294,7 +295,7 @@ internal static partial class LibraryEndpoints
         var unknown = desired.Where(entryId => !existing.Contains(entryId)).ToArray();
         if (unknown.Length > 0)
         {
-            return ApiProblems.Invalid(nameof(request.EntryIds), "Неизвестные записи: " + string.Join(", ", unknown) + ".");
+            return ApiProblems.Invalid(nameof(request.EntryIds), L.T("LibraryEndpoints.UnknownEntries") + string.Join(", ", unknown) + ".");
         }
 
         var current = await collections.GetItemsAsync(id, cancellationToken).ConfigureAwait(false);
@@ -317,12 +318,12 @@ internal static partial class LibraryEndpoints
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
         if (string.IsNullOrWhiteSpace(request.Name) || request.Name.Trim().Length > 128)
         {
-            errors[nameof(request.Name)] = ["Имя коллекции — от 1 до 128 символов."];
+            errors[nameof(request.Name)] = [L.T("LibraryEndpoints.ACollectionNameIs1To")];
         }
 
         if (request.Kind == Contracts.Library.CollectionKind.SavedQuery && string.IsNullOrWhiteSpace(request.Query))
         {
-            errors[nameof(request.Query)] = ["Для сохранённого запроса нужна строка поиска."];
+            errors[nameof(request.Query)] = [L.T("LibraryEndpoints.ASavedQueryNeedsASearch")];
         }
 
         return errors.Count > 0 ? ApiProblems.Invalid(errors) : null;

@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -6,6 +6,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.ViewModels;
 
@@ -235,7 +236,7 @@ public partial class BrowseView : UserControl
         }
         catch (Exception exception)
         {
-            ViewModel?.ReportError("Не удалось перетащить", exception);
+            ViewModel?.ReportError(L.T("Browse.CouldNotDrag"), exception);
         }
     }
 

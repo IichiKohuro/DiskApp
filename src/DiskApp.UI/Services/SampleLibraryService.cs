@@ -1,3 +1,4 @@
+﻿using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 
 namespace DiskApp.UI.Services;
@@ -56,7 +57,7 @@ public sealed class SampleLibraryService : ILibraryService
         {
             if (entryIds.Count != _favorites.Count || !entryIds.All(_favorites.Contains))
             {
-                throw new InvalidOperationException("Передайте все записи избранного по одному разу.");
+                throw new InvalidOperationException(L.T("SampleLibrary.PassEveryFavoriteExactlyOnce"));
             }
 
             _favorites.Clear();
@@ -274,7 +275,7 @@ public sealed class SampleLibraryService : ILibraryService
     {
         if (_tags.Exists(tag => tag.Id != exceptId && string.Equals(tag.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)))
         {
-            throw new InvalidOperationException($"Тег «{name.Trim()}» уже есть.");
+            throw new InvalidOperationException(L.F("SampleLibrary.TagAlreadyExists", name.Trim()));
         }
     }
 }

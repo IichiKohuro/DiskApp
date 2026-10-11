@@ -1,7 +1,8 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -79,7 +80,7 @@ public sealed partial class AddFilesViewModel : ViewModelBase
     public bool CanAdd => SelectedTarget is not null;
 
     /// <summary>Куда: путь выбранного места.</summary>
-    public string TargetText => SelectedTarget is { } target ? "Куда: " + target.Path : "Выберите папку";
+    public string TargetText => SelectedTarget is { } target ? L.T("AddFiles.To") + target.Path : L.T("AddFiles.ChooseAFolder");
 
     /// <summary>Завершается, когда загружены начальные варианты (последний поиск).</summary>
     public Task PendingLoad { get; private set; } = Task.CompletedTask;
@@ -110,15 +111,15 @@ public sealed partial class AddFilesViewModel : ViewModelBase
         var parts = new List<string>();
         if (files > 0)
         {
-            parts.Add(Formatting.Count(files, "файл", "файла", "файлов"));
+            parts.Add(Formatting.Count(files, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")));
         }
 
         if (folders > 0)
         {
-            parts.Add(Formatting.Count(folders, "папка", "папки", "папок"));
+            parts.Add(Formatting.Count(folders, L.T("Common.Folder.One"), L.T("Common.Folder.Few"), L.T("Common.Folder.Many")));
         }
 
-        return string.Join(" и ", parts);
+        return string.Join(L.T("AddFiles.And"), parts);
     }
 
     private async Task LoadDefaultsAsync()
@@ -126,10 +127,10 @@ public sealed partial class AddFilesViewModel : ViewModelBase
         var targets = new List<AddTarget>();
         if (_preferences.InboxPath is { Length: > 0 } inbox)
         {
-            targets.Add(new AddTarget("Входящие", inbox, "место по умолчанию", Symbol.MailInbox));
+            targets.Add(new AddTarget(L.T("AddFiles.Inbox"), inbox, L.T("AddFiles.DefaultPlace"), Symbol.MailInbox));
         }
 
-        targets.AddRange(_preferences.RecentTargets.Select(static path => new AddTarget(PathText.FileName(path), path, "недавнее", Symbol.History)));
+        targets.AddRange(_preferences.RecentTargets.Select(static path => new AddTarget(PathText.FileName(path), path, L.T("AddFiles.Recent"), Symbol.History)));
 
         try
         {
@@ -138,7 +139,7 @@ public sealed partial class AddFilesViewModel : ViewModelBase
                 .Where(static section => section.Title == SectionTitles.Pinned)
                 .SelectMany(static section => section.Entries)
                 .Where(static entry => entry.Kind == FileKind.Folder)
-                .Select(static entry => new AddTarget(entry.Name, entry.FullPath, "закреплено", Symbol.Pin)));
+                .Select(static entry => new AddTarget(entry.Name, entry.FullPath, L.T("AddFiles.Pinned"), Symbol.Pin)));
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -148,7 +149,7 @@ public sealed partial class AddFilesViewModel : ViewModelBase
 
         if (targets.Count == 0)
         {
-            targets.AddRange(_rootPaths.Select(static path => new AddTarget(PathText.FileName(path), path, "корень", Symbol.HardDrive)));
+            targets.AddRange(_rootPaths.Select(static path => new AddTarget(PathText.FileName(path), path, L.T("AddFiles.Root"), Symbol.HardDrive)));
         }
 
         Show(targets);

@@ -151,6 +151,9 @@ public sealed record AppearanceSettingsDto
 
     /// <summary>Компактный режим списков.</summary>
     public bool Compact { get; set; }
+
+    /// <summary>Язык интерфейса: <c>system</c>, <c>ru</c> или <c>en</c>.</summary>
+    public string Language { get; set; } = string.Empty;
 }
 
 /// <summary>Тема интерфейса.</summary>

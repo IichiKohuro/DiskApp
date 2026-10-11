@@ -1,5 +1,6 @@
-using System.Globalization;
+﻿using System.Globalization;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Text;
 
 namespace DiskApp.UI.Models;
@@ -18,10 +19,10 @@ public sealed class FileDetails
 
         Entry = entry;
         KindText = KindName(entry.Kind) + (entry.Extension.Length > 0 && entry.Kind != FileKind.Folder ? $" · .{entry.Extension}" : string.Empty);
-        SizeText = entry.Kind == FileKind.Folder ? "—" : $"{Formatting.Size(entry.Size)} ({entry.Size.ToString("N0", CultureInfo.CurrentCulture)} байт)";
+        SizeText = entry.Kind == FileKind.Folder ? "—" : L.F("FileDetails.Bytes", Formatting.Size(entry.Size), entry.Size.ToString("N0", CultureInfo.CurrentCulture));
         ModifiedText = entry.Modified == default ? "—" : entry.Modified.ToLocalTime().ToString("d MMMM yyyy, HH:mm", CultureInfo.CurrentCulture);
-        Availability = entry.IsOffline ? "Диск недоступен"
-            : entry.IsCloudOnly ? "Только в облаке: откроется после загрузки"
+        Availability = entry.IsOffline ? L.T("FileDetails.DriveUnavailable")
+            : entry.IsCloudOnly ? L.T("FileDetails.CloudOnlyOpensAfterDownload")
             : string.Empty;
     }
 
@@ -51,18 +52,18 @@ public sealed class FileDetails
     /// </summary>
     public static string KindName(FileKind kind) => kind switch
     {
-        FileKind.Folder => "Папка",
-        FileKind.Document => "Документ",
-        FileKind.Spreadsheet => "Таблица",
-        FileKind.Presentation => "Презентация",
+        FileKind.Folder => L.T("Common.Kind.Folder"),
+        FileKind.Document => L.T("Common.Kind.Document"),
+        FileKind.Spreadsheet => L.T("Common.Kind.Spreadsheet"),
+        FileKind.Presentation => L.T("Common.Kind.Presentation"),
         FileKind.Pdf => "PDF",
-        FileKind.Image => "Изображение",
-        FileKind.Video => "Видео",
-        FileKind.Audio => "Аудио",
-        FileKind.Archive => "Архив",
-        FileKind.Installer => "Программа",
-        FileKind.Code => "Код",
-        FileKind.Text => "Текст",
-        _ => "Файл",
+        FileKind.Image => L.T("Common.Kind.Image"),
+        FileKind.Video => L.T("Common.Kind.Video"),
+        FileKind.Audio => L.T("Common.Kind.Audio"),
+        FileKind.Archive => L.T("Common.Kind.Archive"),
+        FileKind.Installer => L.T("Common.Kind.Program"),
+        FileKind.Code => L.T("Common.Kind.Code"),
+        FileKind.Text => L.T("Common.Kind.Text"),
+        _ => L.T("Common.Kind.File"),
     };
 }

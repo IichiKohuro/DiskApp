@@ -1,5 +1,6 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:c="using:DiskApp.UI.Controls"
@@ -26,15 +27,15 @@
             <TextBlock Text="{Binding Availability}" />
         </Border>
         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Classes="details">
-            <TextBlock Grid.Row="0" Classes="label" Text="Вид" />
+            <TextBlock Grid.Row="0" Classes="label" Text="{loc:Str FileDetails.Kind}" />
             <TextBlock Grid.Row="0" Grid.Column="1" Classes="value" Text="{Binding KindText}" />
-            <TextBlock Grid.Row="1" Classes="label" Text="Размер" />
+            <TextBlock Grid.Row="1" Classes="label" Text="{loc:Str FileDetails.Size}" />
             <TextBlock Grid.Row="1" Grid.Column="1" Classes="value" Text="{Binding SizeText}" />
-            <TextBlock Grid.Row="2" Classes="label" Text="Изменён" />
+            <TextBlock Grid.Row="2" Classes="label" Text="{loc:Str FileDetails.Modified}" />
             <TextBlock Grid.Row="2" Grid.Column="1" Classes="value" Text="{Binding ModifiedText}" />
-            <TextBlock Grid.Row="3" Classes="label" Text="Корень" />
+            <TextBlock Grid.Row="3" Classes="label" Text="{loc:Str FileDetails.Root}" />
             <TextBlock Grid.Row="3" Grid.Column="1" Classes="value" Text="{Binding Entry.Root}" />
-            <TextBlock Grid.Row="4" Classes="label" Text="Папка" />
+            <TextBlock Grid.Row="4" Classes="label" Text="{loc:Str FileDetails.Folder}" />
             <SelectableTextBlock Grid.Row="4" Grid.Column="1" Classes="value" TextWrapping="Wrap" Text="{Binding Entry.Directory}" />
         </Grid>
         <ItemsControl ItemsSource="{Binding Entry.TagLabels}" IsVisible="{Binding HasTags}">

@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -161,7 +162,7 @@ public sealed partial class BrowseViewModel : PageViewModel
     /// Создаёт страницу с заданными сервисами и часами (тесты).
     /// </summary>
     public BrowseViewModel(IBrowseService browse, IRootsService roots, ISearchService search, IFileActions actions, IDialogService? dialogs, IInfoBarService? notices, IOperationsCoordinator? operations, Func<DateTimeOffset> clock)
-        : base(PageKeys.Browse, "Обзор", FASymbol.Folder)
+        : base(PageKeys.Browse, "Browse.Browse", FASymbol.Folder)
     {
         ArgumentNullException.ThrowIfNull(browse);
         ArgumentNullException.ThrowIfNull(roots);
@@ -194,24 +195,24 @@ public sealed partial class BrowseViewModel : PageViewModel
     /// <summary>Варианты фильтра по виду.</summary>
     public IReadOnlyList<KindFilterOption> KindOptions { get; } =
     [
-        new("Все", []),
-        new("Папки", [FileKind.Folder]),
-        new("Документы", [FileKind.Document, FileKind.Text, FileKind.Pdf]),
-        new("Таблицы", [FileKind.Spreadsheet]),
-        new("Изображения", [FileKind.Image]),
-        new("Видео", [FileKind.Video]),
-        new("Аудио", [FileKind.Audio]),
-        new("Архивы", [FileKind.Archive]),
-        new("Код", [FileKind.Code]),
+        new(L.T("Browse.All"), []),
+        new(L.T("Browse.Folders"), [FileKind.Folder]),
+        new(L.T("Browse.Documents"), [FileKind.Document, FileKind.Text, FileKind.Pdf]),
+        new(L.T("Browse.Spreadsheets"), [FileKind.Spreadsheet]),
+        new(L.T("Browse.Images"), [FileKind.Image]),
+        new(L.T("Browse.Videos"), [FileKind.Video]),
+        new(L.T("Browse.Audio"), [FileKind.Audio]),
+        new(L.T("Browse.Archives"), [FileKind.Archive]),
+        new(L.T("Browse.Code"), [FileKind.Code]),
     ];
 
     /// <summary>Варианты сортировки.</summary>
     public IReadOnlyList<SortOption> SortOptions { get; } =
     [
-        new("Имя", BrowseSort.Name),
-        new("Дата изменения", BrowseSort.Modified),
-        new("Размер", BrowseSort.Size),
-        new("Тип", BrowseSort.Kind),
+        new(L.T("Browse.Name"), BrowseSort.Name),
+        new(L.T("Browse.DateModified"), BrowseSort.Modified),
+        new(L.T("Browse.Size"), BrowseSort.Size),
+        new(L.T("Browse.Type"), BrowseSort.Kind),
     ];
 
     /// <summary>Дерево: корни и раскрытые папки.</summary>
@@ -308,7 +309,7 @@ public sealed partial class BrowseViewModel : PageViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            ErrorText = $"Не удалось открыть «{path}»: {exception.Message}";
+            ErrorText = L.F("Browse.CouldNotOpen", path, exception.Message);
             AddressText = CurrentPath ?? string.Empty;
         }
         finally
@@ -377,6 +378,9 @@ public sealed partial class BrowseViewModel : PageViewModel
             ? NavigateAsync(parent)
             : Task.CompletedTask;
 
+    /// <inheritdoc />
+    protected override Task RelocalizeAsync() => RefreshAsync();
+
     /// <summary>Перечитать папку.</summary>
     [RelayCommand]
     private Task RefreshAsync() => CurrentPath is { } current ? NavigateAsync(current, pushHistory: false) : LoadRootsAsync();
@@ -408,7 +412,7 @@ public sealed partial class BrowseViewModel : PageViewModel
             return;
         }
 
-        await TryAsync(() => _search.OpenAsync(hit.Entry, null, CancellationToken.None), $"Не удалось открыть «{hit.Entry.Name}»");
+        await TryAsync(() => _search.OpenAsync(hit.Entry, null, CancellationToken.None), L.F("Browse.CouldNotOpen2", hit.Entry.Name));
     }
 
     /// <summary>Переключить список и плитку.</summary>
@@ -417,11 +421,11 @@ public sealed partial class BrowseViewModel : PageViewModel
 
     /// <summary>Показать выбранное в Проводнике.</summary>
     [RelayCommand]
-    private Task RevealAsync() => Single() is { } entry ? TryAsync(() => _actions.RevealAsync(entry), "Не удалось показать в папке") : Task.CompletedTask;
+    private Task RevealAsync() => Single() is { } entry ? TryAsync(() => _actions.RevealAsync(entry), L.T("Browse.CouldNotShowInFolder")) : Task.CompletedTask;
 
     /// <summary>Свойства выбранного.</summary>
     [RelayCommand]
-    private Task PropertiesAsync() => Single() is { } entry ? TryAsync(() => _actions.ShowPropertiesAsync(entry), "Не удалось открыть свойства") : Task.CompletedTask;
+    private Task PropertiesAsync() => Single() is { } entry ? TryAsync(() => _actions.ShowPropertiesAsync(entry), L.T("Browse.CouldNotOpenProperties")) : Task.CompletedTask;
 
     /// <summary>Скопировать выбранные файлы: в буфер «Обзора» (для вставки) и в системный буфер обмена (для Проводника).</summary>
     [RelayCommand]
@@ -435,9 +439,9 @@ public sealed partial class BrowseViewModel : PageViewModel
             OnPropertyChanged(nameof(HasClipboard));
         }
 
-        if (entries.Count > 0 && await TryAsync(() => _actions.CopyFilesAsync(entries), "Не удалось скопировать"))
+        if (entries.Count > 0 && await TryAsync(() => _actions.CopyFilesAsync(entries), L.T("Browse.CouldNotCopy")))
         {
-            _notices?.Show("Скопировано", Formatting.Count(entries.Count, "элемент", "элемента", "элементов") + " — вставьте в Проводнике.", FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Browse.Copied"), Formatting.Count(entries.Count, L.T("Common.Item.One"), L.T("Common.Item.Few"), L.T("Common.Item.Many")) + L.T("Browse.PasteInFileExplorer"), FAInfoBarSeverity.Success);
         }
     }
 
@@ -446,9 +450,9 @@ public sealed partial class BrowseViewModel : PageViewModel
     private async Task CopyPathAsync()
     {
         var entries = Selected();
-        if (entries.Count > 0 && await TryAsync(() => _actions.CopyPathsAsync(entries), "Не удалось скопировать путь"))
+        if (entries.Count > 0 && await TryAsync(() => _actions.CopyPathsAsync(entries), L.T("Browse.CouldNotCopyThePath")))
         {
-            _notices?.Show("Путь скопирован", entries.Count == 1 ? entries[0].FullPath : Formatting.Count(entries.Count, "путь", "пути", "путей"), FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Browse.PathCopied"), entries.Count == 1 ? entries[0].FullPath : Formatting.Count(entries.Count, L.T("Common.Path.One"), L.T("Common.Path.Few"), L.T("Common.Path.Many")), FAInfoBarSeverity.Success);
         }
     }
 
@@ -461,13 +465,13 @@ public sealed partial class BrowseViewModel : PageViewModel
             return;
         }
 
-        var name = await _dialogs.PromptAsync("Переименовать", $"Новое имя для «{entry.Name}»", entry.Name, "Переименовать", PathText.StemLength(entry.Name));
+        var name = await _dialogs.PromptAsync(L.T("Common.Rename"), L.F("Browse.NewNameFor", entry.Name), entry.Name, L.T("Common.Rename"), PathText.StemLength(entry.Name));
         if (name is null || name.Trim() == entry.Name)
         {
             return;
         }
 
-        if (await TryAsync(() => _actions.RenameAsync(entry, name), "Не удалось переименовать"))
+        if (await TryAsync(() => _actions.RenameAsync(entry, name), L.T("Browse.CouldNotRename")))
         {
             await RefreshAsync();
         }
@@ -483,15 +487,15 @@ public sealed partial class BrowseViewModel : PageViewModel
             return;
         }
 
-        var what = entries.Count == 1 ? $"«{entries[0].Name}»" : Formatting.Count(entries.Count, "элемент", "элемента", "элементов");
-        if (!await _dialogs.ConfirmAsync("В корзину", $"Переместить {what} в корзину? Их можно будет вернуть из корзины Windows.", "В корзину"))
+        var what = entries.Count == 1 ? $"«{entries[0].Name}»" : Formatting.Count(entries.Count, L.T("Common.Item.One"), L.T("Common.Item.Few"), L.T("Common.Item.Many"));
+        if (!await _dialogs.ConfirmAsync(L.T("Common.ToRecycleBin"), L.F("Browse.MoveToTheRecycleBinYou", what), L.T("Common.ToRecycleBin")))
         {
             return;
         }
 
-        if (await TryAsync(() => _actions.MoveToRecycleBinAsync(entries), "Не удалось переместить в корзину"))
+        if (await TryAsync(() => _actions.MoveToRecycleBinAsync(entries), L.T("Browse.CouldNotMoveToTheRecycle")))
         {
-            _notices?.Show("Перемещено в корзину", what, FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Browse.MovedToTheRecycleBin"), what, FAInfoBarSeverity.Success);
             await RefreshAsync();
         }
     }
@@ -523,10 +527,10 @@ public sealed partial class BrowseViewModel : PageViewModel
             {
                 await _actions.SetFavoriteAsync(entry, favorite);
             }
-        }, "Не удалось изменить закрепление"))
+        }, L.T("Browse.CouldNotChangePinning")))
         {
-            var what = changed.Length == 1 ? $"«{changed[0].Name}»" : Formatting.Count(changed.Length, "элемент", "элемента", "элементов");
-            _notices?.Show(favorite ? "Закреплено" : "Откреплено", what, FAInfoBarSeverity.Success);
+            var what = changed.Length == 1 ? $"«{changed[0].Name}»" : Formatting.Count(changed.Length, L.T("Common.Item.One"), L.T("Common.Item.Few"), L.T("Common.Item.Many"));
+            _notices?.Show(favorite ? L.T("Browse.Pinned") : L.T("Browse.Unpinned"), what, FAInfoBarSeverity.Success);
             await RefreshAsync();
         }
     }
@@ -542,9 +546,9 @@ public sealed partial class BrowseViewModel : PageViewModel
         }
 
         IReadOnlyList<FileEntry>? updated = null;
-        if (await TryAsync(async () => updated = await TagEditor.EditAsync(entries), "Не удалось изменить теги") && updated is { Count: > 0 })
+        if (await TryAsync(async () => updated = await TagEditor.EditAsync(entries), L.T("Browse.CouldNotChangeTags")) && updated is { Count: > 0 })
         {
-            _notices?.Show("Теги сохранены", updated.Count == 1 ? $"«{updated[0].Name}»" : Formatting.Count(updated.Count, "файл", "файла", "файлов"), FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Browse.TagsSaved"), updated.Count == 1 ? $"«{updated[0].Name}»" : Formatting.Count(updated.Count, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")), FAInfoBarSeverity.Success);
             await RefreshAsync();
         }
     }
@@ -579,7 +583,7 @@ public sealed partial class BrowseViewModel : PageViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            ErrorText = "Не удалось получить корни: " + exception.Message;
+            ErrorText = L.T("Browse.CouldNotGetTheRoots") + exception.Message;
             return;
         }
 
@@ -597,7 +601,7 @@ public sealed partial class BrowseViewModel : PageViewModel
         }
         else if (roots.Count == 0)
         {
-            StatusText = "Корней пока нет — добавьте папку на главной";
+            StatusText = L.T("Browse.NoRootsYetAddAFolder");
         }
     }
 
@@ -615,7 +619,7 @@ public sealed partial class BrowseViewModel : PageViewModel
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             node.Children.Clear();
-            _notices?.Show($"Не удалось открыть «{node.Name}»", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.F("Browse.CouldNotOpen2", node.Name), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -687,21 +691,21 @@ public sealed partial class BrowseViewModel : PageViewModel
 
     private void UpdateStatus()
     {
-        var text = Formatting.Count(Items.Count, "элемент", "элемента", "элементов");
+        var text = Formatting.Count(Items.Count, L.T("Common.Item.One"), L.T("Common.Item.Few"), L.T("Common.Item.Many"));
         if (Items.Count != _listing.Count)
         {
-            text += $" из {_listing.Count}";
+            text += L.F("Browse.Of", _listing.Count);
         }
 
         if (_current?.Truncated == true)
         {
-            text += " · показаны первые";
+            text += L.T("Browse.ShowingTheFirst");
         }
 
         if (_selection.Count > 0)
         {
             var size = _selection.Where(static hit => hit.Entry.Kind != FileKind.Folder).Sum(static hit => hit.Entry.Size);
-            text += $" · выбрано {_selection.Count}" + (size > 0 ? ", " + Formatting.Size(size) : string.Empty);
+            text += L.F("Browse.Selected", _selection.Count) + (size > 0 ? ", " + Formatting.Size(size) : string.Empty);
         }
 
         StatusText = text;

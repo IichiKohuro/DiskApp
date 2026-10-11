@@ -1,5 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using DiskApp.UI.Localization;
+
 using FluentAvalonia.UI.Controls;
 
 namespace DiskApp.UI.ViewModels;
@@ -50,20 +52,65 @@ public abstract partial class PageViewModel : ViewModelBase
     /// Создаёт страницу.
     /// </summary>
     /// <param name="key">Ключ из <see cref="PageKeys"/>.</param>
-    /// <param name="title">Заголовок в навигации.</param>
+    /// <param name="title">Ключ строки заголовка в навигации (или готовый текст).</param>
     /// <param name="icon">Иконка пункта навигации.</param>
     protected PageViewModel(string key, string title, FASymbol icon)
     {
         Key = key;
-        Title = title;
+        TitleKey = title;
         Icon = icon;
+
+        // При смене языка заголовок и собранные в коде тексты перечитываются (этап 9.2). Подписка слабая: страница из
+        // тестов или превью не держится в памяти событием.
+        var page = new WeakReference<PageViewModel>(this);
+        EventHandler? handler = null;
+        handler = (_, _) =>
+        {
+            if (page.TryGetTarget(out var target))
+            {
+                target.OnLanguageChanged();
+            }
+            else
+            {
+                Localizer.Instance.LanguageChanged -= handler;
+            }
+        };
+        Localizer.Instance.LanguageChanged += handler;
+    }
+
+    /// <summary>
+    /// Перечитывает тексты, собранные в коде, после смены языка: по умолчанию ничего, страницы со сводками
+    /// перезагружают данные.
+    /// </summary>
+    protected virtual Task RelocalizeAsync() => Task.CompletedTask;
+
+    private void OnLanguageChanged()
+    {
+        OnPropertyChanged(nameof(Title));
+        _ = RelocalizeSafelyAsync();
+    }
+
+    private async Task RelocalizeSafelyAsync()
+    {
+        try
+        {
+            await RelocalizeAsync();
+        }
+        catch (Exception exception) when (exception is not OutOfMemoryException)
+        {
+            // Тексты обновятся при следующем показе страницы.
+            _ = exception;
+        }
     }
 
     /// <summary>Ключ страницы.</summary>
     public string Key { get; }
 
-    /// <summary>Заголовок в навигации.</summary>
-    public string Title { get; }
+    /// <summary>Ключ строки заголовка.</summary>
+    public string TitleKey { get; }
+
+    /// <summary>Заголовок в навигации на языке интерфейса.</summary>
+    public string Title => L.T(TitleKey);
 
     /// <summary>Иконка пункта навигации.</summary>
     public FASymbol Icon { get; }

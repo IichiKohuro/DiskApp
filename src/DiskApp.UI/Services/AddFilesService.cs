@@ -1,6 +1,7 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Text;
 using DiskApp.UI.ViewModels;
@@ -47,7 +48,7 @@ public sealed class AddFilesService(
         var sources = paths.Where(static path => File.Exists(path) || Directory.Exists(path)).ToList();
         if (sources.Count == 0)
         {
-            notices.Show("Нечего добавлять", "Файлы не найдены на диске.", FAInfoBarSeverity.Warning);
+            notices.Show(L.T("AddFiles.NothingToAdd"), L.T("AddFiles.TheFilesWereNotFoundOn"), FAInfoBarSeverity.Warning);
             return;
         }
 
@@ -58,7 +59,7 @@ public sealed class AddFilesService(
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            notices.Show("Не удалось получить корни", exception.Message, FAInfoBarSeverity.Error);
+            notices.Show(L.T("AddFiles.CouldNotGetTheRoots"), exception.Message, FAInfoBarSeverity.Error);
             return;
         }
 
@@ -79,7 +80,7 @@ public sealed class AddFilesService(
         ArgumentNullException.ThrowIfNull(text);
         if (text.Trim().Length == 0)
         {
-            notices.Show("Буфер обмена пуст", "Скопируйте текст, картинку или файлы.", FAInfoBarSeverity.Informational);
+            notices.Show(L.T("AddFiles.ClipboardIsEmpty"), L.T("AddFiles.CopyTextAPictureOrFiles"), FAInfoBarSeverity.Informational);
             return;
         }
 
@@ -93,7 +94,7 @@ public sealed class AddFilesService(
     public async Task AddImageAsync(Func<Stream, Task> savePng)
     {
         ArgumentNullException.ThrowIfNull(savePng);
-        var file = TemporaryFile("изображение", ".png");
+        var file = TemporaryFile(L.T("AddFiles.Image"), ".png");
         await using (var stream = File.Create(file))
         {
             await savePng(stream);
@@ -126,12 +127,12 @@ public sealed class AddFilesService(
             .Replace("{time}", now.ToString("HH-mm-ss", CultureInfo.InvariantCulture), StringComparison.Ordinal)
             .Replace("{title}", title, StringComparison.Ordinal);
         var clean = new string([.. name.Select(static c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)]).Trim(' ', '.', '_');
-        return (clean.Length == 0 ? "буфер" : clean) + extension;
+        return (clean.Length == 0 ? L.T("AddFiles.Clipboard") : clean) + extension;
     }
 
     private static string TitleOf(string text)
     {
-        var line = text.Split('\n').Select(static item => item.Trim().TrimStart('#', '-', '*', '>', ' ')).FirstOrDefault(static item => item.Length > 0) ?? "текст";
+        var line = text.Split('\n').Select(static item => item.Trim().TrimStart('#', '-', '*', '>', ' ')).FirstOrDefault(static item => item.Length > 0) ?? L.T("AddFiles.Text");
         return line.Length <= 40 ? line : line[..40].TrimEnd();
     }
 
@@ -188,13 +189,13 @@ public sealed class AddFilesService(
         {
             var saved = files.Count == 0 ? 0 : await actions.CopyIntoAsync(files, new FileEntry { FullPath = target, Kind = FileKind.Folder, Root = string.Empty });
             notices.Show(
-                "Добавлено",
-                $"{Formatting.Count(saved, "файл", "файла", "файлов")} в «{PathText.FileName(target)}»." + (skipped > 0 ? $" Папки извне пока не копируются: {skipped}." : string.Empty),
+                L.T("AddFiles.Added"),
+                L.F("Common.CountTo", Formatting.Count(saved, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")), PathText.FileName(target)) + (skipped > 0 ? L.F("AddFiles.FoldersFromOutsideAreNotCopied", skipped) : string.Empty),
                 skipped > 0 ? FAInfoBarSeverity.Warning : FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            notices.Show($"Не удалось добавить в «{PathText.FileName(target)}»", exception.Message, FAInfoBarSeverity.Error);
+            notices.Show(L.F("AddFiles.CouldNotAddTo", PathText.FileName(target)), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 }

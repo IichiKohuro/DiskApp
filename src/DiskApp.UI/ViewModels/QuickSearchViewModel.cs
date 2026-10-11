@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -65,7 +66,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// Создаёт ViewModel с заданными действиями и часами (для тестов).
     /// </summary>
     public QuickSearchViewModel(ISearchService search, IFileActions actions, Func<DateTimeOffset> clock)
-        : base(PageKeys.Search, "Поиск", FASymbol.Find)
+        : base(PageKeys.Search, "QuickSearch.Search", FASymbol.Find)
     {
         ArgumentNullException.ThrowIfNull(search);
         ArgumentNullException.ThrowIfNull(actions);
@@ -178,6 +179,9 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         return PendingRefresh;
     }
 
+    /// <inheritdoc />
+    protected override Task RelocalizeAsync() => RefreshAsync();
+
     /// <summary>
     /// Перезапускает запрос для текущего текста, отменяя предыдущий.
     /// </summary>
@@ -246,7 +250,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         catch (Exception exception) when (!token.IsCancellationRequested)
         {
             // Сервер недоступен или вернул ошибку: окно не падает, следующая буква повторит запрос.
-            ShowError("Нет связи с сервером поиска: " + exception.Message);
+            ShowError(L.T("QuickSearch.NoConnectionToTheSearchServer") + exception.Message);
         }
         finally
         {
@@ -311,7 +315,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            ShowError($"Не удалось открыть «{hit.Entry.Name}»: {exception.Message}");
+            ShowError(L.F("QuickSearch.CouldNotOpen", hit.Entry.Name, exception.Message));
             return false;
         }
 
@@ -381,8 +385,8 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         }
 
         ReplaceResults(grouped, string.Empty);
-        var total = Formatting.Count(status.TotalEntries, "файл", "файла", "файлов") + " в индексе";
-        StatusText = status.IsIndexing ? $"{status.DescribeIndexing()} · {total}" : $"{total} · начните вводить имя";
+        var total = Formatting.Count(status.TotalEntries, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")) + L.T("QuickSearch.InTheIndex");
+        StatusText = status.IsIndexing ? $"{status.DescribeIndexing()} · {total}" : L.F("QuickSearch.StartTypingAName", total);
         ShowEmptyState = false;
         ShowResults = Results.Count > 0;
     }
@@ -395,15 +399,15 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
         if (result.TotalCount == 0)
         {
-            StatusText = "Ничего не найдено — попробуйте другое слово или часть имени";
+            StatusText = L.T("QuickSearch.NothingFoundTryAnotherWordOr");
             ShowEmptyState = true;
             ShowResults = false;
             return;
         }
 
         var elapsed = Math.Max(1, (int)Math.Round(result.Elapsed.TotalMilliseconds));
-        var count = Formatting.Count(result.TotalCount, "результат", "результата", "результатов");
-        StatusText = (result.IsTotalApproximate ? count.Replace(" ", "+ ", StringComparison.Ordinal) : count) + $" · {elapsed} мс"
+        var count = Formatting.Count(result.TotalCount, L.T("QuickSearch.Result.One"), L.T("QuickSearch.Result.Few"), L.T("QuickSearch.Result.Many"));
+        StatusText = (result.IsTotalApproximate ? count.Replace(" ", "+ ", StringComparison.Ordinal) : count) + L.F("QuickSearch.Ms", elapsed)
             + (_status is { IsIndexing: true } status ? " · " + status.DescribeIndexing() : string.Empty);
         ShowEmptyState = false;
         ShowResults = true;

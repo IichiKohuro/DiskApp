@@ -1,5 +1,6 @@
-using DiskApp.Client;
+﻿using DiskApp.Client;
 using DiskApp.Contracts.Operations;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Text;
 
@@ -49,7 +50,7 @@ public sealed class ApiFileActions(IDiskAppApi api, IClipboardService clipboard)
     {
         var request = new OperationRequest { Kind = OperationKind.Delete, Sources = Paths(entries), Permanent = false };
         var operation = await _api.EnqueueOperationAsync(request, cancellationToken).ConfigureAwait(false);
-        await WaitAsync(operation, conflictMessage: "Удаление ждёт решения по конфликту.", cancellationToken).ConfigureAwait(false);
+        await WaitAsync(operation, conflictMessage: L.T("ApiFileActions.DeletionIsWaitingForAConflict"), cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -77,7 +78,7 @@ public sealed class ApiFileActions(IDiskAppApi api, IClipboardService clipboard)
             Conflicts = ConflictPolicy.Ask,
         };
         var operation = await _api.EnqueueOperationAsync(request, cancellationToken).ConfigureAwait(false);
-        await WaitAsync(operation, conflictMessage: $"«{newName}» уже есть в этой папке.", cancellationToken).ConfigureAwait(false);
+        await WaitAsync(operation, conflictMessage: L.F("ApiFileActions.AlreadyExistsInThisFolder", newName), cancellationToken).ConfigureAwait(false);
         return entry with { FullPath = PathText.WithFileName(entry.FullPath, newName), NameHighlights = null };
     }
 
@@ -142,9 +143,9 @@ public sealed class ApiFileActions(IDiskAppApi api, IClipboardService clipboard)
                 case OperationState.Completed:
                     return;
                 case OperationState.Failed:
-                    throw new InvalidOperationException(operation.Message ?? "Операция не выполнена.");
+                    throw new InvalidOperationException(operation.Message ?? L.T("ApiFileActions.TheOperationFailed"));
                 case OperationState.Cancelled:
-                    throw new OperationCanceledException(operation.Message ?? "Операция отменена.");
+                    throw new OperationCanceledException(operation.Message ?? L.T("ApiFileActions.TheOperationWasCancelled"));
                 case OperationState.WaitingDecision:
                     await _api.CancelOperationAsync(operation.Id, CancellationToken.None).ConfigureAwait(false);
                     throw new InvalidOperationException(conflictMessage);
@@ -152,7 +153,7 @@ public sealed class ApiFileActions(IDiskAppApi api, IClipboardService clipboard)
 
             if (DateTimeOffset.UtcNow >= deadline)
             {
-                throw new TimeoutException("Операция ещё выполняется: её ход виден на странице «Операции».");
+                throw new TimeoutException(L.T("ApiFileActions.TheOperationIsStillRunningIts"));
             }
 
             await Task.Delay(PollDelays[Math.Min(attempt, PollDelays.Length - 1)], cancellationToken).ConfigureAwait(false);

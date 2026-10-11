@@ -1,8 +1,9 @@
-using System.Net;
+﻿using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
 using DiskApp.Contracts;
+using DiskApp.Server.Localization;
 
 using Microsoft.AspNetCore.Http;
 
@@ -27,17 +28,17 @@ internal sealed class LocalSecurityMiddleware(RequestDelegate next, DiskAppServe
         var request = context.Request;
         if (!IsLoopbackHost(request.Host.Host))
         {
-            return RejectAsync(context, StatusCodes.Status403Forbidden, "Запросы принимаются только по адресу loopback.");
+            return RejectAsync(context, StatusCodes.Status403Forbidden, L.T("LocalSecurityMiddleware.RequestsAreAcceptedOnlyAtThe"));
         }
 
         if (request.Headers.Origin is { Count: > 0 } origin && !IsSameOrigin(origin.ToString(), request))
         {
-            return RejectAsync(context, StatusCodes.Status403Forbidden, "Запросы со сторонних страниц запрещены.");
+            return RejectAsync(context, StatusCodes.Status403Forbidden, L.T("LocalSecurityMiddleware.RequestsFromThirdPartyPagesAre"));
         }
 
         if (_token is not null && !request.Path.StartsWithSegments(ApiRoutes.Health) && !HasToken(request))
         {
-            return RejectAsync(context, StatusCodes.Status401Unauthorized, "Нужен токен сессии в заголовке " + ApiHeaders.SessionToken + ".");
+            return RejectAsync(context, StatusCodes.Status401Unauthorized, L.T("LocalSecurityMiddleware.ASessionTokenIsRequiredIn") + ApiHeaders.SessionToken + ".");
         }
 
         return next(context);
@@ -67,7 +68,7 @@ internal sealed class LocalSecurityMiddleware(RequestDelegate next, DiskAppServe
     private static Task RejectAsync(HttpContext context, int statusCode, string detail)
     {
         context.Response.StatusCode = statusCode;
-        return Results.Problem(detail, statusCode: statusCode, title: statusCode == StatusCodes.Status401Unauthorized ? "Нужна авторизация" : "Доступ запрещён")
+        return Results.Problem(detail, statusCode: statusCode, title: statusCode == StatusCodes.Status401Unauthorized ? L.T("LocalSecurityMiddleware.AuthorizationRequired") : L.T("Security.AccessDenied"))
             .ExecuteAsync(context);
     }
 }

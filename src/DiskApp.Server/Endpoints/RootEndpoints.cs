@@ -1,10 +1,11 @@
-using DiskApp.Contracts;
+﻿using DiskApp.Contracts;
 using DiskApp.Contracts.Roots;
 using DiskApp.Core.Domain;
 using DiskApp.Core.Indexing;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
 using DiskApp.Core.Search;
+using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
@@ -105,7 +106,7 @@ internal static class RootEndpoints
     {
         if (request.MaxDepth is < 0)
         {
-            return ApiProblems.Invalid(nameof(request.MaxDepth), "Глубина не может быть отрицательной.");
+            return ApiProblems.Invalid(nameof(request.MaxDepth), L.T("Roots.DepthNegative"));
         }
 
         var existing = await repository.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -119,7 +120,7 @@ internal static class RootEndpoints
 
         if (!Directory.Exists(candidate.Path))
         {
-            return ApiProblems.Invalid(nameof(request.Path), $"Папка «{candidate.Path}» не найдена или недоступна.");
+            return ApiProblems.Invalid(nameof(request.Path), L.F("RootEndpoints.FolderNotFoundOrUnavailable", candidate.Path));
         }
 
         var label = string.IsNullOrWhiteSpace(request.Label) ? candidate.Label : request.Label.Trim();
@@ -150,18 +151,18 @@ internal static class RootEndpoints
     {
         if (string.IsNullOrWhiteSpace(request.Label))
         {
-            return ApiProblems.Invalid(nameof(request.Label), "Подпись не может быть пустой.");
+            return ApiProblems.Invalid(nameof(request.Label), L.T("RootEndpoints.TheLabelCannotBeEmpty"));
         }
 
         if (request.MaxDepth is < 0)
         {
-            return ApiProblems.Invalid(nameof(request.MaxDepth), "Глубина не может быть отрицательной.");
+            return ApiProblems.Invalid(nameof(request.MaxDepth), L.T("Roots.DepthNegative"));
         }
 
         var root = await repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (root is null)
         {
-            return ApiProblems.NotFound($"Корень {id} не найден.");
+            return ApiProblems.NotFound(L.F("Roots.NotFound", id));
         }
 
         var updated = root with
@@ -188,7 +189,7 @@ internal static class RootEndpoints
         var root = await repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (root is null)
         {
-            return ApiProblems.NotFound($"Корень {id} не найден.");
+            return ApiProblems.NotFound(L.F("Roots.NotFound", id));
         }
 
         // Сначала корень отключается от индексатора (задача отменяется и дожидается), потом удаляется с записями.
@@ -207,7 +208,7 @@ internal static class RootEndpoints
     {
         if (!indexer.GetStatuses().Any(status => status.RootId == id))
         {
-            return ApiProblems.NotFound($"Корень {id} не подключён к индексации.");
+            return ApiProblems.NotFound(L.F("Roots.NotConnected", id));
         }
 
         // false — такое же сканирование уже стоит в очереди: результат для клиента тот же.
@@ -216,10 +217,10 @@ internal static class RootEndpoints
     }
 
     private static Results<NoContent, ProblemHttpResult> Pause(long id, IndexerService indexer)
-        => indexer.PauseRoot(id) ? TypedResults.NoContent() : ApiProblems.NotFound($"Корень {id} не подключён к индексации.");
+        => indexer.PauseRoot(id) ? TypedResults.NoContent() : ApiProblems.NotFound(L.F("Roots.NotConnected", id));
 
     private static Results<NoContent, ProblemHttpResult> Resume(long id, IndexerService indexer)
-        => indexer.ResumeRoot(id) ? TypedResults.NoContent() : ApiProblems.NotFound($"Корень {id} не подключён к индексации.");
+        => indexer.ResumeRoot(id) ? TypedResults.NoContent() : ApiProblems.NotFound(L.F("Roots.NotConnected", id));
 
     private static async Task<Ok<IndexStatusDto>> GetStatusAsync(IndexerService indexer, IFileIndexRepository entries, CancellationToken cancellationToken)
         => TypedResults.Ok(indexer.ToIndexStatusDto() with { TotalEntries = await entries.CountAsync(cancellationToken).ConfigureAwait(false) });
@@ -246,7 +247,7 @@ internal static class RootEndpoints
     {
         if (await repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false) is null)
         {
-            return ApiProblems.NotFound($"Корень {id} не найден.");
+            return ApiProblems.NotFound(L.F("Roots.NotFound", id));
         }
 
         var stats = await entries.GetStatsAsync(id, cancellationToken).ConfigureAwait(false);

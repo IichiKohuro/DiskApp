@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 using DiskApp.Contracts;
 using DiskApp.Contracts.Entries;
@@ -10,6 +10,7 @@ using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
 using DiskApp.Core.Results;
 using DiskApp.Core.Search;
+using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
@@ -103,7 +104,7 @@ internal static class EntryEndpoints
     {
         if (request.Paths.Count > ResolveEntriesRequest.MaxPaths)
         {
-            return ApiProblems.Invalid("paths", $"Не больше {ResolveEntriesRequest.MaxPaths} путей за запрос.");
+            return ApiProblems.Invalid("paths", L.F("EntryEndpoints.NoMoreThanPathsPerRequest", ResolveEntriesRequest.MaxPaths));
         }
 
         var all = await roots.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -183,7 +184,7 @@ internal static class EntryEndpoints
     private static async Task<Results<Ok<EntryDto>, ProblemHttpResult>> GetAsync(long id, EntryLookup lookup, CancellationToken cancellationToken)
         => await lookup.GetAsync(id, cancellationToken).ConfigureAwait(false) is { } dto
             ? TypedResults.Ok(dto)
-            : ApiProblems.NotFound($"Запись {id} не найдена.");
+            : ApiProblems.NotFound(L.F("Entries.EntryNotFound", id));
 
     private static async Task<Results<Ok<BrowseResponse>, ValidationProblem, ProblemHttpResult>> GetChildrenAsync(
         long id,
@@ -203,14 +204,14 @@ internal static class EntryEndpoints
         var found = await lookup.FindAsync(id, cancellationToken).ConfigureAwait(false);
         if (found is null)
         {
-            return ApiProblems.NotFound($"Запись {id} не найдена.");
+            return ApiProblems.NotFound(L.F("Entries.EntryNotFound", id));
         }
 
         var (folder, root) = found.Value;
 
         if (!folder.IsDirectory)
         {
-            return ApiProblems.Invalid("id", $"«{folder.Name}» — файл, а не папка.");
+            return ApiProblems.Invalid("id", L.F("Entries.FileNotFolder", folder.Name));
         }
 
         return TypedResults.Ok(await ListAsync(root, folder, sort, desc, offset, limit, lookup, entries, cancellationToken).ConfigureAwait(false));
@@ -236,12 +237,12 @@ internal static class EntryEndpoints
         var (allowed, normalized, root) = await guard.CheckAsync(path, cancellationToken).ConfigureAwait(false);
         if (normalized is null)
         {
-            return ApiProblems.Invalid("path", "Нужен абсолютный путь.");
+            return ApiProblems.Invalid("path", L.T("EntryEndpoints.AnAbsolutePathIsRequired"));
         }
 
         if (!allowed || root is null || !paths.TryGetRelativePath(root.Path, normalized, out var relPath))
         {
-            return TypedResults.Problem($"Путь «{normalized}» вне добавленных корней.", statusCode: StatusCodes.Status403Forbidden, title: "Доступ запрещён");
+            return TypedResults.Problem(L.F("Entries.OutsideRoots", normalized), statusCode: StatusCodes.Status403Forbidden, title: L.T("Entries.AccessDenied"));
         }
 
         FileEntry? folder = null;
@@ -250,12 +251,12 @@ internal static class EntryEndpoints
             folder = await entries.GetByPathAsync(root.Id, relPath, cancellationToken).ConfigureAwait(false);
             if (folder is null)
             {
-                return ApiProblems.NotFound($"Папки «{normalized}» нет в индексе.");
+                return ApiProblems.NotFound(L.F("EntryEndpoints.FolderIsNotInTheIndex", normalized));
             }
 
             if (!folder.IsDirectory)
             {
-                return ApiProblems.Invalid("path", $"«{folder.Name}» — файл, а не папка.");
+                return ApiProblems.Invalid("path", L.F("Entries.FileNotFolder", folder.Name));
             }
         }
 
@@ -290,8 +291,8 @@ internal static class EntryEndpoints
     }
 
     private static ValidationProblem? ValidatePaging(int? offset, int? limit)
-        => offset is < 0 ? ApiProblems.Invalid("offset", "Смещение не может быть отрицательным.")
-            : limit is < 1 or > MaxChildren ? ApiProblems.Invalid("limit", $"Записей на странице — от 1 до {MaxChildren}.")
+        => offset is < 0 ? ApiProblems.Invalid("offset", L.T("EntryEndpoints.TheOffsetCannotBeNegative"))
+            : limit is < 1 or > MaxChildren ? ApiProblems.Invalid("limit", L.F("EntryEndpoints.EntriesPerPageFrom1To", MaxChildren))
             : null;
 
     private static async Task<Results<PhysicalFileHttpResult, ValidationProblem, ProblemHttpResult>> GetContentAsync(long id, EntryLookup lookup, CancellationToken cancellationToken)
@@ -299,26 +300,26 @@ internal static class EntryEndpoints
         var found = await lookup.FindAsync(id, cancellationToken).ConfigureAwait(false);
         if (found is null)
         {
-            return ApiProblems.NotFound($"Запись {id} не найдена.");
+            return ApiProblems.NotFound(L.F("Entries.EntryNotFound", id));
         }
 
         var (entry, root) = found.Value;
 
         if (entry.IsDirectory)
         {
-            return ApiProblems.Invalid("id", "У папки нет содержимого: используйте /children.");
+            return ApiProblems.Invalid("id", L.T("EntryEndpoints.AFolderHasNoContentUse"));
         }
 
         if (entry.IsCloudPlaceholder)
         {
-            return ApiProblems.Conflict("entry.cloud_placeholder", $"Файл «{entry.Name}» хранится в облаке и не скачан на диск.");
+            return ApiProblems.Conflict("entry.cloud_placeholder", L.F("EntryEndpoints.FileIsStoredInTheCloud", entry.Name));
         }
 
         var path = lookup.FullPath(entry, root);
         var info = new FileInfo(path);
         if (!info.Exists)
         {
-            return ApiProblems.NotFound($"Файла «{path}» больше нет на диске.");
+            return ApiProblems.NotFound(L.F("EntryEndpoints.FileIsNoLongerOnDisk", path));
         }
 
         var contentType = ContentTypes.TryGetContentType(path, out var known) ? known : "application/octet-stream";
@@ -330,20 +331,20 @@ internal static class EntryEndpoints
         var pixels = size ?? 32;
         if (Array.IndexOf(IconSizes, pixels) < 0)
         {
-            return ApiProblems.Invalid("size", "Размер иконки: " + string.Join(", ", IconSizes) + ".");
+            return ApiProblems.Invalid("size", L.T("EntryEndpoints.IconSize") + string.Join(", ", IconSizes) + ".");
         }
 
         var found = await lookup.FindAsync(id, cancellationToken).ConfigureAwait(false);
         if (found is null)
         {
-            return ApiProblems.NotFound($"Запись {id} не найдена.");
+            return ApiProblems.NotFound(L.F("Entries.EntryNotFound", id));
         }
 
         var (entry, root) = found.Value;
 
         if (services.GetService<IIconProvider>() is not { } icons)
         {
-            return ApiProblems.Unavailable("Получение иконок");
+            return ApiProblems.Unavailable(L.T("EntryEndpoints.GettingIcons"));
         }
 
         var key = DtoMapper.IconKey(entry);
@@ -364,25 +365,25 @@ internal static class EntryEndpoints
         var pixels = size ?? 256;
         if (pixels is < 32 or > 1024)
         {
-            return ApiProblems.Invalid("size", "Размер миниатюры — от 32 до 1024.");
+            return ApiProblems.Invalid("size", L.T("EntryEndpoints.ThumbnailSizeIsFrom32To"));
         }
 
         var found = await lookup.FindAsync(id, cancellationToken).ConfigureAwait(false);
         if (found is null)
         {
-            return ApiProblems.NotFound($"Запись {id} не найдена.");
+            return ApiProblems.NotFound(L.F("Entries.EntryNotFound", id));
         }
 
         var (entry, root) = found.Value;
 
         if (services.GetService<IIconProvider>() is not { } icons)
         {
-            return ApiProblems.Unavailable("Получение миниатюр");
+            return ApiProblems.Unavailable(L.T("EntryEndpoints.GettingThumbnails"));
         }
 
         if (entry.IsCloudPlaceholder)
         {
-            return ApiProblems.NotFound($"Для облачного файла «{entry.Name}» миниатюры нет.");
+            return ApiProblems.NotFound(L.F("EntryEndpoints.ACloudFileHasNoThumbnail", entry.Name));
         }
 
         var etag = new EntityTagHeaderValue("\"t" + entry.Id.ToString(CultureInfo.InvariantCulture) + "-" + entry.ModifiedUtc.UtcTicks.ToString(CultureInfo.InvariantCulture)
@@ -402,7 +403,7 @@ internal static class EntryEndpoints
     {
         if (image is null)
         {
-            return ApiProblems.NotFound("Изображение недоступно.");
+            return ApiProblems.NotFound(L.T("EntryEndpoints.ImageUnavailable"));
         }
 
         var headers = context.Response.GetTypedHeaders();
@@ -433,14 +434,14 @@ internal static class EntryEndpoints
         var found = await lookup.FindAsync(id, cancellationToken).ConfigureAwait(false);
         if (found is null)
         {
-            return ApiProblems.NotFound($"Запись {id} не найдена.");
+            return ApiProblems.NotFound(L.F("Entries.EntryNotFound", id));
         }
 
         var (entry, root) = found.Value;
 
         if (services.GetService<IPlatformShell>() is not { } shell)
         {
-            return ApiProblems.Unavailable("Действие с файлом");
+            return ApiProblems.Unavailable(L.T("EntryEndpoints.FileAction"));
         }
 
         var result = await action(shell, lookup.FullPath(entry, root), cancellationToken).ConfigureAwait(false);
@@ -472,7 +473,7 @@ internal static class EntryEndpoints
         var entry = await entries.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (entry is null)
         {
-            return ApiProblems.NotFound($"Запись {id} не найдена.");
+            return ApiProblems.NotFound(L.F("Entries.EntryNotFound", id));
         }
 
         var known = (await tags.GetAllAsync(cancellationToken).ConfigureAwait(false)).Select(static tag => tag.Id).ToHashSet();
@@ -480,7 +481,7 @@ internal static class EntryEndpoints
         var unknown = desired.Where(tagId => !known.Contains(tagId)).ToArray();
         if (unknown.Length > 0)
         {
-            return ApiProblems.Invalid(nameof(request.TagIds), "Неизвестные теги: " + string.Join(", ", unknown) + ".");
+            return ApiProblems.Invalid(nameof(request.TagIds), L.T("EntryEndpoints.UnknownTags") + string.Join(", ", unknown) + ".");
         }
 
         var current = (await tags.GetTagsOfEntryAsync(id, cancellationToken).ConfigureAwait(false)).Select(static tag => tag.Id).ToHashSet();

@@ -1,3 +1,5 @@
+﻿using DiskApp.UI.Localization;
+
 namespace DiskApp.UI.Services;
 
 /// <summary>
@@ -32,7 +34,7 @@ public sealed class NullAutoStartService : IAutoStartService
     public bool IsEnabled => false;
 
     /// <inheritdoc />
-    public string Warning => "Автозапуск на этой платформе пока не поддерживается.";
+    public string Warning => L.T("NullAutoStart.AutostartIsNotSupportedOnThis");
 
     /// <inheritdoc />
     public void SetEnabled(bool enabled)

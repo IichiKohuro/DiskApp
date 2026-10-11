@@ -1,6 +1,7 @@
-using DiskApp.Contracts;
+﻿using DiskApp.Contracts;
 using DiskApp.Contracts.Search;
 using DiskApp.Core.Search;
+using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
@@ -98,7 +99,7 @@ internal static class SearchEndpoints
     {
         if (request.Limit is < 1 or > MaxLimit)
         {
-            return ApiProblems.Invalid("limit", $"Размер страницы — от 1 до {MaxLimit}.");
+            return ApiProblems.Invalid("limit", L.F("SearchEndpoints.PageSizeIsFrom1To", MaxLimit));
         }
 
         SearchCursor? cursor = null;
@@ -106,7 +107,7 @@ internal static class SearchEndpoints
         {
             if (!SearchCursorCodec.TryDecode(request.Cursor, out cursor))
             {
-                return ApiProblems.Invalid("cursor", "Курсор не распознан: возьмите его из прошлого ответа.");
+                return ApiProblems.Invalid("cursor", L.T("SearchEndpoints.TheCursorWasNotRecognizedTake"));
             }
         }
 
@@ -140,7 +141,7 @@ internal static class SearchEndpoints
     {
         if (limit is < 1 or > 50)
         {
-            return ApiProblems.Invalid("limit", "Подсказок — от 1 до 50.");
+            return ApiProblems.Invalid("limit", L.T("SearchEndpoints.SuggestionsFrom1To50"));
         }
 
         var suggestions = await service.SuggestAsync(q, limit ?? 10, cancellationToken).ConfigureAwait(false);
@@ -151,7 +152,7 @@ internal static class SearchEndpoints
     {
         if (limit is < 1 or > 1_000)
         {
-            return ApiProblems.Invalid("limit", "Записей — от 1 до 1 000.");
+            return ApiProblems.Invalid("limit", L.T("SearchEndpoints.EntriesFrom1To1000"));
         }
 
         var history = await service.GetHistoryAsync(limit ?? 100, cancellationToken).ConfigureAwait(false);
@@ -162,12 +163,12 @@ internal static class SearchEndpoints
     {
         if (string.IsNullOrWhiteSpace(query))
         {
-            return ApiProblems.Invalid("query", "Укажите запрос.");
+            return ApiProblems.Invalid("query", L.T("SearchEndpoints.SpecifyAQuery"));
         }
 
         return await service.RemoveFromHistoryAsync(query, cancellationToken).ConfigureAwait(false)
             ? TypedResults.NoContent()
-            : ApiProblems.NotFound("Такого запроса в истории нет.");
+            : ApiProblems.NotFound(L.T("SearchEndpoints.ThisQueryIsNotInThe"));
     }
 
     private static async Task<NoContent> ClearHistoryAsync(SearchService service, CancellationToken cancellationToken)

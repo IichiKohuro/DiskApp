@@ -1,4 +1,5 @@
-using DiskApp.Core.Abstractions;
+﻿using DiskApp.Core.Abstractions;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 
 namespace DiskApp.Desktop.Shell;
@@ -31,5 +32,5 @@ internal sealed class ShellClipboardService(IPlatformShell? shell = null) : ICli
         }
     }
 
-    private IPlatformShell Shell => shell ?? throw new NotSupportedException("Буфер обмена недоступен: нет оболочки ОС.");
+    private IPlatformShell Shell => shell ?? throw new NotSupportedException(L.T("ShellClipboard.ClipboardUnavailableNoOSShell"));
 }

@@ -1,6 +1,8 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+
+using DiskApp.UI.Localization;
 
 namespace DiskApp.Desktop.Platform.Windows;
 
@@ -42,9 +44,9 @@ internal sealed class GlobalHotkey : IDisposable
         {
             var error = Marshal.GetLastPInvokeError();
             var reason = error == NativeMethods.ErrorHotkeyAlreadyRegistered
-                ? "сочетание уже занято другим приложением"
-                : "Windows отклонила регистрацию";
-            throw new Win32Exception(error, $"Не удалось зарегистрировать горячую клавишу: {reason}.");
+                ? L.T("GlobalHotkey.TheShortcutIsAlreadyTakenBy")
+                : L.T("GlobalHotkey.WindowsRejectedTheRegistration");
+            throw new Win32Exception(error, L.F("GlobalHotkey.CouldNotRegisterTheHotkey", reason));
         }
 
         return new GlobalHotkey(window, id);

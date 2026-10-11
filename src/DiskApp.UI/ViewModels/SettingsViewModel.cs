@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Reflection;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 
 using FluentAvalonia.UI.Controls;
@@ -50,7 +51,7 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         IRootsService? roots = null,
         IAppMaintenance? maintenance = null,
         IHotkeyChecker? hotkeyChecker = null)
-        : base(PageKeys.Settings, "Настройки", FASymbol.Settings)
+        : base(PageKeys.Settings, "Settings.Settings", FASymbol.Settings)
     {
         ArgumentNullException.ThrowIfNull(themes);
         ArgumentNullException.ThrowIfNull(search);
@@ -76,15 +77,15 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         _quickSwitch = quickSwitch ?? new NullQuickSwitchSettings();
         IsQuickSwitchSupported = _quickSwitch.IsSupported;
         QuickSwitchEnabled = _quickSwitch.IsEnabled;
-        QuickSwitchDescription = $"Экспериментально. {_quickSwitch.HotkeyText} в окне «Сохранить» или «Открыть» любой программы — "
-            + "выбор папки в DiskApp, и диалог переходит в неё";
+        QuickSwitchDescription = L.F("Settings.ExperimentalInTheSaveOrOpen", _quickSwitch.HotkeyText)
+            + L.T("Settings.ChooseAFolderInDiskAppAnd");
         Hotkeys = hotkeys;
 
         Themes =
         [
-            new ThemeOption(AppTheme.System, "Как в системе"),
-            new ThemeOption(AppTheme.Light, "Светлая"),
-            new ThemeOption(AppTheme.Dark, "Тёмная"),
+            new ThemeOption(AppTheme.System, L.T("Settings.AsInWindows")),
+            new ThemeOption(AppTheme.Light, L.T("Settings.Light")),
+            new ThemeOption(AppTheme.Dark, L.T("Settings.Dark")),
         ];
         SelectedTheme = Themes.First(option => option.Theme == themes.Current);
 
@@ -96,18 +97,18 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         CloseToTray = true;
         RemindAboutInbox = true;
 
-        VersionText = $"Версия {ReadVersion()} · альфа";
+        VersionText = L.F("Settings.VersionAlpha", ReadVersion());
         Categories =
         [
-            new SettingsCategory("appearance", "Внешний вид", FASymbol.ColorBackground),
-            new SettingsCategory("quick", "Быстрый поиск", FASymbol.Keyboard),
-            new SettingsCategory("search", "Поиск", FASymbol.Find),
-            new SettingsCategory("index", "Индекс", FASymbol.Folder),
-            new SettingsCategory("behavior", "Поведение", FASymbol.Settings),
-            new SettingsCategory("integrations", "Интеграции", FASymbol.Link),
-            new SettingsCategory("inbox", "Входящие", FASymbol.Download),
-            new SettingsCategory("data", "Данные", FASymbol.Library),
-            new SettingsCategory("about", "О программе", FASymbol.Help),
+            new SettingsCategory("appearance", L.T("Settings.Appearance"), FASymbol.ColorBackground),
+            new SettingsCategory("quick", L.T("Settings.QuickSearch"), FASymbol.Keyboard),
+            new SettingsCategory("search", L.T("Settings.Search"), FASymbol.Find),
+            new SettingsCategory("index", L.T("Settings.Index"), FASymbol.Folder),
+            new SettingsCategory("behavior", L.T("Settings.Behavior"), FASymbol.Settings),
+            new SettingsCategory("integrations", L.T("Settings.Integrations"), FASymbol.Link),
+            new SettingsCategory("inbox", L.T("Settings.Inbox"), FASymbol.Download),
+            new SettingsCategory("data", L.T("Settings.Data"), FASymbol.Library),
+            new SettingsCategory("about", L.T("Settings.About"), FASymbol.Help),
         ];
         SelectedCategory = Categories[0];
         _loading = false;
@@ -131,6 +132,9 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
     public void OnNavigatedFrom()
     {
     }
+
+    /// <inheritdoc />
+    protected override Task RelocalizeAsync() => InitializeAsync();
 
     private async Task InitializeAsync()
     {
@@ -184,7 +188,7 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
     public string InboxHotkeyText { get; } = "Ctrl + Alt + I";
 
     /// <summary>Расписание напоминаний.</summary>
-    public string ReminderText { get; } = "Ежедневно в 18:00 и когда накопится 10 файлов";
+    public string ReminderText { get; } = L.T("Settings.DailyAt1800AndWhen");
 
     /// <summary>Версия приложения.</summary>
     public string VersionText { get; }
@@ -206,7 +210,7 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Не удалось загрузить корни: " + exception.Message;
+            SettingsNote = L.T("Settings.CouldNotLoadTheRoots") + exception.Message;
         }
     }
 

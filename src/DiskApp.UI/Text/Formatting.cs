@@ -1,18 +1,15 @@
 using System.Globalization;
 
+using DiskApp.UI.Localization;
+
 namespace DiskApp.UI.Text;
 
 /// <summary>
-/// Подписи для интерфейса: размеры, относительное время, количества со склонением.
-/// Пока интерфейс только русский; локализация приходит в этапе 9 и заменит строки на ресурсы.
+/// Подписи для интерфейса: размеры, относительное время, количества со склонением — на языке интерфейса (этап 9.2).
 /// </summary>
 public static class Formatting
 {
-    private static readonly string[] SizeUnits = ["Б", "КБ", "МБ", "ГБ", "ТБ"];
-    private static readonly string[] MonthsGenitive =
-    [
-        "янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек",
-    ];
+    private static readonly string[] SizeUnits = ["Size.B", "Size.KB", "Size.MB", "Size.GB", "Size.TB"];
 
     /// <summary>
     /// Размер в байтах в удобных единицах: «512 Б», «1,2 МБ», «3 ГБ». Дробная часть только для значений меньше 10.
@@ -33,7 +30,7 @@ public static class Formatting
             ? value.ToString("0", CultureInfo.CurrentCulture)
             : value.ToString(value < 10 ? "0.#" : "0", CultureInfo.CurrentCulture);
 
-        return $"{text} {SizeUnits[unit]}";
+        return $"{text} {L.T(SizeUnits[unit])}";
     }
 
     /// <summary>
@@ -42,7 +39,7 @@ public static class Formatting
     public static string Percent(double fraction)
     {
         var percent = Math.Clamp((int)Math.Round(fraction * 100), 0, 100);
-        return $"{percent.ToString(CultureInfo.CurrentCulture)} %";
+        return L.F("Format.Percent", percent.ToString(CultureInfo.CurrentCulture));
     }
 
     /// <summary>
@@ -54,32 +51,32 @@ public static class Formatting
         var age = now - value;
         if (age < TimeSpan.FromMinutes(1))
         {
-            return "только что";
+            return L.T("Time.JustNow");
         }
 
         if (age < TimeSpan.FromHours(1))
         {
-            return $"{Count((int)age.TotalMinutes, "минуту", "минуты", "минут")} назад";
+            return L.F("Time.Ago", Count((int)age.TotalMinutes, L.T("Time.Minute.One"), L.T("Time.Minute.Few"), L.T("Time.Minute.Many")));
         }
 
         if (age < TimeSpan.FromHours(24) && value.Date == now.Date)
         {
-            return $"{Count((int)age.TotalHours, "час", "часа", "часов")} назад";
+            return L.F("Time.Ago", Count((int)age.TotalHours, L.T("Time.Hour.One"), L.T("Time.Hour.Few"), L.T("Time.Hour.Many")));
         }
 
         if (value.Date == now.Date.AddDays(-1))
         {
-            return "вчера";
+            return L.T("Time.Yesterday");
         }
 
         if (age < TimeSpan.FromDays(7))
         {
-            return $"{Count((int)age.TotalDays, "день", "дня", "дней")} назад";
+            return L.F("Time.Ago", Count((int)age.TotalDays, L.T("Time.Day.One"), L.T("Time.Day.Few"), L.T("Time.Day.Many")));
         }
 
         return value.Year == now.Year
-            ? $"{value.Day.ToString(CultureInfo.CurrentCulture)} {MonthsGenitive[value.Month - 1]}"
-            : value.ToString("dd.MM.yyyy", CultureInfo.CurrentCulture);
+            ? $"{value.Day.ToString(CultureInfo.CurrentCulture)} {L.T("Month.Short." + value.Month.ToString(CultureInfo.InvariantCulture))}"
+            : value.ToString(L.T("Date.Full"), CultureInfo.CurrentCulture);
     }
 
     /// <summary>
@@ -98,6 +95,11 @@ public static class Formatting
     /// </summary>
     public static string Number(long value)
     {
+        if (Localizer.Instance.IsEnglish)
+        {
+            return value.ToString("N0", Localizer.Instance.Culture);
+        }
+
         var text = Math.Abs(value).ToString(CultureInfo.InvariantCulture);
         var groups = new List<string>();
         for (var end = text.Length; end > 0; end -= 3)
@@ -109,11 +111,17 @@ public static class Formatting
     }
 
     /// <summary>
-    /// Форма слова для числа по правилам русского языка.
+    /// Форма слова для числа по правилам языка интерфейса: в русском три формы, в английском две (1 — <paramref name="one"/>,
+    /// остальное — <paramref name="many"/>).
     /// </summary>
     public static string Plural(long count, string one, string few, string many)
     {
         var absolute = Math.Abs(count);
+        if (Localizer.Instance.IsEnglish)
+        {
+            return absolute == 1 ? one : many;
+        }
+
         var lastTwo = absolute % 100;
         var last = absolute % 10;
 

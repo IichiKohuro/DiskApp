@@ -1,9 +1,10 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.Versioning;
 
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Settings;
 using DiskApp.Desktop.Platform.Windows;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 
 using Serilog;
@@ -151,7 +152,7 @@ internal sealed class QuickSwitchController : IQuickSwitchSettings, IDisposable
         var hotkey = Configured();
         if (HotkeyKeys.ToVirtualKey(hotkey.Key) is not { } virtualKey)
         {
-            throw new InvalidOperationException($"Клавиша {hotkey.DisplayText} не поддерживается для Quick Switch.");
+            throw new InvalidOperationException(L.F("QuickSwitchController.TheKeyIsNotSupportedFor", hotkey.DisplayText));
         }
 
         try
@@ -160,7 +161,7 @@ internal sealed class QuickSwitchController : IQuickSwitchSettings, IDisposable
         }
         catch (Win32Exception exception)
         {
-            throw new InvalidOperationException($"Quick Switch не включён: {hotkey.DisplayText} — {exception.Message}", exception);
+            throw new InvalidOperationException(L.F("QuickSwitchController.QuickSwitchIsNotOn", hotkey.DisplayText, exception.Message), exception);
         }
 
         _hotkey.Pressed += (_, _) => _pressed?.Invoke();

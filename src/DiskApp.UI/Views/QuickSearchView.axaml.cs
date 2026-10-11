@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 using DiskApp.UI.Input;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.ViewModels;
 
@@ -254,7 +255,7 @@ public partial class QuickSearchView : UserControl
         catch (Exception exception)
         {
             // Обработчик событий: исключение отсюда уронило бы приложение — сообщаем и продолжаем.
-            ViewModel?.ReportError("Не удалось перетащить", exception);
+            ViewModel?.ReportError(L.T("QuickSearch.CouldNotDrag"), exception);
         }
     }
 
@@ -310,7 +311,7 @@ public partial class QuickSearchView : UserControl
         }
         catch (Exception exception)
         {
-            viewModel.ReportError("Не удалось принять файлы", exception);
+            viewModel.ReportError(L.T("QuickSearch.CouldNotAcceptTheFiles"), exception);
         }
     }
 

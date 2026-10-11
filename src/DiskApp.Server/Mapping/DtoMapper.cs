@@ -165,6 +165,7 @@ internal static class DtoMapper
             AccentColor = settings.Appearance.AccentColor,
             FontScale = settings.Appearance.FontScale,
             Compact = settings.Appearance.Compact,
+            Language = settings.Appearance.Language,
         },
         Indexing = new IndexingSettingsDto
         {
@@ -227,6 +228,7 @@ internal static class DtoMapper
             AccentColor = dto.Appearance.AccentColor,
             FontScale = dto.Appearance.FontScale,
             Compact = dto.Appearance.Compact,
+            Language = dto.Appearance.Language,
         },
         Indexing = current.Indexing with
         {

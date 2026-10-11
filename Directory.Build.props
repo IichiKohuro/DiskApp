@@ -34,7 +34,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <VersionPrefix>0.1.0</VersionPrefix>
-    <NeutralLanguage>en</NeutralLanguage>
+    <!-- Нейтральные ресурсы строк — русские (этап 9.2), английский перевод — во вспомогательной сборке en. -->
+    <NeutralLanguage>ru</NeutralLanguage>
   </PropertyGroup>
 
   <!-- Воспроизводимая сборка в CI: пути в PDB нормализуются, source link не зависит от машины. -->

@@ -1,9 +1,10 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.ViewModels;
 
@@ -51,7 +52,7 @@ public partial class HomeView : UserControl
         {
             var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = "Папки, по которым искать",
+                Title = L.T("Home.FoldersToSearch"),
                 AllowMultiple = true,
             });
             var paths = folders.Select(static folder => folder.TryGetLocalPath()).OfType<string>().ToArray();
@@ -62,7 +63,7 @@ public partial class HomeView : UserControl
         }
         catch (Exception exception)
         {
-            viewModel.ReportError("Не удалось добавить папку", exception);
+            viewModel.ReportError(L.T("Home.CouldNotAddTheFolder"), exception);
         }
     }
 

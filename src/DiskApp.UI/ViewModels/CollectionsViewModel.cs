@@ -1,9 +1,10 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Text;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -70,7 +71,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
     /// Создаёт страницу с заданными часами (тесты, превью).
     /// </summary>
     public CollectionsViewModel(ILibraryService library, ISearchService search, IFileActions actions, IDialogService? dialogs, IInfoBarService? notices, ITagEditor? tagEditor, Func<DateTimeOffset> clock)
-        : base(PageKeys.Collections, "Коллекции", FASymbol.Library)
+        : base(PageKeys.Collections, "Common.Page.Collections", FASymbol.Library)
     {
         ArgumentNullException.ThrowIfNull(library);
         ArgumentNullException.ThrowIfNull(search);
@@ -134,7 +135,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
     public bool IsSavedQuery => SelectedList?.Kind == CollectionListKind.SavedQuery;
 
     /// <summary>Заголовок правой части.</summary>
-    public string FilesTitle => SelectedList?.Title ?? "Выберите коллекцию";
+    public string FilesTitle => SelectedList?.Title ?? L.T("Collections.ChooseACollection");
 
     /// <summary>Завершается, когда загружены списки и записи выбранного.</summary>
     public Task PendingLoad { get; private set; } = Task.CompletedTask;
@@ -154,6 +155,9 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
     /// <inheritdoc />
     public void Dispose() => StopAutoRefresh();
 
+    /// <inheritdoc />
+    protected override Task RelocalizeAsync() => RefreshAsync();
+
     /// <summary>Перечитывает списки и записи выбранного.</summary>
     [RelayCommand]
     public async Task RefreshAsync()
@@ -163,7 +167,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         {
             var collections = await _library.GetCollectionsAsync();
             Lists.Clear();
-            Lists.Add(new CollectionListItem(CollectionListKind.Favorites, null, "Избранное", "Закреплённое: Ctrl+D в любом списке", Symbol.Star));
+            Lists.Add(new CollectionListItem(CollectionListKind.Favorites, null, L.T("Common.Favorites"), L.T("Collections.PinnedCtrlDInAnyList"), Symbol.Star));
             foreach (var collection in collections)
             {
                 Lists.Add(ToItem(collection));
@@ -174,7 +178,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            Error = "Не удалось загрузить коллекции: " + exception.Message;
+            Error = L.T("Collections.CouldNotLoadCollections") + exception.Message;
         }
 
         if (Equals(before, SelectedList))
@@ -210,10 +214,10 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
                 ? await AddToFavoritesAsync(resolved.Entries)
                 : await AddToCollectionAsync(target.Collection!, resolved.Entries);
 
-            var message = Formatting.Count(added, "запись добавлена", "записи добавлены", "записей добавлено");
+            var message = Formatting.Count(added, L.T("Collections.EntryAdded.One"), L.T("Collections.EntryAdded.Few"), L.T("Collections.EntryAdded.Many"));
             if (resolved.Missing.Count > 0)
             {
-                message += "; " + Formatting.Count(resolved.Missing.Count, "путь", "пути", "путей") + " вне индекса";
+                message += "; " + Formatting.Count(resolved.Missing.Count, L.T("Common.Path.One"), L.T("Common.Path.Few"), L.T("Common.Path.Many")) + L.T("Collections.OutsideTheIndex");
             }
 
             _notices?.Show($"«{target.Title}»", message, resolved.Missing.Count > 0 ? FAInfoBarSeverity.Warning : FAInfoBarSeverity.Success);
@@ -226,7 +230,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось добавить", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotAdd"), exception.Message, FAInfoBarSeverity.Error);
             return 0;
         }
     }
@@ -238,7 +242,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
 
     private static CollectionListItem ToItem(CollectionInfo collection) => collection.Type == CollectionType.SavedQuery
         ? new CollectionListItem(CollectionListKind.SavedQuery, collection, collection.Name, collection.Query ?? string.Empty, Symbol.SearchSquare)
-        : new CollectionListItem(CollectionListKind.Manual, collection, collection.Name, "Ручная коллекция", Symbol.Collections);
+        : new CollectionListItem(CollectionListKind.Manual, collection, collection.Name, L.T("Collections.ManualCollection"), Symbol.Collections);
 
     private async Task LoadFilesAsync()
     {
@@ -270,18 +274,18 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
 
             SelectedFile = Files.FirstOrDefault(hit => hit.Entry.Id == selected);
             FilesText = entries.Count > 0
-                ? Formatting.Count(entries.Count, "запись", "записи", "записей")
+                ? Formatting.Count(entries.Count, L.T("Common.Entry.One"), L.T("Common.Entry.Few"), L.T("Common.Entry.Many"))
                 : list.Kind switch
                 {
-                    CollectionListKind.Favorites => "Избранного пока нет: Ctrl+D закрепляет файл в поиске и «Обзоре».",
-                    CollectionListKind.SavedQuery => "По запросу ничего не найдено.",
-                    _ => "Коллекция пуста: перетащите сюда файлы или загрузите список путей.",
+                    CollectionListKind.Favorites => L.T("Collections.NoFavoritesYetCtrlDPins"),
+                    CollectionListKind.SavedQuery => L.T("Collections.NothingMatchesTheQuery"),
+                    _ => L.T("Collections.TheCollectionIsEmptyDropFiles"),
                 };
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             Files.Clear();
-            FilesText = "Не удалось загрузить записи: " + exception.Message;
+            FilesText = L.T("Collections.CouldNotLoadEntries") + exception.Message;
         }
     }
 
@@ -339,7 +343,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
     [RelayCommand]
     private async Task NewCollectionAsync()
     {
-        if (_dialogs is null || await _dialogs.PromptAsync("Новая коллекция", "Имя", string.Empty, "Создать") is not { } name || name.Trim().Length == 0)
+        if (_dialogs is null || await _dialogs.PromptAsync(L.T("Collections.NewCollection"), L.T("Common.Name"), string.Empty, L.T("Common.Create")) is not { } name || name.Trim().Length == 0)
         {
             return;
         }
@@ -352,13 +356,13 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
     private async Task NewSavedQueryAsync()
     {
         if (_dialogs is null
-            || await _dialogs.PromptAsync("Новый сохранённый запрос", "Запрос, например: ext:pdf modified:7d", string.Empty, "Далее") is not { } query
+            || await _dialogs.PromptAsync(L.T("Collections.NewSavedQuery"), L.T("Collections.QueryForExampleExtPdfModified"), string.Empty, L.T("Collections.Next")) is not { } query
             || query.Trim().Length == 0)
         {
             return;
         }
 
-        if (await _dialogs.PromptAsync("Новый сохранённый запрос", "Имя", query.Trim(), "Создать") is not { } name || name.Trim().Length == 0)
+        if (await _dialogs.PromptAsync(L.T("Collections.NewSavedQuery"), L.T("Common.Name"), query.Trim(), L.T("Common.Create")) is not { } name || name.Trim().Length == 0)
         {
             return;
         }
@@ -376,7 +380,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось создать коллекцию", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotCreateTheCollection"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -391,7 +395,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
             return;
         }
 
-        if (await _dialogs.PromptAsync("Переименовать коллекцию", "Имя", collection.Name, "Сохранить") is not { } name || name.Trim().Length == 0)
+        if (await _dialogs.PromptAsync(L.T("Collections.RenameCollection"), L.T("Common.Name"), collection.Name, L.T("Common.Save")) is not { } name || name.Trim().Length == 0)
         {
             return;
         }
@@ -410,7 +414,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
             return;
         }
 
-        if (await _dialogs.PromptAsync("Изменить запрос", "Запрос", collection.Query ?? string.Empty, "Сохранить") is not { } query || query.Trim().Length == 0)
+        if (await _dialogs.PromptAsync(L.T("Collections.EditQuery"), L.T("Collections.Query"), collection.Query ?? string.Empty, L.T("Common.Save")) is not { } query || query.Trim().Length == 0)
         {
             return;
         }
@@ -428,7 +432,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось изменить коллекцию", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotChangeTheCollection"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -441,7 +445,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
             return;
         }
 
-        if (!await _dialogs.ConfirmAsync("Удалить коллекцию", $"Удалить «{collection.Name}»? Файлы останутся на месте.", "Удалить"))
+        if (!await _dialogs.ConfirmAsync(L.T("Collections.DeleteCollection"), L.F("Collections.DeleteTheFilesStayWhereThey", collection.Name), L.T("Common.Delete")))
         {
             return;
         }
@@ -451,11 +455,11 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
             await _library.DeleteCollectionAsync(collection.Id);
             SelectedList = null;
             await RefreshAsync();
-            _notices?.Show("Коллекция удалена", $"«{collection.Name}»", FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Collections.CollectionDeleted"), $"«{collection.Name}»", FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось удалить коллекцию", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotDeleteTheCollection"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -474,7 +478,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось открыть", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotOpen"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -493,7 +497,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось показать в папке", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotShowInFolder"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -515,7 +519,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось изменить теги", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotChangeTags"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -545,7 +549,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось убрать запись", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotRemoveTheEntry"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -587,7 +591,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось изменить порядок", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotChangeTheOrder"), exception.Message, FAInfoBarSeverity.Error);
             await LoadFilesAsync();
         }
     }
@@ -604,11 +608,11 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         try
         {
             await _actions.CopyPathsAsync([.. Files.Select(static file => file.Entry)]);
-            _notices?.Show("Пути скопированы", Formatting.Count(Files.Count, "путь", "пути", "путей"), FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Collections.PathsCopied"), Formatting.Count(Files.Count, L.T("Common.Path.One"), L.T("Common.Path.Few"), L.T("Common.Path.Many")), FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            _notices?.Show("Не удалось скопировать пути", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotCopyThePaths"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -621,7 +625,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
             return;
         }
 
-        if (await _dialogs.PickSaveFileAsync("Сохранить список путей", PathText.ValidateFileName(list.Title) is null ? list.Title + ".txt" : "Коллекция.txt") is not { } path)
+        if (await _dialogs.PickSaveFileAsync(L.T("Collections.SaveListOfPaths"), PathText.ValidateFileName(list.Title) is null ? list.Title + ".txt" : L.T("Collections.CollectionTxt")) is not { } path)
         {
             return;
         }
@@ -629,11 +633,11 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         try
         {
             await File.WriteAllLinesAsync(path, Files.Select(static file => file.Entry.FullPath), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-            _notices?.Show("Список сохранён", path, FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Collections.ListSaved"), path, FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            _notices?.Show("Не удалось сохранить список", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotSaveTheList"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -645,7 +649,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
     [RelayCommand(CanExecute = nameof(CanImport))]
     private async Task ImportAsync()
     {
-        if (_dialogs is null || await _dialogs.PickOpenFileAsync("Загрузить список путей") is not { } path)
+        if (_dialogs is null || await _dialogs.PickOpenFileAsync(L.T("Collections.LoadListOfPaths")) is not { } path)
         {
             return;
         }
@@ -657,7 +661,7 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            _notices?.Show("Не удалось прочитать список", exception.Message, FAInfoBarSeverity.Error);
+            _notices?.Show(L.T("Collections.CouldNotReadTheList"), exception.Message, FAInfoBarSeverity.Error);
             return;
         }
 

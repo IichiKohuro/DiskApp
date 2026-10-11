@@ -1,5 +1,6 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ic="using:FluentIcons.Avalonia"
@@ -20,7 +21,7 @@
                  x:Name="QueryBox"
                  Classes="search"
                  Text="{Binding Query, Mode=TwoWay}"
-                 PlaceholderText="Найти файл или папку…">
+                 PlaceholderText="{loc:Str QuickSearch.FindAFileOrFolder}">
             <TextBox.InnerLeftContent>
                 <ic:SymbolIcon Symbol="Search"
                                FontSize="20"
@@ -65,7 +66,7 @@
                     Classes="filter"
                     Focusable="False"
                     VerticalAlignment="Top"
-                    Content="Очистить"
+                    Content="{loc:Str QuickSearch.Clear}"
                     Command="{Binding ClearHistoryCommand}"
                     IsVisible="{Binding IsShowingHistory}" />
             <ItemsControl ItemsSource="{Binding Suggestions}">
@@ -86,7 +87,7 @@
                             <Button Classes="remove"
                                     Focusable="False"
                                     IsVisible="{Binding IsHistory}"
-                                    ToolTip.Tip="Удалить из истории"
+                                    ToolTip.Tip="{loc:Str QuickSearch.RemoveFromHistory}"
                                     Command="{Binding $parent[ItemsControl].((vm:QuickSearchViewModel)DataContext).DeleteHistoryCommand}"
                                     CommandParameter="{Binding}">
                                 <ic:SymbolIcon Symbol="Dismiss" FontSize="10" />
@@ -111,7 +112,7 @@
                         <MenuItem Command="{Binding OpenCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Открыть" />
+                                    <TextBlock Text="{loc:Str Common.Open}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.OpenText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -120,7 +121,7 @@
                         <MenuItem Command="{Binding RevealCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Показать в папке" />
+                                    <TextBlock Text="{loc:Str QuickSearch.ShowInFolder}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RevealText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -129,7 +130,7 @@
                         <MenuItem Command="{Binding OpenWithCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Открыть с помощью…" />
+                                    <TextBlock Text="{loc:Str QuickSearch.OpenWith}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.OpenWithText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -139,7 +140,7 @@
                         <MenuItem Command="{Binding CopyFilesCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Копировать" />
+                                    <TextBlock Text="{loc:Str Common.Copy}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.CopyFilesText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -148,7 +149,7 @@
                         <MenuItem Command="{Binding CopyPathCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Копировать путь" />
+                                    <TextBlock Text="{loc:Str Common.CopyPath}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.CopyPathText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -167,7 +168,7 @@
                         <MenuItem Command="{Binding EditTagsCommand}" IsVisible="{Binding CanEditTags}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Теги…" />
+                                    <TextBlock Text="{loc:Str Common.TagsEllipsis}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.EditTagsText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -176,7 +177,7 @@
                         <MenuItem Command="{Binding BeginRenameCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Переименовать" />
+                                    <TextBlock Text="{loc:Str Common.Rename}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RenameText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -185,7 +186,7 @@
                         <MenuItem Command="{Binding BeginDeleteCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="В корзину" />
+                                    <TextBlock Text="{loc:Str Common.ToRecycleBin}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.DeleteText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -195,7 +196,7 @@
                         <MenuItem Command="{Binding RunAsAdminCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Запустить от имени администратора" />
+                                    <TextBlock Text="{loc:Str QuickSearch.RunAsAdministrator}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RunAsAdminText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -204,7 +205,7 @@
                         <MenuItem Command="{Binding PropertiesCommand}">
                             <MenuItem.Header>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="Свойства" />
+                                    <TextBlock Text="{loc:Str Common.Properties}" />
                                     <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.PropertiesText}" />
                                 </Grid>
                             </MenuItem.Header>
@@ -221,8 +222,8 @@
                                FontSize="40"
                                HorizontalAlignment="Center"
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                <TextBlock Classes="secondary" Text="Ничего не найдено" HorizontalAlignment="Center" />
-                <TextBlock Classes="tertiary" FontSize="12" Text="Введите ?, чтобы увидеть фильтры и клавиши" HorizontalAlignment="Center" />
+                <TextBlock Classes="secondary" Text="{loc:Str QuickSearch.NothingFound}" HorizontalAlignment="Center" />
+                <TextBlock Classes="tertiary" FontSize="12" Text="{loc:Str QuickSearch.TypeToSeeFiltersAndKeys}" HorizontalAlignment="Center" />
             </StackPanel>
 
             <!-- Файлы тащат в окно: куда их бросить -->
@@ -235,7 +236,7 @@
                     IsHitTestVisible="False"
                     IsVisible="{Binding ShowDropHint}">
                 <TextBlock Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
-                           Text="Бросьте файлы на папку в списке — они скопируются туда" />
+                           Text="{loc:Str QuickSearch.DropFilesOnAFolderIn}" />
             </Border>
 
             <!-- Подсказка синтаксиса по запросу «?» -->
@@ -276,7 +277,7 @@
                     <Button Classes="accent"
                             Content="{Binding PendingConfirmText}"
                             Command="{Binding ConfirmPendingActionCommand}" />
-                    <Button Content="Отмена" Command="{Binding CancelPendingActionCommand}" />
+                    <Button Content="{loc:Str Common.CancelButton}" Command="{Binding CancelPendingActionCommand}" />
                 </StackPanel>
                 <TextBox Grid.Row="1" Grid.Column="0"
                          x:Name="RenameBox"
@@ -300,12 +301,12 @@
                        FontSize="12"
                        Margin="12,0,0,0"
                        VerticalAlignment="Center"
-                       Text="Enter открыть · Tab меню · ? справка · Esc закрыть" />
+                       Text="{loc:Str QuickSearch.EnterOpenTabMenuHelpEsc}" />
             <Button DockPanel.Dock="Right"
                     Margin="8,0,0,0"
                     Padding="10,2"
                     FontSize="12"
-                    Content="Повторить"
+                    Content="{loc:Str QuickSearch.Retry}"
                     Command="{Binding RetryCommand}"
                     IsVisible="{Binding HasError}" />
             <ic:SymbolIcon DockPanel.Dock="Left"

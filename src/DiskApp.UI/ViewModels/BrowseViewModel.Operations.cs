@@ -1,5 +1,6 @@
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Text;
 
@@ -25,8 +26,8 @@ public sealed partial class BrowseViewModel
     /// <summary>Шаблоны новых файлов.</summary>
     public IReadOnlyList<NewFileTemplate> FileTemplates { get; } =
     [
-        new("Текстовый документ", ".txt"),
-        new("Заметка Markdown", ".md"),
+        new(L.T("Browse.TextDocument"), ".txt"),
+        new(L.T("Browse.MarkdownNote"), ".md"),
         new("JSON", ".json"),
     ];
 
@@ -48,7 +49,7 @@ public sealed partial class BrowseViewModel
         var sources = _clipboard.Count > 0 ? _clipboard : systemFiles ?? [];
         if (sources.Count == 0)
         {
-            _notices?.Show("Нечего вставить", "Скопируйте или вырежьте файлы в «Обзоре» или в Проводнике.", FAInfoBarSeverity.Informational);
+            _notices?.Show(L.T("Browse.NothingToPaste"), L.T("Browse.CopyOrCutFilesInBrowse"), FAInfoBarSeverity.Informational);
             return;
         }
 
@@ -76,7 +77,7 @@ public sealed partial class BrowseViewModel
         var items = sources.Where(source => !IsSameOrParent(source, targetFolder)).ToList();
         if (items.Count == 0)
         {
-            _notices?.Show("Некуда переносить", "Папку нельзя перенести в неё саму.", FAInfoBarSeverity.Warning);
+            _notices?.Show(L.T("Browse.NowhereToMove"), L.T("Browse.AFolderCannotBeMovedInto"), FAInfoBarSeverity.Warning);
             return;
         }
 
@@ -86,7 +87,7 @@ public sealed partial class BrowseViewModel
         {
             if (_operations is null)
             {
-                _notices?.Show("Операции недоступны", "Очередь операций сервера не подключена.", FAInfoBarSeverity.Warning);
+                _notices?.Show(L.T("Browse.OperationsUnavailable"), L.T("Browse.TheServerOperationQueueIsNot"), FAInfoBarSeverity.Warning);
             }
             else
             {
@@ -98,12 +99,12 @@ public sealed partial class BrowseViewModel
         {
             var files = outside.Where(File.Exists).ToList();
             var saved = 0;
-            if (files.Count > 0 && await TryAsync(async () => saved = await _actions.CopyIntoAsync(files, new FileEntry { FullPath = targetFolder, Kind = FileKind.Folder, Root = string.Empty }), "Не удалось скопировать"))
+            if (files.Count > 0 && await TryAsync(async () => saved = await _actions.CopyIntoAsync(files, new FileEntry { FullPath = targetFolder, Kind = FileKind.Folder, Root = string.Empty }), L.T("Browse.CouldNotCopy")))
             {
                 var skipped = outside.Count - files.Count;
                 _notices?.Show(
-                    "Скопировано",
-                    $"{Formatting.Count(saved, "файл", "файла", "файлов")} в «{PathText.FileName(targetFolder)}»." + (skipped > 0 ? $" Папки извне пока не копируются: {skipped}." : string.Empty),
+                    L.T("Browse.Copied"),
+                    L.F("Common.CountTo", Formatting.Count(saved, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")), PathText.FileName(targetFolder)) + (skipped > 0 ? L.F("Browse.FoldersFromOutsideAreNotCopied", skipped) : string.Empty),
                     skipped > 0 ? FAInfoBarSeverity.Warning : FAInfoBarSeverity.Success);
                 await RefreshAsync();
             }
@@ -123,7 +124,7 @@ public sealed partial class BrowseViewModel
         _clipboard = [.. entries.Select(static entry => entry.FullPath)];
         _clipboardCut = true;
         OnPropertyChanged(nameof(HasClipboard));
-        _notices?.Show("Вырезано", Formatting.Count(entries.Count, "элемент", "элемента", "элементов") + " — вставьте в нужную папку (Ctrl+V).", FAInfoBarSeverity.Informational);
+        _notices?.Show(L.T("Browse.Cut"), Formatting.Count(entries.Count, L.T("Common.Item.One"), L.T("Common.Item.Few"), L.T("Common.Item.Many")) + L.T("Browse.PasteIntoTheTargetFolderCtrl"), FAInfoBarSeverity.Informational);
         await Task.CompletedTask;
     }
 
@@ -133,14 +134,14 @@ public sealed partial class BrowseViewModel
 
     /// <summary>Создать папку в текущей папке (`Ctrl+Shift+N`).</summary>
     [RelayCommand]
-    private Task NewFolderAsync() => CreateAsync(FileOperationKind.CreateFolder, "Новая папка", "Новая папка", string.Empty);
+    private Task NewFolderAsync() => CreateAsync(FileOperationKind.CreateFolder, L.T("Browse.NewFolder"), L.T("Browse.NewFolder"), string.Empty);
 
     /// <summary>Создать файл по шаблону.</summary>
     [RelayCommand]
     private Task NewFileAsync(NewFileTemplate template)
     {
         ArgumentNullException.ThrowIfNull(template);
-        return CreateAsync(FileOperationKind.CreateFile, "Новый файл", template.Label, template.Extension);
+        return CreateAsync(FileOperationKind.CreateFile, L.T("Browse.NewFile"), template.Label, template.Extension);
     }
 
     private async Task CreateAsync(FileOperationKind kind, string title, string baseName, string extension)
@@ -151,7 +152,7 @@ public sealed partial class BrowseViewModel
         }
 
         var initial = baseName + extension;
-        var name = await _dialogs.PromptAsync(title, $"Имя в папке «{PathText.FileName(target)}»", initial, "Создать", baseName.Length);
+        var name = await _dialogs.PromptAsync(title, L.F("Browse.NameInFolder", PathText.FileName(target)), initial, L.T("Common.Create"), baseName.Length);
         if (name is null)
         {
             return;
@@ -160,13 +161,13 @@ public sealed partial class BrowseViewModel
         name = name.Trim();
         if (PathText.ValidateFileName(name) is { } error)
         {
-            _notices?.Show("Такое имя не подходит", error, FAInfoBarSeverity.Warning);
+            _notices?.Show(L.T("Browse.ThisNameWillNotWork"), error, FAInfoBarSeverity.Warning);
             return;
         }
 
         if (_operations is null)
         {
-            _notices?.Show("Операции недоступны", "Очередь операций сервера не подключена.", FAInfoBarSeverity.Warning);
+            _notices?.Show(L.T("Browse.OperationsUnavailable"), L.T("Browse.TheServerOperationQueueIsNot"), FAInfoBarSeverity.Warning);
             return;
         }
 

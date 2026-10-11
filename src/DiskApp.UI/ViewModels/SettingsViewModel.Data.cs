@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using DiskApp.Contracts;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
 
@@ -69,7 +70,7 @@ public sealed partial class SettingsViewModel
     public IReadOnlyList<ThirdPartyComponent> ThirdParty => _maintenance.ThirdParty;
 
     /// <summary>Описание раздела обновлений.</summary>
-    public string UpdatesText { get; } = "Проверка и установка обновлений появятся вместе с установщиком (этап 11). Сейчас новая версия скачивается со страницы релизов.";
+    public string UpdatesText { get; } = L.T("Settings.CheckingForAndInstallingUpdatesWill");
 
     /// <summary>Страница релизов.</summary>
     public Uri ReleasesUri { get; } = new("https://github.com/IichiKohuro/DiskApp/releases");
@@ -115,7 +116,7 @@ public sealed partial class SettingsViewModel
 
         if (KeyName(key) is not { } name)
         {
-            HotkeyNote = "Эта клавиша не подходит: возьмите букву, цифру, F1–F24, пробел или клавиши навигации.";
+            HotkeyNote = L.T("Settings.ThisKeyWillNotWorkUse");
             return true;
         }
 
@@ -143,7 +144,7 @@ public sealed partial class SettingsViewModel
         parts.Add(name);
         if (!Hotkey.TryParse(string.Join('+', parts), out var hotkey))
         {
-            HotkeyNote = "Нужен хотя бы один из Ctrl, Alt или Win — иначе сочетание перехватит обычный ввод.";
+            HotkeyNote = L.T("Settings.AtLeastOneOfCtrlAlt");
             return true;
         }
 
@@ -212,11 +213,11 @@ public sealed partial class SettingsViewModel
         try
         {
             var status = await _search.GetIndexStatusAsync(CancellationToken.None);
-            IndexSizeText = $"{Formatting.Count(status.TotalEntries, "запись", "записи", "записей")} · база {Formatting.Size(_maintenance.DatabaseSize)}";
+            IndexSizeText = L.F("SettingsData.IndexSize", Formatting.Count(status.TotalEntries, L.T("Common.Entry.One"), L.T("Common.Entry.Few"), L.T("Common.Entry.Many")), Formatting.Size(_maintenance.DatabaseSize));
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            IndexSizeText = "База " + Formatting.Size(_maintenance.DatabaseSize);
+            IndexSizeText = L.T("Settings.Database") + Formatting.Size(_maintenance.DatabaseSize);
         }
     }
 
@@ -232,7 +233,7 @@ public sealed partial class SettingsViewModel
     [RelayCommand]
     private async Task ClearCacheAsync()
     {
-        if (_dialogs is not null && !await _dialogs.ConfirmAsync("Очистить кэш", "Удалить сохранённые иконки и миниатюры? Они загрузятся заново при показе файлов.", "Очистить"))
+        if (_dialogs is not null && !await _dialogs.ConfirmAsync(L.T("Settings.ClearCache"), L.T("Settings.DeleteSavedIconsAndThumbnailsThey"), L.T("Settings.Clear")))
         {
             return;
         }
@@ -241,11 +242,11 @@ public sealed partial class SettingsViewModel
         {
             await _maintenance.ClearCacheAsync();
             await RefreshDataAsync();
-            _notices?.Show("Кэш очищен", "Иконки и миниатюры загрузятся заново.", FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Settings.CacheCleared"), L.T("Settings.IconsAndThumbnailsWillLoadAgain"), FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Кэш не очищен: " + exception.Message;
+            SettingsNote = L.T("Settings.CacheNotCleared") + exception.Message;
         }
     }
 
@@ -254,7 +255,7 @@ public sealed partial class SettingsViewModel
     private async Task RebuildIndexAsync()
     {
         if (_dialogs is not null
-            && !await _dialogs.ConfirmAsync("Пересобрать индекс", "Индекс всех корней построится заново. Файлы не трогаются, но пока идёт обход, поиск находит не всё. Избранное, теги и коллекции сохранятся для найденных снова файлов.", "Пересобрать"))
+            && !await _dialogs.ConfirmAsync(L.T("Settings.RebuildIndex"), L.T("Settings.TheIndexOfAllRootsWill"), L.T("Settings.Rebuild")))
         {
             return;
         }
@@ -262,11 +263,11 @@ public sealed partial class SettingsViewModel
         try
         {
             await _maintenance.RebuildIndexAsync();
-            _notices?.Show("Пересборка индекса", "Ход виден в строке состояния главного окна.", FAInfoBarSeverity.Informational);
+            _notices?.Show(L.T("Settings.RebuildingTheIndex"), L.T("Settings.ProgressIsShownInTheMain"), FAInfoBarSeverity.Informational);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            SettingsNote = "Индекс не пересобран: " + exception.Message;
+            SettingsNote = L.T("Settings.IndexNotRebuilt") + exception.Message;
         }
     }
 
@@ -274,7 +275,7 @@ public sealed partial class SettingsViewModel
     [RelayCommand]
     private async Task ExportSettingsAsync()
     {
-        if (_dialogs is null || await _dialogs.PickSaveFileAsync("Сохранить настройки", "diskapp-settings.json", "json") is not { } path)
+        if (_dialogs is null || await _dialogs.PickSaveFileAsync(L.T("Settings.SaveSettings"), "diskapp-settings.json", "json") is not { } path)
         {
             return;
         }
@@ -284,11 +285,11 @@ public sealed partial class SettingsViewModel
             var settings = await _settings.GetAsync();
             var json = JsonSerializer.Serialize(settings, ExportOptions.GetTypeInfo(typeof(Contracts.App.SettingsDto)));
             await File.WriteAllTextAsync(path, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-            _notices?.Show("Настройки сохранены", path, FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Settings.SettingsSaved"), path, FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
-            SettingsNote = "Настройки не сохранены в файл: " + exception.Message;
+            SettingsNote = L.T("Settings.SettingsWereNotSavedToThe") + exception.Message;
         }
     }
 
@@ -296,7 +297,7 @@ public sealed partial class SettingsViewModel
     [RelayCommand]
     private async Task ImportSettingsAsync()
     {
-        if (_dialogs is null || await _dialogs.PickOpenFileAsync("Загрузить настройки", "json") is not { } path)
+        if (_dialogs is null || await _dialogs.PickOpenFileAsync(L.T("Settings.LoadSettings"), "json") is not { } path)
         {
             return;
         }
@@ -305,18 +306,18 @@ public sealed partial class SettingsViewModel
         {
             if (JsonNode.Parse(await File.ReadAllTextAsync(path)) is not JsonObject patch)
             {
-                SettingsNote = "В файле нет настроек DiskApp.";
+                SettingsNote = L.T("Settings.TheFileHasNoDiskAppSettings");
                 return;
             }
 
             await PendingSave;
             Apply(await _settings.PatchAsync(patch));
             SettingsNote = string.Empty;
-            _notices?.Show("Настройки загружены", path, FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Settings.SettingsLoaded"), path, FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException)
         {
-            SettingsNote = "Настройки не загружены: " + exception.Message;
+            SettingsNote = L.T("Settings.SettingsWereNotLoaded") + exception.Message;
         }
     }
 }

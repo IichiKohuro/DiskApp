@@ -1,5 +1,6 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 
 using FluentAvalonia.UI.Controls;
@@ -102,9 +103,9 @@ public sealed partial class MainViewModel : ViewModelBase
             collections,
             tags,
             new PlaceholderPageViewModel(
-                PageKeys.Inbox, "Входящие", FASymbol.Download, Symbol.MailInbox,
-                "Разбор «Загрузок» по профильным складам: подсказка «куда положить», одна клавиша — следующий файл, отмена любого решения.",
-                "Этап 17"),
+                PageKeys.Inbox, "Main.Inbox", FASymbol.Download, Symbol.MailInbox,
+                "Main.SortingDownloadsIntoDedicatedStoresA",
+                "Main.Stage17"),
             operations,
         ];
         FooterPages = [settings];
@@ -117,6 +118,22 @@ public sealed partial class MainViewModel : ViewModelBase
         IndexStatusShort = string.Empty;
 
         Initialization = RefreshAsync();
+
+        // Состояние индекса собирается в коде: после смены языка его подписи перечитываются (этап 9.2).
+        var main = new WeakReference<MainViewModel>(this);
+        EventHandler? handler = null;
+        handler = (_, _) =>
+        {
+            if (main.TryGetTarget(out var target))
+            {
+                _ = target.RefreshAsync();
+            }
+            else
+            {
+                Localizer.Instance.LanguageChanged -= handler;
+            }
+        };
+        Localizer.Instance.LanguageChanged += handler;
     }
 
     /// <summary>Завершается, когда состояние индекса загружено.</summary>
@@ -173,15 +190,15 @@ public sealed partial class MainViewModel : ViewModelBase
     /// <returns><c>true</c>, если страница найдена.</returns>
     /// <summary>Страница «Коллекции» без библиотеки (превью, тесты оболочки).</summary>
     private static PlaceholderPageViewModel CollectionsPlaceholder() => new(
-        PageKeys.Collections, "Коллекции", FASymbol.Library, Symbol.Collections,
-        "Избранное, закреплённые папки и подборки файлов из разных мест — для проектов, поездок и дел.",
-        "Этап 8");
+        PageKeys.Collections, "Common.Page.Collections", FASymbol.Library, Symbol.Collections,
+        "Main.FavoritesPinnedFoldersAndSetsOf",
+        "Main.Stage8");
 
     /// <summary>Страница «Теги» без библиотеки (превью, тесты оболочки).</summary>
     private static PlaceholderPageViewModel TagsPlaceholder() => new(
-        PageKeys.Tags, "Теги", FASymbol.Tag, Symbol.TagMultiple,
-        "Теги и цвета для файлов и папок; фильтр tag: в поиске; быстрые метки одной клавишей.",
-        "Этап 8");
+        PageKeys.Tags, "Common.Page.Tags", FASymbol.Tag, Symbol.TagMultiple,
+        "Main.TagsAndColorsForFilesAnd",
+        "Main.Stage8");
 
     partial void OnSelectedPageChanged(PageViewModel? oldValue, PageViewModel? newValue)
     {
@@ -257,7 +274,7 @@ public sealed partial class MainViewModel : ViewModelBase
         if (!_healthFromServer)
         {
             IsIndexing = status.IsIndexing;
-            IndexStatusShort = status.IsIndexing ? Capitalize(status.DescribeIndexing()) : "Индекс актуален";
+            IndexStatusShort = status.IsIndexing ? Capitalize(status.DescribeIndexing()) : L.T("Main.IndexIsUpToDate");
         }
 
         if (Pages.FirstOrDefault(page => page.Key == PageKeys.Inbox) is { } inbox)

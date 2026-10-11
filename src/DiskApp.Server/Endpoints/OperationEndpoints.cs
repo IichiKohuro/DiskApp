@@ -1,8 +1,9 @@
-using DiskApp.Contracts;
+﻿using DiskApp.Contracts;
 using DiskApp.Contracts.Operations;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Indexing;
 using DiskApp.Core.Operations;
+using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
@@ -81,8 +82,8 @@ internal static class OperationEndpoints
             if (!allowed)
             {
                 return normalized is null
-                    ? ApiProblems.Invalid("sources", $"Путь «{path}» должен быть абсолютным.")
-                    : TypedResults.Problem($"Путь «{normalized}» вне добавленных корней.", statusCode: StatusCodes.Status403Forbidden, title: "Доступ запрещён");
+                    ? ApiProblems.Invalid("sources", L.F("OperationEndpoints.PathMustBeAbsolute", path))
+                    : TypedResults.Problem(L.F("OperationEndpoints.PathIsOutsideTheAddedRoots", normalized), statusCode: StatusCodes.Status403Forbidden, title: L.T("Operations.AccessDenied"));
             }
         }
 
@@ -95,7 +96,7 @@ internal static class OperationEndpoints
     private static Ok<OperationDto[]> GetAll(FileOperationService service) => TypedResults.Ok(service.GetAll().Select(static info => info.ToDto()).ToArray());
 
     private static Results<Ok<OperationDto>, ProblemHttpResult> Get(Guid id, FileOperationService service)
-        => service.Get(id) is { } info ? TypedResults.Ok(info.ToDto()) : ApiProblems.NotFound($"Операция {id} не найдена.");
+        => service.Get(id) is { } info ? TypedResults.Ok(info.ToDto()) : ApiProblems.NotFound(L.F("OperationEndpoints.OperationNotFound", id));
 
     private static Results<NoContent, ProblemHttpResult> Cancel(Guid id, FileOperationService service)
     {
@@ -131,26 +132,26 @@ internal static class OperationEndpoints
     {
         if (!request.HasFormContentType)
         {
-            return ApiProblems.Invalid("body", "Нужен multipart/form-data.");
+            return ApiProblems.Invalid("body", L.T("OperationEndpoints.MultipartFormDataIsRequired"));
         }
 
         var (allowed, folder, _) = await guard.CheckAsync(destination, cancellationToken).ConfigureAwait(false);
         if (!allowed || folder is null)
         {
             return folder is null
-                ? ApiProblems.Invalid("destination", "Укажите абсолютный путь папки.")
-                : TypedResults.Problem($"Папка «{folder}» вне добавленных корней.", statusCode: StatusCodes.Status403Forbidden, title: "Доступ запрещён");
+                ? ApiProblems.Invalid("destination", L.T("OperationEndpoints.SpecifyTheAbsoluteFolderPath"))
+                : TypedResults.Problem(L.F("OperationEndpoints.FolderIsOutsideTheAddedRoots", folder), statusCode: StatusCodes.Status403Forbidden, title: L.T("Operations.AccessDenied"));
         }
 
         if (!Directory.Exists(folder))
         {
-            return ApiProblems.NotFound($"Папка «{folder}» не найдена.");
+            return ApiProblems.NotFound(L.F("OperationEndpoints.FolderNotFound", folder));
         }
 
         var policy = conflicts ?? ConflictPolicy.KeepBoth;
         if (policy == ConflictPolicy.Ask)
         {
-            return ApiProblems.Invalid("conflicts", "Для загрузки выберите KeepBoth, Skip или Overwrite.");
+            return ApiProblems.Invalid("conflicts", L.T("OperationEndpoints.ForUploadsChooseKeepBothSkipOr"));
         }
 
         var form = await request.ReadFormAsync(cancellationToken).ConfigureAwait(false);
@@ -175,7 +176,7 @@ internal static class OperationEndpoints
                     case ConflictPolicy.Overwrite:
                         if (services.GetService<IPlatformShell>() is not { } shell)
                         {
-                            return ApiProblems.Unavailable("Замена файлов через корзину");
+                            return ApiProblems.Unavailable(L.T("OperationEndpoints.ReplacingFilesThroughTheRecycleBin"));
                         }
 
                         var recycled = await shell.MoveToRecycleBinAsync([target], cancellationToken).ConfigureAwait(false);

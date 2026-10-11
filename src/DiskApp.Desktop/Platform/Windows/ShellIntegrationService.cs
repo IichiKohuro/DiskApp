@@ -1,7 +1,8 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 
 using Microsoft.Win32;
@@ -76,10 +77,10 @@ internal sealed class ShellIntegrationService : IShellIntegrationService
             switch (feature)
             {
                 case ShellIntegrationFeature.SendTo:
-                    SetShortcut(SendToShortcut, "--import", "Положить файлы в выбранную папку DiskApp", enabled);
+                    SetShortcut(SendToShortcut, "--import", L.T("ShellIntegration.PutFilesIntoADiskAppFolder"), enabled);
                     break;
                 case ShellIntegrationFeature.DesktopShortcut:
-                    SetShortcut(DesktopShortcut, "--show", "Поиск и разбор файлов", enabled);
+                    SetShortcut(DesktopShortcut, "--show", L.T("ShellIntegration.SearchAndSortFiles"), enabled);
                     break;
                 case ShellIntegrationFeature.ContextMenu:
                     SetContextMenu(enabled);
@@ -91,7 +92,7 @@ internal sealed class ShellIntegrationService : IShellIntegrationService
         }
         catch (Exception exception) when (exception is UnauthorizedAccessException or SecurityException or IOException or COMException)
         {
-            throw new InvalidOperationException("Windows не дала изменить интеграцию: " + exception.Message, exception);
+            throw new InvalidOperationException(L.T("ShellIntegration.WindowsDidNotAllowChangingThe") + exception.Message, exception);
         }
     }
 
@@ -143,10 +144,10 @@ internal sealed class ShellIntegrationService : IShellIntegrationService
     {
         if (enabled)
         {
-            WriteVerb(AddVerb, "Добавить в DiskApp", "--import \"%1\"");
-            WriteVerb(IndexVerb, "Добавить в индекс DiskApp", "--add \"%1\"");
-            WriteVerb(OpenVerb, "Открыть в DiskApp", "--page browse --path \"%1\"");
-            WriteVerb(BackgroundVerb, "Открыть в DiskApp", "--page browse --path \"%V\"");
+            WriteVerb(AddVerb, L.T("ShellIntegration.AddToDiskApp"), "--import \"%1\"");
+            WriteVerb(IndexVerb, L.T("ShellIntegration.AddToDiskAppIndex"), "--add \"%1\"");
+            WriteVerb(OpenVerb, L.T("ShellIntegration.OpenInDiskApp"), "--page browse --path \"%1\"");
+            WriteVerb(BackgroundVerb, L.T("ShellIntegration.OpenInDiskApp"), "--page browse --path \"%V\"");
             return;
         }
 

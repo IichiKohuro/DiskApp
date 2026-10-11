@@ -1,7 +1,8 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 using DiskApp.Contracts.Hub;
 using DiskApp.Contracts.Roots;
+using DiskApp.UI.Localization;
 
 namespace DiskApp.Desktop.Shell;
 
@@ -63,13 +64,13 @@ internal sealed class TrayStatus
         {
             var text = State switch
             {
-                TrayState.Starting => "DiskApp — запускается…",
-                TrayState.Error when _failure is not null => "DiskApp — сервер не запустился",
-                TrayState.Error => "DiskApp — ошибка индексации: " + string.Join(", ", _roots.Values.Where(static root => root.Status == RootStatus.Error).Select(static root => root.Label)),
-                TrayState.Paused => "DiskApp — индексация на паузе",
-                TrayState.Indexing => "DiskApp — индексация" + IndexingDetails(),
-                TrayState.Offline => "DiskApp — недоступно: " + string.Join(", ", _roots.Values.Where(static root => root.Status == RootStatus.Offline).Select(static root => root.Label)),
-                _ => "DiskApp — индекс актуален",
+                TrayState.Starting => L.T("TrayStatus.DiskAppStarting"),
+                TrayState.Error when _failure is not null => L.T("TrayStatus.DiskAppTheServerDidNotStart"),
+                TrayState.Error => L.T("TrayStatus.DiskAppIndexingError") + string.Join(", ", _roots.Values.Where(static root => root.Status == RootStatus.Error).Select(static root => root.Label)),
+                TrayState.Paused => L.T("TrayStatus.DiskAppIndexingPaused"),
+                TrayState.Indexing => L.T("TrayStatus.DiskAppIndexing") + IndexingDetails(),
+                TrayState.Offline => L.T("TrayStatus.DiskAppUnavailable") + string.Join(", ", _roots.Values.Where(static root => root.Status == RootStatus.Offline).Select(static root => root.Label)),
+                _ => L.T("TrayStatus.DiskAppIndexIsUpToDate"),
             };
             return text.Length <= 127 ? text : text[..126] + "…";
         }
@@ -154,6 +155,6 @@ internal sealed class TrayStatus
         }
 
         var written = active.Sum(static progress => progress.Written);
-        return written > 0 ? ": " + written.ToString("N0", CultureInfo.GetCultureInfo("ru-RU")) + " записей" : "…";
+        return written > 0 ? ": " + written.ToString("N0", CultureInfo.GetCultureInfo("ru-RU")) + L.T("TrayStatus.Entries") : "…";
     }
 }

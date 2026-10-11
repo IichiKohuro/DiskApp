@@ -1,3 +1,4 @@
+﻿using DiskApp.UI.Localization;
 using DiskApp.UI.Text;
 
 namespace DiskApp.UI.Models;
@@ -36,18 +37,18 @@ public sealed record IndexStatus
     /// </summary>
     public string Describe(DateTimeOffset now)
     {
-        var entries = Formatting.Count(TotalEntries, "файл", "файла", "файлов");
-        var roots = Formatting.Count(Roots.Count, "корне", "корнях", "корнях");
+        var entries = Formatting.Count(TotalEntries, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"));
+        var roots = Formatting.Count(Roots.Count, L.T("IndexStatus.Root.One"), L.T("IndexStatus.Root.Few"), L.T("IndexStatus.Root.Many"));
 
         return IsIndexing
-            ? $"{DescribeIndexing()} · {entries} в {roots}"
-            : $"{entries} в {roots} · обновлён {Formatting.RelativeTime(LastUpdated, now)}";
+            ? L.F("IndexStatus.In", DescribeIndexing(), entries, roots)
+            : L.F("IndexStatus.InUpdated", entries, roots, Formatting.RelativeTime(LastUpdated, now));
     }
 
     /// <summary>
     /// Ход индексации: «индексация 43 %», если объём известен, иначе «индексация: просмотрено 12 345».
     /// </summary>
     public string DescribeIndexing() => Progress is { } progress
-        ? $"индексация {Formatting.Percent(progress)}"
-        : Scanned > 0 ? $"индексация: просмотрено {Formatting.Number(Scanned)}" : "идёт индексация";
+        ? L.F("IndexStatus.Indexing", Formatting.Percent(progress))
+        : Scanned > 0 ? L.F("IndexStatus.IndexingScanned", Formatting.Number(Scanned)) : L.T("IndexStatus.Indexing2");
 }

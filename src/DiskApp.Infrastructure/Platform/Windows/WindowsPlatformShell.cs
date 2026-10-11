@@ -1,9 +1,10 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 using DiskApp.Core.Abstractions;
+using DiskApp.Core.Localization;
 using DiskApp.Core.Results;
 
 namespace DiskApp.Infrastructure.Platform.Windows;
@@ -36,7 +37,7 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
                 var result = ShellNative.ShOpenWithDialog(0, ref info);
                 return result >= 0 || result == ShellNative.HresultCancelled
                     ? Result.Ok()
-                    : Fail("shell.open_with_failed", $"Диалог «Открыть с помощью» не открылся (0x{result:X8}).");
+                    : Fail("shell.open_with_failed", L.F("WindowsPlatformShell.TheOpenWithDialogDidNot", result));
             }
             finally
             {
@@ -56,7 +57,7 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
             try
             {
                 var result = ShellNative.ShOpenFolderAndSelectItems(pidl, 0, 0, 0);
-                return result >= 0 ? Result.Ok() : Fail("shell.reveal_failed", $"Проводник не открылся (0x{result:X8}).");
+                return result >= 0 ? Result.Ok() : Fail("shell.reveal_failed", L.F("WindowsPlatformShell.FileExplorerDidNotOpen0x", result));
             }
             finally
             {
@@ -68,7 +69,7 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
     public Task<Result> ShowPropertiesAsync(string path, CancellationToken cancellationToken = default)
         => RunAsync(path, () => ShellNative.ShObjectProperties(0, ShellNative.ShopFilePath, path, null)
             ? Result.Ok()
-            : Fail("shell.properties_failed", "Окно свойств не открылось."), cancellationToken);
+            : Fail("shell.properties_failed", L.T("WindowsPlatformShell.ThePropertiesWindowDidNotOpen")), cancellationToken);
 
     /// <inheritdoc />
     public Task<Result> RunAsAdminAsync(string path, CancellationToken cancellationToken = default)
@@ -93,7 +94,7 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
             if (!HasRecycleBin(path))
             {
                 return Task.FromResult(Fail("shell.recycle_unavailable",
-                    $"Для «{path}» нет корзины (сетевой или съёмный диск): удалять такие файлы можно только безвозвратно и явно."));
+                    L.F("WindowsPlatformShell.HasNoRecycleBinNetworkOr", path)));
             }
         }
 
@@ -111,9 +112,9 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
                 };
                 var result = ShellNative.ShFileOperation(ref operation);
                 return result != 0
-                    ? Fail("shell.recycle_failed", $"Windows не переместила в корзину (код {result}).")
+                    ? Fail("shell.recycle_failed", L.F("WindowsPlatformShell.WindowsDidNotMoveItTo", result))
                     : operation.AnyOperationsAborted != 0
-                        ? Fail("shell.cancelled", "Перемещение в корзину отменено.")
+                        ? Fail("shell.cancelled", L.T("WindowsPlatformShell.MovingToTheRecycleBinWas"))
                         : Result.Ok();
             }
             finally
@@ -166,7 +167,7 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
 
     private static Result Fail(string code, string message) => Result.Fail(new DomainError(code, message));
 
-    private static Result NotFound(string path) => Fail("shell.not_found", $"«{path}» больше нет на диске.");
+    private static Result NotFound(string path) => Fail("shell.not_found", L.F("WindowsPlatformShell.IsNoLongerOnDisk", path));
 
     private static Result Start(ProcessStartInfo start)
     {
@@ -179,9 +180,9 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
         {
             return exception.NativeErrorCode switch
             {
-                1223 => Fail("shell.cancelled", "Действие отменено."),
-                1155 => Fail("shell.no_association", "Нет приложения для этого типа файлов: выберите его через «Открыть с помощью»."),
-                2 or 3 => Fail("shell.not_found", "Файл не найден."),
+                1223 => Fail("shell.cancelled", L.T("WindowsPlatformShell.TheActionWasCancelled")),
+                1155 => Fail("shell.no_association", L.T("WindowsPlatformShell.NoAppForThisFileType")),
+                2 or 3 => Fail("shell.not_found", L.T("WindowsPlatformShell.FileNotFound")),
                 _ => Fail("shell.failed", exception.Message),
             };
         }
@@ -193,7 +194,7 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
         {
             if (attempt >= 10)
             {
-                return Fail("shell.clipboard_busy", "Буфер обмена занят другим приложением.");
+                return Fail("shell.clipboard_busy", L.T("WindowsPlatformShell.TheClipboardIsBusyWithAnother"));
             }
 
             Thread.Sleep(50);
@@ -205,7 +206,7 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
             var memory = ShellNative.GlobalAlloc(ShellNative.GmemMoveable | ShellNative.GmemZeroInit, (nuint)data.Length);
             if (memory == 0)
             {
-                return Fail("shell.clipboard_failed", "Не хватило памяти для буфера обмена.");
+                return Fail("shell.clipboard_failed", L.T("WindowsPlatformShell.NotEnoughMemoryForTheClipboard"));
             }
 
             var pointer = ShellNative.GlobalLock(memory);
@@ -214,7 +215,7 @@ public sealed class WindowsPlatformShell : IPlatformShell, IDisposable
             if (ShellNative.SetClipboardData(format, memory) == 0)
             {
                 ShellNative.GlobalFree(memory);
-                return Fail("shell.clipboard_failed", "Windows не приняла данные в буфер обмена.");
+                return Fail("shell.clipboard_failed", L.T("WindowsPlatformShell.WindowsDidNotAcceptTheClipboard"));
             }
 
             return Result.Ok();

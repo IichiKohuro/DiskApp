@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FileOperation.AlreadyExists" xml:space="preserve">
+    <value>“{0}” already exists.</value>
+  </data>
+  <data name="FileOperation.Cancelled" xml:space="preserve">
+    <value>Cancelled.</value>
+  </data>
+  <data name="FileOperation.CancelledBeforeStart" xml:space="preserve">
+    <value>Cancelled before start.</value>
+  </data>
+  <data name="FileOperation.CouldNotRestore" xml:space="preserve">
+    <value>Could not restore “{0}”: {1}</value>
+  </data>
+  <data name="FileOperation.ErrorsFirst" xml:space="preserve">
+    <value>Errors: {0}. First: {1}</value>
+  </data>
+  <data name="FileOperation.FolderCannotBePlacedIntoItself" xml:space="preserve">
+    <value>Folder “{0}” cannot be placed into itself.</value>
+  </data>
+  <data name="FileOperation.FolderNotFound" xml:space="preserve">
+    <value>Folder “{0}” not found.</value>
+  </data>
+  <data name="FileOperation.InvalidName" xml:space="preserve">
+    <value>Invalid name.</value>
+  </data>
+  <data name="FileOperation.IsGone" xml:space="preserve">
+    <value>“{0}” is gone.</value>
+  </data>
+  <data name="FileOperation.NotFound" xml:space="preserve">
+    <value>“{0}” not found.</value>
+  </data>
+  <data name="FileOperation.OnlyOneFileOrFolderCan" xml:space="preserve">
+    <value>Only one file or folder can be renamed.</value>
+  </data>
+  <data name="FileOperation.PathsRepeat" xml:space="preserve">
+    <value>Paths repeat.</value>
+  </data>
+  <data name="FileOperation.SayInWhichFolderToCreate" xml:space="preserve">
+    <value>Say in which folder to create.</value>
+  </data>
+  <data name="FileOperation.SayWhatToDelete" xml:space="preserve">
+    <value>Say what to delete.</value>
+  </data>
+  <data name="FileOperation.SayWhatToMoveAndInto" xml:space="preserve">
+    <value>Say what to move and into which folder.</value>
+  </data>
+  <data name="FileOperation.Skipped" xml:space="preserve">
+    <value>Skipped: {0}.</value>
+  </data>
+  <data name="FileOperation.SomethingAlreadyExistsInPlaceOf" xml:space="preserve">
+    <value>Something already exists in place of “{0}”.</value>
+  </data>
+  <data name="FileOperation.StoppedWhenTheAppExited" xml:space="preserve">
+    <value>Stopped when the app exited.</value>
+  </data>
+  <data name="FileOperation.TheCopyOfDidNotMatch" xml:space="preserve">
+    <value>The copy of “{0}” did not match the source size; the source is kept.</value>
+  </data>
+  <data name="FileOperation.TheNameCannotBeEmpty" xml:space="preserve">
+    <value>The name cannot be empty.</value>
+  </data>
+  <data name="FileOperation.TheNameCannotContain" xml:space="preserve">
+    <value>The name cannot contain \ / : * ? " &lt; &gt; |.</value>
+  </data>
+  <data name="FileOperation.TheNameCannotStartWithA" xml:space="preserve">
+    <value>The name cannot start with a space or end with a space or a dot.</value>
+  </data>
+  <data name="FileOperation.TheNameIsLongerThan255" xml:space="preserve">
+    <value>The name is longer than 255 characters.</value>
+  </data>
+  <data name="FileOperation.TheNameIsReservedByWindows" xml:space="preserve">
+    <value>The name “{0}” is reserved by Windows.</value>
+  </data>
+  <data name="FileOperation.TheOperationHasAlreadyFinished" xml:space="preserve">
+    <value>The operation has already finished.</value>
+  </data>
+  <data name="FileOperation.TheOperationIsNotWaitingFor" xml:space="preserve">
+    <value>The operation is not waiting for a decision.</value>
+  </data>
+  <data name="FileOperation.TheRecycleBinIsNotAvailable" xml:space="preserve">
+    <value>The Recycle Bin is not available on this platform: files are not deleted or replaced.</value>
+  </data>
+  <data name="FileOperation.ThisCannotBeDoneWithThe" xml:space="preserve">
+    <value>This cannot be done with the drive root “{0}”.</value>
+  </data>
+  <data name="FileOperation.ThisOperationCannotBeUndone" xml:space="preserve">
+    <value>This operation cannot be undone.</value>
+  </data>
+  <data name="FileOperation.UnknownOperation" xml:space="preserve">
+    <value>Unknown operation.</value>
+  </data>
+  <data name="FilterBuilder.FilterWasNotApplied" xml:space="preserve">
+    <value>Filter “{0}:{1}” was not applied.</value>
+  </data>
+  <data name="FilterBuilder.FolderIsNotInAnyRoot" xml:space="preserve">
+    <value>Folder “{0}” is not in any root.</value>
+  </data>
+  <data name="FilterBuilder.RootNotFound" xml:space="preserve">
+    <value>Root “{0}” not found.</value>
+  </data>
+  <data name="Indexer.FileOperation" xml:space="preserve">
+    <value>File operation</value>
+  </data>
+  <data name="Indexer.FirstScan" xml:space="preserve">
+    <value>First scan</value>
+  </data>
+  <data name="Indexer.IndexRebuild" xml:space="preserve">
+    <value>Index rebuild</value>
+  </data>
+  <data name="Indexer.IndexRestored" xml:space="preserve">
+    <value>Index restored</value>
+  </data>
+  <data name="Indexer.ReconciliationAtStartup" xml:space="preserve">
+    <value>Reconciliation at startup</value>
+  </data>
+  <data name="Indexer.ReconciliationOnRequest" xml:space="preserve">
+    <value>Reconciliation on request</value>
+  </data>
+  <data name="Indexer.RescanOnRequest" xml:space="preserve">
+    <value>Rescan on request</value>
+  </data>
+  <data name="Indexer.ScheduledReconciliation" xml:space="preserve">
+    <value>Scheduled reconciliation</value>
+  </data>
+  <data name="Indexer.TheRootDisappearedDuringIndexing" xml:space="preserve">
+    <value>The root disappeared during indexing.</value>
+  </data>
+  <data name="Indexer.TheRootIsAvailableAgain" xml:space="preserve">
+    <value>The root is available again</value>
+  </data>
+  <data name="Indexer.TheRootIsUnavailableAtStartup" xml:space="preserve">
+    <value>The root is unavailable at startup.</value>
+  </data>
+  <data name="Indexer.WatcherRestarted" xml:space="preserve">
+    <value>Watcher restarted: </value>
+  </data>
+  <data name="JsonSettingsStore.TheRootOfTheSettingsFile" xml:space="preserve">
+    <value>The root of the settings file must be an object.</value>
+  </data>
+  <data name="JsonSettingsStore.TheSettingsFileIsEmpty" xml:space="preserve">
+    <value>The settings file is empty.</value>
+  </data>
+  <data name="Operations.NotFound" xml:space="preserve">
+    <value>Operation not found.</value>
+  </data>
+  <data name="Operations.PathMustBeAbsolute" xml:space="preserve">
+    <value>Path “{0}” must be absolute.</value>
+  </data>
+  <data name="QueryParser.DidNotUnderstandTheFilterValue" xml:space="preserve">
+    <value>Did not understand the filter value “{0}” — searching as text.</value>
+  </data>
+  <data name="QueryParser.RegularExpressionCouldNotBeParsed" xml:space="preserve">
+    <value>Regular expression “{0}” could not be parsed — searching as text.</value>
+  </data>
+  <data name="RootChangeProcessor.ErrorApplyingChanges" xml:space="preserve">
+    <value>Error applying changes: </value>
+  </data>
+  <data name="RootChangeProcessor.FileSystemEventBufferOverflow" xml:space="preserve">
+    <value>File system event buffer overflow.</value>
+  </data>
+  <data name="RootChangeProcessor.NewFolderReconcilingItsContents" xml:space="preserve">
+    <value>New folder: reconciling its contents.</value>
+  </data>
+  <data name="RootValidator.ChooseAFolderOrADrive" xml:space="preserve">
+    <value>Choose a folder or a drive.</value>
+  </data>
+  <data name="RootValidator.PathMustBeAbsoluteForExample" xml:space="preserve">
+    <value>Path “{0}” must be absolute, for example D:\Projects or \\server\share.</value>
+  </data>
+  <data name="RootValidator.RootIsAlreadyAdded" xml:space="preserve">
+    <value>Root “{0}” ({1}) is already added.</value>
+  </data>
+  <data name="ScanPipeline.MoreErrorsAreNotLoggedIn" xml:space="preserve">
+    <value>{0} more errors are not logged in detail.</value>
+  </data>
+  <data name="ScanPipeline.TheRootIsUnavailableTheIndex" xml:space="preserve">
+    <value>The root is unavailable: the index is kept unchanged.</value>
+  </data>
+  <data name="WindowsPlatformShell.FileExplorerDidNotOpen0x" xml:space="preserve">
+    <value>File Explorer did not open (0x{0:X8}).</value>
+  </data>
+  <data name="WindowsPlatformShell.FileNotFound" xml:space="preserve">
+    <value>File not found.</value>
+  </data>
+  <data name="WindowsPlatformShell.HasNoRecycleBinNetworkOr" xml:space="preserve">
+    <value>“{0}” has no Recycle Bin (network or removable drive): such files can only be deleted permanently, which DiskApp does not do.</value>
+  </data>
+  <data name="WindowsPlatformShell.IsNoLongerOnDisk" xml:space="preserve">
+    <value>“{0}” is no longer on disk.</value>
+  </data>
+  <data name="WindowsPlatformShell.MovingToTheRecycleBinWas" xml:space="preserve">
+    <value>Moving to the Recycle Bin was cancelled.</value>
+  </data>
+  <data name="WindowsPlatformShell.NoAppForThisFileType" xml:space="preserve">
+    <value>No app for this file type: choose one with “Open with”.</value>
+  </data>
+  <data name="WindowsPlatformShell.NotEnoughMemoryForTheClipboard" xml:space="preserve">
+    <value>Not enough memory for the clipboard.</value>
+  </data>
+  <data name="WindowsPlatformShell.TheActionWasCancelled" xml:space="preserve">
+    <value>The action was cancelled.</value>
+  </data>
+  <data name="WindowsPlatformShell.TheClipboardIsBusyWithAnother" xml:space="preserve">
+    <value>The clipboard is busy with another app.</value>
+  </data>
+  <data name="WindowsPlatformShell.TheOpenWithDialogDidNot" xml:space="preserve">
+    <value>The “Open with” dialog did not open (0x{0:X8}).</value>
+  </data>
+  <data name="WindowsPlatformShell.ThePropertiesWindowDidNotOpen" xml:space="preserve">
+    <value>The properties window did not open.</value>
+  </data>
+  <data name="WindowsPlatformShell.WindowsDidNotAcceptTheClipboard" xml:space="preserve">
+    <value>Windows did not accept the clipboard data.</value>
+  </data>
+  <data name="WindowsPlatformShell.WindowsDidNotMoveItTo" xml:space="preserve">
+    <value>Windows did not move it to the Recycle Bin (code {0}).</value>
+  </data>
+</root>

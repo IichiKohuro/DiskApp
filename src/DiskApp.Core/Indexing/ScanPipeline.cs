@@ -1,8 +1,9 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading.Channels;
 
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Events;
+using DiskApp.Core.Localization;
 using DiskApp.Core.Repositories;
 
 namespace DiskApp.Core.Indexing;
@@ -159,12 +160,12 @@ public sealed class ScanPipeline(
 
         if (summary.ErrorCount > summary.Errors.Count)
         {
-            log.Add(new ScanLogEntry(rootId, scanId, now, ScanLogLevel.Warning, null, $"Ещё {summary.ErrorCount - summary.Errors.Count} ошибок не записаны подробно."));
+            log.Add(new ScanLogEntry(rootId, scanId, now, ScanLogLevel.Warning, null, L.F("ScanPipeline.MoreErrorsAreNotLoggedIn", summary.ErrorCount - summary.Errors.Count)));
         }
 
         if (status == ScanOutcomeStatus.RootMissing)
         {
-            log.Add(new ScanLogEntry(rootId, scanId, now, ScanLogLevel.Error, null, "Корень недоступен: индекс сохранён без изменений."));
+            log.Add(new ScanLogEntry(rootId, scanId, now, ScanLogLevel.Error, null, L.T("ScanPipeline.TheRootIsUnavailableTheIndex")));
         }
 
         await scanLog.AddAsync(log, cancellationToken).ConfigureAwait(false);

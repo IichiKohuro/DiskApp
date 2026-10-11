@@ -1,8 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
 using DiskApp.UI.Text;
@@ -53,7 +54,7 @@ public sealed partial class HomeViewModel : PageViewModel
     /// Создаёт страницу с заданными корнями, уведомлениями и часами (для тестов).
     /// </summary>
     public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, IRootsService roots, IInfoBarService? notices, Func<DateTimeOffset> clock)
-        : base(PageKeys.Home, "Главная", FASymbol.Home)
+        : base(PageKeys.Home, "Home.Home", FASymbol.Home)
     {
         ArgumentNullException.ThrowIfNull(search);
         ArgumentNullException.ThrowIfNull(commands);
@@ -138,11 +139,15 @@ public sealed partial class HomeViewModel : PageViewModel
     /// <summary>Корней нет: показать приглашение добавить папку.</summary>
     public bool HasNoRoots => Roots.Count == 0;
 
+    /// <inheritdoc />
+    protected override Task RelocalizeAsync() => RefreshAsync();
+
     /// <summary>
     /// Перечитывает состояние индекса и список недавних файлов.
     /// </summary>
     public async Task RefreshAsync()
     {
+        Greeting = GreetingFor(_clock().Hour);
         var status = await _search.GetIndexStatusAsync(CancellationToken.None);
         var recent = await _search.GetRecentAsync(CancellationToken.None);
         var sections = await _search.GetSuggestionsAsync(CancellationToken.None);
@@ -155,8 +160,8 @@ public sealed partial class HomeViewModel : PageViewModel
         IsIndexProgressIndeterminate = status.Progress is null;
         InboxCount = status.InboxCount;
         InboxText = status.InboxCount > 0
-            ? $"{Formatting.Count(status.InboxCount, "файл ждёт", "файла ждут", "файлов ждут")} разбора в «Загрузках»"
-            : "Во «входящих» пусто — всё разобрано";
+            ? L.F("Home.InboxWaiting", Formatting.Count(status.InboxCount, L.T("Home.FileWaits.One"), L.T("Home.FileWaits.Few"), L.T("Home.FileWaits.Many")))
+            : L.T("Home.InboxIsEmptyEverythingIsSorted");
 
         Fill(RecentFiles, recent, now);
         Fill(PinnedFiles, sections.FirstOrDefault(static section => section.Title == SectionTitles.Pinned)?.Entries ?? [], now);
@@ -179,7 +184,7 @@ public sealed partial class HomeViewModel : PageViewModel
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            ReportError("Не удалось получить корни", exception);
+            ReportError(L.T("Home.CouldNotGetTheRoots"), exception);
             return;
         }
 
@@ -217,13 +222,13 @@ public sealed partial class HomeViewModel : PageViewModel
 
         if (added.Count > 0)
         {
-            _notices?.Show("Папки добавлены в индекс", string.Join(", ", added) + ". Индексация уже идёт.", FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Home.FoldersAddedToTheIndex"), string.Join(", ", added) + L.T("Home.IndexingIsAlreadyRunning"), FAInfoBarSeverity.Success);
             await RefreshRootsAsync();
         }
 
         if (failed.Count > 0)
         {
-            _notices?.Show("Не все папки добавлены", string.Join("; ", failed), FAInfoBarSeverity.Warning);
+            _notices?.Show(L.T("Home.NotAllFoldersWereAdded"), string.Join("; ", failed), FAInfoBarSeverity.Warning);
         }
 
         return added.Count;
@@ -259,10 +264,10 @@ public sealed partial class HomeViewModel : PageViewModel
     /// </summary>
     public static string GreetingFor(int hour) => hour switch
     {
-        >= 5 and < 12 => "Доброе утро",
-        >= 12 and < 18 => "Добрый день",
-        >= 18 and < 23 => "Добрый вечер",
-        _ => "Доброй ночи",
+        >= 5 and < 12 => L.T("Home.GoodMorning"),
+        >= 12 and < 18 => L.T("Home.GoodAfternoon"),
+        >= 18 and < 23 => L.T("Home.GoodEvening"),
+        _ => L.T("Home.GoodNight"),
     };
 
     [RelayCommand]
@@ -288,11 +293,11 @@ public sealed partial class HomeViewModel : PageViewModel
         try
         {
             await _search.OpenAsync(hit.Entry, null, CancellationToken.None);
-            LastOpenedText = $"Открыт «{hit.Entry.Name}»";
+            LastOpenedText = L.F("Home.Opened", hit.Entry.Name);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
-            ReportError($"Не удалось открыть «{hit.Entry.Name}»", exception);
+            ReportError(L.F("Home.CouldNotOpen", hit.Entry.Name), exception);
         }
 
         await RefreshAsync();

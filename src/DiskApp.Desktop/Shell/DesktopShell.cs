@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.Versioning;
 
 using Avalonia;
@@ -17,6 +17,7 @@ using DiskApp.Desktop.Platform.Windows;
 using DiskApp.Desktop.SingleInstance;
 using DiskApp.Desktop.Startup;
 using DiskApp.Desktop.Windows;
+using DiskApp.UI.Localization;
 using DiskApp.UI.Services;
 using DiskApp.UI.ViewModels;
 
@@ -54,6 +55,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     private TrayIcon? _tray;
     private NativeMenuItem? _searchItem;
     private NativeMenuItem? _pauseItem;
+    private NativeMenuItem? _openItem;
+    private NativeMenuItem? _settingsItem;
+    private NativeMenuItem? _exitItem;
     private MessageWindow? _messageWindow;
     private GlobalHotkey? _hotkey;
     private Hotkey? _activeHotkey;
@@ -88,6 +92,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     {
         ArgumentNullException.ThrowIfNull(args);
 
+        // Язык — до создания окон и трея: строки, собранные в коде, берутся на нём (этап 9.2).
+        DiskApp.UI.Localization.Localizer.Instance.SetLanguage(_services.GetRequiredService<ISettingsStore<AppSettings>>().Current.Appearance.Language);
+
         var startup = StartupArguments.Parse(args);
 
         // Иконки в шаблонах строк берутся из общего кэша: элементы шаблонов создаёт Avalonia, а не контейнер.
@@ -97,6 +104,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         RegisterHotkey();
         CreateTray();
+        DiskApp.UI.Localization.Localizer.Instance.LanguageChanged += (_, _) => Dispatcher.UIThread.Post(RelabelTray);
         _log.Information("Трей показан через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
         ConnectStatus();
         _services.GetRequiredService<OperationsViewModel>().PropertyChanged += (_, e) =>
@@ -144,7 +152,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         if (!OperatingSystem.IsWindows() || _messageWindow is null)
         {
-            return "глобальные сочетания работают только в Windows.";
+            return L.T("DesktopShell.GlobalShortcutsWorkOnlyOnWindows");
         }
 
         var quickSwitch = _services.GetService<QuickSwitchController>();
@@ -157,18 +165,18 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         if (hotkey == other)
         {
-            return target == HotkeyTarget.QuickSearch ? "это сочетание уже у Quick Switch." : "это сочетание уже у быстрого поиска.";
+            return target == HotkeyTarget.QuickSearch ? L.T("DesktopShell.ThisShortcutAlreadyBelongsToQuick") : L.T("DesktopShell.ThisShortcutAlreadyBelongsToQuick2");
         }
 
         if (HotkeyKeys.ToVirtualKey(hotkey.Key) is not { } virtualKey)
         {
-            return "клавиша не поддерживается.";
+            return L.T("DesktopShell.TheKeyIsNotSupported");
         }
 
         // Пробная регистрация: если Windows отдала сочетание, оно свободно; сразу освобождаем его.
         if (!NativeMethods.RegisterHotKey(_messageWindow.Handle, ProbeHotkeyId, (uint)hotkey.Modifiers | NativeMethods.ModNoRepeat, virtualKey))
         {
-            return "сочетание занято другим приложением.";
+            return L.T("DesktopShell.TheShortcutIsTakenByAnother");
         }
 
         NativeMethods.UnregisterHotKey(_messageWindow.Handle, ProbeHotkeyId);
@@ -380,29 +388,29 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     {
         var menu = new NativeMenu();
 
-        var open = new NativeMenuItem("Открыть DiskApp");
-        open.Click += (_, _) => ShowMainWindow();
-        menu.Items.Add(open);
+        _openItem = new NativeMenuItem(L.T("DesktopShell.OpenDiskApp"));
+        _openItem.Click += (_, _) => ShowMainWindow();
+        menu.Items.Add(_openItem);
 
-        _searchItem = new NativeMenuItem("Быстрый поиск") { Gesture = _activeHotkey?.ToGesture() };
+        _searchItem = new NativeMenuItem(L.T("DesktopShell.QuickSearch")) { Gesture = _activeHotkey?.ToGesture() };
         _searchItem.Click += (_, _) => ShowQuickSearch();
         menu.Items.Add(_searchItem);
 
         menu.Items.Add(new NativeMenuItemSeparator());
 
-        _pauseItem = new NativeMenuItem("Приостановить индексацию") { IsEnabled = false };
+        _pauseItem = new NativeMenuItem(L.T("DesktopShell.PauseIndexing")) { IsEnabled = false };
         _pauseItem.Click += (_, _) => _ = TogglePauseAsync();
         menu.Items.Add(_pauseItem);
 
-        var settings = new NativeMenuItem("Настройки");
-        settings.Click += (_, _) => NavigateTo(PageKeys.Settings);
-        menu.Items.Add(settings);
+        _settingsItem = new NativeMenuItem(L.T("DesktopShell.Settings"));
+        _settingsItem.Click += (_, _) => NavigateTo(PageKeys.Settings);
+        menu.Items.Add(_settingsItem);
 
         menu.Items.Add(new NativeMenuItemSeparator());
 
-        var exit = new NativeMenuItem("Выход");
-        exit.Click += (_, _) => Exit();
-        menu.Items.Add(exit);
+        _exitItem = new NativeMenuItem(L.T("DesktopShell.Exit"));
+        _exitItem.Click += (_, _) => Exit();
+        menu.Items.Add(_exitItem);
 
         _tray = new TrayIcon
         {
@@ -419,6 +427,21 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         }
     }
 
+    /// <summary>Подписи меню трея и подсказка — на новом языке после его смены (этап 9.2).</summary>
+    private void RelabelTray()
+    {
+        if (_openItem is null || _searchItem is null || _settingsItem is null || _exitItem is null)
+        {
+            return;
+        }
+
+        _openItem.Header = L.T("DesktopShell.OpenDiskApp");
+        _searchItem.Header = L.T("DesktopShell.QuickSearch");
+        _settingsItem.Header = L.T("DesktopShell.Settings");
+        _exitItem.Header = L.T("DesktopShell.Exit");
+        UpdateTray();
+    }
+
     /// <summary>
     /// Регистрирует сочетание быстрого поиска из настроек, а если оно занято — первое свободное из запасных (ADR-0006);
     /// итог — в <see cref="HotkeyStatus"/>. Изменение сочетания в настройках перерегистрирует его без перезапуска.
@@ -430,7 +453,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         if (!OperatingSystem.IsWindows())
         {
             status.IsRegistered = false;
-            status.Message = "Глобальные горячие клавиши пока работают только в Windows.";
+            status.Message = L.T("DesktopShell.GlobalHotkeysWorkOnlyOnWindows");
             return;
         }
 
@@ -441,7 +464,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         catch (Win32Exception exception)
         {
             status.IsRegistered = false;
-            status.Message = $"Не удалось создать окно для приёма клавиш: {exception.Message}";
+            status.Message = L.F("DesktopShell.CouldNotCreateTheWindowThat", exception.Message);
             _log.Warning(exception, "Окно сообщений для горячей клавиши не создано");
             return;
         }
@@ -482,7 +505,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         {
             if (HotkeyKeys.ToVirtualKey(candidate.Key) is not { } virtualKey)
             {
-                failures.Add($"{candidate.DisplayText} — клавиша не поддерживается");
+                failures.Add(L.F("DesktopShell.TheKeyIsNotSupported2", candidate.DisplayText));
                 continue;
             }
 
@@ -502,10 +525,10 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             status.QuickSearchText = candidate.DisplayText;
             status.IsRegistered = true;
             status.Message = !recognized
-                ? $"Сочетание «{configured}» в настройках не распознано, поэтому действует {candidate.DisplayText}."
+                ? L.F("DesktopShell.TheShortcutInSettingsIsNot", configured, candidate.DisplayText)
                 : candidate == preferred
                     ? string.Empty
-                    : $"Сочетание {preferred.DisplayText} занято другим приложением, поэтому действует {candidate.DisplayText}. Его можно сменить в настройках.";
+                    : L.F("DesktopShell.IsTakenByAnotherAppSo", preferred.DisplayText, candidate.DisplayText);
 
             if (status.Message.Length > 0)
             {
@@ -521,8 +544,8 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         }
 
         status.IsRegistered = false;
-        status.Message = "Ни одно сочетание не удалось зарегистрировать: " + string.Join("; ", failures)
-            + ". Поиск открывается щелчком по иконке в трее; сочетание можно сменить в настройках.";
+        status.Message = L.T("DesktopShell.NoShortcutCouldBeRegistered") + string.Join("; ", failures)
+            + L.T("DesktopShell.SearchOpensWithAClickOn");
         _log.Warning("Горячая клавиша недоступна: {Message}", status.Message);
     }
 
@@ -606,7 +629,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _tray.Icon = IconFor(_trayStatus.State) ?? _tray.Icon;
         if (_pauseItem is not null)
         {
-            _pauseItem.Header = _trayStatus.IsPaused ? "Возобновить индексацию" : "Приостановить индексацию";
+            _pauseItem.Header = _trayStatus.IsPaused ? L.T("DesktopShell.ResumeIndexing") : L.T("DesktopShell.PauseIndexing");
             _pauseItem.IsEnabled = _trayStatus.State is not (TrayState.Starting or TrayState.Error) || _trayStatus.IsPaused;
         }
     }
@@ -629,7 +652,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         {
             _log.Warning(exception, "Пауза индексации не переключилась");
             Dispatcher.UIThread.Post(() => _services.GetRequiredService<IInfoBarService>()
-                .Show("Пауза индексации не переключилась", exception.Message, FAInfoBarSeverity.Error));
+                .Show(L.T("DesktopShell.IndexingPauseDidNotSwitch"), exception.Message, FAInfoBarSeverity.Error));
         }
     }
 
@@ -661,12 +684,12 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             var notices = _services.GetRequiredService<IInfoBarService>();
             if (failed.Count == 0)
             {
-                notices.Show("Корни добавлены", string.Join(", ", added) + ". Индексация уже идёт.", FAInfoBarSeverity.Success);
+                notices.Show(L.T("DesktopShell.RootsAdded"), string.Join(", ", added) + L.T("DesktopShell.IndexingIsAlreadyRunning"), FAInfoBarSeverity.Success);
             }
             else
             {
-                var message = (added.Count > 0 ? "Добавлены: " + string.Join(", ", added) + ". " : string.Empty) + "Не добавлены: " + string.Join("; ", failed);
-                notices.Show("Не все корни добавлены", message, FAInfoBarSeverity.Warning);
+                var message = (added.Count > 0 ? L.T("DesktopShell.Added") + string.Join(", ", added) + ". " : string.Empty) + L.T("DesktopShell.NotAdded") + string.Join("; ", failed);
+                notices.Show(L.T("DesktopShell.NotAllRootsWereAdded"), message, FAInfoBarSeverity.Warning);
             }
         });
     }
@@ -682,9 +705,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         if (settings.Tray.ConfirmExitDuringOperations && await CountActiveOperationsAsync().ConfigureAwait(true) is > 0 and var active)
         {
             var confirmed = await _services.GetRequiredService<IDialogService>().ConfirmAsync(
-                "Выйти из DiskApp?",
-                $"Идут файловые операции: {active}. При выходе они отменятся, недокопированные файлы удалятся.",
-                "Выйти").ConfigureAwait(true);
+                L.T("DesktopShell.ExitDiskApp"),
+                L.F("DesktopShell.FileOperationsAreRunningOnExit", active),
+                L.T("DesktopShell.Exit2")).ConfigureAwait(true);
             if (!confirmed)
             {
                 return;
@@ -741,8 +764,8 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             _log.Information("Quick Switch: на переднем плане нет стандартного диалога файлов");
             ShowQuickSearch();
             viewModel.ReportFolderPickProblem(
-                "Диалог сохранения не найден",
-                $"Откройте «Сохранить как» или «Открыть» в программе и нажмите {_services.GetRequiredService<QuickSwitchController>().HotkeyText} в нём.");
+                L.T("DesktopShell.SaveDialogNotFound"),
+                L.F("DesktopShell.OpenSaveAsOrOpenIn", _services.GetRequiredService<QuickSwitchController>().HotkeyText));
             return;
         }
 
@@ -762,9 +785,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         var (title, message) = result switch
         {
-            QuickSwitchResult.DialogClosed => ("Диалог уже закрыт", "Окно «Сохранить» или «Открыть» закрылось, пока выбиралась папка."),
-            QuickSwitchResult.FolderMissing => ("Папки больше нет", "Выбранная папка удалена или недоступна: индекс обновится сам."),
-            _ => ("Диалог не перешёл в папку", "Путь скопирован в буфер обмена: вставьте его в поле имени файла и нажмите Enter."),
+            QuickSwitchResult.DialogClosed => (L.T("DesktopShell.TheDialogIsAlreadyClosed"), L.T("DesktopShell.TheSaveOrOpenWindowClosed")),
+            QuickSwitchResult.FolderMissing => (L.T("DesktopShell.TheFolderIsGone"), L.T("DesktopShell.TheChosenFolderWasDeletedOr")),
+            _ => (L.T("DesktopShell.TheDialogDidNotGoTo"), L.T("DesktopShell.ThePathIsCopiedToThe")),
         };
 
         if (result == QuickSwitchResult.Failed)
@@ -806,7 +829,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             _log.Warning(exception, "Буфер обмена не сохранился в файл");
-            _services.GetRequiredService<IInfoBarService>().Show("Не удалось сохранить буфер обмена", exception.Message, FAInfoBarSeverity.Error);
+            _services.GetRequiredService<IInfoBarService>().Show(L.T("DesktopShell.CouldNotSaveTheClipboard"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -838,11 +861,11 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         var hotkeys = _services.GetRequiredService<HotkeyStatus>();
         if (!hotkeys.IsRegistered)
         {
-            viewModel.ShowNotice("Горячая клавиша недоступна", hotkeys.Message, FAInfoBarSeverity.Warning);
+            viewModel.ShowNotice(L.T("DesktopShell.HotkeyUnavailable"), hotkeys.Message, FAInfoBarSeverity.Warning);
         }
         else if (hotkeys.Message.Length > 0)
         {
-            viewModel.ShowNotice("Запасное сочетание клавиш", hotkeys.Message, FAInfoBarSeverity.Informational);
+            viewModel.ShowNotice(L.T("DesktopShell.FallbackShortcut"), hotkeys.Message, FAInfoBarSeverity.Informational);
         }
 
         return window;
@@ -882,6 +905,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         }
 
         ApplyAccent(appearance);
+        DiskApp.UI.Localization.Localizer.Instance.SetLanguage(appearance.Language);
         Program.LogLevel.MinimumLevel = settings.Diagnostics.LogLevel switch
         {
             "Debug" => Serilog.Events.LogEventLevel.Debug,

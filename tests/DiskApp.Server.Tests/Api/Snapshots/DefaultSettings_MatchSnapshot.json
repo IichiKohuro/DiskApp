@@ -10,7 +10,8 @@
     "useSystemAccent": true,
     "reduceMotion": false,
     "fontScale": 1,
-    "compact": false
+    "compact": false,
+    "language": "system"
   },
   "indexing": {
     "exclusions": [

@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="FileOperation.AlreadyExists" xml:space="preserve">
+    <value>«{0}» уже существует.</value>
+  </data>
+  <data name="FileOperation.Cancelled" xml:space="preserve">
+    <value>Отменена.</value>
+  </data>
+  <data name="FileOperation.CancelledBeforeStart" xml:space="preserve">
+    <value>Отменена до запуска.</value>
+  </data>
+  <data name="FileOperation.CouldNotRestore" xml:space="preserve">
+    <value>Не удалось вернуть «{0}»: {1}</value>
+  </data>
+  <data name="FileOperation.ErrorsFirst" xml:space="preserve">
+    <value>Ошибок: {0}. Первая: {1}</value>
+  </data>
+  <data name="FileOperation.FolderCannotBePlacedIntoItself" xml:space="preserve">
+    <value>Папку «{0}» нельзя поместить в неё саму.</value>
+  </data>
+  <data name="FileOperation.FolderNotFound" xml:space="preserve">
+    <value>Папка «{0}» не найдена.</value>
+  </data>
+  <data name="FileOperation.InvalidName" xml:space="preserve">
+    <value>Недопустимое имя.</value>
+  </data>
+  <data name="FileOperation.IsGone" xml:space="preserve">
+    <value>«{0}» больше нет.</value>
+  </data>
+  <data name="FileOperation.NotFound" xml:space="preserve">
+    <value>«{0}» не найден.</value>
+  </data>
+  <data name="FileOperation.OnlyOneFileOrFolderCan" xml:space="preserve">
+    <value>Переименовать можно один файл или папку.</value>
+  </data>
+  <data name="FileOperation.PathsRepeat" xml:space="preserve">
+    <value>Пути повторяются.</value>
+  </data>
+  <data name="FileOperation.SayInWhichFolderToCreate" xml:space="preserve">
+    <value>Укажите папку, в которой создать.</value>
+  </data>
+  <data name="FileOperation.SayWhatToDelete" xml:space="preserve">
+    <value>Укажите, что удалить.</value>
+  </data>
+  <data name="FileOperation.SayWhatToMoveAndInto" xml:space="preserve">
+    <value>Укажите, что и в какую папку переносить.</value>
+  </data>
+  <data name="FileOperation.Skipped" xml:space="preserve">
+    <value>Пропущено: {0}.</value>
+  </data>
+  <data name="FileOperation.SomethingAlreadyExistsInPlaceOf" xml:space="preserve">
+    <value>На месте «{0}» уже что-то есть.</value>
+  </data>
+  <data name="FileOperation.StoppedWhenTheAppExited" xml:space="preserve">
+    <value>Остановлена при выходе из приложения.</value>
+  </data>
+  <data name="FileOperation.TheCopyOfDidNotMatch" xml:space="preserve">
+    <value>Копия «{0}» не совпала по размеру с источником; источник оставлен.</value>
+  </data>
+  <data name="FileOperation.TheNameCannotBeEmpty" xml:space="preserve">
+    <value>Имя не может быть пустым.</value>
+  </data>
+  <data name="FileOperation.TheNameCannotContain" xml:space="preserve">
+    <value>Имя не может содержать символы \ / : * ? " &lt; &gt; |.</value>
+  </data>
+  <data name="FileOperation.TheNameCannotStartWithA" xml:space="preserve">
+    <value>Имя не может начинаться с пробела и заканчиваться пробелом или точкой.</value>
+  </data>
+  <data name="FileOperation.TheNameIsLongerThan255" xml:space="preserve">
+    <value>Имя длиннее 255 символов.</value>
+  </data>
+  <data name="FileOperation.TheNameIsReservedByWindows" xml:space="preserve">
+    <value>Имя «{0}» зарезервировано Windows.</value>
+  </data>
+  <data name="FileOperation.TheOperationHasAlreadyFinished" xml:space="preserve">
+    <value>Операция уже завершена.</value>
+  </data>
+  <data name="FileOperation.TheOperationIsNotWaitingFor" xml:space="preserve">
+    <value>Операция не ждёт решения.</value>
+  </data>
+  <data name="FileOperation.TheRecycleBinIsNotAvailable" xml:space="preserve">
+    <value>Корзина недоступна на этой платформе: удаление и замена файлов не выполняются.</value>
+  </data>
+  <data name="FileOperation.ThisCannotBeDoneWithThe" xml:space="preserve">
+    <value>С корнем диска «{0}» так работать нельзя.</value>
+  </data>
+  <data name="FileOperation.ThisOperationCannotBeUndone" xml:space="preserve">
+    <value>Эту операцию нельзя отменить.</value>
+  </data>
+  <data name="FileOperation.UnknownOperation" xml:space="preserve">
+    <value>Неизвестная операция.</value>
+  </data>
+  <data name="FilterBuilder.FilterWasNotApplied" xml:space="preserve">
+    <value>Фильтр «{0}:{1}» не применён.</value>
+  </data>
+  <data name="FilterBuilder.FolderIsNotInAnyRoot" xml:space="preserve">
+    <value>Папка «{0}» не входит ни в один корень.</value>
+  </data>
+  <data name="FilterBuilder.RootNotFound" xml:space="preserve">
+    <value>Корень «{0}» не найден.</value>
+  </data>
+  <data name="Indexer.FileOperation" xml:space="preserve">
+    <value>Файловая операция</value>
+  </data>
+  <data name="Indexer.FirstScan" xml:space="preserve">
+    <value>Первое сканирование</value>
+  </data>
+  <data name="Indexer.IndexRebuild" xml:space="preserve">
+    <value>Пересборка индекса</value>
+  </data>
+  <data name="Indexer.IndexRestored" xml:space="preserve">
+    <value>Индекс восстановлен</value>
+  </data>
+  <data name="Indexer.ReconciliationAtStartup" xml:space="preserve">
+    <value>Сверка при запуске</value>
+  </data>
+  <data name="Indexer.ReconciliationOnRequest" xml:space="preserve">
+    <value>Сверка по запросу</value>
+  </data>
+  <data name="Indexer.RescanOnRequest" xml:space="preserve">
+    <value>Пересканирование по запросу</value>
+  </data>
+  <data name="Indexer.ScheduledReconciliation" xml:space="preserve">
+    <value>Плановая сверка</value>
+  </data>
+  <data name="Indexer.TheRootDisappearedDuringIndexing" xml:space="preserve">
+    <value>Корень пропал во время индексации.</value>
+  </data>
+  <data name="Indexer.TheRootIsAvailableAgain" xml:space="preserve">
+    <value>Корень снова доступен</value>
+  </data>
+  <data name="Indexer.TheRootIsUnavailableAtStartup" xml:space="preserve">
+    <value>Корень недоступен при запуске.</value>
+  </data>
+  <data name="Indexer.WatcherRestarted" xml:space="preserve">
+    <value>Наблюдатель перезапущен: </value>
+  </data>
+  <data name="JsonSettingsStore.TheRootOfTheSettingsFile" xml:space="preserve">
+    <value>Корень файла настроек должен быть объектом.</value>
+  </data>
+  <data name="JsonSettingsStore.TheSettingsFileIsEmpty" xml:space="preserve">
+    <value>Файл настроек пуст.</value>
+  </data>
+  <data name="Operations.NotFound" xml:space="preserve">
+    <value>Операция не найдена.</value>
+  </data>
+  <data name="Operations.PathMustBeAbsolute" xml:space="preserve">
+    <value>Путь «{0}» должен быть абсолютным.</value>
+  </data>
+  <data name="QueryParser.DidNotUnderstandTheFilterValue" xml:space="preserve">
+    <value>Не понял значение фильтра «{0}» — ищу как текст.</value>
+  </data>
+  <data name="QueryParser.RegularExpressionCouldNotBeParsed" xml:space="preserve">
+    <value>Регулярное выражение «{0}» не разобрано — ищу как текст.</value>
+  </data>
+  <data name="RootChangeProcessor.ErrorApplyingChanges" xml:space="preserve">
+    <value>Ошибка применения изменений: </value>
+  </data>
+  <data name="RootChangeProcessor.FileSystemEventBufferOverflow" xml:space="preserve">
+    <value>Переполнение буфера событий файловой системы.</value>
+  </data>
+  <data name="RootChangeProcessor.NewFolderReconcilingItsContents" xml:space="preserve">
+    <value>Новая папка: сверка содержимого.</value>
+  </data>
+  <data name="RootValidator.ChooseAFolderOrADrive" xml:space="preserve">
+    <value>Укажите папку или диск.</value>
+  </data>
+  <data name="RootValidator.PathMustBeAbsoluteForExample" xml:space="preserve">
+    <value>Путь «{0}» должен быть абсолютным, например D:\Projects или \\server\share.</value>
+  </data>
+  <data name="RootValidator.RootIsAlreadyAdded" xml:space="preserve">
+    <value>Корень «{0}» ({1}) уже добавлен.</value>
+  </data>
+  <data name="ScanPipeline.MoreErrorsAreNotLoggedIn" xml:space="preserve">
+    <value>Ещё {0} ошибок не записаны подробно.</value>
+  </data>
+  <data name="ScanPipeline.TheRootIsUnavailableTheIndex" xml:space="preserve">
+    <value>Корень недоступен: индекс сохранён без изменений.</value>
+  </data>
+  <data name="WindowsPlatformShell.FileExplorerDidNotOpen0x" xml:space="preserve">
+    <value>Проводник не открылся (0x{0:X8}).</value>
+  </data>
+  <data name="WindowsPlatformShell.FileNotFound" xml:space="preserve">
+    <value>Файл не найден.</value>
+  </data>
+  <data name="WindowsPlatformShell.HasNoRecycleBinNetworkOr" xml:space="preserve">
+    <value>Для «{0}» нет корзины (сетевой или съёмный диск): удалять такие файлы можно только безвозвратно и явно.</value>
+  </data>
+  <data name="WindowsPlatformShell.IsNoLongerOnDisk" xml:space="preserve">
+    <value>«{0}» больше нет на диске.</value>
+  </data>
+  <data name="WindowsPlatformShell.MovingToTheRecycleBinWas" xml:space="preserve">
+    <value>Перемещение в корзину отменено.</value>
+  </data>
+  <data name="WindowsPlatformShell.NoAppForThisFileType" xml:space="preserve">
+    <value>Нет приложения для этого типа файлов: выберите его через «Открыть с помощью».</value>
+  </data>
+  <data name="WindowsPlatformShell.NotEnoughMemoryForTheClipboard" xml:space="preserve">
+    <value>Не хватило памяти для буфера обмена.</value>
+  </data>
+  <data name="WindowsPlatformShell.TheActionWasCancelled" xml:space="preserve">
+    <value>Действие отменено.</value>
+  </data>
+  <data name="WindowsPlatformShell.TheClipboardIsBusyWithAnother" xml:space="preserve">
+    <value>Буфер обмена занят другим приложением.</value>
+  </data>
+  <data name="WindowsPlatformShell.TheOpenWithDialogDidNot" xml:space="preserve">
+    <value>Диалог «Открыть с помощью» не открылся (0x{0:X8}).</value>
+  </data>
+  <data name="WindowsPlatformShell.ThePropertiesWindowDidNotOpen" xml:space="preserve">
+    <value>Окно свойств не открылось.</value>
+  </data>
+  <data name="WindowsPlatformShell.WindowsDidNotAcceptTheClipboard" xml:space="preserve">
+    <value>Windows не приняла данные в буфер обмена.</value>
+  </data>
+  <data name="WindowsPlatformShell.WindowsDidNotMoveItTo" xml:space="preserve">
+    <value>Windows не переместила в корзину (код {0}).</value>
+  </data>
+</root>
