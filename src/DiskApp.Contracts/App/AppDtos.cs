@@ -42,6 +42,18 @@ public sealed record SettingsDto
 
     /// <summary>Трей и запуск.</summary>
     public TraySettingsDto Tray { get; set; } = new();
+
+    /// <summary>Добавление файлов: «Входящие», недавние места, имя файла из буфера обмена.</summary>
+    public AddSettingsDto Add { get; set; } = new();
+
+    /// <summary>Экспериментальные функции.</summary>
+    public ExperimentalSettingsDto Experimental { get; set; } = new();
+
+    /// <summary>Окно быстрого поиска.</summary>
+    public PopupSettingsDto Popup { get; set; } = new();
+
+    /// <summary>Диагностика.</summary>
+    public DiagnosticsSettingsDto Diagnostics { get; set; } = new();
 }
 
 /// <summary>Горячие клавиши.</summary>
@@ -52,6 +64,68 @@ public sealed record HotkeySettingsDto
 
     /// <summary>Разбор входящих.</summary>
     public string Triage { get; set; } = string.Empty;
+
+    /// <summary>Quick Switch в диалогах «Сохранить» и «Открыть».</summary>
+    public string QuickSwitch { get; set; } = string.Empty;
+}
+
+/// <summary>Добавление файлов.</summary>
+public sealed record AddSettingsDto
+{
+    /// <summary>Папка «Входящие»; <c>null</c> — первый корень.</summary>
+    public string? InboxPath { get; set; }
+
+    /// <summary>Недавние папки назначения, самые свежие первыми (не больше 8).</summary>
+    public IReadOnlyList<string> RecentTargets { get; set; } = [];
+
+    /// <summary>Шаблон имени файла из буфера обмена: <c>{date}</c>, <c>{time}</c>, <c>{title}</c>.</summary>
+    public string ClipboardNameTemplate { get; set; } = string.Empty;
+}
+
+/// <summary>Экспериментальные функции.</summary>
+public sealed record ExperimentalSettingsDto
+{
+    /// <summary>Quick Switch для стандартных диалогов файлов (ADR-0008).</summary>
+    public bool QuickSwitch { get; set; }
+}
+
+/// <summary>Окно быстрого поиска.</summary>
+public sealed record PopupSettingsDto
+{
+    /// <summary>Монитор для окна.</summary>
+    public PopupMonitor Monitor { get; set; }
+
+    /// <summary>Прятать при потере фокуса.</summary>
+    public bool HideOnDeactivate { get; set; }
+
+    /// <summary>Показывать папку файла.</summary>
+    public bool ShowPath { get; set; }
+
+    /// <summary>Показывать размер.</summary>
+    public bool ShowSize { get; set; }
+
+    /// <summary>Показывать дату изменения.</summary>
+    public bool ShowDate { get; set; }
+}
+
+/// <summary>Монитор для окна быстрого поиска.</summary>
+public enum PopupMonitor
+{
+    /// <summary>С курсором мыши.</summary>
+    Cursor,
+
+    /// <summary>С активным окном.</summary>
+    ActiveWindow,
+
+    /// <summary>Основной.</summary>
+    Primary,
+}
+
+/// <summary>Диагностика.</summary>
+public sealed record DiagnosticsSettingsDto
+{
+    /// <summary>Уровень журнала: <c>Debug</c>, <c>Information</c>, <c>Warning</c>, <c>Error</c>.</summary>
+    public string LogLevel { get; set; } = string.Empty;
 }
 
 /// <summary>Оформление.</summary>
@@ -68,6 +142,15 @@ public sealed record AppearanceSettingsDto
 
     /// <summary>Меньше анимаций.</summary>
     public bool ReduceMotion { get; set; }
+
+    /// <summary>Свой акцентный цвет <c>#RRGGBB</c> при выключенном системном; <c>null</c> — синий по умолчанию.</summary>
+    public string? AccentColor { get; set; }
+
+    /// <summary>Масштаб текста: от 0,9 до 1,5.</summary>
+    public double FontScale { get; set; }
+
+    /// <summary>Компактный режим списков.</summary>
+    public bool Compact { get; set; }
 }
 
 /// <summary>Тема интерфейса.</summary>
@@ -167,6 +250,12 @@ public sealed record SearchSettingsDto
 
     /// <summary>Пресет ранжирования.</summary>
     public RankingPreset RankingPreset { get; set; }
+
+    /// <summary>Нечёткий поиск при малом числе точных совпадений.</summary>
+    public bool Fuzzy { get; set; }
+
+    /// <summary>Подборка при пустом запросе.</summary>
+    public bool ShowSuggestionsOnEmpty { get; set; }
 }
 
 /// <summary>Трей и запуск.</summary>

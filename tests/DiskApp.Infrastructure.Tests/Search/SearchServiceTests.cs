@@ -258,6 +258,25 @@ public sealed class SearchServiceTests
     }
 
     [Fact]
+    public async Task Search_FuzzyTurnedOffInSettings_AppliesWithoutRestart()
+    {
+        // Arrange
+        await using var context = await CreateAsync();
+        await context.AddAsync(context.Projects, "report.docx", "unrelated.txt");
+        var service = context.Service();
+        var before = await service.SearchAsync(new SearchRequest { Text = "reprot", Limit = 5 }, TestContext.Current.CancellationToken);
+
+        // Act
+        service.UpdateOptions(SearchOptions.FromSettings(new DiskApp.Core.Settings.SearchSettings { Fuzzy = false }));
+        var after = await service.SearchAsync(new SearchRequest { Text = "reprot", Limit = 5 }, TestContext.Current.CancellationToken);
+
+        // Assert
+        before.IncludesFuzzy.ShouldBeTrue();
+        after.IncludesFuzzy.ShouldBeFalse();
+        Names(after).ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Search_RefinedQuery_ReusesCandidatesWithoutIndexCall()
     {
         // Arrange

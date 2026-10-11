@@ -68,11 +68,51 @@ public sealed class SettingsApiTests
         settings.Search.PageSize.ShouldBe(50);
     }
 
+    [Fact]
+    public async Task Patch_StageNineFields_IncludingNullableOnes_AreSaved()
+    {
+        // Arrange
+        await using var context = await ServerTestContext.StartAsync();
+        var inbox = context.Files.FullPath.Replace(@"\", @"\\", StringComparison.Ordinal);
+
+        // Act: поля без значения по умолчанию (accentColor, inboxPath) тоже принимаются.
+        using var response = await PatchAsync(context, $$$"""
+            {"appearance":{"useSystemAccent":false,"accentColor":"#E74856","fontScale":1.25,"compact":true},
+             "search":{"fuzzy":false,"showSuggestionsOnEmpty":false},
+             "popup":{"monitor":"Primary","hideOnDeactivate":false,"showSize":false},
+             "add":{"inboxPath":"{{{inbox}}}"},
+             "experimental":{"quickSwitch":true},
+             "hotkeys":{"quickSwitch":"Ctrl+Alt+Q"},
+             "diagnostics":{"logLevel":"Debug"}}
+            """);
+        var settings = await context.GetAsync(ApiRoutes.V1.Settings, DiskAppJsonContext.Default.SettingsDto);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        settings.Appearance.AccentColor.ShouldBe("#E74856");
+        settings.Appearance.FontScale.ShouldBe(1.25);
+        settings.Appearance.Compact.ShouldBeTrue();
+        settings.Search.Fuzzy.ShouldBeFalse();
+        settings.Search.ShowSuggestionsOnEmpty.ShouldBeFalse();
+        settings.Popup.Monitor.ShouldBe(DiskApp.Contracts.App.PopupMonitor.Primary);
+        settings.Popup.HideOnDeactivate.ShouldBeFalse();
+        settings.Popup.ShowSize.ShouldBeFalse();
+        settings.Popup.ShowPath.ShouldBeTrue();
+        settings.Add.InboxPath.ShouldBe(context.Files.FullPath);
+        settings.Experimental.QuickSwitch.ShouldBeTrue();
+        settings.Hotkeys.QuickSwitch.ShouldBe("Ctrl+Alt+Q");
+        settings.Diagnostics.LogLevel.ShouldBe("Debug");
+    }
+
     [Theory]
     [InlineData("""{"search":{"pageSiz":10}}""", "search.pageSiz")]
     [InlineData("""{"search":{"pageSize":5}}""", "search.pageSize")]
     [InlineData("""{"search":{"pageSize":"много"}}""", "")]
     [InlineData("""{"indexing":{"exclusions":[{"kind":"Size","pattern":"abc"}]}}""", "indexing.exclusions[0].pattern")]
+    [InlineData("""{"appearance":{"fontScale":3}}""", "appearance.fontScale")]
+    [InlineData("""{"appearance":{"accentColor":"red"}}""", "appearance.accentColor")]
+    [InlineData("""{"diagnostics":{"logLevel":"Verbose"}}""", "diagnostics.logLevel")]
+    [InlineData("""{"add":{"inboxPath":"relative\\path"}}""", "add.inboxPath")]
     public async Task Patch_InvalidInput_Returns400AndKeepsSettings(string json, string field)
     {
         // Arrange

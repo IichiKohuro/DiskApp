@@ -39,6 +39,60 @@ public sealed record AppSettings
 
     /// <summary>Экспериментальные функции: выключены по умолчанию.</summary>
     public ExperimentalSettings Experimental { get; set; } = new();
+
+    /// <summary>Окно быстрого поиска: где показывать, когда прятать, какие подробности в строках.</summary>
+    public PopupSettings Popup { get; set; } = new();
+
+    /// <summary>Диагностика: уровень журнала.</summary>
+    public DiagnosticsSettings Diagnostics { get; set; } = new();
+}
+
+/// <summary>
+/// Окно быстрого поиска (PLAN.md, этап 9.1, «Поведение»).
+/// </summary>
+public sealed record PopupSettings
+{
+    /// <summary>На каком мониторе показывать окно.</summary>
+    public PopupMonitor Monitor { get; set; } = PopupMonitor.Cursor;
+
+    /// <summary>Прятать окно, когда оно теряет фокус.</summary>
+    public bool HideOnDeactivate { get; set; } = true;
+
+    /// <summary>Показывать папку файла в строке.</summary>
+    public bool ShowPath { get; set; } = true;
+
+    /// <summary>Показывать размер в строке.</summary>
+    public bool ShowSize { get; set; } = true;
+
+    /// <summary>Показывать дату изменения в строке.</summary>
+    public bool ShowDate { get; set; } = true;
+}
+
+/// <summary>
+/// Монитор для окна быстрого поиска.
+/// </summary>
+public enum PopupMonitor
+{
+    /// <summary>Монитор с курсором мыши.</summary>
+    Cursor,
+
+    /// <summary>Монитор с активным окном.</summary>
+    ActiveWindow,
+
+    /// <summary>Основной монитор.</summary>
+    Primary,
+}
+
+/// <summary>
+/// Диагностика (PLAN.md, этап 9.1, «Данные»).
+/// </summary>
+public sealed record DiagnosticsSettings
+{
+    /// <summary>Уровни журнала, которые можно выбрать.</summary>
+    public static IReadOnlyList<string> LogLevels { get; } = ["Debug", "Information", "Warning", "Error"];
+
+    /// <summary>Уровень журнала: <c>Debug</c>, <c>Information</c>, <c>Warning</c> или <c>Error</c>.</summary>
+    public string LogLevel { get; set; } = "Information";
 }
 
 /// <summary>
@@ -124,6 +178,15 @@ public sealed record AppearanceSettings
 
     /// <summary>Уменьшить анимации независимо от системной настройки.</summary>
     public bool ReduceMotion { get; set; }
+
+    /// <summary>Свой акцентный цвет <c>#RRGGBB</c>, когда системный выключен; <c>null</c> — синий Windows по умолчанию.</summary>
+    public string? AccentColor { get; set; }
+
+    /// <summary>Масштаб текста интерфейса: от 0,9 до 1,5.</summary>
+    public double FontScale { get; set; } = 1.0;
+
+    /// <summary>Компактный режим: строки списков ниже, отступы меньше.</summary>
+    public bool Compact { get; set; }
 }
 
 /// <summary>
@@ -236,6 +299,12 @@ public sealed record SearchSettings
 
     /// <summary>Пресет весов ранжирования.</summary>
     public string RankingPreset { get; set; } = "balanced";
+
+    /// <summary>Нечёткий поиск: при малом числе точных совпадений добавлять похожие имена с опечатками.</summary>
+    public bool Fuzzy { get; set; } = true;
+
+    /// <summary>Подборка при пустом запросе: недавние, закреплённые и изменённые файлы.</summary>
+    public bool ShowSuggestionsOnEmpty { get; set; } = true;
 }
 
 /// <summary>

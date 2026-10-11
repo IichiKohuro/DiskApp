@@ -27,7 +27,7 @@ public sealed class SearchService
     private readonly ITagRepository _tags;
     private readonly IClock _clock;
     private readonly PathNormalizer _paths;
-    private readonly SearchOptions _options;
+    private volatile SearchOptions _options;
     private readonly TimeZoneInfo _zone;
     private readonly Lock _gate = new();
     private RefinementCache? _cache;
@@ -102,7 +102,7 @@ public sealed class SearchService
             Remember(plan, batch);
             exactCount = candidates.Count;
 
-            if (plan.FtsTerms.Count > 0 && candidates.Count < _options.FuzzyThreshold && !partial)
+            if (_options.FuzzyEnabled && plan.FtsTerms.Count > 0 && candidates.Count < _options.FuzzyThreshold && !partial)
             {
                 var fuzzy = await FindFuzzyAsync(plan, candidates, cancellationToken).ConfigureAwait(false);
                 if (fuzzy.Count > 0)
@@ -250,6 +250,16 @@ public sealed class SearchService
 
     /// <summary>Очищает историю.</summary>
     public Task ClearHistoryAsync(CancellationToken cancellationToken = default) => _history.ClearAsync(cancellationToken);
+
+    /// <summary>
+    /// Новые параметры поиска из настроек (PLAN.md, этап 9.1): действуют со следующего запроса, кэш уточнения сбрасывается.
+    /// </summary>
+    public void UpdateOptions(SearchOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        _options = options;
+        InvalidateCaches();
+    }
 
     /// <summary>Сбрасывает кэши корней и уточнения: после изменения индекса или корней.</summary>
     public void InvalidateCaches()
@@ -519,6 +529,9 @@ public sealed record SearchOptions
     /// <summary>Сколько записей в подборке для пустого запроса.</summary>
     public int RecentLimit { get; init; } = 50;
 
+    /// <summary>Нечёткий поиск включён (настройка <c>search.fuzzy</c>).</summary>
+    public bool FuzzyEnabled { get; init; } = true;
+
     /// <summary>Если точных совпадений меньше, добавляются нечёткие.</summary>
     public int FuzzyThreshold { get; init; } = 5;
 
@@ -545,6 +558,7 @@ public sealed record SearchOptions
             HistoryLimit = settings.HistoryLimit > 0 ? settings.HistoryLimit : defaults.HistoryLimit,
             FrecencyHalfLife = settings.FrecencyHalfLifeDays > 0 ? TimeSpan.FromDays(settings.FrecencyHalfLifeDays) : defaults.FrecencyHalfLife,
             Preset = RankingWeights.ParsePreset(settings.RankingPreset),
+            FuzzyEnabled = settings.Fuzzy,
         };
     }
 }

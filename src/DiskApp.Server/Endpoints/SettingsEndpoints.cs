@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 
 using DiskApp.Contracts;
 using DiskApp.Contracts.App;
@@ -20,9 +21,18 @@ namespace DiskApp.Server.Endpoints;
 /// Настройки и сведения о приложении (PLAN.md, этап 4.3). Изменение — JSON Merge Patch (RFC 7396) поверх текущих
 /// настроек: переданные поля заменяются, <c>null</c> возвращает значение по умолчанию, неизвестное поле — 400.
 /// </summary>
-internal static class SettingsEndpoints
+internal static partial class SettingsEndpoints
 {
+    [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
+    private static partial Regex HexColor();
+
     private static readonly string[] UnknownSetting = ["Неизвестная настройка."];
+
+    /// <summary>
+    /// Контекст сериализации со всеми полями, включая <c>null</c>: иначе поле без значения (свой акцент, папка «Входящие»)
+    /// выпало бы из основы слияния и считалось бы неизвестным.
+    /// </summary>
+    private static readonly DiskAppJsonContext AllFields = new(new JsonSerializerOptions(DiskAppJsonContext.Default.Options) { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never });
 
     public static void MapSettings(this IEndpointRouteBuilder endpoints)
     {
@@ -50,8 +60,8 @@ internal static class SettingsEndpoints
     private static async Task<Results<Ok<SettingsDto>, ValidationProblem>> PatchAsync(JsonObject patch, ISettingsStore<AppSettings> store, CancellationToken cancellationToken)
     {
         var current = store.Current;
-        var target = JsonSerializer.SerializeToNode(current.ToDto(), DiskAppJsonContext.Default.SettingsDto)!.AsObject();
-        var defaults = JsonSerializer.SerializeToNode(AppSettings.Default.ToDto(), DiskAppJsonContext.Default.SettingsDto)!.AsObject();
+        var target = JsonSerializer.SerializeToNode(current.ToDto(), AllFields.SettingsDto)!.AsObject();
+        var defaults = JsonSerializer.SerializeToNode(AppSettings.Default.ToDto(), AllFields.SettingsDto)!.AsObject();
 
         var unknown = new List<string>();
         Merge(target, patch, defaults, string.Empty, unknown);
@@ -150,6 +160,46 @@ internal static class SettingsEndpoints
         if (string.IsNullOrWhiteSpace(settings.Hotkeys.QuickSearch))
         {
             errors["hotkeys.quickSearch"] = ["Сочетание не может быть пустым."];
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.Hotkeys.QuickSwitch))
+        {
+            errors["hotkeys.quickSwitch"] = ["Сочетание не может быть пустым."];
+        }
+
+        if (settings.Appearance.FontScale is < 0.9 or > 1.5 || double.IsNaN(settings.Appearance.FontScale))
+        {
+            errors["appearance.fontScale"] = ["Допустимо от 0,9 до 1,5."];
+        }
+
+        if (settings.Appearance.AccentColor is { } accent && !HexColor().IsMatch(accent))
+        {
+            errors["appearance.accentColor"] = ["Нужен цвет вида #RRGGBB."];
+        }
+
+        if (!Enum.IsDefined(settings.Popup.Monitor))
+        {
+            errors["popup.monitor"] = ["Неизвестный монитор."];
+        }
+
+        if (!DiagnosticsSettings.LogLevels.Contains(settings.Diagnostics.LogLevel, StringComparer.Ordinal))
+        {
+            errors["diagnostics.logLevel"] = ["Допустимо: " + string.Join(", ", DiagnosticsSettings.LogLevels) + "."];
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.Add.ClipboardNameTemplate))
+        {
+            errors["add.clipboardNameTemplate"] = ["Шаблон не может быть пустым."];
+        }
+
+        if (settings.Add.InboxPath is { Length: > 0 } inbox && !Path.IsPathFullyQualified(inbox))
+        {
+            errors["add.inboxPath"] = ["Нужен полный путь к папке."];
+        }
+
+        if (settings.Add.RecentTargets.Count > AddSettings.RecentLimit)
+        {
+            errors["add.recentTargets"] = [$"Не больше {AddSettings.RecentLimit} мест."];
         }
 
         for (var i = 0; i < settings.Indexing.Exclusions.Count; i++)

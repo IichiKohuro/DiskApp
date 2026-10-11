@@ -155,13 +155,16 @@ internal static class DtoMapper
 
     public static SettingsDto ToDto(this AppSettings settings) => new()
     {
-        Hotkeys = new HotkeySettingsDto { QuickSearch = settings.Hotkeys.QuickSearch, Triage = settings.Hotkeys.Triage },
+        Hotkeys = new HotkeySettingsDto { QuickSearch = settings.Hotkeys.QuickSearch, Triage = settings.Hotkeys.Triage, QuickSwitch = settings.Hotkeys.QuickSwitch },
         Appearance = new AppearanceSettingsDto
         {
             Theme = (Contract.App.ThemeMode)(int)settings.Appearance.Theme,
             Backdrop = (Contract.App.BackdropMode)(int)settings.Appearance.Backdrop,
             UseSystemAccent = settings.Appearance.UseSystemAccent,
             ReduceMotion = settings.Appearance.ReduceMotion,
+            AccentColor = settings.Appearance.AccentColor,
+            FontScale = settings.Appearance.FontScale,
+            Compact = settings.Appearance.Compact,
         },
         Indexing = new IndexingSettingsDto
         {
@@ -181,6 +184,8 @@ internal static class DtoMapper
             HistoryLimit = settings.Search.HistoryLimit,
             FrecencyHalfLifeDays = settings.Search.FrecencyHalfLifeDays,
             RankingPreset = (Contract.Search.RankingPreset)(int)RankingWeights.ParsePreset(settings.Search.RankingPreset),
+            Fuzzy = settings.Search.Fuzzy,
+            ShowSuggestionsOnEmpty = settings.Search.ShowSuggestionsOnEmpty,
         },
         Tray = new TraySettingsDto
         {
@@ -189,6 +194,22 @@ internal static class DtoMapper
             ConfirmExitDuringOperations = settings.Tray.ConfirmExitDuringOperations,
             AutoStart = settings.Tray.AutoStart,
         },
+        Add = new AddSettingsDto
+        {
+            InboxPath = settings.Add.InboxPath,
+            RecentTargets = settings.Add.RecentTargets,
+            ClipboardNameTemplate = settings.Add.ClipboardNameTemplate,
+        },
+        Experimental = new ExperimentalSettingsDto { QuickSwitch = settings.Experimental.QuickSwitch },
+        Popup = new PopupSettingsDto
+        {
+            Monitor = (Contract.App.PopupMonitor)(int)settings.Popup.Monitor,
+            HideOnDeactivate = settings.Popup.HideOnDeactivate,
+            ShowPath = settings.Popup.ShowPath,
+            ShowSize = settings.Popup.ShowSize,
+            ShowDate = settings.Popup.ShowDate,
+        },
+        Diagnostics = new DiagnosticsSettingsDto { LogLevel = settings.Diagnostics.LogLevel },
     };
 
     /// <summary>
@@ -196,13 +217,16 @@ internal static class DtoMapper
     /// </summary>
     public static AppSettings ToDomain(this SettingsDto dto, AppSettings current) => current with
     {
-        Hotkeys = current.Hotkeys with { QuickSearch = dto.Hotkeys.QuickSearch, Triage = dto.Hotkeys.Triage },
+        Hotkeys = current.Hotkeys with { QuickSearch = dto.Hotkeys.QuickSearch, Triage = dto.Hotkeys.Triage, QuickSwitch = dto.Hotkeys.QuickSwitch },
         Appearance = current.Appearance with
         {
             Theme = (Core.Settings.ThemeMode)(int)dto.Appearance.Theme,
             Backdrop = (Core.Settings.BackdropMode)(int)dto.Appearance.Backdrop,
             UseSystemAccent = dto.Appearance.UseSystemAccent,
             ReduceMotion = dto.Appearance.ReduceMotion,
+            AccentColor = dto.Appearance.AccentColor,
+            FontScale = dto.Appearance.FontScale,
+            Compact = dto.Appearance.Compact,
         },
         Indexing = current.Indexing with
         {
@@ -222,6 +246,8 @@ internal static class DtoMapper
             HistoryLimit = dto.Search.HistoryLimit,
             FrecencyHalfLifeDays = dto.Search.FrecencyHalfLifeDays,
             RankingPreset = PresetName(dto.Search.RankingPreset),
+            Fuzzy = dto.Search.Fuzzy,
+            ShowSuggestionsOnEmpty = dto.Search.ShowSuggestionsOnEmpty,
         },
         Tray = current.Tray with
         {
@@ -230,6 +256,22 @@ internal static class DtoMapper
             ConfirmExitDuringOperations = dto.Tray.ConfirmExitDuringOperations,
             AutoStart = dto.Tray.AutoStart,
         },
+        Add = current.Add with
+        {
+            InboxPath = string.IsNullOrWhiteSpace(dto.Add.InboxPath) ? null : dto.Add.InboxPath,
+            RecentTargets = dto.Add.RecentTargets ?? [],
+            ClipboardNameTemplate = dto.Add.ClipboardNameTemplate,
+        },
+        Experimental = current.Experimental with { QuickSwitch = dto.Experimental.QuickSwitch },
+        Popup = current.Popup with
+        {
+            Monitor = (Core.Settings.PopupMonitor)(int)dto.Popup.Monitor,
+            HideOnDeactivate = dto.Popup.HideOnDeactivate,
+            ShowPath = dto.Popup.ShowPath,
+            ShowSize = dto.Popup.ShowSize,
+            ShowDate = dto.Popup.ShowDate,
+        },
+        Diagnostics = current.Diagnostics with { LogLevel = dto.Diagnostics.LogLevel },
     };
 
     public static FileOperationRequest ToDomain(this OperationRequest request) => new(

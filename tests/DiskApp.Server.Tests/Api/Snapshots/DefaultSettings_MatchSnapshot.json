@@ -1,13 +1,16 @@
 {
   "hotkeys": {
     "quickSearch": "Ctrl+Alt+D",
-    "triage": "Ctrl+Alt+I"
+    "triage": "Ctrl+Alt+I",
+    "quickSwitch": "Ctrl+Alt+G"
   },
   "appearance": {
     "theme": "System",
     "backdrop": "Mica",
     "useSystemAccent": true,
-    "reduceMotion": false
+    "reduceMotion": false,
+    "fontScale": 1,
+    "compact": false
   },
   "indexing": {
     "exclusions": [
@@ -69,12 +72,31 @@
     "candidateLimit": 2000,
     "historyLimit": 100,
     "frecencyHalfLifeDays": 30,
-    "rankingPreset": "Balanced"
+    "rankingPreset": "Balanced",
+    "fuzzy": true,
+    "showSuggestionsOnEmpty": true
   },
   "tray": {
     "startMinimized": true,
     "closeToTray": true,
     "confirmExitDuringOperations": true,
     "autoStart": false
+  },
+  "add": {
+    "recentTargets": [],
+    "clipboardNameTemplate": "{date}_{time}_{title}"
+  },
+  "experimental": {
+    "quickSwitch": false
+  },
+  "popup": {
+    "monitor": "Cursor",
+    "hideOnDeactivate": true,
+    "showPath": true,
+    "showSize": true,
+    "showDate": true
+  },
+  "diagnostics": {
+    "logLevel": "Information"
   }
 }
