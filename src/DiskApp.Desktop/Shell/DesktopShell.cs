@@ -442,7 +442,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         {
             _hotkey?.Dispose();
             _hotkey = null;
-            _services.GetService<QuickSwitchController>()?.Dispose();
+
+            // Quick Switch освобождает контейнер, и раньше оболочки: она создана первой. Обращаться к контейнеру здесь
+            // нельзя — при остановке хоста он уже освобождён, и исключение роняло процесс на выходе (найдено в 9.5).
             _messageWindow?.Dispose();
             _messageWindow = null;
         }
