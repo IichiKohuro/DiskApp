@@ -73,6 +73,10 @@ public sealed partial class HomeViewModel : PageViewModel
     [ObservableProperty]
     public partial double IndexProgressPercent { get; set; }
 
+    /// <summary>Объём индексации заранее неизвестен: индикатор бегущий.</summary>
+    [ObservableProperty]
+    public partial bool IsIndexProgressIndeterminate { get; set; }
+
     /// <summary>Сколько файлов ждёт разбора во «входящих».</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasInbox))]
@@ -103,7 +107,8 @@ public sealed partial class HomeViewModel : PageViewModel
 
         IndexStatusText = status.Describe(now);
         IsIndexing = status.IsIndexing;
-        IndexProgressPercent = status.Progress * 100;
+        IndexProgressPercent = (status.Progress ?? 0) * 100;
+        IsIndexProgressIndeterminate = status.Progress is null;
         InboxCount = status.InboxCount;
         InboxText = status.InboxCount > 0
             ? $"{Formatting.Count(status.InboxCount, "файл ждёт", "файла ждут", "файлов ждут")} разбора в «Загрузках»"

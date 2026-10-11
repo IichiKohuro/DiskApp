@@ -17,6 +17,7 @@
                 <TextBlock Classes="secondary" Text="{Binding IndexStatusText}" />
                 <ProgressBar IsVisible="{Binding IsIndexing}"
                              Value="{Binding IndexProgressPercent}"
+                             IsIndeterminate="{Binding IsIndexProgressIndeterminate}"
                              Maximum="100"
                              Margin="0,8,0,0" />
             </StackPanel>

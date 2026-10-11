@@ -84,6 +84,29 @@ public sealed class SampleSearchService : ISearchService
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyList<ResultSection>> GetSuggestionsAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        List<FileEntry> recent;
+        lock (_gate)
+        {
+            recent = [.. _recent.Take(RecentLimit)];
+        }
+
+        ResultSection[] sections =
+        [
+            new(SectionTitles.RecentlyOpened, recent),
+            new(SectionTitles.Pinned, [.. _entries.Where(static entry => entry.IsFavorite)]),
+            new(SectionTitles.RecentlyModified, [.. _entries
+                .Where(static entry => entry.Kind != FileKind.Folder)
+                .OrderByDescending(static entry => entry.Modified)
+                .Take(RecentLimit)]),
+        ];
+        return Task.FromResult<IReadOnlyList<ResultSection>>([.. sections.Where(static section => section.Entries.Count > 0)]);
+    }
+
+    /// <inheritdoc />
     public Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

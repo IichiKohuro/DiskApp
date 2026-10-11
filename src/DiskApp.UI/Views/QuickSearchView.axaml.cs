@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 
+using DiskApp.UI.Models;
 using DiskApp.UI.ViewModels;
 
 namespace DiskApp.UI.Views;
@@ -22,6 +23,7 @@ public partial class QuickSearchView : UserControl
         InitializeComponent();
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
         ResultsList.DoubleTapped += OnResultDoubleTapped;
+        ResultsList.ContainerPrepared += OnContainerPrepared;
     }
 
     private QuickSearchViewModel? ViewModel => DataContext as QuickSearchViewModel;
@@ -78,12 +80,26 @@ public partial class QuickSearchView : UserControl
         if (handled)
         {
             e.Handled = true;
-            if (viewModel.SelectedIndex >= 0)
-            {
-                ResultsList.ScrollIntoView(viewModel.SelectedIndex);
-            }
+            ScrollToSelection(viewModel);
         }
     }
+
+    // Первая строка — к началу списка, чтобы над ней был виден заголовок секции.
+    private void ScrollToSelection(QuickSearchViewModel viewModel)
+    {
+        if (viewModel.SelectedIndex == 0)
+        {
+            ResultsList.ScrollIntoView(0);
+        }
+        else if (viewModel.SelectedRow is { } row)
+        {
+            ResultsList.ScrollIntoView(row);
+        }
+    }
+
+    // Контейнеры переиспользуются при прокрутке: класс заголовка ставится и снимается каждый раз.
+    private static void OnContainerPrepared(object? sender, ContainerPreparedEventArgs e)
+        => e.Container.Classes.Set("header", e.Container.DataContext is ResultSectionHeader);
 
     private void OnResultDoubleTapped(object? sender, TappedEventArgs e)
     {

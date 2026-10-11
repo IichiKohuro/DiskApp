@@ -67,7 +67,24 @@ public sealed class ApiSearchServiceTests
     }
 
     [Fact]
-    public async Task GetRecent_SendsEmptyQueryForServerSelection()
+    public async Task GetRecent_OpenedFiles_ReturnsThemWithoutSearch()
+    {
+        // Arrange
+        var (api, fake) = FakeApi.Create();
+        fake.Roots = [Root(1, "Документы")];
+        fake.Recent = [Entry(5, "opened.txt", ContractKind.Document)];
+        var service = new ApiSearchService(api);
+
+        // Act
+        var recent = await service.GetRecentAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        recent.ShouldHaveSingleItem().Name.ShouldBe("opened.txt");
+        fake.Calls.ShouldNotContain(nameof(IDiskAppApi.SearchAsync));
+    }
+
+    [Fact]
+    public async Task GetRecent_NothingOpenedYet_FallsBackToServerSelection()
     {
         // Arrange
         var (api, fake) = FakeApi.Create();
@@ -85,13 +102,65 @@ public sealed class ApiSearchServiceTests
     }
 
     [Fact]
+    public async Task GetSuggestions_Server_ReturnsRecentPinnedAndModifiedFilesInPlanOrder()
+    {
+        // Arrange
+        var (api, fake) = FakeApi.Create();
+        fake.Roots = [Root(1, "Документы", offline: true)];
+        fake.Recent = [Entry(1, "opened.txt", ContractKind.Document)];
+        fake.Pinned = [Entry(2, "pinned.pdf", ContractKind.Pdf)];
+        fake.Search = _ => Response(
+            [Entry(3, "folder", ContractKind.Folder) with { IsDirectory = true }, Entry(4, "changed.xlsx", ContractKind.Spreadsheet)],
+            total: 2,
+            approximate: false);
+        var service = new ApiSearchService(api);
+
+        // Act
+        var sections = await service.GetSuggestionsAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        sections.Select(static section => section.Title).ShouldBe([SectionTitles.RecentlyOpened, SectionTitles.Pinned, SectionTitles.RecentlyModified]);
+        sections[2].Entries.ShouldHaveSingleItem().Name.ShouldBe("changed.xlsx", "в «Недавно изменённых» только файлы");
+        sections[0].Entries[0].IsOffline.ShouldBeTrue("корень недоступен");
+        fake.LastRequest!.Sort.ShouldBe(SearchSort.Modified);
+        fake.LastRequest.Descending.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task GetSuggestions_EmptySections_AreSkipped()
+    {
+        // Arrange
+        var (api, fake) = FakeApi.Create();
+        fake.Search = _ => Response([], total: 0, approximate: false);
+        var service = new ApiSearchService(api);
+
+        // Act
+        var sections = await service.GetSuggestionsAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        sections.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ToEntry_CloudPlaceholder_IsCloudOnly()
+    {
+        // Act
+        var entry = ApiSearchService.ToEntry(Entry(1, "video.mp4", ContractKind.Video) with { IsCloudPlaceholder = true }, "OneDrive");
+
+        // Assert
+        entry.IsCloudOnly.ShouldBeTrue();
+        entry.IsOffline.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task GetIndexStatus_Indexing_ReportsTotalsRootsAndLatestScan()
     {
         // Arrange
         var (api, fake) = FakeApi.Create();
         var latest = new DateTimeOffset(2026, 10, 11, 8, 0, 0, TimeSpan.Zero);
         fake.Status = new IndexStatusDto(IndexerState.Indexing, false,
-            [RootStatus(1, "Документы", latest.AddHours(-3)), RootStatus(2, "Проекты", latest)], TotalEntries: 1234);
+            [RootStatus(1, "Документы", latest.AddHours(-3)) with { Progress = new IndexProgressDto(1, IndexPhase.Enumerating, 700, 650, null, 100, 7) }, RootStatus(2, "Проекты", latest)],
+            TotalEntries: 1234);
         var service = new ApiSearchService(api);
 
         // Act
@@ -100,6 +169,9 @@ public sealed class ApiSearchServiceTests
         // Assert
         status.TotalEntries.ShouldBe(1234);
         status.IsIndexing.ShouldBeTrue();
+        status.Progress.ShouldBeNull("объём первого сканирования неизвестен");
+        status.Scanned.ShouldBe(700);
+        status.DescribeIndexing().ShouldBe("индексация: просмотрено 700");
         status.Roots.ShouldBe(["Документы", "Проекты"]);
         status.LastUpdated.ShouldBe(latest);
     }
@@ -144,9 +216,9 @@ public sealed class ApiSearchServiceTests
         Tags = [new TagDto(1, "работа", null)],
     };
 
-    private static RootDto Root(long id, string label)
+    private static RootDto Root(long id, string label, bool offline = false)
         => new(id, @"D:\Docs", label, IsEnabled: true, IncludeHidden: false, IncludeSystem: false, MaxDepth: null, LastScanUtc: null,
-            Status: Contracts.Roots.RootStatus.Online, ErrorMessage: null);
+            Status: offline ? Contracts.Roots.RootStatus.Offline : Contracts.Roots.RootStatus.Online, ErrorMessage: null);
 
     private static RootIndexStatusDto RootStatus(long id, string label, DateTimeOffset? lastScan = null)
         => new(id, @"D:\Docs", label, Contracts.Roots.RootStatus.Online, Message: null, RunningTask: null, IsQueued: false, Progress: null, LastScanUtc: lastScan);
@@ -164,6 +236,10 @@ public sealed class ApiSearchServiceTests
         public Func<SearchRequest, SearchResponse> Search { get; set; } = _ => throw new InvalidOperationException("Поиск не задан.");
 
         public IReadOnlyList<RootDto> Roots { get; set; } = [];
+
+        public IReadOnlyList<EntryDto> Recent { get; set; } = [];
+
+        public IReadOnlyList<EntryDto> Pinned { get; set; } = [];
 
         public IndexStatusDto Status { get; set; } = new(IndexerState.Idle, false, []);
 
@@ -189,6 +265,10 @@ public sealed class ApiSearchServiceTests
                     return Task.FromResult(Search(LastRequest));
                 case nameof(IDiskAppApi.GetRootsAsync):
                     return Task.FromResult(Roots);
+                case nameof(IDiskAppApi.GetRecentAsync):
+                    return Task.FromResult(Recent);
+                case nameof(IDiskAppApi.GetPinnedAsync):
+                    return Task.FromResult(Pinned);
                 case nameof(IDiskAppApi.GetIndexStatusAsync):
                     return Task.FromResult(Status);
                 case nameof(IDiskAppApi.OpenAsync):

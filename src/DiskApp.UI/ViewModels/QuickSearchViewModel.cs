@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;
@@ -17,7 +18,8 @@ namespace DiskApp.UI.ViewModels;
 /// </summary>
 /// <remarks>
 /// Запрос выполняется с задержкой <see cref="DebounceDelay"/> после последнего ввода; предыдущий запрос отменяется,
-/// а устаревший ответ отбрасывается. Пустой запрос показывает недавно открытые файлы.
+/// а устаревший ответ отбрасывается. Пустой запрос показывает подборку по секциям: недавно открытые, закреплённые,
+/// недавно изменённые; запись показывается только в первой секции, где встретилась.
 /// </remarks>
 public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 {
@@ -26,6 +28,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     private readonly ISearchService _search;
     private readonly Func<DateTimeOffset> _clock;
     private CancellationTokenSource? _pending;
+    private IndexStatus? _status;
 
     /// <summary>
     /// Создаёт ViewModel и сразу загружает недавние файлы (<see cref="PendingRefresh"/>).
@@ -49,7 +52,6 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
         Query = string.Empty;
         StatusText = string.Empty;
-        SectionHeader = string.Empty;
         SelectedIndex = -1;
         DebounceDelay = TimeSpan.FromMilliseconds(60);
         PendingRefresh = RefreshAsync();
@@ -64,8 +66,11 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// <summary>Пауза между последним вводом и запросом; в тестах можно обнулить.</summary>
     public TimeSpan DebounceDelay { get; set; }
 
-    /// <summary>Результаты текущего запроса или недавние файлы при пустом запросе.</summary>
+    /// <summary>Результаты текущего запроса или подборка при пустом запросе — только файлы, без заголовков.</summary>
     public ObservableCollection<SearchHit> Results { get; } = [];
+
+    /// <summary>Строки списка: <see cref="SearchHit"/> и заголовки секций <see cref="ResultSectionHeader"/>.</summary>
+    public ObservableCollection<object> Rows { get; } = [];
 
     /// <summary>Последний запущенный запрос; завершается, когда результаты показаны или запрос отменён.</summary>
     public Task PendingRefresh { get; private set; }
@@ -74,19 +79,14 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     [ObservableProperty]
     public partial string Query { get; set; }
 
-    /// <summary>Индекс выбранной строки; −1, если список пуст.</summary>
+    /// <summary>Индекс выбранного результата в <see cref="Results"/>; −1, если список пуст.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SelectedResult))]
+    [NotifyPropertyChangedFor(nameof(SelectedResult), nameof(SelectedRow))]
     public partial int SelectedIndex { get; set; }
 
     /// <summary>Строка состояния: количество результатов и время, либо подсказка.</summary>
     [ObservableProperty]
     public partial string StatusText { get; set; }
-
-    /// <summary>Заголовок секции над списком, например «Недавно открытые»; пусто для результатов поиска.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSectionHeader))]
-    public partial string SectionHeader { get; set; }
 
     /// <summary>Идёт запрос.</summary>
     [ObservableProperty]
@@ -107,8 +107,36 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// <summary>Выбранная строка или <c>null</c>.</summary>
     public SearchHit? SelectedResult => SelectedIndex >= 0 && SelectedIndex < Results.Count ? Results[SelectedIndex] : null;
 
-    /// <summary>Есть ли заголовок секции.</summary>
-    public bool HasSectionHeader => SectionHeader.Length > 0;
+    /// <summary>
+    /// Выбранная строка списка для привязки <c>SelectedItem</c>: заголовки секций не выбираются, сброс выделения
+    /// при перестроении списка игнорируется.
+    /// </summary>
+    public object? SelectedRow
+    {
+        get => SelectedResult;
+        set
+        {
+            if (value is SearchHit hit && Results.IndexOf(hit) is >= 0 and var index)
+            {
+                SelectedIndex = index;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Повторяет последний запрос — кнопка «Повторить» при ошибке связи с сервером.
+    /// </summary>
+    [RelayCommand]
+    public Task RetryAsync() => ActivateAsync();
+
+    /// <summary>
+    /// Окно поиска показано: подборка или результаты перечитываются — индекс мог измениться, пока окно было скрыто.
+    /// </summary>
+    public Task ActivateAsync()
+    {
+        PendingRefresh = RefreshAsync();
+        return PendingRefresh;
+    }
 
     /// <summary>
     /// Перезапускает запрос для текущего текста, отменяя предыдущий.
@@ -137,14 +165,22 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
             if (query.Length == 0)
             {
-                var recent = await _search.GetRecentAsync(token);
+                var sections = await _search.GetSuggestionsAsync(token);
                 var status = await _search.GetIndexStatusAsync(token);
                 token.ThrowIfCancellationRequested();
-                ShowRecent(recent, status);
+                _status = status;
+                ShowSuggestions(sections, status);
             }
             else
             {
+                // Пока идёт индексация, состояние обновляется вместе с поиском, чтобы строка показывала ход; потом — нет.
+                var statusTask = _status is { IsIndexing: true } ? _search.GetIndexStatusAsync(token) : null;
                 var result = await _search.SearchAsync(query, token);
+                if (statusTask is not null)
+                {
+                    _status = await statusTask;
+                }
+
                 token.ThrowIfCancellationRequested();
                 ShowSearchResult(result);
             }
@@ -255,12 +291,24 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         ShowEmptyState = false;
     }
 
-    private void ShowRecent(IReadOnlyList<FileEntry> recent, IndexStatus status)
+    private void ShowSuggestions(IReadOnlyList<ResultSection> sections, IndexStatus status)
     {
         HasError = false;
-        ReplaceResults(recent, string.Empty);
-        SectionHeader = recent.Count > 0 ? "Недавно открытые" : string.Empty;
-        StatusText = $"{Formatting.Count(status.TotalEntries, "файл", "файла", "файлов")} в индексе · начните вводить имя";
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var grouped = new List<(string Title, IReadOnlyList<FileEntry> Entries)>();
+        foreach (var section in sections)
+        {
+            var entries = section.Entries.Where(entry => seen.Add(entry.FullPath)).ToArray();
+            if (entries.Length > 0)
+            {
+                grouped.Add((section.Title, entries));
+            }
+        }
+
+        ReplaceResults(grouped, string.Empty);
+        var total = Formatting.Count(status.TotalEntries, "файл", "файла", "файлов") + " в индексе";
+        StatusText = status.IsIndexing ? $"{status.DescribeIndexing()} · {total}" : $"{total} · начните вводить имя";
         ShowEmptyState = false;
         ShowResults = Results.Count > 0;
     }
@@ -268,8 +316,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     private void ShowSearchResult(SearchResult result)
     {
         HasError = false;
-        ReplaceResults(result.Entries, Query.Trim());
-        SectionHeader = string.Empty;
+        ReplaceResults([(string.Empty, result.Entries)], Query.Trim());
 
         if (result.TotalCount == 0)
         {
@@ -281,20 +328,35 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
         var elapsed = Math.Max(1, (int)Math.Round(result.Elapsed.TotalMilliseconds));
         var count = Formatting.Count(result.TotalCount, "результат", "результата", "результатов");
-        StatusText = (result.IsTotalApproximate ? count.Replace(" ", "+ ", StringComparison.Ordinal) : count) + $" · {elapsed} мс";
+        StatusText = (result.IsTotalApproximate ? count.Replace(" ", "+ ", StringComparison.Ordinal) : count) + $" · {elapsed} мс"
+            + (_status is { IsIndexing: true } status ? " · " + status.DescribeIndexing() : string.Empty);
         ShowEmptyState = false;
         ShowResults = true;
     }
 
-    private void ReplaceResults(IReadOnlyList<FileEntry> entries, string highlight)
+    private void ReplaceResults(IReadOnlyList<(string Title, IReadOnlyList<FileEntry> Entries)> sections, string highlight)
     {
         var now = _clock();
         Results.Clear();
-        for (var i = 0; i < entries.Count; i++)
+        Rows.Clear();
+        foreach (var (title, entries) in sections)
         {
-            Results.Add(new SearchHit(entries[i], highlight, i < NumberedResults ? i + 1 : 0, now));
+            if (title.Length > 0)
+            {
+                Rows.Add(new ResultSectionHeader(title));
+            }
+
+            foreach (var entry in entries)
+            {
+                var hit = new SearchHit(entry, highlight, Results.Count < NumberedResults ? Results.Count + 1 : 0, now);
+                Results.Add(hit);
+                Rows.Add(hit);
+            }
         }
 
+        // Список перестроен: выделение в нём сброшено, даже если индекс прежний — оповестить явно.
         SelectedIndex = Results.Count > 0 ? 0 : -1;
+        OnPropertyChanged(nameof(SelectedResult));
+        OnPropertyChanged(nameof(SelectedRow));
     }
 }

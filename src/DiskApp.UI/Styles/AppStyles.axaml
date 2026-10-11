@@ -56,6 +56,12 @@
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="CornerRadius" Value="4" />
     </Style>
+    <!-- Строка-заголовок секции: не выбирается и не реагирует на мышь -->
+    <Style Selector="ListBox.results ListBoxItem.header">
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
 
     <!-- Поле быстрого поиска: крупный шрифт -->
     <Style Selector="TextBox.search">

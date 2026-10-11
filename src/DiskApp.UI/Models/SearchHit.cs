@@ -65,6 +65,15 @@ public sealed class SearchHit
 
     /// <summary>Теги через точку с запятой для подписи.</summary>
     public string TagsText => string.Join(" · ", Entry.Tags);
+
+    /// <summary>Файл сейчас не открыть мгновенно: корень недоступен или содержимое только в облаке.</summary>
+    public bool IsUnavailable => Entry.IsOffline || Entry.IsCloudOnly;
+
+    /// <summary>Подсказка к значку доступности.</summary>
+    public string AvailabilityText => Entry.IsOffline ? "Диск недоступен" : Entry.IsCloudOnly ? "Только в облаке: откроется после загрузки" : string.Empty;
+
+    /// <summary>Значок доступности: отключённый диск или облако.</summary>
+    public Symbol AvailabilitySymbol => Entry.IsOffline ? Symbol.PlugDisconnected : Symbol.Cloud;
 }
 
 /// <summary>

@@ -157,11 +157,13 @@ public sealed partial class MainViewModel : ViewModelBase
 
         IsIndexing = status.IsIndexing;
         IndexStatusText = status.Describe(_clock());
-        IndexStatusShort = status.IsIndexing ? $"Индексация {Text.Formatting.Percent(status.Progress)}" : "Индекс актуален";
+        IndexStatusShort = status.IsIndexing ? Capitalize(status.DescribeIndexing()) : "Индекс актуален";
 
         if (Pages.FirstOrDefault(page => page.Key == PageKeys.Inbox) is { } inbox)
         {
             inbox.BadgeValue = status.InboxCount;
         }
     }
+
+    private static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
 }

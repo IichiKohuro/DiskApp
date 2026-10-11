@@ -89,7 +89,7 @@ public static class SampleData
             Entry(PhotosRoot, @"2026\10\IMG_4522.jpg", FileKind.Image, (long)(3.4 * Megabyte), Days(1)),
             Entry(PhotosRoot, @"2026\09\Крым\DSC_0871.jpg", FileKind.Image, 5 * Megabyte, Days(25), tags: "отпуск"),
             Entry(PhotosRoot, @"2026\09\Крым\DSC_0872.jpg", FileKind.Image, (long)(5.1 * Megabyte), Days(25), tags: "отпуск"),
-            Entry(PhotosRoot, @"2026\09\Крым\DJI_0043.mp4", FileKind.Video, 780 * Megabyte, Days(25), tags: "отпуск"),
+            Entry(PhotosRoot, @"2026\09\Крым\DJI_0043.mp4", FileKind.Video, 780 * Megabyte, Days(25), tags: "отпуск") with { IsCloudOnly = true },
             Entry(PhotosRoot, @"2025\12\Новый год\IMG_3310.jpg", FileKind.Image, 4 * Megabyte, Days(290)),
             Entry(PhotosRoot, @"Избранное", FileKind.Folder, 0, Days(3), favorite: true),
             Entry(PhotosRoot, @"Portraits\Анна.png", FileKind.Image, (long)(2.2 * Megabyte), Days(120)),

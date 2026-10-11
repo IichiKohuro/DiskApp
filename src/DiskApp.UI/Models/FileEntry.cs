@@ -90,6 +90,12 @@ public sealed record FileEntry
     /// <summary>Теги пользователя.</summary>
     public IReadOnlyList<string> Tags { get; init; } = [];
 
+    /// <summary>Облачная заглушка (OneDrive и т. п.): содержимого на диске нет, открытие его скачает.</summary>
+    public bool IsCloudOnly { get; init; }
+
+    /// <summary>Корень файла сейчас недоступен: диск отключён или пропала сеть.</summary>
+    public bool IsOffline { get; init; }
+
     /// <summary>Имя файла с расширением.</summary>
     public string Name => PathText.FileName(FullPath);
 

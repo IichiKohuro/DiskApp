@@ -3,9 +3,8 @@ using DiskApp.UI.Models;
 namespace DiskApp.UI.Services;
 
 /// <summary>
-/// Источник данных для поиска и главной страницы. Сейчас единственная реализация — <see cref="SampleSearchService"/>
-/// с макетными данными; в этапе 5 её заменит обёртка над <c>IDiskAppApi</c> из <c>DiskApp.Client</c>,
-/// а интерфейс останется прежним.
+/// Источник данных для поиска и главной страницы: <see cref="ApiSearchService"/> поверх клиента API в приложении,
+/// <see cref="SampleSearchService"/> с макетными данными в превью и тестах.
 /// </summary>
 public interface ISearchService
 {
@@ -18,6 +17,12 @@ public interface ISearchService
     /// Недавно открытые записи, самые свежие первыми.
     /// </summary>
     Task<IReadOnlyList<FileEntry>> GetRecentAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Подборка для пустого запроса: секции «Недавно открытые», «Закреплённые», «Недавно изменённые» (пустые секции
+    /// пропускаются). Одна запись может встретиться в нескольких секциях; повторы убирает тот, кто показывает.
+    /// </summary>
+    Task<IReadOnlyList<ResultSection>> GetSuggestionsAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Состояние индекса.

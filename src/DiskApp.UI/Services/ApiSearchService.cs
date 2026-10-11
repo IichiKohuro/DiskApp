@@ -13,16 +13,17 @@ namespace DiskApp.UI.Services;
 
 /// <summary>
 /// <see cref="ISearchService"/> поверх клиента API (PLAN.md, этап 7.1): поиск, подборка для пустого запроса
-/// (избранное, недавно открытые и изменённые), состояние индекса и открытие файла через сервер — он же записывает
-/// открытие и запрос в историю. Подписи корней берутся из API и кэшируются.
+/// (недавно открытые, закреплённые, недавно изменённые), состояние индекса и открытие файла через сервер — он же
+/// записывает открытие и запрос в историю. Подписи и доступность корней берутся из API и кэшируются.
 /// </summary>
 public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
 {
     private const int PageSize = 50;
     private const int RecentCount = 20;
+    private const int SectionCount = 8;
 
     private readonly IDiskAppApi _api = api ?? throw new ArgumentNullException(nameof(api));
-    private readonly ConcurrentDictionary<long, string> _rootLabels = new();
+    private readonly ConcurrentDictionary<long, RootInfo> _roots = new();
 
     /// <inheritdoc />
     public async Task<SearchResult> SearchAsync(string query, CancellationToken cancellationToken)
@@ -33,11 +34,47 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Пока через DiskApp ничего не открывали (новая установка), отдаёт подборку сервера для пустого запроса:
+    /// избранное и недавно изменённые, чтобы главная страница не была пустой.
+    /// </remarks>
     public async Task<IReadOnlyList<FileEntry>> GetRecentAsync(CancellationToken cancellationToken)
     {
-        // Пустой запрос сервер отвечает подборкой: избранное, недавно открытые, затем недавно изменённые.
-        var response = await _api.SearchAsync(new SearchRequest { Q = string.Empty, Limit = RecentCount }, cancellationToken).ConfigureAwait(false);
-        return await ToEntriesAsync(response.Items, cancellationToken).ConfigureAwait(false);
+        var recent = await _api.GetRecentAsync(RecentCount, cancellationToken).ConfigureAwait(false);
+        if (recent.Count == 0)
+        {
+            recent = (await _api.SearchAsync(new SearchRequest { Q = string.Empty, Limit = RecentCount }, cancellationToken).ConfigureAwait(false)).Items;
+        }
+
+        return await ToEntriesAsync(recent, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<ResultSection>> GetSuggestionsAsync(CancellationToken cancellationToken)
+    {
+        var pinned = _api.GetPinnedAsync(cancellationToken);
+        var recent = _api.GetRecentAsync(SectionCount, cancellationToken);
+        var modified = _api.SearchAsync(new SearchRequest { Q = string.Empty, Sort = SearchSort.Modified, Descending = true, Limit = SectionCount * 2 }, cancellationToken);
+        await Task.WhenAll(pinned, recent, modified).ConfigureAwait(false);
+
+        var modifiedFiles = (await modified.ConfigureAwait(false)).Items.Where(static item => !item.IsDirectory).Take(SectionCount).ToArray();
+        (string Title, IReadOnlyList<EntryDto> Items)[] sections =
+        [
+            (SectionTitles.RecentlyOpened, await recent.ConfigureAwait(false)),
+            (SectionTitles.Pinned, await pinned.ConfigureAwait(false)),
+            (SectionTitles.RecentlyModified, modifiedFiles),
+        ];
+
+        var result = new List<ResultSection>(sections.Length);
+        foreach (var (title, items) in sections)
+        {
+            if (items.Count > 0)
+            {
+                result.Add(new ResultSection(title, await ToEntriesAsync(items, cancellationToken).ConfigureAwait(false)));
+            }
+        }
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -46,7 +83,7 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
         var status = await _api.GetIndexStatusAsync(cancellationToken).ConfigureAwait(false);
         foreach (var root in status.Roots)
         {
-            _rootLabels[root.RootId] = root.Label;
+            _roots[root.RootId] = new RootInfo(root.Label, root.Status == RootStatus.Offline);
         }
 
         return new IndexStatus
@@ -54,6 +91,10 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
             TotalEntries = status.TotalEntries ?? 0,
             Roots = status.Roots.Select(static root => root.Label).ToArray(),
             IsIndexing = status.State == IndexerState.Indexing,
+
+            // Объём первого сканирования заранее неизвестен: показываем, сколько уже просмотрено.
+            Progress = null,
+            Scanned = status.Roots.Sum(static root => root.Progress?.Scanned ?? 0),
             LastUpdated = status.Roots.Select(static root => root.LastScanUtc).OfType<DateTimeOffset>().DefaultIfEmpty(DateTimeOffset.Now).Max(),
         };
     }
@@ -68,7 +109,10 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
     /// <summary>
     /// Запись API в модель интерфейса.
     /// </summary>
-    public static FileEntry ToEntry(EntryDto dto, string rootLabel)
+    /// <param name="dto">Запись API.</param>
+    /// <param name="rootLabel">Подпись корня.</param>
+    /// <param name="rootOffline">Корень сейчас недоступен.</param>
+    public static FileEntry ToEntry(EntryDto dto, string rootLabel, bool rootOffline = false)
     {
         ArgumentNullException.ThrowIfNull(dto);
 
@@ -84,6 +128,8 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
             Tags = dto.Tags?.Select(static tag => tag.Name).ToArray() ?? [],
             IconKey = dto.IconKey,
             NameHighlights = dto.NameHighlights?.Select(static range => new HighlightRange(range.Start, range.Length)).ToArray(),
+            IsCloudOnly = dto.IsCloudPlaceholder,
+            IsOffline = rootOffline,
         };
     }
 
@@ -105,14 +151,18 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
 
     private async Task<IReadOnlyList<FileEntry>> ToEntriesAsync(IReadOnlyList<EntryDto> items, CancellationToken cancellationToken)
     {
-        if (items.Any(item => !_rootLabels.ContainsKey(item.RootId)))
+        if (items.Any(item => !_roots.ContainsKey(item.RootId)))
         {
             foreach (var root in await _api.GetRootsAsync(cancellationToken).ConfigureAwait(false))
             {
-                _rootLabels[root.Id] = root.Label;
+                _roots[root.Id] = new RootInfo(root.Label, root.Status == RootStatus.Offline);
             }
         }
 
-        return items.Select(item => ToEntry(item, _rootLabels.GetValueOrDefault(item.RootId, string.Empty))).ToArray();
+        return items.Select(item => _roots.TryGetValue(item.RootId, out var root)
+            ? ToEntry(item, root.Label, root.IsOffline)
+            : ToEntry(item, string.Empty)).ToArray();
     }
+
+    private readonly record struct RootInfo(string Label, bool IsOffline);
 }

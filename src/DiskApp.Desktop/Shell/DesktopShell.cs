@@ -101,7 +101,17 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     }
 
     /// <inheritdoc />
-    public void ShowQuickSearch() => _quickSearch?.ShowAt(CursorPosition());
+    public void ShowQuickSearch()
+    {
+        if (_quickSearch is null)
+        {
+            return;
+        }
+
+        // Индекс мог измениться, пока окно было скрыто: подборка и результаты перечитываются при каждом показе.
+        _ = _services.GetRequiredService<QuickSearchViewModel>().ActivateAsync();
+        _quickSearch.ShowAt(CursorPosition());
+    }
 
     /// <inheritdoc />
     public void ShowMainWindow()

@@ -8,10 +8,10 @@
              x:Class="DiskApp.UI.Views.QuickSearchView"
              x:DataType="vm:QuickSearchViewModel"
              Design.DataContext="{x:Static vm:DesignData.QuickSearch}">
-    <!-- Содержимое быстрого поиска: поле ввода, заголовок секции, список результатов или «ничего не найдено»,
-         строка состояния. Клавиши обрабатываются в code-behind на этапе туннелирования, чтобы стрелки
+    <!-- Содержимое быстрого поиска: поле ввода, список результатов (при пустом запросе — по секциям) или «ничего
+         не найдено», строка состояния. Клавиши обрабатываются в code-behind на этапе туннелирования, чтобы стрелки
          управляли списком, а фокус оставался в поле ввода. -->
-    <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*,Auto">
         <TextBox Grid.Row="0"
                  x:Name="QueryBox"
                  Classes="search"
@@ -26,18 +26,12 @@
             </TextBox.InnerLeftContent>
         </TextBox>
 
-        <TextBlock Grid.Row="1"
-                   Classes="section"
-                   Margin="6,10,0,2"
-                   Text="{Binding SectionHeader}"
-                   IsVisible="{Binding HasSectionHeader}" />
-
-        <Panel Grid.Row="2" Margin="0,4,0,0">
+        <Panel Grid.Row="1" Margin="0,8,0,0">
             <ListBox x:Name="ResultsList"
                      Classes="results"
-                     ItemsSource="{Binding Results}"
-                     SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
-                     ItemTemplate="{StaticResource FileHitTemplate}"
+                     ItemsSource="{Binding Rows}"
+                     SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                     ItemTemplate="{StaticResource ResultRowTemplate}"
                      SelectionMode="Single"
                      IsVisible="{Binding ShowResults}" />
             <StackPanel IsVisible="{Binding ShowEmptyState}"
@@ -52,15 +46,32 @@
             </StackPanel>
         </Panel>
 
-        <DockPanel Grid.Row="3" Margin="6,8,6,0">
+        <DockPanel Grid.Row="2" Margin="6,8,6,0">
             <TextBlock DockPanel.Dock="Right"
                        Classes="tertiary"
                        FontSize="12"
                        Margin="12,0,0,0"
+                       VerticalAlignment="Center"
                        Text="↑↓ выбрать · Enter открыть · Esc закрыть" />
+            <Button DockPanel.Dock="Right"
+                    Margin="8,0,0,0"
+                    Padding="10,2"
+                    FontSize="12"
+                    Content="Повторить"
+                    Command="{Binding RetryCommand}"
+                    IsVisible="{Binding HasError}" />
+            <ic:SymbolIcon DockPanel.Dock="Left"
+                           Symbol="ErrorCircle"
+                           FontSize="14"
+                           Margin="0,0,6,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                           IsVisible="{Binding HasError}" />
             <TextBlock Classes="secondary"
                        FontSize="12"
+                       VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis"
+                       ToolTip.Tip="{Binding StatusText}"
                        Text="{Binding StatusText}" />
         </DockPanel>
     </Grid>

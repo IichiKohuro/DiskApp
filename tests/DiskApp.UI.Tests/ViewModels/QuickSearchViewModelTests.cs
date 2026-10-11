@@ -13,20 +13,57 @@ public sealed class QuickSearchViewModelTests
     private static readonly DateTimeOffset Now = new(2026, 10, 10, 15, 0, 0, TimeSpan.FromHours(3));
 
     [Fact]
-    public async Task Constructor_EmptyQuery_ShowsRecentFilesWithHeader()
+    public async Task Constructor_EmptyQuery_ShowsSectionsWithoutDuplicates()
     {
         // Arrange & Act
         using var viewModel = Create();
         await viewModel.PendingRefresh;
 
         // Assert
-        viewModel.SectionHeader.ShouldBe("Недавно открытые");
-        viewModel.Results.Count.ShouldBe(6);
+        viewModel.Rows.OfType<ResultSectionHeader>().Select(static header => header.Title)
+            .ShouldBe(["Недавно открытые", "Закреплённые", "Недавно изменённые"]);
+        viewModel.Rows[0].ShouldBeOfType<ResultSectionHeader>();
         viewModel.Results[0].Entry.Name.ShouldBe("MainView.axaml");
+        viewModel.Results.Select(static hit => hit.Entry.FullPath).ShouldBeUnique("запись показывается только в первой секции");
+        viewModel.Results.Count(static hit => hit.Entry.Name == "Бюджет 2026.xlsx").ShouldBe(1);
+        viewModel.Results.Where(static hit => hit.HasNumber).Select(static hit => hit.Number).ShouldBe([1, 2, 3, 4, 5, 6, 7, 8, 9]);
         viewModel.SelectedIndex.ShouldBe(0);
+        viewModel.SelectedRow.ShouldBeSameAs(viewModel.Results[0]);
         viewModel.ShowResults.ShouldBeTrue();
         viewModel.ShowEmptyState.ShouldBeFalse();
         viewModel.StatusText.ShouldContain("в индексе");
+    }
+
+    [Fact]
+    public async Task SelectedRow_HeaderOrNull_KeepsSelection()
+    {
+        // Arrange
+        using var viewModel = Create();
+        await viewModel.PendingRefresh;
+        viewModel.MoveSelection(2);
+
+        // Act
+        viewModel.SelectedRow = viewModel.Rows.OfType<ResultSectionHeader>().First();
+        viewModel.SelectedRow = null;
+
+        // Assert
+        viewModel.SelectedIndex.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task SelectedRow_Hit_SelectsItsResultIndex()
+    {
+        // Arrange
+        using var viewModel = Create();
+        await viewModel.PendingRefresh;
+        var target = viewModel.Results[7];
+
+        // Act
+        viewModel.SelectedRow = target;
+
+        // Assert
+        viewModel.SelectedIndex.ShouldBe(7);
+        viewModel.SelectedResult.ShouldBeSameAs(target);
     }
 
     [Fact]
@@ -45,7 +82,7 @@ public sealed class QuickSearchViewModelTests
         viewModel.Results[0].Entry.Name.ShouldBe("Отчёт за 3 квартал 2026.docx", "свежий файл выше старого");
         viewModel.Results[0].Highlight.ShouldBe("ОТЧЁТ");
         viewModel.Results[0].Number.ShouldBe(1);
-        viewModel.SectionHeader.ShouldBeEmpty();
+        viewModel.Rows.ShouldNotContain(row => row is ResultSectionHeader, "у результатов поиска нет секций");
         viewModel.StatusText.ShouldStartWith("2 результата");
     }
 
@@ -129,8 +166,12 @@ public sealed class QuickSearchViewModelTests
         // Act & Assert
         viewModel.SelectNumber(3).ShouldBeTrue();
         viewModel.SelectedIndex.ShouldBe(2);
-        viewModel.SelectNumber(9).ShouldBeFalse("в недавних всего шесть строк");
-        viewModel.SelectedIndex.ShouldBe(2);
+        viewModel.Query = "ОТЧЁТ";
+        await viewModel.PendingRefresh;
+        viewModel.SelectNumber(2).ShouldBeTrue();
+        viewModel.SelectedIndex.ShouldBe(1);
+        viewModel.SelectNumber(3).ShouldBeFalse("найдено всего два файла");
+        viewModel.SelectedIndex.ShouldBe(1);
     }
 
     [Fact]
@@ -150,7 +191,7 @@ public sealed class QuickSearchViewModelTests
         // Assert
         viewModel.Query.ShouldBeEmpty();
         closeRequests.ShouldBe(0);
-        viewModel.SectionHeader.ShouldBe("Недавно открытые");
+        viewModel.Rows[0].ShouldBe(new ResultSectionHeader("Недавно открытые"));
     }
 
     [Fact]
@@ -253,6 +294,47 @@ public sealed class QuickSearchViewModelTests
     }
 
     [Fact]
+    public async Task RetryAsync_AfterServerError_RepeatsQuery()
+    {
+        // Arrange
+        var search = new FlakySearchService { FailSearch = true };
+        using var viewModel = new QuickSearchViewModel(search, static () => Now) { DebounceDelay = TimeSpan.Zero };
+        viewModel.Query = "бюджет";
+        await viewModel.PendingRefresh;
+        search.FailSearch = false;
+
+        // Act
+        await viewModel.RetryCommand.ExecuteAsync(null);
+
+        // Assert
+        viewModel.HasError.ShouldBeFalse();
+        viewModel.Results[0].Entry.Name.ShouldBe("Бюджет 2026.xlsx");
+    }
+
+    [Fact]
+    public async Task StatusText_WhileIndexing_ShowsProgressForSuggestionsAndSearch()
+    {
+        // Arrange
+        var search = new FlakySearchService
+        {
+            Status = new IndexStatus { TotalEntries = 500, Roots = ["D:"], IsIndexing = true, Scanned = 12_345 },
+        };
+        using var viewModel = new QuickSearchViewModel(search, static () => Now) { DebounceDelay = TimeSpan.Zero };
+        await viewModel.PendingRefresh;
+        var suggestionsText = viewModel.StatusText;
+
+        // Act
+        search.Status = search.Status with { Progress = 0.43 };
+        viewModel.Query = "бюджет";
+        await viewModel.PendingRefresh;
+
+        // Assert
+        suggestionsText.ShouldStartWith("индексация: просмотрено 12");
+        suggestionsText.ShouldContain("500 файлов в индексе");
+        viewModel.StatusText.ShouldEndWith("· индексация 43 %");
+    }
+
+    [Fact]
     public async Task OpenSelectedAsync_WithQuery_PassesTrimmedQueryToService()
     {
         // Arrange
@@ -282,6 +364,8 @@ public sealed class QuickSearchViewModelTests
 
         public bool FailOpen { get; set; }
 
+        public IndexStatus? Status { get; set; }
+
         public string? LastOpenQuery { get; private set; }
 
         public Task<SearchResult> SearchAsync(string query, CancellationToken cancellationToken)
@@ -289,7 +373,10 @@ public sealed class QuickSearchViewModelTests
 
         public Task<IReadOnlyList<FileEntry>> GetRecentAsync(CancellationToken cancellationToken) => _inner.GetRecentAsync(cancellationToken);
 
-        public Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken) => _inner.GetIndexStatusAsync(cancellationToken);
+        public Task<IReadOnlyList<ResultSection>> GetSuggestionsAsync(CancellationToken cancellationToken) => _inner.GetSuggestionsAsync(cancellationToken);
+
+        public Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken)
+            => Status is { } status ? Task.FromResult(status) : _inner.GetIndexStatusAsync(cancellationToken);
 
         public Task OpenAsync(FileEntry entry, string? query, CancellationToken cancellationToken)
         {
