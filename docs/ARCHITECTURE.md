@@ -404,7 +404,9 @@ Endpoints проверяют, что все пути лежат в добавл�
 
 С этапа 7 (2026-10-11) окна работают с настоящим индексом: `ApiSearchService` переводит ответы `IDiskAppApi` в модели интерфейса (подсветка диапазонами сервера, подписи и доступность корней, ход индексации), пустой запрос показывает секции «Недавно открытые», «Закреплённые», «Недавно изменённые» строками-заголовками, которые не выбираются. Действия над файлом — `IFileActions` (`ApiFileActions`): действия оболочки идут запросами к серверу, корзина и переименование — операциями его очереди с ожиданием итога, буфер обмена — `IClipboardService`, который десктоп реализует через оболочку Windows (`ShellClipboardService`). Клавиши быстрого поиска связаны с командами в одном месте — `QuickSearchKeyMap` (клавиши редактирования остаются полю запроса); `F2` и `Del` открывают панель под списком (новое имя, подтверждение корзины), итог действия показывает `InfoBar` в окне поиска, контекстное меню строки открывается правой кнопкой, `Tab` или `Shift+F10`.
 
-Состав оболочки и интерфейса после этапа 7.3:
+Иконки строк показывает `FileIcon`: растр берётся из `IIconCache` (`ApiIconCache` — PNG с `/icon` и `/thumbnail`, LRU на 768 растров, одна загрузка на ключ), до загрузки и при отсутствии — заглушка FluentIcons по виду файла; у изображений и видео — миниатюра. Над результатами — чипы фильтров, которые переписывают текст запроса (`type:`, `modified:`, `root:`), под полем — подсказки сервера (`/suggest`) или история запросов; запрос `?` показывает справку (`SearchHelp`). Перетаскивание из списка — `DragDrop.DoDragDropAsync` с файлом (копия по умолчанию), файлы извне принимаются на строку-папку и копируются загрузкой через API.
+
+Состав оболочки и интерфейса после этапа 7:
 
 ```mermaid
 flowchart TB
@@ -447,7 +449,7 @@ flowchart TB
 | Интерфейс (Core) | Windows-реализация | Где живёт | Этап |
 |---|---|---|---|
 | `IPlatformShell` | `WindowsPlatformShell` на отдельном STA-потоке: `ShellExecuteEx` (через `Process.Start`), `SHOpenWithDialog`, `SHOpenFolderAndSelectItems`, `SHObjectProperties`, verb `runas`, корзина `SHFileOperation` с `FOF_ALLOWUNDO` (только локальные жёсткие диски — на сетевых и съёмных корзины нет, действие отклоняется), буфер Windows `CF_UNICODETEXT` и `CF_HDROP`. Регистрирует только десктоп; живые тесты — при `DISKAPP_SHELL_TESTS=1` | Infrastructure | есть (7.3) |
-| `IIconProvider` | `SHGetFileInfo`, `IShellItemImageFactory`, кэш PNG на диске | Infrastructure | 7 |
+| `IIconProvider` | `WindowsIconProvider`: иконка типа — `SHGetFileInfo` + `SHGetImageList` (16/32/48/256, у «jumbo» без своего кадра — обрезка), своя иконка и миниатюра — `IShellItemImageFactory`; PNG собственным кодировщиком (`Imaging/PngEncoder`), кэш в памяти (LRU) и PNG на диске в `cache\icons\v1` на неделю; иконки и миниатюры на разных STA-потоках | Infrastructure | есть (7.4) |
 | Горячая клавиша | `GlobalHotkey` + `MessageWindow`: `RegisterHotKey` с `MOD_NOREPEAT`, приём `WM_HOTKEY` собственным message-only окном (`CreateWindowEx` с `HWND_MESSAGE`); `Win32Properties` в Avalonia 12 нет. Цепочка сочетаний `Ctrl+Alt+D` → `F` → `Space` (ADR-0006), итог в `HotkeyStatus`; настраиваемое сочетание — этап 6.5 | Desktop | есть (0.6) |
 | Трей | Avalonia `TrayIcon` + `NativeMenu` (Открыть, Быстрый поиск, Настройки, Выход); щелчок переключает окно поиска | Desktop | есть (0.6) |
 | Одиночный экземпляр, IPC | `SingleInstanceGuard` (`Mutex` на пользователя и сеанс) + `InstanceServer`/`InstanceClient` (`NamedPipeServerStream`, `CurrentUserOnly`, строка JSON через source generator) | Desktop | есть (0.6) |
