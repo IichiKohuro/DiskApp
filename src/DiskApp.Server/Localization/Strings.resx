@@ -249,6 +249,12 @@
   <data name="SettingsEndpoints.EmptySettings" xml:space="preserve">
     <value>Пустые настройки.</value>
   </data>
+  <data name="SettingsEndpoints.FolderListedTwice" xml:space="preserve">
+    <value>Папка указана дважды.</value>
+  </data>
+  <data name="SettingsEndpoints.NoMoreThanFolders" xml:space="preserve">
+    <value>Не больше {0} папок.</value>
+  </data>
   <data name="SettingsEndpoints.NoMoreThanPlaces" xml:space="preserve">
     <value>Не больше {0} мест.</value>
   </data>

@@ -181,6 +181,10 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
         => SendAsync(HttpMethod.Post, ApiRoutes.V1.Operations, request, Json.OperationRequest, Json.OperationDto, cancellationToken);
 
     /// <inheritdoc />
+    public Task<OperationDto> SortFilesAsync(SortFilesRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Post, ApiRoutes.V1.SortingMove, request, Json.SortFilesRequest, Json.OperationDto, cancellationToken);
+
+    /// <inheritdoc />
     public Task<IReadOnlyList<OperationDto>> GetOperationsAsync(CancellationToken cancellationToken = default)
         => GetAsync(ApiRoutes.V1.Operations, Json.IReadOnlyListOperationDto, cancellationToken);
 

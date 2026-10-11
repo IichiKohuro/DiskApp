@@ -249,6 +249,12 @@
   <data name="SettingsEndpoints.EmptySettings" xml:space="preserve">
     <value>Empty settings.</value>
   </data>
+  <data name="SettingsEndpoints.FolderListedTwice" xml:space="preserve">
+    <value>The folder is listed twice.</value>
+  </data>
+  <data name="SettingsEndpoints.NoMoreThanFolders" xml:space="preserve">
+    <value>No more than {0} folders.</value>
+  </data>
   <data name="SettingsEndpoints.NoMoreThanPlaces" xml:space="preserve">
     <value>No more than {0} places.</value>
   </data>

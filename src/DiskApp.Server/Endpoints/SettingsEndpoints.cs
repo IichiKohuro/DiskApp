@@ -217,6 +217,9 @@ internal static partial class SettingsEndpoints
             errors["add.recentTargets"] = [L.F("SettingsEndpoints.NoMoreThanPlaces", AddSettings.RecentLimit)];
         }
 
+        ValidateSortingFolders(settings.Sorting.Inboxes, "sorting.inboxes", errors);
+        ValidateSortingFolders(settings.Sorting.WorkFolders, "sorting.workFolders", errors);
+
         for (var i = 0; i < settings.Indexing.Exclusions.Count; i++)
         {
             var rule = settings.Indexing.Exclusions[i];
@@ -234,5 +237,30 @@ internal static partial class SettingsEndpoints
         }
 
         return errors;
+    }
+
+    // Папки разбора (этап 17): полные пути без повторов, не больше SortingSettings.MaxFolders в списке.
+    private static void ValidateSortingFolders(IReadOnlyList<SortingFolderDto>? folders, string field, Dictionary<string, string[]> errors)
+    {
+        folders ??= [];
+        if (folders.Count > SortingSettings.MaxFolders)
+        {
+            errors[field] = [L.F("SettingsEndpoints.NoMoreThanFolders", SortingSettings.MaxFolders)];
+            return;
+        }
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < folders.Count; i++)
+        {
+            var path = folders[i].Path;
+            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathFullyQualified(path))
+            {
+                errors[$"{field}[{i}].path"] = [L.T("SettingsEndpoints.AFullFolderPathIsRequired")];
+            }
+            else if (!seen.Add(path.TrimEnd('\\', '/')))
+            {
+                errors[$"{field}[{i}].path"] = [L.T("SettingsEndpoints.FolderListedTwice")];
+            }
+        }
     }
 }

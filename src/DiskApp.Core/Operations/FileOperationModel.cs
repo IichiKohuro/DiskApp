@@ -160,7 +160,19 @@ public sealed record FileOperationInfo(
 {
     /// <summary>Операция ещё не завершена.</summary>
     public bool IsActive => State is OperationState.Queued or OperationState.Running or OperationState.WaitingDecision;
+
+    /// <summary>
+    /// Что куда перенесено или переименовано (с учётом «оставить оба»); заполняется, когда операция завершилась.
+    /// </summary>
+    public IReadOnlyList<MovedItem> Moved { get; init; } = [];
 }
+
+/// <summary>
+/// Перенесённый элемент: прежний и новый путь.
+/// </summary>
+/// <param name="From">Откуда.</param>
+/// <param name="To">Куда, с итоговым именем.</param>
+public sealed record MovedItem(string From, string To);
 
 /// <summary>
 /// Параметры сервиса операций.

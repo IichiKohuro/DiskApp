@@ -195,6 +195,24 @@
   <data name="ScanPipeline.TheRootIsUnavailableTheIndex" xml:space="preserve">
     <value>The root is unavailable: the index is kept unchanged.</value>
   </data>
+  <data name="Sorting.CannotCreateFolder" xml:space="preserve">
+    <value>Could not create the folder “{0}”: {1}</value>
+  </data>
+  <data name="Sorting.IntoItself" xml:space="preserve">
+    <value>A folder cannot be moved into itself.</value>
+  </data>
+  <data name="Sorting.NothingToMove" xml:space="preserve">
+    <value>No files are selected.</value>
+  </data>
+  <data name="Sorting.TagTooLong" xml:space="preserve">
+    <value>A tag is longer than {0} characters.</value>
+  </data>
+  <data name="Sorting.TooManyItems" xml:space="preserve">
+    <value>No more than {0} items can be moved at once.</value>
+  </data>
+  <data name="Sorting.TooManyTags" xml:space="preserve">
+    <value>No more than {0} tags at once.</value>
+  </data>
   <data name="Sqlite.DiskFull" xml:space="preserve">
     <value>The disk with the index database is out of space</value>
   </data>

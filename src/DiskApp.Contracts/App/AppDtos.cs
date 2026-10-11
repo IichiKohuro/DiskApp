@@ -63,6 +63,29 @@ public sealed record SettingsDto
 
     /// <summary>Знакомство с приложением.</summary>
     public OnboardingSettingsDto Onboarding { get; set; } = new();
+
+    /// <summary>Разбор: склады и рабочие папки.</summary>
+    public SortingSettingsDto Sorting { get; set; } = new();
+}
+
+/// <summary>Разбор входящих: склады и рабочие папки в порядке показа (не больше 50 в каждом списке).</summary>
+public sealed record SortingSettingsDto
+{
+    /// <summary>Склады — папки, куда сыплются файлы.</summary>
+    public IReadOnlyList<SortingFolderDto> Inboxes { get; set; } = [];
+
+    /// <summary>Рабочие папки; первые девять — на клавишах 1–9.</summary>
+    public IReadOnlyList<SortingFolderDto> WorkFolders { get; set; } = [];
+}
+
+/// <summary>Папка разбора.</summary>
+public sealed record SortingFolderDto
+{
+    /// <summary>Полный путь.</summary>
+    public string Path { get; set; } = string.Empty;
+
+    /// <summary>Подпись; пусто — имя папки.</summary>
+    public string? Label { get; set; }
 }
 
 /// <summary>Знакомство с приложением.</summary>

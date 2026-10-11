@@ -104,5 +104,9 @@
   "onboarding": {
     "completed": false,
     "tipsShown": []
+  },
+  "sorting": {
+    "inboxes": [],
+    "workFolders": []
   }
 }

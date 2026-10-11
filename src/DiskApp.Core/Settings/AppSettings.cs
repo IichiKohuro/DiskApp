@@ -48,6 +48,53 @@ public sealed record AppSettings
 
     /// <summary>Знакомство с приложением: мастер первого запуска, подсказки, «Что нового».</summary>
     public OnboardingSettings Onboarding { get; set; } = new();
+
+    /// <summary>Разбор: склады, куда сыплются файлы, и рабочие папки, куда их раскладывают.</summary>
+    public SortingSettings Sorting { get; set; } = new();
+}
+
+/// <summary>
+/// Разбор входящих (PLAN.md, этап 17): склады — папки, куда сами собой сыплются файлы («Загрузки», полученные
+/// в мессенджере), и рабочие папки, куда их раскладывают с тегами. И те и другие индексируются и ищутся как все.
+/// </summary>
+public sealed record SortingSettings
+{
+    /// <summary>Наибольшее число папок в каждом списке.</summary>
+    public const int MaxFolders = 50;
+
+    /// <summary>Склады в порядке показа.</summary>
+    public IReadOnlyList<SortingFolder> Inboxes { get; set; } = [];
+
+    /// <summary>Рабочие папки в порядке показа; первые девять получают клавиши 1–9.</summary>
+    public IReadOnlyList<SortingFolder> WorkFolders { get; set; } = [];
+
+    /// <summary>Равенство по содержимому: списки сравниваются поэлементно.</summary>
+    public bool Equals(SortingSettings? other)
+        => other is not null && Inboxes.SequenceEqual(other.Inboxes) && WorkFolders.SequenceEqual(other.WorkFolders);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        foreach (var folder in Inboxes.Concat(WorkFolders))
+        {
+            hash.Add(folder);
+        }
+
+        return hash.ToHashCode();
+    }
+}
+
+/// <summary>
+/// Папка разбора: склад или рабочая папка.
+/// </summary>
+public sealed record SortingFolder
+{
+    /// <summary>Полный путь.</summary>
+    public string Path { get; set; } = string.Empty;
+
+    /// <summary>Подпись; <c>null</c> — имя папки.</summary>
+    public string? Label { get; set; }
 }
 
 /// <summary>

@@ -367,7 +367,11 @@ public sealed partial class FileOperationService : IAsyncDisposable
             new OperationProgress(run.ProcessedItems, run.TotalItems, run.ProcessedBytes, run.TotalBytes, run.CurrentPath, Math.Round(speed, 1), remaining),
             run.Message,
             CanUndo(run),
-            run.PendingConflict);
+            run.PendingConflict)
+        {
+            // Пока операция идёт, список переносов пополняется на её потоке; читается только после завершения.
+            Moved = run.CompletedUtc is null ? [] : [.. run.Moves.Select(static move => new MovedItem(move.From, move.To))],
+        };
     }
 
     private DomainError? Validate(FileOperationRequest request, out FileOperationRequest normalized)

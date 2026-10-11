@@ -119,6 +119,9 @@ public static class ApiRoutes
         /// <summary>Загрузка файлов в папку (multipart).</summary>
         public const string Upload = Prefix + "/upload";
 
+        /// <summary>Разбор: перенос со склада в рабочую папку с тегами.</summary>
+        public const string SortingMove = Prefix + "/sorting/move";
+
         /// <summary>Избранное: список (записи) и добавление.</summary>
         public const string Favorites = Prefix + "/favorites";
 

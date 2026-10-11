@@ -195,6 +195,24 @@
   <data name="ScanPipeline.TheRootIsUnavailableTheIndex" xml:space="preserve">
     <value>Корень недоступен: индекс сохранён без изменений.</value>
   </data>
+  <data name="Sorting.CannotCreateFolder" xml:space="preserve">
+    <value>Не удалось создать папку «{0}»: {1}</value>
+  </data>
+  <data name="Sorting.IntoItself" xml:space="preserve">
+    <value>Папку нельзя перенести в неё саму.</value>
+  </data>
+  <data name="Sorting.NothingToMove" xml:space="preserve">
+    <value>Не выбрано ни одного файла.</value>
+  </data>
+  <data name="Sorting.TagTooLong" xml:space="preserve">
+    <value>Тег длиннее {0} символов.</value>
+  </data>
+  <data name="Sorting.TooManyItems" xml:space="preserve">
+    <value>За раз можно перенести не больше {0} элементов.</value>
+  </data>
+  <data name="Sorting.TooManyTags" xml:space="preserve">
+    <value>Не больше {0} тегов за раз.</value>
+  </data>
   <data name="Sqlite.DiskFull" xml:space="preserve">
     <value>На диске с базой индекса закончилось место</value>
   </data>

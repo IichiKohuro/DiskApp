@@ -218,6 +218,11 @@ internal static class DtoMapper
             LastSeenVersion = settings.Onboarding.LastSeenVersion,
             TipsShown = settings.Onboarding.TipsShown,
         },
+        Sorting = new SortingSettingsDto
+        {
+            Inboxes = [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label })],
+            WorkFolders = [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label })],
+        },
     };
 
     /// <summary>
@@ -288,7 +293,19 @@ internal static class DtoMapper
             LastSeenVersion = string.IsNullOrWhiteSpace(dto.Onboarding.LastSeenVersion) ? null : dto.Onboarding.LastSeenVersion,
             TipsShown = dto.Onboarding.TipsShown ?? [],
         },
+        Sorting = new SortingSettings
+        {
+            Inboxes = ToSortingFolders(dto.Sorting.Inboxes),
+            WorkFolders = ToSortingFolders(dto.Sorting.WorkFolders),
+        },
     };
+
+    private static SortingFolder[] ToSortingFolders(IReadOnlyList<SortingFolderDto>? folders)
+        => [.. (folders ?? []).Select(static folder => new SortingFolder
+        {
+            Path = folder.Path.Trim(),
+            Label = string.IsNullOrWhiteSpace(folder.Label) ? null : folder.Label.Trim(),
+        })];
 
     public static FileOperationRequest ToDomain(this OperationRequest request) => new(
         (FileOperationKind)(int)request.Kind,

@@ -10,6 +10,7 @@ using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
 using DiskApp.Core.Search;
 using DiskApp.Core.Settings;
+using DiskApp.Core.Sorting;
 using DiskApp.Infrastructure.FileSystem;
 using DiskApp.Infrastructure.Settings;
 using DiskApp.Infrastructure.Sqlite;
@@ -78,6 +79,15 @@ public static class ServerServiceCollectionExtensions
             provider.GetService<IPlatformShell>(),
             provider.GetRequiredService<IPathChangeSink>(),
             provider.GetRequiredService<ILogger<FileOperationService>>()));
+        services.AddSingleton(static provider => new SortingService(
+            provider.GetRequiredService<FileOperationService>(),
+            new System.IO.Abstractions.FileSystem(),
+            provider.GetRequiredService<IIndexEventBus>(),
+            provider.GetRequiredService<IRootRepository>(),
+            provider.GetRequiredService<IFileIndexRepository>(),
+            provider.GetRequiredService<ITagRepository>(),
+            provider.GetRequiredService<PathNormalizer>(),
+            provider.GetRequiredService<ILogger<SortingService>>()));
         services.AddHostedService<ServerStartupService>();
         services.AddHostedService<SearchCacheInvalidator>();
         services.AddProblemDetails();
