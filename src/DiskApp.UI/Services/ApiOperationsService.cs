@@ -58,6 +58,22 @@ public sealed class ApiOperationsService : IOperationsService
     }
 
     /// <inheritdoc />
+    public async Task<OperationInfo> SortAsync(SortOperation operation, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        var request = new SortFilesRequest
+        {
+            Sources = operation.Sources,
+            Destination = operation.Destination,
+            NewFolder = operation.NewFolder,
+            Tags = operation.Tags,
+        };
+        var info = Remember(ToInfo(await _api.SortFilesAsync(request, cancellationToken).ConfigureAwait(false)));
+        Updated?.Invoke(this, info);
+        return info;
+    }
+
+    /// <inheritdoc />
     public Task CancelAsync(Guid id, CancellationToken cancellationToken = default) => _api.CancelOperationAsync(id, cancellationToken);
 
     /// <inheritdoc />

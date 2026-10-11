@@ -152,3 +152,12 @@ public sealed record ConflictAnswer(ConflictChoice Choice, bool ApplyToAll);
 /// <param name="Destination">Папка назначения.</param>
 /// <param name="NewName">Имя для создания и переименования.</param>
 public sealed record NewOperation(FileOperationKind Kind, IReadOnlyList<string> Sources, string? Destination, string? NewName = null);
+
+/// <summary>
+/// Перенос со склада в рабочую папку (PLAN.md, этап 17).
+/// </summary>
+/// <param name="Sources">Что перенести.</param>
+/// <param name="Destination">Рабочая папка или её подпапка.</param>
+/// <param name="NewFolder">Новая подпапка внутри <paramref name="Destination"/>; <c>null</c> — прямо в неё.</param>
+/// <param name="Tags">Теги для перенесённого.</param>
+public sealed record SortOperation(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags);

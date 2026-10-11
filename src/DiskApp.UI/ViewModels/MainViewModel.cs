@@ -49,12 +49,12 @@ public sealed partial class MainViewModel : ViewModelBase
     /// Создаёт оболочку с заданными страницами и часами.
     /// </summary>
     public MainViewModel(HomeViewModel home, QuickSearchViewModel search, BrowseViewModel browse, OperationsViewModel operations, SettingsViewModel settings, ISearchService searchService, Func<DateTimeOffset> clock)
-        : this(home, search, browse, operations, CollectionsPlaceholder(), TagsPlaceholder(), settings, searchService, clock)
+        : this(home, search, browse, operations, CollectionsPlaceholder(), TagsPlaceholder(), InboxPlaceholder(), settings, searchService, clock)
     {
     }
 
     /// <summary>
-    /// Создаёт главное окно приложения со всеми страницами, включая «Коллекции» и «Теги» (PLAN.md, этап 8.7).
+    /// Создаёт главное окно со страницами «Коллекции» и «Теги» (PLAN.md, этап 8.7) и заглушкой разбора.
     /// </summary>
     public MainViewModel(
         HomeViewModel home,
@@ -65,7 +65,24 @@ public sealed partial class MainViewModel : ViewModelBase
         TagsViewModel tags,
         SettingsViewModel settings,
         ISearchService searchService)
-        : this(home, search, browse, operations, collections, tags, settings, searchService, static () => DateTimeOffset.Now)
+        : this(home, search, browse, operations, collections, tags, InboxPlaceholder(), settings, searchService, static () => DateTimeOffset.Now)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт главное окно приложения со всеми страницами, включая «Разбор» (PLAN.md, этап 17).
+    /// </summary>
+    public MainViewModel(
+        HomeViewModel home,
+        QuickSearchViewModel search,
+        BrowseViewModel browse,
+        OperationsViewModel operations,
+        CollectionsViewModel collections,
+        TagsViewModel tags,
+        SortingViewModel sorting,
+        SettingsViewModel settings,
+        ISearchService searchService)
+        : this(home, search, browse, operations, collections, tags, sorting, settings, searchService, static () => DateTimeOffset.Now)
     {
     }
 
@@ -76,10 +93,12 @@ public sealed partial class MainViewModel : ViewModelBase
         OperationsViewModel operations,
         PageViewModel collections,
         PageViewModel tags,
+        PageViewModel inbox,
         SettingsViewModel settings,
         ISearchService searchService,
         Func<DateTimeOffset> clock)
     {
+        ArgumentNullException.ThrowIfNull(inbox);
         ArgumentNullException.ThrowIfNull(home);
         ArgumentNullException.ThrowIfNull(search);
         ArgumentNullException.ThrowIfNull(browse);
@@ -102,10 +121,7 @@ public sealed partial class MainViewModel : ViewModelBase
             browse,
             collections,
             tags,
-            new PlaceholderPageViewModel(
-                PageKeys.Inbox, "Main.Inbox", FASymbol.Download, Symbol.MailInbox,
-                "Main.SortingDownloadsIntoDedicatedStoresA",
-                "Main.Stage17"),
+            inbox,
             operations,
         ];
         FooterPages = [settings];
@@ -118,6 +134,12 @@ public sealed partial class MainViewModel : ViewModelBase
         IndexStatusShort = string.Empty;
 
         Initialization = RefreshAsync();
+
+        // Число файлов на складах видно на бейдже сразу, а не после первого входа на страницу.
+        if (inbox is SortingViewModel sorting)
+        {
+            _ = sorting.RefreshAsync();
+        }
 
         // Состояние индекса собирается в коде: после смены языка его подписи перечитываются (этап 9.2).
         var main = new WeakReference<MainViewModel>(this);
@@ -218,6 +240,12 @@ public sealed partial class MainViewModel : ViewModelBase
         "Main.FavoritesPinnedFoldersAndSetsOf",
         "Main.Stage8");
 
+    /// <summary>Страница разбора без сервисов (превью, тесты оболочки).</summary>
+    private static PlaceholderPageViewModel InboxPlaceholder() => new(
+        PageKeys.Inbox, "Sorting.Title", FASymbol.Download, Symbol.MailInbox,
+        "Main.SortingDownloadsIntoDedicatedStoresA",
+        "Main.Stage17");
+
     /// <summary>Страница «Теги» без библиотеки (превью, тесты оболочки).</summary>
     private static PlaceholderPageViewModel TagsPlaceholder() => new(
         PageKeys.Tags, "Common.Page.Tags", FASymbol.Tag, Symbol.TagMultiple,
@@ -301,7 +329,8 @@ public sealed partial class MainViewModel : ViewModelBase
             IndexStatusShort = status.IsIndexing ? Capitalize(status.DescribeIndexing()) : L.T("Main.IndexIsUpToDate");
         }
 
-        if (Pages.FirstOrDefault(page => page.Key == PageKeys.Inbox) is { } inbox)
+        // Настоящая страница разбора сама считает файлы на складах; заглушка берёт число из макетного состояния.
+        if (Pages.FirstOrDefault(page => page.Key == PageKeys.Inbox) is PlaceholderPageViewModel inbox)
         {
             inbox.BadgeValue = status.InboxCount;
         }

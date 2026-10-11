@@ -1,0 +1,231 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:c="using:DiskApp.UI.Controls"
+             xmlns:s="using:DiskApp.UI.Services"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
+             x:Class="DiskApp.UI.Views.SortingView"
+             x:DataType="vm:SortingViewModel">
+    <!-- Страница «Разбор» (PLAN.md, этап 17): слева файлы со складов, справа — куда их положить: рабочая папка
+         (клавиши 1–9) или любая найденная, подпапка (в том числе новая), теги; Ctrl+Enter — перенести. -->
+    <UserControl.Styles>
+        <Style Selector="TreeViewItem" x:DataType="vm:SortFolderNode">
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+        </Style>
+        <Style Selector="ListBox.chips > ListBoxItem">
+            <Setter Property="Padding" Value="12,4" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Margin="16,12,16,8" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,380">
+        <DockPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Bottom">
+                <Button AutomationProperties.Name="{loc:Str Common.RefreshF5}" Classes="tool" Command="{Binding RefreshCommand}" HotKey="F5" ToolTip.Tip="{loc:Str Common.RefreshF5}">
+                    <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
+                </Button>
+            </StackPanel>
+            <StackPanel Spacing="4">
+                <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="{loc:Str Sorting.Title}" />
+                <TextBlock Classes="secondary" TextWrapping="Wrap" Text="{loc:Str Sorting.Description}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Склады и их файлы -->
+        <Border Grid.Row="1" Classes="card" Padding="8">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="4,2,4,6">
+                    <Button DockPanel.Dock="Right" AutomationProperties.Name="{loc:Str Sorting.AddInbox}" Classes="tool" Command="{Binding AddInboxCommand}" ToolTip.Tip="{loc:Str Sorting.AddInbox}" VerticalAlignment="Top">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:SymbolIcon Symbol="Add" FontSize="14" />
+                            <TextBlock Text="{loc:Str Sorting.Inbox}" />
+                        </StackPanel>
+                    </Button>
+                    <ListBox AutomationProperties.Name="{loc:Str Sorting.Inboxes}" Classes="chips" ItemsSource="{Binding Inboxes}" SelectedItem="{Binding SelectedInbox, Mode=TwoWay}" Background="Transparent">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:InboxFilter">
+                                <TextBlock Text="{Binding Text}" ToolTip.Tip="{Binding Problem}">
+                                    <TextBlock.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuItem Header="{loc:Str Sorting.RemoveInbox}"
+                                                      Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).RemoveInboxCommand}"
+                                                      CommandParameter="{Binding}"
+                                                      IsVisible="{Binding Folder, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                        </MenuFlyout>
+                                    </TextBlock.ContextFlyout>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+                <Panel>
+                    <ListBox x:Name="ItemsList" AutomationProperties.Name="{loc:Str Sorting.Files}" ItemsSource="{Binding Items}" SelectionMode="Multiple">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SortItem">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3">
+                                    <c:FileIcon Width="30" Height="30" CornerRadius="6" IconSize="22" VerticalAlignment="Center"
+                                                Entry="{Binding Entry}" Symbol="{Binding Symbol}"
+                                                FallbackBackground="{DynamicResource SubtleFillColorSecondaryBrush}"
+                                                Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                    <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock Text="{Binding Entry.Name}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Classes="tertiary" FontSize="11" Text="{Binding Inbox.Title}" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock Classes="secondary" FontSize="12" HorizontalAlignment="Right" Text="{Binding ModifiedText}" />
+                                        <TextBlock Classes="tertiary" FontSize="11" HorizontalAlignment="Right" Text="{Binding SizeText}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" IsVisible="{Binding HasEmptyHint}">
+                        <ic:SymbolIcon Symbol="MailInbox" FontSize="36" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                        <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="380" Text="{Binding EmptyHint}" />
+                        <Button HorizontalAlignment="Center" Classes="accent" Content="{loc:Str Sorting.AddInbox}" Command="{Binding AddInboxCommand}" IsVisible="{Binding HasNoInboxes}" />
+                    </StackPanel>
+                </Panel>
+            </DockPanel>
+        </Border>
+
+        <!-- Куда -->
+        <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="12" Margin="8,0,0,0">
+            <DockPanel>
+                <!-- Перенос внизу, всегда на виду -->
+                <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,10,0,0">
+                    <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap">
+                        <Run Text="{loc:Str Sorting.To}" /><Run Text=": " /><Run FontWeight="SemiBold" Text="{Binding DestinationText}" />
+                    </TextBlock>
+                    <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="36"
+                            Content="{Binding MoveText}" Command="{Binding MoveCommand}" HotKey="Ctrl+Enter"
+                            ToolTip.Tip="{loc:Str Sorting.MoveTip}" />
+                </StackPanel>
+
+                <!-- Теги -->
+                <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,10,0,0">
+                    <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Sorting.Tags}" />
+                    <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding !!Tags.Count}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Border Classes="tag" Margin="0,0,6,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+                                        <Button Classes="tool" Padding="2" MinWidth="0" MinHeight="0"
+                                                AutomationProperties.Name="{loc:Str Sorting.RemoveTag}" ToolTip.Tip="{loc:Str Sorting.RemoveTag}"
+                                                Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).RemoveTagCommand}" CommandParameter="{Binding}">
+                                            <ic:SymbolIcon Symbol="Dismiss" FontSize="10" />
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBox x:Name="TagBox" AutomationProperties.Name="{loc:Str Sorting.Tags}" PlaceholderText="{loc:Str Sorting.TagWatermark}" Text="{Binding TagText, Mode=TwoWay}" />
+                    <ItemsControl ItemsSource="{Binding TagSuggestions}" IsVisible="{Binding !!TagSuggestions.Count}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Button Classes="tool" Margin="0,0,4,4" Content="{Binding}"
+                                        Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).AddTagCommand}" CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Рабочие папки, поиск, дерево -->
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <Button DockPanel.Dock="Right" AutomationProperties.Name="{loc:Str Sorting.AddWorkFolder}" Classes="tool" Command="{Binding AddWorkFolderCommand}" ToolTip.Tip="{loc:Str Sorting.AddWorkFolder}">
+                            <ic:SymbolIcon Symbol="Add" FontSize="14" />
+                        </Button>
+                        <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Text="{loc:Str Sorting.WorkFolders}" />
+                    </DockPanel>
+                    <ListBox DockPanel.Dock="Top" AutomationProperties.Name="{loc:Str Sorting.WorkFolders}" Classes="chips" ItemsSource="{Binding WorkFolders}" SelectedItem="{Binding SelectedWorkFolder, Mode=TwoWay}" Background="Transparent">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:WorkFolderItem">
+                                <TextBlock Text="{Binding Text}" ToolTip.Tip="{Binding Folder.Path}">
+                                    <TextBlock.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuItem Header="{loc:Str Sorting.Earlier}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).MoveWorkFolderUpCommand}" CommandParameter="{Binding}" />
+                                            <MenuItem Header="{loc:Str Sorting.Later}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).MoveWorkFolderDownCommand}" CommandParameter="{Binding}" />
+                                            <Separator />
+                                            <MenuItem Header="{loc:Str Sorting.RemoveWorkFolder}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).RemoveWorkFolderCommand}" CommandParameter="{Binding}" />
+                                        </MenuFlyout>
+                                    </TextBlock.ContextFlyout>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock DockPanel.Dock="Top" Classes="tertiary" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,6" Text="{loc:Str Sorting.NoWorkFoldersHint}" IsVisible="{Binding HasNoWorkFolders}" />
+
+                    <TextBox DockPanel.Dock="Top" x:Name="FolderSearchBox" AutomationProperties.Name="{loc:Str Sorting.FindFolder}" PlaceholderText="{loc:Str Sorting.FindFolder}" Text="{Binding FolderQuery, Mode=TwoWay}" Margin="0,0,0,6" />
+                    <ListBox DockPanel.Dock="Top" x:Name="FolderResultsList" AutomationProperties.Name="{loc:Str Sorting.FoundFolders}" ItemsSource="{Binding FolderResults}" MaxHeight="180" Margin="0,0,0,6" IsVisible="{Binding !!FolderResults.Count}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="s:SortingFolderInfo">
+                                <StackPanel Spacing="1" Margin="0,2">
+                                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Classes="tertiary" FontSize="11" Text="{Binding Path}" TextTrimming="PrefixCharacterEllipsis" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="4" Margin="0,6,0,0">
+                        <Button AutomationProperties.Name="{loc:Str Sorting.NewFolder}" Classes="tool" Command="{Binding StartNewFolderCommand}" HotKey="Ctrl+Shift+N" ToolTip.Tip="{loc:Str Sorting.NewFolderTip}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <ic:SymbolIcon Symbol="FolderAdd" FontSize="14" />
+                                <TextBlock Text="{loc:Str Sorting.NewFolder}" />
+                            </StackPanel>
+                        </Button>
+                        <Button AutomationProperties.Name="{loc:Str Sorting.PinAsWorkFolder}" Classes="tool" Command="{Binding PinDestinationCommand}" ToolTip.Tip="{loc:Str Sorting.PinAsWorkFolder}">
+                            <ic:SymbolIcon Symbol="Pin" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                    <TextBox DockPanel.Dock="Bottom" x:Name="NewFolderBox" AutomationProperties.Name="{loc:Str Sorting.NewFolderName}" PlaceholderText="{loc:Str Sorting.NewFolderName}"
+                             Text="{Binding NewFolderName, Mode=TwoWay}" IsVisible="{Binding IsNamingFolder}" Margin="0,6,0,0" />
+
+                    <TreeView AutomationProperties.Name="{loc:Str Sorting.Subfolders}" ItemsSource="{Binding Tree}" SelectedItem="{Binding SelectedFolder, Mode=TwoWay}">
+                        <TreeView.ItemTemplate>
+                            <TreeDataTemplate x:DataType="vm:SortFolderNode" ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <ic:SymbolIcon Symbol="{Binding IsNew, Converter={x:Static c:SortingConverters.FolderSymbol}}" FontSize="16" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" IsVisible="{Binding !IsPlaceholder}" />
+                                    <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </TreeDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </DockPanel>
+            </DockPanel>
+        </Border>
+
+        <TextBlock Grid.Row="2" Classes="secondary" FontSize="12" Margin="4,8,0,0" Text="{Binding ItemsText}" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Classes="tertiary" FontSize="12" Margin="8,8,0,0" HorizontalAlignment="Right" Text="{loc:Str Sorting.KeysHint}" />
+    </Grid>
+</UserControl>

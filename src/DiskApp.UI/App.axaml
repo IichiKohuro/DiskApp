@@ -36,6 +36,9 @@
         <DataTemplate DataType="vm:OperationsViewModel">
             <views:OperationsView />
         </DataTemplate>
+        <DataTemplate DataType="vm:SortingViewModel">
+            <views:SortingView />
+        </DataTemplate>
         <DataTemplate DataType="vm:CollectionsViewModel">
             <views:CollectionsView />
         </DataTemplate>

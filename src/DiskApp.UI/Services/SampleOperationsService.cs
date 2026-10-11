@@ -53,6 +53,28 @@ public sealed class SampleOperationsService : IOperationsService
         return Task.FromResult(info);
     }
 
+    /// <summary>Переносы разбора по порядку (для тестов).</summary>
+    public List<SortOperation> Sorted { get; } = [];
+
+    /// <inheritdoc />
+    public Task<OperationInfo> SortAsync(SortOperation operation, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        Sorted.Add(operation);
+        var info = new OperationInfo
+        {
+            Id = Guid.NewGuid(),
+            Kind = FileOperationKind.Move,
+            State = FileOperationState.Completed,
+            Sources = operation.Sources,
+            Destination = operation.NewFolder is { } folder ? Path.Combine(operation.Destination, folder) : operation.Destination,
+            Created = DateTimeOffset.Now,
+            CanUndo = true,
+        };
+        Report(info);
+        return Task.FromResult(info);
+    }
+
     /// <inheritdoc />
     public Task CancelAsync(Guid id, CancellationToken cancellationToken = default)
     {

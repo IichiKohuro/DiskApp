@@ -2589,6 +2589,144 @@
   <data name="Size.TB" xml:space="preserve">
     <value>TB</value>
   </data>
+  <data name="Sorting.AddInbox" xml:space="preserve">
+    <value>Add an inbox</value>
+  </data>
+  <data name="Sorting.AddWorkFolder" xml:space="preserve">
+    <value>Add a work folder</value>
+  </data>
+  <data name="Sorting.AddedToIndex" xml:space="preserve">
+    <value>The folder “{0}” was added to the index: search will find its files after the scan.</value>
+  </data>
+  <data name="Sorting.AllInboxes" xml:space="preserve">
+    <value>All inboxes</value>
+  </data>
+  <data name="Sorting.BadFolderName" xml:space="preserve">
+    <value>Invalid folder name.</value>
+  </data>
+  <data name="Sorting.ChooseDestination" xml:space="preserve">
+    <value>choose a work folder or find any folder</value>
+  </data>
+  <data name="Sorting.Description" xml:space="preserve">
+    <value>Files from inboxes (Downloads, files received in messengers) go to work folders, into a subfolder and with tags. Search covers both inboxes and work folders.</value>
+  </data>
+  <data name="Sorting.Earlier" xml:space="preserve">
+    <value>Earlier (lower number)</value>
+  </data>
+  <data name="Sorting.Files" xml:space="preserve">
+    <value>Files in inboxes</value>
+  </data>
+  <data name="Sorting.FindFolder" xml:space="preserve">
+    <value>Find any folder…</value>
+  </data>
+  <data name="Sorting.FoundFolders" xml:space="preserve">
+    <value>Found folders</value>
+  </data>
+  <data name="Sorting.Inbox" xml:space="preserve">
+    <value>Inbox</value>
+  </data>
+  <data name="Sorting.InboxEmpty" xml:space="preserve">
+    <value>The inbox is empty: everything is sorted.</value>
+  </data>
+  <data name="Sorting.InboxProblem" xml:space="preserve">
+    <value>The inbox could not be read: {0}</value>
+  </data>
+  <data name="Sorting.Inboxes" xml:space="preserve">
+    <value>Inboxes</value>
+  </data>
+  <data name="Sorting.ItemsSelected" xml:space="preserve">
+    <value>{0}, {1} selected</value>
+  </data>
+  <data name="Sorting.KeysHint" xml:space="preserve">
+    <value>1–9: work folder · Ctrl+Enter: move</value>
+  </data>
+  <data name="Sorting.Later" xml:space="preserve">
+    <value>Later (higher number)</value>
+  </data>
+  <data name="Sorting.LoadFailed" xml:space="preserve">
+    <value>Inboxes could not be read: {0}</value>
+  </data>
+  <data name="Sorting.Loading" xml:space="preserve">
+    <value>loading…</value>
+  </data>
+  <data name="Sorting.Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="Sorting.MoveFailed" xml:space="preserve">
+    <value>Move failed</value>
+  </data>
+  <data name="Sorting.MoveItems" xml:space="preserve">
+    <value>Move {0}</value>
+  </data>
+  <data name="Sorting.MoveTip" xml:space="preserve">
+    <value>Move the selection (Ctrl+Enter, Enter in the list)</value>
+  </data>
+  <data name="Sorting.Moved" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="Sorting.MovedWithTags" xml:space="preserve">
+    <value>{0} → {1}, tags: {2}</value>
+  </data>
+  <data name="Sorting.NewFolder" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="Sorting.NewFolderName" xml:space="preserve">
+    <value>New folder name and Enter</value>
+  </data>
+  <data name="Sorting.NewFolderNode" xml:space="preserve">
+    <value>{0} (new)</value>
+  </data>
+  <data name="Sorting.NewFolderTip" xml:space="preserve">
+    <value>New subfolder in the selected folder (Ctrl+Shift+N); created on move</value>
+  </data>
+  <data name="Sorting.NoInboxesHint" xml:space="preserve">
+    <value>Add an inbox: a folder where files pile up by themselves, such as Downloads or files received in Skype or a messenger.</value>
+  </data>
+  <data name="Sorting.NoWorkFoldersHint" xml:space="preserve">
+    <value>Add work folders (the first nine get keys 1–9) or find any folder with search.</value>
+  </data>
+  <data name="Sorting.PickInbox" xml:space="preserve">
+    <value>Inbox: a folder where files pile up</value>
+  </data>
+  <data name="Sorting.PickWorkFolder" xml:space="preserve">
+    <value>Work folder</value>
+  </data>
+  <data name="Sorting.PinAsWorkFolder" xml:space="preserve">
+    <value>Pin the folder as a work folder</value>
+  </data>
+  <data name="Sorting.RemoveInbox" xml:space="preserve">
+    <value>Remove from inboxes</value>
+  </data>
+  <data name="Sorting.RemoveTag" xml:space="preserve">
+    <value>Remove the tag</value>
+  </data>
+  <data name="Sorting.RemoveWorkFolder" xml:space="preserve">
+    <value>Remove from work folders</value>
+  </data>
+  <data name="Sorting.SaveFailed" xml:space="preserve">
+    <value>Could not save: {0}</value>
+  </data>
+  <data name="Sorting.Subfolders" xml:space="preserve">
+    <value>Subfolders</value>
+  </data>
+  <data name="Sorting.TagWatermark" xml:space="preserve">
+    <value>Tag and Enter</value>
+  </data>
+  <data name="Sorting.Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Sorting.Title" xml:space="preserve">
+    <value>Sorting</value>
+  </data>
+  <data name="Sorting.To" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="Sorting.Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Sorting.WorkFolders" xml:space="preserve">
+    <value>Work folders</value>
+  </data>
   <data name="TagPicker.Add" xml:space="preserve">
     <value>Add</value>
   </data>

@@ -20,6 +20,9 @@ public interface IOperationsService
     /// <summary>Ставит операцию в очередь; конфликты имён спрашиваются (<see cref="ConflictRaised"/>).</summary>
     Task<OperationInfo> EnqueueAsync(NewOperation operation, CancellationToken cancellationToken = default);
 
+    /// <summary>Разбор: переносит со склада в рабочую папку с тегами; одинаковые имена — «оставить оба».</summary>
+    Task<OperationInfo> SortAsync(SortOperation operation, CancellationToken cancellationToken = default);
+
     /// <summary>Отменяет операцию.</summary>
     Task CancelAsync(Guid id, CancellationToken cancellationToken = default);
 
