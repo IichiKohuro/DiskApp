@@ -2935,34 +2935,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>Downloads and files received in messengers go to your work folders: pick the files, a work folder (keys 1–9), a subfolder or a new one, tags and a name, then press Ctrl+Enter. The move can be undone from the notice.</value>
+    <value>A click on the tray icon opens a window you can drop files into: they go to the main collector folder — moved from the same drive, copied from another, and everything can be undone. From the keyboard — Ctrl+Alt+B.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Sorting collector folders</value>
+    <value>Click the icon — Drag&amp;Drop window</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>Collector folders and work folders are searched together; tags move with the file, and tag: finds it in the new place.</value>
+    <value>The main window opens with a double-click on the icon or Ctrl+Alt+O. Quick search is still Ctrl+Alt+D and in the icon menu.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Search across all folders</value>
+    <value>Double-click — main window</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Settings keep a backup, folders are rechecked after sleep, and an unreachable network folder no longer slows down the others.</value>
+    <value>A new Shortcuts settings section: quick search, the main window, the Drag&amp;Drop window and Quick Switch. If a shortcut is taken by another app, DiskApp picks a spare one itself.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>More reliable</value>
+    <value>All shortcuts in one place</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Files with é or й from archives made on a Mac are found by a query typed on the keyboard.</value>
+    <value>On the Sorting page, right-click a collector → Make main: files from the Drag&amp;Drop window and the Add dialog go there. In settings it replaced the Inbox folder.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Names from macOS</value>
+    <value>Main collector folder</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Windows are drawn without the GPU, about 95 MB when idle. The blurred search window background is turned on in Appearance → Hardware acceleration.</value>
+    <value>Undo and Ctrl+Z after copying send the created copies to the Recycle Bin.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Less memory</value>
+    <value>Copies can be undone</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>

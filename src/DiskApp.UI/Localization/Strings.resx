@@ -2935,34 +2935,34 @@
     <value> записей</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>«Загрузки» и полученные в мессенджерах файлы раскладываются по рабочим папкам: выберите файлы, рабочую папку (клавиши 1–9), подпапку или новую папку, теги и имя — и Ctrl+Enter. Перенос отменяется из уведомления.</value>
+    <value>Щелчок по значку в трее открывает окно, куда можно бросить файлы: они упадут в основную папку-накопитель — с того же диска переносятся, с другого копируются, и всё отменяется. С клавиатуры — Ctrl+Alt+B.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Разбор папок-накопителей</value>
+    <value>Щелчок по значку — окно Drag&amp;Drop</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>Папки-накопители и рабочие папки ищутся вместе; теги переезжают с файлом, и tag: находит его на новом месте.</value>
+    <value>Главное окно открывается двойным щелчком по значку или Ctrl+Alt+O. Быстрый поиск — по-прежнему Ctrl+Alt+D и в меню значка.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Поиск по всем папкам</value>
+    <value>Двойной щелчок — главное окно</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Настройки хранят резервную копию, после сна папки перепроверяются, а недоступная сетевая папка не тормозит остальные.</value>
+    <value>Новый раздел настроек «Горячие клавиши»: быстрый поиск, главное окно, окно Drag&amp;Drop и Quick Switch. Если сочетание занято другой программой, DiskApp сам берёт запасное.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Надёжнее</value>
+    <value>Горячие клавиши в одном месте</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Файлы с «é» или «й» из архивов, созданных на Mac, находятся запросом, набранным с клавиатуры.</value>
+    <value>На странице «Разбор» правый щелчок по накопителю → «Сделать основной»: сюда падают файлы из окна Drag&amp;Drop и окна «Добавить». В настройках она заменила папку «Входящие».</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Имена из macOS</value>
+    <value>Основная папка-накопитель</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Окна рисуются без видеокарты — около 95 МБ в простое. Размытый фон окна поиска включается в «Внешний вид → Аппаратное ускорение».</value>
+    <value>«Отменить» и Ctrl+Z после копирования убирают созданные копии в корзину.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Меньше памяти</value>
+    <value>Копирование отменяется</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Понятно</value>
