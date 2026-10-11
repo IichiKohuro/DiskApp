@@ -30,7 +30,7 @@ public sealed class HomeRootsTests
         // Assert
         home.Roots.Count.ShouldBe(SampleData.Roots.Count);
         home.HasNoRoots.ShouldBeFalse();
-        home.Roots[0].SummaryText.Replace((char)0x202F, ' ').Replace((char)0xA0, ' ').ShouldBe("10 000 файлов · 800 папок · 1,4 ГБ");
+        home.Roots[0].SummaryText.Replace((char)0x202F, ' ').Replace((char)0xA0, ' ').ShouldBe("10 000 файлов · 800 папок · " + DiskApp.UI.Text.Formatting.Size(1_500_000_000L).Replace((char)0x202F, ' ').Replace((char)0xA0, ' '));
         home.Roots[0].StateText.ShouldBe("Актуален");
         home.Roots[3].IsProblem.ShouldBeTrue();
         home.Roots[3].StateText.ShouldBe("Недоступен: Диск E: не подключён");
