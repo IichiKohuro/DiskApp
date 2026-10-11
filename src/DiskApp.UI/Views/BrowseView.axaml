@@ -1,0 +1,169 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:c="using:DiskApp.UI.Controls"
+             xmlns:m="using:DiskApp.UI.Models"
+             xmlns:views="using:DiskApp.UI.Views"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             x:Class="DiskApp.UI.Views.BrowseView"
+             x:DataType="vm:BrowseViewModel">
+    <!-- Обзор папок (PLAN.md, этап 8.3): панель команд с адресной строкой и фильтрами, крошки, дерево корней и папок
+         слева, содержимое папки списком или плиткой, сведения о выбранном справа, строка состояния внизу.
+         Клавиши как в Проводнике: Backspace / Alt+← — назад, Alt+→ — вперёд, Alt+↑ — выше, Enter — открыть,
+         Ctrl+L — адресная строка, F2 — переименовать, Del — в корзину, F5 — обновить. -->
+    <Grid Margin="16,12,16,8" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="240,*,Auto">
+
+        <!-- Панель команд -->
+        <DockPanel Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
+                <Button Classes="tool" Command="{Binding GoBackCommand}" IsEnabled="{Binding CanGoBack}" ToolTip.Tip="Назад (Alt+←)">
+                    <ic:SymbolIcon Symbol="ArrowLeft" FontSize="16" />
+                </Button>
+                <Button Classes="tool" Command="{Binding GoForwardCommand}" IsEnabled="{Binding CanGoForward}" ToolTip.Tip="Вперёд (Alt+→)">
+                    <ic:SymbolIcon Symbol="ArrowRight" FontSize="16" />
+                </Button>
+                <Button Classes="tool" Command="{Binding GoUpCommand}" IsEnabled="{Binding CanGoUp}" ToolTip.Tip="На уровень выше (Alt+↑)">
+                    <ic:SymbolIcon Symbol="ArrowUp" FontSize="16" />
+                </Button>
+                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="Обновить (F5)">
+                    <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
+                </Button>
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="8,0,0,0">
+                <TextBox Width="140" PlaceholderText="Фильтр в папке" Text="{Binding Filter, Mode=TwoWay}" />
+                <ComboBox Width="120" ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind, Mode=TwoWay}" ToolTip.Tip="Вид файлов" />
+                <ComboBox Width="140" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort, Mode=TwoWay}" ToolTip.Tip="Сортировка" />
+                <ToggleButton Classes="tool" IsChecked="{Binding Descending, Mode=TwoWay}" ToolTip.Tip="По убыванию">
+                    <ic:SymbolIcon Symbol="ArrowSortDown" FontSize="16" />
+                </ToggleButton>
+                <ToggleButton Classes="tool" IsChecked="{Binding IsTiles, Mode=TwoWay}" ToolTip.Tip="Плитка">
+                    <ic:SymbolIcon Symbol="Grid" FontSize="16" />
+                </ToggleButton>
+            </StackPanel>
+            <TextBox x:Name="AddressBox" Text="{Binding AddressText, Mode=TwoWay}" PlaceholderText="Путь к папке внутри корней · Ctrl+L">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding GoToAddressCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+        </DockPanel>
+
+        <!-- Крошки -->
+        <ui:FABreadcrumbBar Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                            x:Name="Breadcrumbs"
+                            Margin="8,0,0,8"
+                            ItemsSource="{Binding Crumbs}">
+        </ui:FABreadcrumbBar>
+
+        <!-- Дерево корней и папок -->
+        <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" Classes="card" Padding="4">
+            <TreeView x:Name="FolderTree" ItemsSource="{Binding Tree}">
+                <TreeView.Styles>
+                    <Style Selector="TreeViewItem" x:DataType="vm:FolderNode">
+                        <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    </Style>
+                </TreeView.Styles>
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate x:DataType="vm:FolderNode" ItemsSource="{Binding Children}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:SymbolIcon Symbol="{Binding Symbol}" FontSize="16" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+        </Border>
+
+        <!-- Содержимое папки -->
+        <Border Grid.Row="2" Grid.Column="1" Classes="card" Padding="8" Margin="8,0,0,0">
+            <Panel>
+                <ListBox x:Name="ItemsList"
+                         Classes="results"
+                         ItemsSource="{Binding Items}"
+                         ItemTemplate="{StaticResource FileHitTemplate}"
+                         SelectionMode="Multiple"
+                         IsVisible="{Binding !IsTiles}" />
+                <ListBox x:Name="TilesList"
+                         Classes="tiles"
+                         ItemsSource="{Binding Items}"
+                         SelectionMode="Multiple"
+                         IsVisible="{Binding IsTiles}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="m:SearchHit">
+                            <StackPanel Width="112" Spacing="6">
+                                <c:FileIcon Width="72" Height="72"
+                                            HorizontalAlignment="Center"
+                                            CornerRadius="8"
+                                            IconSize="56"
+                                            PreferThumbnail="True"
+                                            Entry="{Binding Entry}"
+                                            Symbol="{Binding Symbol}"
+                                            FallbackBackground="{DynamicResource SubtleFillColorSecondaryBrush}"
+                                            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{Binding Entry.Name}"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           MaxLines="2"
+                                           TextTrimming="CharacterEllipsis"
+                                           FontSize="12" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <ui:FAProgressRing IsIndeterminate="True" Width="40" Height="40" IsVisible="{Binding IsLoading}" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" IsVisible="{Binding HasError}">
+                    <ic:SymbolIcon Symbol="FolderProhibited" FontSize="36" HorizontalAlignment="Center" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
+                    <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="420" Text="{Binding ErrorText}" />
+                </StackPanel>
+            </Panel>
+        </Border>
+
+        <!-- Сведения о выбранном -->
+        <Border Grid.Row="2" Grid.Column="2" x:Name="DetailsCard" Classes="card" Width="280" Padding="16" Margin="8,0,0,0">
+            <Panel>
+                <TextBlock Classes="tertiary"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           VerticalAlignment="Center"
+                           Text="Выберите один файл — здесь появятся его сведения"
+                           IsVisible="{Binding SelectedDetails, Converter={x:Static ObjectConverters.IsNull}}" />
+                <ScrollViewer IsVisible="{Binding SelectedDetails, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <StackPanel Spacing="12">
+                        <views:FileDetailsView DataContext="{Binding SelectedDetails}" />
+                        <Button Classes="accent" HorizontalAlignment="Stretch" Content="Открыть" Command="{Binding OpenItemCommand}" CommandParameter="{Binding Selection[0]}" />
+                        <Button HorizontalAlignment="Stretch" Content="Показать в Проводнике" Command="{Binding RevealCommand}" />
+                        <Button HorizontalAlignment="Stretch" Content="Копировать путь" Command="{Binding CopyPathCommand}" />
+                        <Button HorizontalAlignment="Stretch" Content="Свойства" Command="{Binding PropertiesCommand}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Panel>
+        </Border>
+
+        <!-- Строка состояния -->
+        <TextBlock Grid.Row="3" Grid.ColumnSpan="3" Classes="secondary" FontSize="12" Margin="4,8,0,0" Text="{Binding StatusText}" />
+    </Grid>
+
+    <UserControl.ContextFlyout>
+        <MenuFlyout>
+            <MenuItem Header="Открыть" Command="{Binding OpenItemCommand}" CommandParameter="{Binding Selection[0]}" />
+            <MenuItem Header="Показать в Проводнике" Command="{Binding RevealCommand}" />
+            <Separator />
+            <MenuItem Header="Копировать" Command="{Binding CopyFilesCommand}" />
+            <MenuItem Header="Копировать путь" Command="{Binding CopyPathCommand}" />
+            <Separator />
+            <MenuItem Header="Закрепить или открепить" Command="{Binding TogglePinCommand}" />
+            <MenuItem Header="Переименовать…" Command="{Binding RenameCommand}" />
+            <MenuItem Header="В корзину…" Command="{Binding DeleteCommand}" />
+            <Separator />
+            <MenuItem Header="Свойства" Command="{Binding PropertiesCommand}" />
+        </MenuFlyout>
+    </UserControl.ContextFlyout>
+</UserControl>

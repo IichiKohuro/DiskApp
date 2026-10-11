@@ -99,4 +99,17 @@ public sealed class StartupArgumentsTests
         parsed.Show.ShouldBeTrue();
         parsed.SearchQuery.ShouldBe(string.Empty);
     }
+
+    [Theory]
+    [InlineData(new[] { "--page", "Browse" }, "browse")]
+    [InlineData(new[] { "--page=operations" }, "operations")]
+    [InlineData(new[] { "--page", "--show" }, null)]
+    public void Parse_Page_OpensSectionByKey(string[] args, string? expected)
+    {
+        // Act
+        var parsed = StartupArguments.Parse(args);
+
+        // Assert
+        parsed.Page.ShouldBe(expected);
+    }
 }

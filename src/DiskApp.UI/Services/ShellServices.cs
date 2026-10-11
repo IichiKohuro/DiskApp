@@ -39,6 +39,16 @@ public interface IDialogService
     /// Спросить подтверждение; <c>true</c> — пользователь выбрал основное действие.
     /// </summary>
     Task<bool> ConfirmAsync(string title, string message, string primaryText, string closeText = "Отмена");
+
+    /// <summary>
+    /// Спросить строку (новое имя файла); <c>null</c> — пользователь отказался.
+    /// </summary>
+    /// <param name="title">Заголовок.</param>
+    /// <param name="label">Подпись поля.</param>
+    /// <param name="text">Начальный текст.</param>
+    /// <param name="primaryText">Подпись основной кнопки.</param>
+    /// <param name="selectionLength">Сколько символов выделить с начала; отрицательное — выделить всё.</param>
+    Task<string?> PromptAsync(string title, string label, string text, string primaryText, int selectionLength = -1);
 }
 
 /// <summary>

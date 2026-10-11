@@ -222,8 +222,8 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         }
 
         var showMain = initialLaunch
-            ? !startup.Minimized || startup.Show || startup.OpenSettings
-            : startup.Show || startup.OpenSettings || (!startup.Minimized && !startup.ShowSearch);
+            ? !startup.Minimized || startup.Show || startup.OpenSettings || startup.Page is not null
+            : startup.Show || startup.OpenSettings || startup.Page is not null || (!startup.Minimized && !startup.ShowSearch);
 
         if (showMain)
         {
@@ -233,6 +233,11 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         if (startup.OpenSettings)
         {
             NavigateTo(PageKeys.Settings);
+        }
+
+        if (startup.Page is { } page)
+        {
+            NavigateTo(page);
         }
 
         if (startup.ShowSearch)

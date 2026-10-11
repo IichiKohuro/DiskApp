@@ -20,7 +20,15 @@ public sealed partial class MainViewModel : ViewModelBase
     private readonly Func<DateTimeOffset> _clock;
 
     /// <summary>
-    /// Создаёт оболочку с готовыми страницами и запускает загрузку состояния индекса (<see cref="Initialization"/>).
+    /// Создаёт оболочку приложения и запускает загрузку состояния индекса (<see cref="Initialization"/>).
+    /// </summary>
+    public MainViewModel(HomeViewModel home, QuickSearchViewModel search, BrowseViewModel browse, SettingsViewModel settings, ISearchService searchService)
+        : this(home, search, browse, settings, searchService, static () => DateTimeOffset.Now)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт оболочку с макетным обзором (превью).
     /// </summary>
     public MainViewModel(HomeViewModel home, QuickSearchViewModel search, SettingsViewModel settings, ISearchService searchService)
         : this(home, search, settings, searchService, static () => DateTimeOffset.Now)
@@ -28,12 +36,21 @@ public sealed partial class MainViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Создаёт оболочку с заданными часами (для тестов и превью).
+    /// Создаёт оболочку с заданными часами и макетным обзором (для тестов и превью).
     /// </summary>
     public MainViewModel(HomeViewModel home, QuickSearchViewModel search, SettingsViewModel settings, ISearchService searchService, Func<DateTimeOffset> clock)
+        : this(home, search, SampleBrowse(searchService, clock), settings, searchService, clock)
+    {
+    }
+
+    /// <summary>
+    /// Создаёт оболочку с заданными страницами и часами.
+    /// </summary>
+    public MainViewModel(HomeViewModel home, QuickSearchViewModel search, BrowseViewModel browse, SettingsViewModel settings, ISearchService searchService, Func<DateTimeOffset> clock)
     {
         ArgumentNullException.ThrowIfNull(home);
         ArgumentNullException.ThrowIfNull(search);
+        ArgumentNullException.ThrowIfNull(browse);
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(searchService);
         ArgumentNullException.ThrowIfNull(clock);
@@ -46,10 +63,7 @@ public sealed partial class MainViewModel : ViewModelBase
         [
             home,
             search,
-            new PlaceholderPageViewModel(
-                PageKeys.Browse, "Обзор", FASymbol.Folder, Symbol.FolderOpen,
-                "Дерево папок, список и плитка, адресная строка и панель сведений — как в Проводнике, только быстрее и с поиском под рукой.",
-                "Этап 8"),
+            browse,
             new PlaceholderPageViewModel(
                 PageKeys.Collections, "Коллекции", FASymbol.Library, Symbol.Collections,
                 "Избранное, закреплённые папки и подборки файлов из разных мест — для проектов, поездок и дел.",
@@ -174,4 +188,7 @@ public sealed partial class MainViewModel : ViewModelBase
     }
 
     private static string Capitalize(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
+
+    private static BrowseViewModel SampleBrowse(ISearchService search, Func<DateTimeOffset> clock)
+        => new(new SampleBrowseService(clock), new SampleRootsService(), search, new SampleFileActions(), null, null, clock);
 }

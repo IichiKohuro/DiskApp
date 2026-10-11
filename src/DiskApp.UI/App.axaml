@@ -30,6 +30,9 @@
         <DataTemplate DataType="vm:QuickSearchViewModel">
             <views:SearchPageView />
         </DataTemplate>
+        <DataTemplate DataType="vm:BrowseViewModel">
+            <views:BrowseView />
+        </DataTemplate>
         <DataTemplate DataType="vm:SettingsViewModel">
             <views:SettingsView />
         </DataTemplate>

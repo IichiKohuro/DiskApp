@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="using:DiskApp.UI.Controls"
+             xmlns:m="using:DiskApp.UI.Models"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="420"
+             x:Class="DiskApp.UI.Views.FileDetailsView"
+             x:DataType="m:FileDetails">
+    <!-- Сведения о файле: миниатюра или иконка, имя, доступность, свойства и теги. Общие для поиска и обзора. -->
+    <StackPanel Spacing="12">
+        <c:FileIcon Width="96" Height="96"
+                    HorizontalAlignment="Center"
+                    CornerRadius="8"
+                    IconSize="80"
+                    PreferThumbnail="True"
+                    Entry="{Binding Entry}"
+                    Symbol="{Binding Entry.Kind, Converter={x:Static c:FileKindConverters.Symbol}}"
+                    FallbackBackground="{DynamicResource SubtleFillColorSecondaryBrush}"
+                    Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+        <SelectableTextBlock Theme="{StaticResource SubtitleTextBlockStyle}"
+                             TextWrapping="Wrap"
+                             TextAlignment="Center"
+                             Text="{Binding Entry.Name}" />
+        <Border Classes="chip" HorizontalAlignment="Center" IsVisible="{Binding HasAvailability}">
+            <TextBlock Text="{Binding Availability}" />
+        </Border>
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" Classes="details">
+            <TextBlock Grid.Row="0" Classes="label" Text="Вид" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Classes="value" Text="{Binding KindText}" />
+            <TextBlock Grid.Row="1" Classes="label" Text="Размер" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Classes="value" Text="{Binding SizeText}" />
+            <TextBlock Grid.Row="2" Classes="label" Text="Изменён" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Classes="value" Text="{Binding ModifiedText}" />
+            <TextBlock Grid.Row="3" Classes="label" Text="Корень" />
+            <TextBlock Grid.Row="3" Grid.Column="1" Classes="value" Text="{Binding Entry.Root}" />
+            <TextBlock Grid.Row="4" Classes="label" Text="Папка" />
+            <SelectableTextBlock Grid.Row="4" Grid.Column="1" Classes="value" TextWrapping="Wrap" Text="{Binding Entry.Directory}" />
+        </Grid>
+        <ItemsControl ItemsSource="{Binding Entry.Tags}" IsVisible="{Binding HasTags}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Border Classes="chip" Margin="0,0,6,6">
+                        <TextBlock Text="{Binding}" />
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

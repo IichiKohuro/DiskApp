@@ -11,6 +11,7 @@ namespace DiskApp.UI.Services;
 /// <param name="Portable">Портативный режим: данные рядом с исполняемым файлом.</param>
 /// <param name="Exit">Завершить запущенный экземпляр штатно (скрипты, установщик); если он не запущен — ничего не делать.</param>
 /// <param name="AddPaths">Папки, которые добавить корнями (<c>--add &lt;пути…&gt;</c>, «Отправить» в Проводнике); <c>null</c> — нет.</param>
+/// <param name="Page">Открыть раздел главного окна по ключу (<c>--page browse</c>); <c>null</c> — не открывать.</param>
 public sealed record StartupArguments(
     bool Minimized,
     bool Show,
@@ -18,7 +19,8 @@ public sealed record StartupArguments(
     string? SearchQuery,
     bool Portable,
     bool Exit = false,
-    IReadOnlyList<string>? AddPaths = null)
+    IReadOnlyList<string>? AddPaths = null,
+    string? Page = null)
 {
     /// <summary>Схема ссылок DiskApp: <c>diskapp://search?q=…</c>, <c>diskapp://open?path=…</c>.</summary>
     public const string UriScheme = "diskapp";
@@ -43,6 +45,7 @@ public sealed record StartupArguments(
         var exit = false;
         string? search = null;
         List<string>? add = null;
+        string? page = null;
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -81,6 +84,17 @@ public sealed record StartupArguments(
                     }
 
                     break;
+                case "--page":
+                    if (inlineValue is not null)
+                    {
+                        page = inlineValue;
+                    }
+                    else if (i + 1 < args.Count && !args[i + 1].StartsWith("--", StringComparison.Ordinal))
+                    {
+                        page = args[++i];
+                    }
+
+                    break;
                 case "--search":
                     if (inlineValue is not null)
                     {
@@ -106,7 +120,7 @@ public sealed record StartupArguments(
             }
         }
 
-        return new StartupArguments(minimized, show, settings, search, portable, exit, add is { Count: > 0 } ? add : null);
+        return new StartupArguments(minimized, show, settings, search, portable, exit, add is { Count: > 0 } ? add : null, page?.Trim().ToLowerInvariant());
     }
 
     private static bool IsAppUri(string argument) => argument.StartsWith(UriScheme + ":", StringComparison.OrdinalIgnoreCase);

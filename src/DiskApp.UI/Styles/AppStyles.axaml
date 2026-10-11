@@ -114,6 +114,23 @@
         <Setter Property="Foreground" Value="{DynamicResource SystemFillColorCautionBrush}" />
     </Style>
 
+    <!-- Кнопки панели команд «Обзора»: компактные, без рамки -->
+    <Style Selector=":is(Button).tool">
+        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+    </Style>
+
+    <!-- Плитка «Обзора» -->
+    <Style Selector="ListBox.tiles">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.tiles ListBoxItem">
+        <Setter Property="Padding" Value="6,8" />
+        <Setter Property="Margin" Value="2" />
+        <Setter Property="CornerRadius" Value="6" />
+    </Style>
+
     <!-- Точка состояния индекса в панели навигации -->
     <Style Selector="Ellipse.health">
         <Setter Property="Fill" Value="{DynamicResource SystemFillColorSuccessBrush}" />
