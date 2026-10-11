@@ -171,7 +171,15 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         }
 
         var token = cts.Token;
-        var query = Query.Trim();
+        var raw = Query;
+        var query = raw.Trim();
+        UpdateFilterChips();
+
+        if (query == HelpQuery)
+        {
+            ShowHelpPanel();
+            return;
+        }
 
         try
         {
@@ -182,13 +190,15 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
             IsSearching = true;
 
+            // Подсказки идут параллельно поиску: сервер отвечает на них за доли миллисекунды.
+            var suggestions = LoadSuggestionsAsync(raw, token);
             if (query.Length == 0)
             {
                 var sections = await _search.GetSuggestionsAsync(token);
                 var status = await _search.GetIndexStatusAsync(token);
                 token.ThrowIfCancellationRequested();
                 _status = status;
-                ShowSuggestions(sections, status);
+                ShowSectionResults(sections, status);
             }
             else
             {
@@ -203,6 +213,10 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
                 token.ThrowIfCancellationRequested();
                 ShowSearchResult(result);
             }
+
+            var list = await suggestions;
+            token.ThrowIfCancellationRequested();
+            ShowSuggestionList(raw, list);
         }
         catch (OperationCanceledException)
         {
@@ -314,9 +328,11 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         ShowEmptyState = false;
     }
 
-    private void ShowSuggestions(IReadOnlyList<ResultSection> sections, IndexStatus status)
+    private void ShowSectionResults(IReadOnlyList<ResultSection> sections, IndexStatus status)
     {
         HasError = false;
+        ShowHelp = false;
+        UpdateRootChips(status);
 
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var grouped = new List<(string Title, IReadOnlyList<FileEntry> Entries)>();
@@ -339,6 +355,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     private void ShowSearchResult(SearchResult result)
     {
         HasError = false;
+        ShowHelp = false;
         ReplaceResults([(string.Empty, result.Entries)], Query.Trim());
 
         if (result.TotalCount == 0)

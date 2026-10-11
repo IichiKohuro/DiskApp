@@ -5,6 +5,7 @@
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:input="using:DiskApp.UI.Input"
+             xmlns:m="using:DiskApp.UI.Models"
              xmlns:vm="using:DiskApp.UI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="460"
              x:Class="DiskApp.UI.Views.QuickSearchView"
@@ -14,7 +15,7 @@
          не найдено», панель переименования и подтверждения корзины, уведомление об итоге действия, строка состояния.
          Клавиши разбирает карта QuickSearchKeyMap в code-behind на этапе туннелирования, чтобы стрелки управляли
          списком, а фокус оставался в поле ввода. -->
-    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto">
         <TextBox Grid.Row="0"
                  x:Name="QueryBox"
                  Classes="search"
@@ -29,7 +30,74 @@
             </TextBox.InnerLeftContent>
         </TextBox>
 
-        <Panel Grid.Row="1" Margin="0,8,0,0">
+        <!-- Чипы фильтров: меняют текст запроса; Ctrl+F прячет и показывает. Кнопки не берут фокус у поля. -->
+        <ItemsControl Grid.Row="1"
+                      Margin="0,8,0,0"
+                      ItemsSource="{Binding FilterChips}"
+                      IsVisible="{Binding ShowFilters}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:FilterChip">
+                    <Button Classes="filter"
+                            Classes.active="{Binding IsActive}"
+                            Focusable="False"
+                            Content="{Binding Label}"
+                            ToolTip.Tip="{Binding Token}"
+                            Command="{Binding $parent[ItemsControl].((vm:QuickSearchViewModel)DataContext).ToggleFilterCommand}"
+                            CommandParameter="{Binding}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Подсказки: дополнение фильтра (Tab берёт первую) или прошлые запросы с удалением. -->
+        <DockPanel Grid.Row="2" Margin="0,6,0,0" IsVisible="{Binding ShowSuggestions}">
+            <TextBlock DockPanel.Dock="Left"
+                       Classes="tertiary"
+                       FontSize="12"
+                       Margin="6,0,10,6"
+                       VerticalAlignment="Center"
+                       Text="{Binding SuggestionsTitle}" />
+            <Button DockPanel.Dock="Right"
+                    Classes="filter"
+                    Focusable="False"
+                    VerticalAlignment="Top"
+                    Content="Очистить"
+                    Command="{Binding ClearHistoryCommand}"
+                    IsVisible="{Binding IsShowingHistory}" />
+            <ItemsControl ItemsSource="{Binding Suggestions}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="m:QuerySuggestion">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,6,6">
+                            <Button Classes="suggestion"
+                                    Classes.history="{Binding IsHistory}"
+                                    Focusable="False"
+                                    Content="{Binding Display}"
+                                    Command="{Binding $parent[ItemsControl].((vm:QuickSearchViewModel)DataContext).ApplySuggestionCommand}"
+                                    CommandParameter="{Binding}" />
+                            <Button Classes="remove"
+                                    Focusable="False"
+                                    IsVisible="{Binding IsHistory}"
+                                    ToolTip.Tip="Удалить из истории"
+                                    Command="{Binding $parent[ItemsControl].((vm:QuickSearchViewModel)DataContext).DeleteHistoryCommand}"
+                                    CommandParameter="{Binding}">
+                                <ic:SymbolIcon Symbol="Dismiss" FontSize="10" />
+                            </Button>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+
+        <Panel Grid.Row="3" Margin="0,8,0,0">
             <ListBox x:Name="ResultsList"
                      Classes="results"
                      ItemsSource="{Binding Rows}"
@@ -145,11 +213,29 @@
                                HorizontalAlignment="Center"
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                 <TextBlock Classes="secondary" Text="Ничего не найдено" HorizontalAlignment="Center" />
+                <TextBlock Classes="tertiary" FontSize="12" Text="Введите ?, чтобы увидеть фильтры и клавиши" HorizontalAlignment="Center" />
             </StackPanel>
+
+            <!-- Подсказка синтаксиса по запросу «?» -->
+            <ScrollViewer IsVisible="{Binding ShowHelp}">
+                <ItemsControl ItemsSource="{x:Static input:SearchHelp.Items}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="m:HelpItem">
+                            <Panel>
+                                <TextBlock Classes="section" Margin="6,10,0,4" Text="{Binding Description}" IsVisible="{Binding IsHeader}" />
+                                <Grid ColumnDefinitions="220,*" Margin="6,3" IsVisible="{Binding !IsHeader}">
+                                    <TextBlock Classes="code" Text="{Binding Example}" />
+                                    <TextBlock Grid.Column="1" Classes="secondary" TextWrapping="Wrap" Text="{Binding Description}" />
+                                </Grid>
+                            </Panel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
         </Panel>
 
         <!-- Панель действия: новое имя (F2) или подтверждение корзины (Del). Enter — да, Esc — отмена. -->
-        <Border Grid.Row="2"
+        <Border Grid.Row="4"
                 Margin="0,8,0,0"
                 Padding="12,10"
                 CornerRadius="6"
@@ -178,7 +264,7 @@
             </Grid>
         </Border>
 
-        <ui:FAInfoBar Grid.Row="3"
+        <ui:FAInfoBar Grid.Row="5"
                       Margin="0,8,0,0"
                       IsOpen="{Binding IsNoticeOpen, Mode=TwoWay}"
                       Title="{Binding NoticeTitle}"
@@ -186,13 +272,13 @@
                       Severity="{Binding NoticeSeverity}"
                       IsClosable="True" />
 
-        <DockPanel Grid.Row="4" Margin="6,8,6,0">
+        <DockPanel Grid.Row="6" Margin="6,8,6,0">
             <TextBlock DockPanel.Dock="Right"
                        Classes="tertiary"
                        FontSize="12"
                        Margin="12,0,0,0"
                        VerticalAlignment="Center"
-                       Text="Enter открыть · Ctrl+Enter папка · Tab меню · Esc закрыть" />
+                       Text="Enter открыть · Tab меню · ? справка · Esc закрыть" />
             <Button DockPanel.Dock="Right"
                     Margin="8,0,0,0"
                     Padding="10,2"

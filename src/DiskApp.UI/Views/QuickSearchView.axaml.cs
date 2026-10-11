@@ -53,14 +53,19 @@ public partial class QuickSearchView : UserControl
         if (_subscribed is not null)
         {
             _subscribed.PropertyChanged -= OnViewModelPropertyChanged;
+            _subscribed.QueryReplaced -= OnQueryReplaced;
         }
 
         _subscribed = ViewModel;
         if (_subscribed is not null)
         {
             _subscribed.PropertyChanged += OnViewModelPropertyChanged;
+            _subscribed.QueryReplaced += OnQueryReplaced;
         }
     }
+
+    // Чип, подсказка или история заменили текст: курсор — в конец, чтобы продолжить ввод.
+    private void OnQueryReplaced(object? sender, EventArgs e) => Dispatcher.UIThread.Post(FocusQueryKeepingText);
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -122,7 +127,8 @@ public partial class QuickSearchView : UserControl
         var box = new QueryBoxState(
             IsEmpty: text.Length == 0,
             HasSelection: QueryBox.SelectionStart != QueryBox.SelectionEnd,
-            CaretAtEnd: QueryBox.CaretIndex >= text.Length);
+            CaretAtEnd: QueryBox.CaretIndex >= text.Length,
+            HasSuggestions: text.Length > 0 && viewModel.ShowSuggestions);
         if (QuickSearchKeyMap.Resolve(e.Key, e.KeyModifiers, box) is not { } key)
         {
             return;

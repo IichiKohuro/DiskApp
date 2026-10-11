@@ -30,6 +30,18 @@ public interface ISearchService
     Task<IReadOnlyList<string>> GetHistoryAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// Подсказки к запросу: для пустого — запросы из истории, для фильтра в конце (<c>ext:p</c>) — его ключи и значения.
+    /// Текст передаётся как есть, с завершающим пробелом: после пробела дополнять нечего.
+    /// </summary>
+    Task<IReadOnlyList<QuerySuggestion>> SuggestAsync(string query, CancellationToken cancellationToken);
+
+    /// <summary>Удаляет запрос из истории.</summary>
+    Task DeleteHistoryAsync(string query, CancellationToken cancellationToken);
+
+    /// <summary>Очищает историю запросов.</summary>
+    Task ClearHistoryAsync(CancellationToken cancellationToken);
+
+    /// <summary>
     /// Состояние индекса.
     /// </summary>
     Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken);

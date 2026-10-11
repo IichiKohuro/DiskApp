@@ -14,6 +14,8 @@ public sealed class SampleSearchService : ISearchService
     private const int PageSize = 50;
     private const int RecentLimit = 8;
 
+    private static readonly string[] FilterKeys = ["ext", "type", "in", "root", "size", "modified", "created", "is", "tag", "fav"];
+
     private readonly IReadOnlyList<FileEntry> _entries;
     private readonly List<FileEntry> _recent;
     private readonly List<string> _history = ["отчёт", "бюджет", "договор"];
@@ -115,6 +117,70 @@ public sealed class SampleSearchService : ISearchService
         {
             return Task.FromResult<IReadOnlyList<string>>([.. _history]);
         }
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<QuerySuggestion>> SuggestAsync(string query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        List<string> history;
+        lock (_gate)
+        {
+            history = [.. _history];
+        }
+
+        if (query.Trim().Length == 0)
+        {
+            return Task.FromResult<IReadOnlyList<QuerySuggestion>>([.. history.Take(8).Select(static item => new QuerySuggestion(item, item, QuerySuggestionKind.History))]);
+        }
+
+        // Макет дополняет только расширения и ключи фильтров — этого хватает, чтобы проверить интерфейс.
+        var suggestions = new List<QuerySuggestion>();
+        var last = query.EndsWith(' ') ? string.Empty : query.Split(' ')[^1];
+        var head = query[..^last.Length];
+        if (last.StartsWith("ext:", StringComparison.OrdinalIgnoreCase))
+        {
+            var partial = last[4..];
+            suggestions.AddRange(_entries
+                .Select(static entry => entry.Extension)
+                .Where(extension => extension.Length > 0 && extension.StartsWith(partial, StringComparison.OrdinalIgnoreCase))
+                .Distinct()
+                .Order(StringComparer.Ordinal)
+                .Take(8)
+                .Select(extension => new QuerySuggestion($"{head}ext:{extension}", "ext:" + extension, QuerySuggestionKind.FilterValue)));
+        }
+        else if (last.Length > 0 && !last.Contains(':', StringComparison.Ordinal))
+        {
+            suggestions.AddRange(FilterKeys
+                .Where(key => key.StartsWith(last, StringComparison.OrdinalIgnoreCase) && key.Length > last.Length)
+                .Select(key => new QuerySuggestion($"{head}{key}:", key + ":", QuerySuggestionKind.FilterKey)));
+        }
+
+        return Task.FromResult<IReadOnlyList<QuerySuggestion>>(suggestions);
+    }
+
+    /// <inheritdoc />
+    public Task DeleteHistoryAsync(string query, CancellationToken cancellationToken)
+    {
+        lock (_gate)
+        {
+            _history.RemoveAll(item => string.Equals(item, query, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task ClearHistoryAsync(CancellationToken cancellationToken)
+    {
+        lock (_gate)
+        {
+            _history.Clear();
+        }
+
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc />

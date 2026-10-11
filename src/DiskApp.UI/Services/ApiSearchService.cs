@@ -7,6 +7,7 @@ using DiskApp.Contracts.Search;
 using DiskApp.UI.Models;
 
 using ContractKind = DiskApp.Contracts.Entries.FileKind;
+using ContractSuggestionKind = DiskApp.Contracts.Search.SuggestionKind;
 using FileKind = DiskApp.UI.Models.FileKind;
 
 namespace DiskApp.UI.Services;
@@ -22,6 +23,7 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
     private const int RecentCount = 20;
     private const int SectionCount = 8;
     private const int HistoryCount = 50;
+    private const int SuggestionCount = 8;
 
     private readonly IDiskAppApi _api = api ?? throw new ArgumentNullException(nameof(api));
     private readonly ConcurrentDictionary<long, RootInfo> _roots = new();
@@ -84,6 +86,24 @@ public sealed class ApiSearchService(IDiskAppApi api) : ISearchService
         var history = await _api.GetHistoryAsync(HistoryCount, cancellationToken).ConfigureAwait(false);
         return [.. history.Select(static item => item.Query)];
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<QuerySuggestion>> SuggestAsync(string query, CancellationToken cancellationToken)
+    {
+        var response = await _api.SuggestAsync(query, SuggestionCount, cancellationToken).ConfigureAwait(false);
+        return [.. response.Items.Select(static item => new QuerySuggestion(item.Query, item.Display, item.Kind switch
+        {
+            ContractSuggestionKind.FilterKey => QuerySuggestionKind.FilterKey,
+            ContractSuggestionKind.FilterValue => QuerySuggestionKind.FilterValue,
+            _ => QuerySuggestionKind.History,
+        }))];
+    }
+
+    /// <inheritdoc />
+    public Task DeleteHistoryAsync(string query, CancellationToken cancellationToken) => _api.DeleteHistoryEntryAsync(query, cancellationToken);
+
+    /// <inheritdoc />
+    public Task ClearHistoryAsync(CancellationToken cancellationToken) => _api.ClearHistoryAsync(cancellationToken);
 
     /// <inheritdoc />
     public async Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken)

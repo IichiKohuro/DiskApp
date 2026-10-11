@@ -166,6 +166,16 @@ public sealed partial class QuickSearchViewModel
                 }
 
                 break;
+            case QuickSearchCommand.AcceptSuggestion:
+                if (Suggestions.Count > 0)
+                {
+                    ApplySuggestion(Suggestions[0]);
+                }
+
+                break;
+            case QuickSearchCommand.ToggleFilters:
+                ToggleFilters();
+                break;
             case QuickSearchCommand.ContextMenu:
                 // Меню показывает представление: ему нужен элемент списка.
                 break;

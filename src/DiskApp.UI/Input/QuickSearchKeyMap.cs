@@ -56,8 +56,14 @@ public enum QuickSearchCommand
     /// <summary>Закрепить или открепить; <c>Ctrl+P</c>.</summary>
     TogglePin,
 
-    /// <summary>Контекстное меню; <c>Tab</c>, <c>Shift+F10</c>, клавиша меню.</summary>
+    /// <summary>Контекстное меню; <c>Tab</c> (если нет подсказки), <c>Shift+F10</c>, клавиша меню.</summary>
     ContextMenu,
+
+    /// <summary>Дополнить запрос первой подсказкой; <c>Tab</c>, пока под полем видны подсказки к фильтру.</summary>
+    AcceptSuggestion,
+
+    /// <summary>Показать или скрыть чипы фильтров; <c>Ctrl+F</c>.</summary>
+    ToggleFilters,
 
     /// <summary>Очистить запрос, отменить действие или закрыть окно; <c>Esc</c>.</summary>
     Escape,
@@ -69,7 +75,8 @@ public enum QuickSearchCommand
 /// <param name="IsEmpty">Поле пустое.</param>
 /// <param name="HasSelection">В поле выделен текст.</param>
 /// <param name="CaretAtEnd">Курсор в конце текста.</param>
-public readonly record struct QueryBoxState(bool IsEmpty, bool HasSelection, bool CaretAtEnd);
+/// <param name="HasSuggestions">Под полем видны подсказки к фильтру: <c>Tab</c> дополняет, а не открывает меню.</param>
+public readonly record struct QueryBoxState(bool IsEmpty, bool HasSelection, bool CaretAtEnd, bool HasSuggestions = false);
 
 /// <summary>
 /// Команда, найденная по клавише.
@@ -194,7 +201,9 @@ public static class QuickSearchKeyMap
             Key.Delete when none && box.CaretAtEnd && !box.HasSelection => new(QuickSearchCommand.Delete),
             Key.P when ctrl => new(QuickSearchCommand.TogglePin),
 
+            Key.Tab when none && box.HasSuggestions => new(QuickSearchCommand.AcceptSuggestion),
             Key.Tab when none => new(QuickSearchCommand.ContextMenu),
+            Key.F when ctrl => new(QuickSearchCommand.ToggleFilters),
             Key.F10 when modifiers == KeyModifiers.Shift => new(QuickSearchCommand.ContextMenu),
             Key.Apps when none => new(QuickSearchCommand.ContextMenu),
 

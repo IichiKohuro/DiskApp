@@ -189,6 +189,39 @@ public sealed class ApiSearchServiceTests
         fake.Opened.ShouldBe((42L, "a"));
     }
 
+    [Fact]
+    public async Task Suggest_ServerItems_MapKindsAndHistoryCalls()
+    {
+        // Arrange
+        var (api, fake) = FakeDiskAppApi.Create();
+        string? deleted = null;
+        fake.Handlers[nameof(IDiskAppApi.SuggestAsync)] = _ => Task.FromResult(new SuggestResponse(
+        [
+            new SuggestionDto("ext:", "ext:", SuggestionKind.FilterKey),
+            new SuggestionDto("ext:pdf", "ext:pdf", SuggestionKind.FilterValue),
+            new SuggestionDto("отчёт", "отчёт", SuggestionKind.History),
+        ]));
+        fake.Handlers[nameof(IDiskAppApi.DeleteHistoryEntryAsync)] = args =>
+        {
+            deleted = (string)args[0]!;
+            return Task.CompletedTask;
+        };
+        fake.Handlers[nameof(IDiskAppApi.ClearHistoryAsync)] = _ => Task.CompletedTask;
+        var service = new ApiSearchService(api);
+        var token = TestContext.Current.CancellationToken;
+
+        // Act
+        var suggestions = await service.SuggestAsync("ex", token);
+        await service.DeleteHistoryAsync("отчёт", token);
+        await service.ClearHistoryAsync(token);
+
+        // Assert
+        suggestions.Select(static item => item.Kind).ShouldBe([QuerySuggestionKind.FilterKey, QuerySuggestionKind.FilterValue, QuerySuggestionKind.History]);
+        suggestions[2].IsHistory.ShouldBeTrue();
+        deleted.ShouldBe("отчёт");
+        fake.Calls.ShouldContain(nameof(IDiskAppApi.ClearHistoryAsync));
+    }
+
     [Theory]
     [InlineData(ContractKind.Folder, FileKind.Folder)]
     [InlineData(ContractKind.Executable, FileKind.Installer)]
