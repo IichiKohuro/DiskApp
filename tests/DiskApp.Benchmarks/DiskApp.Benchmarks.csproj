@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\DiskApp.Core\DiskApp.Core.csproj" />
     <ProjectReference Include="..\..\src\DiskApp.Infrastructure\DiskApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\DiskApp.Server\DiskApp.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>

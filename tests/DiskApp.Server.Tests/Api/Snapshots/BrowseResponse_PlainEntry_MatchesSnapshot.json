@@ -1,0 +1,27 @@
+{
+  "path": "D:\\Документы",
+  "rootId": 1,
+  "items": [
+    {
+      "id": 42,
+      "rootId": 1,
+      "parentId": 7,
+      "name": "Отчёт за 2026.pdf",
+      "fullPath": "D:\\Документы\\Отчёты\\Отчёт за 2026.pdf",
+      "relPath": "Отчёты\\Отчёт за 2026.pdf",
+      "extension": "pdf",
+      "isDirectory": false,
+      "size": 1234567,
+      "createdUtc": "2026-10-01T09:30:00+00:00",
+      "modifiedUtc": "2026-10-10T09:30:00+00:00",
+      "kind": "Pdf",
+      "iconKey": "ext:pdf",
+      "isHidden": false,
+      "isCloudPlaceholder": false,
+      "isFavorite": false,
+      "openCount": 3,
+      "lastOpenedUtc": "2026-10-11T09:30:00+00:00"
+    }
+  ],
+  "truncated": false
+}

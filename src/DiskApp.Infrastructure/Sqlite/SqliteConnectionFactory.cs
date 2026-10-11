@@ -27,6 +27,7 @@ public sealed class SqliteConnectionFactory
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(databasePath);
 
+        SqliteGlobalConfiguration.Apply();
         DapperConfiguration.EnsureConfigured();
         DatabasePath = Path.GetFullPath(databasePath);
         ConnectionString = new SqliteConnectionStringBuilder

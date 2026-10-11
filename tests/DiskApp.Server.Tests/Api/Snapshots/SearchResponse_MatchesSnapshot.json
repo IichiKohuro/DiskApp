@@ -1,0 +1,63 @@
+{
+  "items": [
+    {
+      "id": 42,
+      "rootId": 1,
+      "parentId": 7,
+      "name": "Отчёт за 2026.pdf",
+      "fullPath": "D:\\Документы\\Отчёты\\Отчёт за 2026.pdf",
+      "relPath": "Отчёты\\Отчёт за 2026.pdf",
+      "extension": "pdf",
+      "isDirectory": false,
+      "size": 1234567,
+      "createdUtc": "2026-10-01T09:30:00+00:00",
+      "modifiedUtc": "2026-10-10T09:30:00+00:00",
+      "kind": "Pdf",
+      "iconKey": "ext:pdf",
+      "isHidden": false,
+      "isCloudPlaceholder": false,
+      "isFavorite": true,
+      "openCount": 3,
+      "lastOpenedUtc": "2026-10-11T09:30:00+00:00",
+      "tags": [
+        {
+          "id": 5,
+          "name": "работа",
+          "color": "#3366FF"
+        }
+      ],
+      "score": 0.92,
+      "match": "Prefix",
+      "nameHighlights": [
+        {
+          "start": 0,
+          "length": 5
+        }
+      ],
+      "pathHighlights": []
+    }
+  ],
+  "total": 120,
+  "isTotalApproximate": false,
+  "nextCursor": "AAAAAAAA8D8qAAAAAAAAAA",
+  "elapsedMs": 12.5,
+  "isPartial": false,
+  "includesFuzzy": false,
+  "warnings": [
+    "Корень «Работа» не найден."
+  ],
+  "tokens": [
+    {
+      "kind": "Term",
+      "start": 0,
+      "length": 5,
+      "text": "отчет"
+    },
+    {
+      "kind": "Filter",
+      "start": 6,
+      "length": 7,
+      "text": "ext:pdf"
+    }
+  ]
+}

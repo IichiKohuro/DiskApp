@@ -1,0 +1,32 @@
+{
+  "state": "Indexing",
+  "isPaused": false,
+  "roots": [
+    {
+      "rootId": 1,
+      "path": "D:\\Документы",
+      "label": "Документы",
+      "status": "Scanning",
+      "runningTask": "FullScan",
+      "isQueued": false,
+      "progress": {
+        "rootId": 1,
+        "phase": "Writing",
+        "scanned": 15000,
+        "written": 14500,
+        "currentPath": "D:\\Документы\\Фото",
+        "ratePerSecond": 2400.5,
+        "elapsedSeconds": 6.25
+      },
+      "lastScanUtc": "2026-10-11T09:30:00+00:00"
+    },
+    {
+      "rootId": 2,
+      "path": "E:\\Архив",
+      "label": "Архив",
+      "status": "Offline",
+      "message": "Диск отключён.",
+      "isQueued": true
+    }
+  ]
+}

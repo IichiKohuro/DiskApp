@@ -1,0 +1,25 @@
+{
+  "status": {
+    "index": {
+      "state": "Idle",
+      "isPaused": false,
+      "roots": []
+    },
+    "operations": []
+  },
+  "changes": {
+    "rootId": 1,
+    "changes": [
+      {
+        "kind": "Modified",
+        "relPath": "Отчёты",
+        "isDirectory": true
+      }
+    ]
+  },
+  "completed": {
+    "operationId": "00000000-0000-0000-0000-000000000000",
+    "state": "Failed",
+    "message": "Нет места на диске."
+  }
+}

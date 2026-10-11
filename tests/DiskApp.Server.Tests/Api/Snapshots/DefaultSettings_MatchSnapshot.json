@@ -1,0 +1,80 @@
+{
+  "hotkeys": {
+    "quickSearch": "Ctrl+Alt+D",
+    "triage": "Ctrl+Alt+I"
+  },
+  "appearance": {
+    "theme": "System",
+    "backdrop": "Mica",
+    "useSystemAccent": true,
+    "reduceMotion": false
+  },
+  "indexing": {
+    "exclusions": [
+      {
+        "kind": "Glob",
+        "pattern": "$RECYCLE.BIN"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "System Volume Information"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "$Recycle.Bin"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "node_modules"
+      },
+      {
+        "kind": "Glob",
+        "pattern": ".git"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "bin"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "obj"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "*.tmp"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "~$*"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "*.crdownload"
+      },
+      {
+        "kind": "Glob",
+        "pattern": "*.part"
+      }
+    ],
+    "includeHiddenByDefault": false,
+    "includeSystemByDefault": false,
+    "batchSize": 5000,
+    "watcherDebounceMilliseconds": 400,
+    "reconcileIntervalMinutes": 360,
+    "followReparsePoints": false,
+    "maxScanParallelism": 0
+  },
+  "search": {
+    "pageSize": 50,
+    "candidateLimit": 2000,
+    "historyLimit": 100,
+    "frecencyHalfLifeDays": 30,
+    "rankingPreset": "Balanced"
+  },
+  "tray": {
+    "startMinimized": true,
+    "closeToTray": true,
+    "confirmExitDuringOperations": true,
+    "autoStart": false
+  }
+}

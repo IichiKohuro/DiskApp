@@ -1,0 +1,30 @@
+{
+  "id": "2f3b6c1e-9d7a-4b8e-a1f2-3c4d5e6f7a8b",
+  "kind": "Copy",
+  "state": "WaitingDecision",
+  "sources": [
+    "D:\\Входящие\\scan.png"
+  ],
+  "destination": "D:\\Документы",
+  "createdUtc": "2026-10-11T09:30:00+00:00",
+  "progress": {
+    "operationId": "2f3b6c1e-9d7a-4b8e-a1f2-3c4d5e6f7a8b",
+    "processedItems": 1,
+    "totalItems": 3,
+    "processedBytes": 1048576,
+    "totalBytes": 3145728,
+    "currentPath": "D:\\Входящие\\scan.png",
+    "bytesPerSecond": 52428800,
+    "remainingSeconds": 0.04
+  },
+  "canUndo": false,
+  "pendingConflict": {
+    "operationId": "2f3b6c1e-9d7a-4b8e-a1f2-3c4d5e6f7a8b",
+    "sourcePath": "D:\\Входящие\\scan.png",
+    "targetPath": "D:\\Документы\\scan.png",
+    "sourceSize": 1048576,
+    "sourceModifiedUtc": "2026-10-11T09:30:00+00:00",
+    "targetSize": 900000,
+    "targetModifiedUtc": "2026-09-11T09:30:00+00:00"
+  }
+}
