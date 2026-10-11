@@ -8,4 +8,8 @@
     <ProjectReference Include="..\..\src\DiskApp.Server\DiskApp.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+  </ItemGroup>
+
 </Project>

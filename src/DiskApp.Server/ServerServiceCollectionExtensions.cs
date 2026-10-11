@@ -16,6 +16,7 @@ using DiskApp.Infrastructure.Sqlite.Repositories;
 using DiskApp.Infrastructure.Sqlite.Search;
 using DiskApp.Server.Endpoints;
 using DiskApp.Server.Hosting;
+using DiskApp.Server.Realtime;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -66,7 +67,24 @@ public static class ServerServiceCollectionExtensions
         services.AddHostedService<ServerStartupService>();
         services.AddProblemDetails();
         services.ConfigureHttpJsonOptions(static json => json.SerializerOptions.TypeInfoResolverChain.Insert(0, DiskAppJsonContext.Default));
+        AddRealtime(services);
         return services;
+    }
+
+    private static void AddRealtime(IServiceCollection services)
+    {
+        // Таймауты под локальную сеть: обрыв замечается за полминуты, keep-alive не нагружает простой.
+        services.AddSignalR(static hub =>
+            {
+                hub.KeepAliveInterval = TimeSpan.FromSeconds(10);
+                hub.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+                hub.HandshakeTimeout = TimeSpan.FromSeconds(15);
+                hub.MaximumReceiveMessageSize = 64 * 1024;
+            })
+            .AddJsonProtocol(static json => json.PayloadSerializerOptions.TypeInfoResolverChain.Insert(0, DiskAppJsonContext.Default));
+        services.AddSingleton(new HubBroadcastOptions());
+        services.AddSingleton<HubBroadcaster>();
+        services.AddHostedService(static provider => provider.GetRequiredService<HubBroadcaster>());
     }
 
     private static void AddStorage(IServiceCollection services, DiskAppServerOptions options)

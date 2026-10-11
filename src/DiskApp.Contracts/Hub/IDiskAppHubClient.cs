@@ -17,7 +17,13 @@ public interface IDiskAppHubClient
     /// <summary>Смена состояния корня.</summary>
     Task OnRootStatusChanged(RootStatusChangedDto change);
 
-    /// <summary>Пакет изменений записей корня; только подписчикам корня (<see cref="HubRoutes.SubscribeRoot"/>).</summary>
+    /// <summary>
+    /// Пакет изменений записей корня; только подписчикам корня (<see cref="HubRoutes.SubscribeRoot"/>). Индексатор сообщает
+    /// об изменении содержимого папок (<see cref="EntryChangeKind.Modified"/> с признаком папки) — клиент перечитывает
+    /// открытые папки и повторяет поиск. Изменения копятся
+    /// 250 мс и уходят пакетами ограниченного размера; при лавине изменений приходит одно изменение
+    /// <see cref="EntryChangeKind.Modified"/> с пустым путём и признаком папки — «перечитайте корень».
+    /// </summary>
     Task OnEntriesChanged(EntriesChangedDto batch);
 
     /// <summary>Ход файловой операции.</summary>
@@ -31,6 +37,9 @@ public interface IDiskAppHubClient
 
     /// <summary>Настройки изменены.</summary>
     Task OnSettingsChanged(SettingsDto settings);
+
+    /// <summary>Текущее состояние индексации и активные операции: первое сообщение после каждого подключения.</summary>
+    Task OnStatus(HubStatusDto status);
 }
 
 /// <summary>
