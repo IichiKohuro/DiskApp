@@ -14,7 +14,7 @@
     <Grid Margin="{StaticResource PagePadding}" RowDefinitions="Auto,*" ColumnDefinitions="*,Auto">
         <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="4" Margin="0,0,0,16">
             <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="{loc:Str SearchPage.Search}" />
-            <TextBlock Classes="secondary" Text="{loc:Str SearchPage.TheSameWindowThatPopsUp}" />
+            <TextBlock Classes="secondary" TextWrapping="Wrap" Text="{loc:Str SearchPage.TheSameWindowThatPopsUp}" />
         </StackPanel>
         <Border Grid.Row="1" Grid.Column="0" Classes="card" Padding="12">
             <views:QuickSearchView x:Name="Search" />

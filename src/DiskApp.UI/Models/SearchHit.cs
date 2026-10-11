@@ -84,6 +84,9 @@ public sealed class SearchHit
 
     /// <summary>Значок доступности: отключённый диск или облако.</summary>
     public Symbol AvailabilitySymbol => Entry.IsOffline ? Symbol.PlugDisconnected : Symbol.Cloud;
+
+    /// <summary>Имя файла: так строку списка называет Экранный диктор (PLAN.md, этап 9.4).</summary>
+    public override string ToString() => Entry.Name;
 }
 
 /// <summary>

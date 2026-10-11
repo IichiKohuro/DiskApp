@@ -31,7 +31,7 @@
                                Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                 <TextBlock Text="DiskApp" FontSize="12" VerticalAlignment="Center" />
             </StackPanel>
-            <TextBox Grid.Column="1"
+            <TextBox AutomationProperties.Name="{loc:Str Main.FindAFileOrFolderCtrl}" Grid.Column="1"
                      x:Name="HeaderSearch"
                      Classes="header-search"
                      Width="400"

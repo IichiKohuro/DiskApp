@@ -17,7 +17,7 @@
          Клавиши разбирает карта QuickSearchKeyMap в code-behind на этапе туннелирования, чтобы стрелки управляли
          списком, а фокус оставался в поле ввода. -->
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto,Auto">
-        <TextBox Grid.Row="0"
+        <TextBox AutomationProperties.Name="{loc:Str QuickSearch.FindAFileOrFolder}" Grid.Row="0"
                  x:Name="QueryBox"
                  Classes="search"
                  Text="{Binding Query, Mode=TwoWay}"
@@ -84,7 +84,7 @@
                                     Content="{Binding Display}"
                                     Command="{Binding $parent[ItemsControl].((vm:QuickSearchViewModel)DataContext).ApplySuggestionCommand}"
                                     CommandParameter="{Binding}" />
-                            <Button Classes="remove"
+                            <Button AutomationProperties.Name="{loc:Str QuickSearch.RemoveFromHistory}" Classes="remove"
                                     Focusable="False"
                                     IsVisible="{Binding IsHistory}"
                                     ToolTip.Tip="{loc:Str QuickSearch.RemoveFromHistory}"
@@ -99,7 +99,7 @@
         </DockPanel>
 
         <Panel Grid.Row="3" Margin="0,8,0,0">
-            <ListBox x:Name="ResultsList"
+            <ListBox x:Name="ResultsList" AutomationProperties.Name="{loc:Str A11y.SearchResults}"
                      Classes="results"
                      ItemsSource="{Binding Rows}"
                      SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
@@ -305,6 +305,7 @@
                 </StackPanel>
                 <TextBox Grid.Row="1" Grid.Column="0"
                          x:Name="RenameBox"
+                         AutomationProperties.Name="{loc:Str A11y.NewName}"
                          Margin="0,8,0,0"
                          Text="{Binding RenameText, Mode=TwoWay}"
                          IsVisible="{Binding IsRenaming}" />

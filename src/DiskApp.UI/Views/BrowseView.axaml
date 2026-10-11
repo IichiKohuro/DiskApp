@@ -16,24 +16,37 @@
          слева, содержимое папки списком или плиткой, сведения о выбранном справа, строка состояния внизу.
          Клавиши как в Проводнике: Backspace / Alt+← — назад, Alt+→ — вперёд, Alt+↑ — выше, Enter — открыть,
          Ctrl+L — адресная строка, F2 — переименовать, Del — в корзину, F5 — обновить. -->
-    <Grid Margin="16,12,16,8" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="240,*,Auto">
+    <UserControl.Styles>
+        <!-- Имена для Экранного диктора (этап 9.4): строка дерева и крошка называются папкой, стрелка — действием. -->
+        <Style Selector="TreeViewItem" x:DataType="vm:FolderNode">
+            <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+        </Style>
+        <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron">
+            <Setter Property="AutomationProperties.Name" Value="{loc:Str A11y.ExpandFolder}" />
+        </Style>
+        <Style Selector="ui|FABreadcrumbBarItem" x:DataType="vm:BrowseCrumb">
+            <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid x:Name="LayoutGrid" Margin="16,12,16,8" RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="240,*,Auto">
 
         <!-- Панель команд -->
         <DockPanel Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,8">
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
-                <Button Classes="tool" Command="{Binding GoBackCommand}" IsEnabled="{Binding CanGoBack}" ToolTip.Tip="{loc:Str Browse.BackAlt}">
+                <Button AutomationProperties.Name="{loc:Str Browse.BackAlt}" Classes="tool" Command="{Binding GoBackCommand}" IsEnabled="{Binding CanGoBack}" ToolTip.Tip="{loc:Str Browse.BackAlt}">
                     <ic:SymbolIcon Symbol="ArrowLeft" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding GoForwardCommand}" IsEnabled="{Binding CanGoForward}" ToolTip.Tip="{loc:Str Browse.ForwardAlt}">
+                <Button AutomationProperties.Name="{loc:Str Browse.ForwardAlt}" Classes="tool" Command="{Binding GoForwardCommand}" IsEnabled="{Binding CanGoForward}" ToolTip.Tip="{loc:Str Browse.ForwardAlt}">
                     <ic:SymbolIcon Symbol="ArrowRight" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding GoUpCommand}" IsEnabled="{Binding CanGoUp}" ToolTip.Tip="{loc:Str Browse.UpOneLevelAlt}">
+                <Button AutomationProperties.Name="{loc:Str Browse.UpOneLevelAlt}" Classes="tool" Command="{Binding GoUpCommand}" IsEnabled="{Binding CanGoUp}" ToolTip.Tip="{loc:Str Browse.UpOneLevelAlt}">
                     <ic:SymbolIcon Symbol="ArrowUp" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Str Common.RefreshF5}">
+                <Button AutomationProperties.Name="{loc:Str Common.RefreshF5}" Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Str Common.RefreshF5}">
                     <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
                 </Button>
-                <Button Classes="tool" ToolTip.Tip="{loc:Str Browse.CreateAFolderCtrlShiftN}">
+                <Button AutomationProperties.Name="{loc:Str Browse.CreateAFolderCtrlShiftN}" Classes="tool" ToolTip.Tip="{loc:Str Browse.CreateAFolderCtrlShiftN}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <ic:SymbolIcon Symbol="Add" FontSize="16" />
                         <TextBlock Text="{loc:Str Common.Create}" />
@@ -49,7 +62,7 @@
                     </Button.Flyout>
                 </Button>
             </StackPanel>
-            <TextBox x:Name="AddressBox" Text="{Binding AddressText, Mode=TwoWay}" PlaceholderText="{loc:Str Browse.FolderPathInsideTheRootsCtrl}">
+            <TextBox AutomationProperties.Name="{loc:Str Browse.FolderPathInsideTheRootsCtrl}" x:Name="AddressBox" Text="{Binding AddressText, Mode=TwoWay}" PlaceholderText="{loc:Str Browse.FolderPathInsideTheRootsCtrl}">
                 <TextBox.KeyBindings>
                     <KeyBinding Gesture="Enter" Command="{Binding GoToAddressCommand}" />
                 </TextBox.KeyBindings>
@@ -58,17 +71,17 @@
 
         <!-- Крошки -->
         <DockPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="8,0,0,8" VerticalAlignment="Center">
-                <TextBox Width="140" PlaceholderText="{loc:Str Browse.FilterInFolder}" Text="{Binding Filter, Mode=TwoWay}" />
-                <ComboBox Width="120" ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.FileKind}" />
-                <ComboBox Width="140" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Sort}" />
-                <ToggleButton Classes="tool" IsChecked="{Binding Descending, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Descending}">
+            <WrapPanel x:Name="FilterBar" DockPanel.Dock="Right" ItemSpacing="6" LineSpacing="6" Margin="8,0,0,8" VerticalAlignment="Center">
+                <TextBox AutomationProperties.Name="{loc:Str Browse.FilterInFolder}" Width="140" PlaceholderText="{loc:Str Browse.FilterInFolder}" Text="{Binding Filter, Mode=TwoWay}" />
+                <ComboBox AutomationProperties.Name="{loc:Str Browse.FileKind}" Width="120" ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.FileKind}" />
+                <ComboBox AutomationProperties.Name="{loc:Str Browse.Sort}" Width="140" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Sort}" />
+                <ToggleButton AutomationProperties.Name="{loc:Str Browse.Descending}" Classes="tool" IsChecked="{Binding Descending, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Descending}">
                     <ic:SymbolIcon Symbol="ArrowSortDown" FontSize="16" />
                 </ToggleButton>
-                <ToggleButton Classes="tool" IsChecked="{Binding IsTiles, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Tiles}">
+                <ToggleButton AutomationProperties.Name="{loc:Str Browse.Tiles}" Classes="tool" IsChecked="{Binding IsTiles, Mode=TwoWay}" ToolTip.Tip="{loc:Str Browse.Tiles}">
                     <ic:SymbolIcon Symbol="Grid" FontSize="16" />
                 </ToggleButton>
-            </StackPanel>
+            </WrapPanel>
             <ui:FABreadcrumbBar x:Name="Breadcrumbs"
                                 Margin="8,0,0,8"
                                 VerticalAlignment="Center"
@@ -77,7 +90,7 @@
 
         <!-- Дерево корней и папок -->
         <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" Classes="card" Padding="4">
-            <TreeView x:Name="FolderTree" ItemsSource="{Binding Tree}">
+            <TreeView x:Name="FolderTree" AutomationProperties.Name="{loc:Str A11y.FolderTree}" ItemsSource="{Binding Tree}">
                 <TreeView.Styles>
                     <Style Selector="TreeViewItem" x:DataType="vm:FolderNode">
                         <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
@@ -97,13 +110,13 @@
         <!-- Содержимое папки -->
         <Border Grid.Row="2" Grid.Column="1" Classes="card" Padding="8" Margin="8,0,0,0">
             <Panel>
-                <ListBox x:Name="ItemsList"
+                <ListBox x:Name="ItemsList" AutomationProperties.Name="{loc:Str A11y.FolderContents}"
                          Classes="results"
                          ItemsSource="{Binding Items}"
                          ItemTemplate="{StaticResource FileHitTemplate}"
                          SelectionMode="Multiple"
                          IsVisible="{Binding !IsTiles}" />
-                <ListBox x:Name="TilesList"
+                <ListBox x:Name="TilesList" AutomationProperties.Name="{loc:Str A11y.FolderContents}"
                          Classes="tiles"
                          ItemsSource="{Binding Items}"
                          SelectionMode="Multiple"

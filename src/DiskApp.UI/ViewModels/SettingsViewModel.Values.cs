@@ -28,6 +28,9 @@ public sealed partial class AccentChoice(string color) : ObservableObject
     /// <summary>Цвет <c>#RRGGBB</c>.</summary>
     public string Color { get; } = color;
 
+    /// <summary>Имя для Экранного диктора (PLAN.md, этап 9.4): «Акцентный цвет #0078D4».</summary>
+    public string AccessibleName => L.F("A11y.AccentColor", Color);
+
     /// <summary>Выбран.</summary>
     [ObservableProperty]
     public partial bool IsSelected { get; set; }

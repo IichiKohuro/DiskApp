@@ -57,8 +57,14 @@ public partial class BrowseView : UserControl
     {
         base.OnSizeChanged(e);
 
-        // Сведениям нужно место: на узком окне остаются дерево и содержимое.
-        DetailsCard.IsVisible = e.NewSize.Width >= 1000;
+        // Сведениям нужно место: на узком окне остаются дерево и содержимое. Ещё уже (масштаб 150 %, этап 9.4) — дерево
+        // сужается, а фильтры уходят на свою строку над содержимым, чтобы ничего не обрезалось справа.
+        var width = e.NewSize.Width;
+        DetailsCard.IsVisible = width >= 1000;
+        var narrow = width < 780;
+        LayoutGrid.ColumnDefinitions[0].Width = new GridLength(narrow ? 180 : 240);
+        DockPanel.SetDock(FilterBar, narrow ? Dock.Top : Dock.Right);
+        FilterBar.HorizontalAlignment = narrow ? Avalonia.Layout.HorizontalAlignment.Right : Avalonia.Layout.HorizontalAlignment.Stretch;
     }
 
     private void PushSelection(ListBox list) => ViewModel?.UpdateSelection([.. list.SelectedItems?.OfType<SearchHit>() ?? []]);

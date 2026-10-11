@@ -14,19 +14,19 @@
     <Grid Margin="16,12,16,8" RowDefinitions="Auto,*,Auto" ColumnDefinitions="260,*">
         <DockPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Bottom">
-                <Button Classes="tool" Command="{Binding CreateTagCommand}" ToolTip.Tip="{loc:Str Tags.NewTag}">
+                <Button AutomationProperties.Name="{loc:Str Tags.NewTag}" Classes="tool" Command="{Binding CreateTagCommand}" ToolTip.Tip="{loc:Str Tags.NewTag}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <ic:SymbolIcon Symbol="Add" FontSize="16" />
                         <TextBlock Text="{loc:Str Tags.NewTag}" />
                     </StackPanel>
                 </Button>
-                <Button Classes="tool" Command="{Binding EditTagCommand}" ToolTip.Tip="{loc:Str Tags.RenameOrChangeColor}">
+                <Button AutomationProperties.Name="{loc:Str Tags.RenameOrChangeColor}" Classes="tool" Command="{Binding EditTagCommand}" ToolTip.Tip="{loc:Str Tags.RenameOrChangeColor}">
                     <ic:SymbolIcon Symbol="Edit" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding DeleteTagCommand}" ToolTip.Tip="{loc:Str Tags.DeleteTagFilesStay}">
+                <Button AutomationProperties.Name="{loc:Str Tags.DeleteTagFilesStay}" Classes="tool" Command="{Binding DeleteTagCommand}" ToolTip.Tip="{loc:Str Tags.DeleteTagFilesStay}">
                     <ic:SymbolIcon Symbol="Delete" FontSize="16" />
                 </Button>
-                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Str Common.RefreshF5}">
+                <Button AutomationProperties.Name="{loc:Str Common.RefreshF5}" Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Str Common.RefreshF5}">
                     <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
                 </Button>
             </StackPanel>
@@ -39,7 +39,7 @@
         <!-- Теги -->
         <Border Grid.Row="1" Classes="card" Padding="6">
             <Panel>
-                <ListBox x:Name="TagsList" ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag, Mode=TwoWay}">
+                <ListBox x:Name="TagsList" AutomationProperties.Name="{loc:Str Common.Page.Tags}" ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag, Mode=TwoWay}">
                     <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="m:TagInfo">
                             <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4">
@@ -61,7 +61,7 @@
         <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="8" Margin="8,0,0,0">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Top" Theme="{StaticResource BodyStrongTextBlockStyle}" Margin="6,2,6,8" Text="{Binding FilesTitle}" />
-                <ListBox x:Name="FilesList"
+                <ListBox x:Name="FilesList" AutomationProperties.Name="{loc:Str A11y.TaggedFiles}"
                          Classes="results"
                          ItemsSource="{Binding Files}"
                          SelectedItem="{Binding SelectedFile, Mode=TwoWay}"

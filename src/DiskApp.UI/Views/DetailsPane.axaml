@@ -27,31 +27,31 @@
                 <views:FileDetailsView />
 
                 <StackPanel Spacing="6" DataContext="{Binding $parent[UserControl].DataContext}" x:DataType="vm:QuickSearchViewModel">
-                    <Button Classes="accent" HorizontalAlignment="Stretch" Command="{Binding OpenCommand}">
+                    <Button AutomationProperties.Name="{loc:Str Common.Open}" Classes="accent" HorizontalAlignment="Stretch" Command="{Binding OpenCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="Open" FontSize="16" />
                             <TextBlock Text="{loc:Str Common.Open}" />
                         </StackPanel>
                     </Button>
-                    <Button HorizontalAlignment="Stretch" Command="{Binding RevealCommand}">
+                    <Button AutomationProperties.Name="{loc:Str DetailsPane.ShowInFolder}" HorizontalAlignment="Stretch" Command="{Binding RevealCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="FolderOpen" FontSize="16" />
                             <TextBlock Text="{loc:Str DetailsPane.ShowInFolder}" />
                         </StackPanel>
                     </Button>
-                    <Button HorizontalAlignment="Stretch" Command="{Binding CopyPathCommand}">
+                    <Button AutomationProperties.Name="{loc:Str Common.CopyPath}" HorizontalAlignment="Stretch" Command="{Binding CopyPathCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="DocumentCopy" FontSize="16" />
                             <TextBlock Text="{loc:Str Common.CopyPath}" />
                         </StackPanel>
                     </Button>
-                    <Button HorizontalAlignment="Stretch" Command="{Binding TogglePinCommand}">
+                    <Button AutomationProperties.Name="{Binding PinMenuText}" HorizontalAlignment="Stretch" Command="{Binding TogglePinCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="Pin" FontSize="16" />
                             <TextBlock Text="{Binding PinMenuText}" />
                         </StackPanel>
                     </Button>
-                    <Button HorizontalAlignment="Stretch" Command="{Binding PropertiesCommand}">
+                    <Button AutomationProperties.Name="{loc:Str Common.Properties}" HorizontalAlignment="Stretch" Command="{Binding PropertiesCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="Info" FontSize="16" />
                             <TextBlock Text="{loc:Str Common.Properties}" />

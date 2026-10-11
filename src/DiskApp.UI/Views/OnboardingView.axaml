@@ -34,7 +34,7 @@
                             <ItemsControl ItemsSource="{Binding Folders}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:FolderChoice">
-                                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" IsEnabled="{Binding CanToggle}" Margin="0,2">
+                                        <CheckBox AutomationProperties.Name="{Binding Title}" IsChecked="{Binding IsChecked, Mode=TwoWay}" IsEnabled="{Binding CanToggle}" Margin="0,2">
                                             <Grid ColumnDefinitions="Auto,*">
                                                 <ic:SymbolIcon Symbol="{Binding Symbol}" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                                                 <StackPanel Grid.Column="1" Spacing="1">
@@ -47,7 +47,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
-                        <Button HorizontalAlignment="Left" Command="{Binding AddFolderCommand}">
+                        <Button AutomationProperties.Name="{loc:Str Onboarding.AddFolder}" HorizontalAlignment="Left" Command="{Binding AddFolderCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <ic:SymbolIcon Symbol="FolderAdd" FontSize="16" />
                                 <TextBlock Text="{loc:Str Onboarding.AddFolder}" />
@@ -66,22 +66,22 @@
                     </StackPanel>
 
                     <!-- Автозапуск -->
-                    <ToggleSwitch IsVisible="{Binding IsStartup}" IsChecked="{Binding StartWithWindows, Mode=TwoWay}" IsEnabled="{Binding IsAutoStartSupported}"
+                    <ToggleSwitch AutomationProperties.Name="{loc:Str Onboarding.StartWithWindows}" IsVisible="{Binding IsStartup}" IsChecked="{Binding StartWithWindows, Mode=TwoWay}" IsEnabled="{Binding IsAutoStartSupported}"
                                   OnContent="{loc:Str Onboarding.StartWithWindows}" OffContent="{loc:Str Onboarding.StartWithWindows}" />
 
                     <!-- Тема и язык -->
                     <Grid IsVisible="{Binding IsAppearance}" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="10">
                         <TextBlock VerticalAlignment="Center" Text="{loc:Str Onboarding.Theme}" />
-                        <ComboBox Grid.Column="1" MinWidth="220" ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" />
+                        <ComboBox AutomationProperties.Name="{loc:Str Onboarding.Theme}" Grid.Column="1" MinWidth="220" ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" />
                         <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{loc:Str Onboarding.Language}" />
-                        <ComboBox Grid.Row="1" Grid.Column="1" MinWidth="220" ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" />
+                        <ComboBox AutomationProperties.Name="{loc:Str Onboarding.Language}" Grid.Row="1" Grid.Column="1" MinWidth="220" ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" />
                     </Grid>
 
                     <!-- Готово -->
                     <StackPanel Spacing="10" IsVisible="{Binding IsDone}">
                         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsIndexing}" />
                         <TextBlock Text="{Binding ProgressText}" />
-                        <Button HorizontalAlignment="Left" Command="{Binding TryQuickSearchCommand}">
+                        <Button AutomationProperties.Name="{loc:Str Onboarding.TryQuickSearch}" HorizontalAlignment="Left" Command="{Binding TryQuickSearchCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <ic:SymbolIcon Symbol="Search" FontSize="16" />
                                 <TextBlock Text="{loc:Str Onboarding.TryQuickSearch}" />

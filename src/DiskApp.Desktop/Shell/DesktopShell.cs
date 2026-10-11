@@ -986,7 +986,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _lifetime.MainWindow = window;
         RestorePlacement(window);
         var appearance = _services.GetRequiredService<ISettingsStore<AppSettings>>().Current.Appearance;
-        window.ApplyAppearance(appearance.Backdrop, Math.Clamp(appearance.FontScale, 0.9, 1.5), appearance.Compact);
+        window.ApplyAppearance(EffectiveBackdrop(appearance), Math.Clamp(appearance.FontScale, 0.9, 1.5), appearance.Compact);
 
         window.Opened += (_, _) => _log.Information("Главное окно открыто через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
         window.Closing += (_, _) => SavePlacement(window);
@@ -1021,6 +1021,10 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     /// Применяет настройки без перезапуска (PLAN.md, этап 9.1): «уменьшить движение» (настройка или выключенные эффекты
     /// анимации Windows), тема, акцент, фон, масштаб и компактность окон, поведение окна поиска, уровень журнала.
     /// </summary>
+    // В высокой контрастности фон сплошной: полупрозрачный Mica и Acrylic с оттенком обоев мешают читать (этап 9.4).
+    private static BackdropMode EffectiveBackdrop(AppearanceSettings appearance)
+        => AppThemeService.IsHighContrast(Application.Current?.PlatformSettings) ? BackdropMode.Solid : appearance.Backdrop;
+
     private void ApplySettings(AppSettings settings)
     {
         var reduce = settings.Appearance.ReduceMotion || (OperatingSystem.IsWindows() && !NativeMethods.AnimationsEnabled());
@@ -1030,10 +1034,10 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         {
             _quickSearch.ReduceMotion = reduce;
             _quickSearch.HideOnDeactivate = settings.Popup.HideOnDeactivate;
-            _quickSearch.ApplyAppearance(appearance.Backdrop, scale, appearance.Compact);
+            _quickSearch.ApplyAppearance(EffectiveBackdrop(appearance), scale, appearance.Compact);
         }
 
-        _mainWindow?.ApplyAppearance(appearance.Backdrop, scale, appearance.Compact);
+        _mainWindow?.ApplyAppearance(EffectiveBackdrop(appearance), scale, appearance.Compact);
         _services.GetRequiredService<MainViewModel>().ReduceMotion = reduce;
         _services.GetRequiredService<QuickSearchViewModel>().Display = new SearchDisplay(
             settings.Popup.ShowPath, settings.Popup.ShowSize, settings.Popup.ShowDate, settings.Search.ShowSuggestionsOnEmpty);
@@ -1044,11 +1048,8 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             Core.Settings.ThemeMode.Dark => AppTheme.Dark,
             _ => AppTheme.System,
         };
-        var themes = _services.GetRequiredService<IThemeService>();
-        if (themes.Current != theme)
-        {
-            themes.Apply(theme);
-        }
+        // Применяется всегда, в том числе «как в системе» при старте: так включается высокая контрастность Windows (этап 9.4).
+        _services.GetRequiredService<IThemeService>().Apply(theme);
 
         ApplyAccent(appearance);
         DiskApp.UI.Localization.Localizer.Instance.SetLanguage(appearance.Language);

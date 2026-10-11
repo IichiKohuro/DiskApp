@@ -19,14 +19,14 @@
                     IsVisible="{Binding HasFinished}" />
             <StackPanel Spacing="4">
                 <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="{loc:Str Operations.Operations}" />
-                <TextBlock Classes="secondary" Text="{loc:Str Operations.CopyMoveRenameAndRecycleBin}" />
+                <TextBlock Classes="secondary" TextWrapping="Wrap" Text="{loc:Str Operations.CopyMoveRenameAndRecycleBin}" />
             </StackPanel>
         </DockPanel>
 
         <StackPanel Grid.Row="1" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsEmpty}">
             <ic:SymbolIcon Symbol="ArrowSync" FontSize="40" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
             <TextBlock Classes="secondary" HorizontalAlignment="Center" Text="{loc:Str Operations.NoOperationsYet}" />
-            <TextBlock Classes="tertiary" FontSize="12" HorizontalAlignment="Center" Text="{loc:Str Operations.CopyingAndMovingFromBrowseRenaming}" />
+            <TextBlock Classes="tertiary" FontSize="12" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="520" Text="{loc:Str Operations.CopyingAndMovingFromBrowseRenaming}" />
         </StackPanel>
 
         <ScrollViewer Grid.Row="1" IsVisible="{Binding !IsEmpty}">
@@ -58,7 +58,7 @@
                                             Command="{Binding $parent[ItemsControl].((vm:OperationsViewModel)DataContext).CancelCommand}"
                                             CommandParameter="{Binding}"
                                             IsVisible="{Binding CanCancel}" />
-                                    <Button Command="{Binding $parent[ItemsControl].((vm:OperationsViewModel)DataContext).UndoCommand}"
+                                    <Button AutomationProperties.Name="{loc:Str Operations.RestoreAsItWas}" Command="{Binding $parent[ItemsControl].((vm:OperationsViewModel)DataContext).UndoCommand}"
                                             CommandParameter="{Binding}"
                                             IsVisible="{Binding CanUndo}"
                                             ToolTip.Tip="{loc:Str Operations.RestoreAsItWas}">

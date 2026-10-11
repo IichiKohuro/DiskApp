@@ -53,13 +53,16 @@
                                           FontSize="14"
                                           VerticalAlignment="Center" />
                 </DockPanel>
-                <StackPanel Orientation="Horizontal" Spacing="8">
+                <!-- Путь сжимается с многоточием, а не наезжает на размер и дату, когда строка узкая (масштаб 150 %, этап 9.4) -->
+                <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Classes="secondary"
                                FontSize="12"
                                Text="{Binding DirectoryText}"
                                TextTrimming="CharacterEllipsis"
                                IsVisible="{Binding ShowPath}" />
-                    <ItemsControl ItemsSource="{Binding Entry.TagLabels}"
+                    <ItemsControl Grid.Column="1"
+                                  Margin="8,0,0,0"
+                                  ItemsSource="{Binding Entry.TagLabels}"
                                   ItemTemplate="{StaticResource TagChipTemplate}"
                                   VerticalAlignment="Center"
                                   IsVisible="{Binding HasTags}">
@@ -69,7 +72,7 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
-                </StackPanel>
+                </Grid>
             </StackPanel>
 
             <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1" MinWidth="72">

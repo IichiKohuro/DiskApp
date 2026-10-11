@@ -12,6 +12,42 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="A11y.AccentColor" xml:space="preserve">
+    <value>Акцентный цвет {0}</value>
+  </data>
+  <data name="A11y.CollectionEntries" xml:space="preserve">
+    <value>Записи коллекции</value>
+  </data>
+  <data name="A11y.Destinations" xml:space="preserve">
+    <value>Куда положить</value>
+  </data>
+  <data name="A11y.ExpandFolder" xml:space="preserve">
+    <value>Развернуть папку</value>
+  </data>
+  <data name="A11y.FolderContents" xml:space="preserve">
+    <value>Содержимое папки</value>
+  </data>
+  <data name="A11y.FolderTree" xml:space="preserve">
+    <value>Дерево папок</value>
+  </data>
+  <data name="A11y.NavigationMenu" xml:space="preserve">
+    <value>Меню навигации</value>
+  </data>
+  <data name="A11y.NewExclusionRule" xml:space="preserve">
+    <value>Новое правило исключения</value>
+  </data>
+  <data name="A11y.NewName" xml:space="preserve">
+    <value>Новое имя</value>
+  </data>
+  <data name="A11y.SearchResults" xml:space="preserve">
+    <value>Результаты поиска</value>
+  </data>
+  <data name="A11y.SettingsSections" xml:space="preserve">
+    <value>Разделы настроек</value>
+  </data>
+  <data name="A11y.TaggedFiles" xml:space="preserve">
+    <value>Файлы с тегом</value>
+  </data>
   <data name="AddFiles.Add" xml:space="preserve">
     <value>Добавить </value>
   </data>

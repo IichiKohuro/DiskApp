@@ -13,7 +13,7 @@
     <Grid Margin="16,12,16,8" RowDefinitions="Auto,*,Auto" ColumnDefinitions="260,*">
         <DockPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Bottom">
-                <Button Classes="tool" ToolTip.Tip="{loc:Str Collections.NewCollectionOrSavedQuery}">
+                <Button AutomationProperties.Name="{loc:Str Collections.NewCollectionOrSavedQuery}" Classes="tool" ToolTip.Tip="{loc:Str Collections.NewCollectionOrSavedQuery}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <ic:SymbolIcon Symbol="Add" FontSize="16" />
                         <TextBlock Text="{loc:Str Common.Create}" />
@@ -29,7 +29,7 @@
                         </MenuFlyout>
                     </Button.Flyout>
                 </Button>
-                <Button Classes="tool" ToolTip.Tip="{loc:Str Collections.ListOfPaths}">
+                <Button AutomationProperties.Name="{loc:Str Collections.ListOfPaths}" Classes="tool" ToolTip.Tip="{loc:Str Collections.ListOfPaths}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <ic:SymbolIcon Symbol="DocumentText" FontSize="16" />
                         <TextBlock Text="{loc:Str Collections.List}" />
@@ -42,7 +42,7 @@
                         </MenuFlyout>
                     </Button.Flyout>
                 </Button>
-                <Button Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Str Common.RefreshF5}">
+                <Button AutomationProperties.Name="{loc:Str Common.RefreshF5}" Classes="tool" Command="{Binding RefreshCommand}" ToolTip.Tip="{loc:Str Common.RefreshF5}">
                     <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="16" />
                 </Button>
             </StackPanel>
@@ -54,7 +54,7 @@
 
         <!-- Списки -->
         <Border Grid.Row="1" Classes="card" Padding="6">
-            <ListBox x:Name="ListsBox" ItemsSource="{Binding Lists}" SelectedItem="{Binding SelectedList, Mode=TwoWay}" DragDrop.AllowDrop="True">
+            <ListBox x:Name="ListsBox" AutomationProperties.Name="{loc:Str Common.Page.Collections}" ItemsSource="{Binding Lists}" SelectedItem="{Binding SelectedList, Mode=TwoWay}" DragDrop.AllowDrop="True">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:CollectionListItem">
                         <Grid ColumnDefinitions="Auto,*" Margin="0,4">
@@ -81,20 +81,20 @@
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="6,2,6,8">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" IsVisible="{Binding IsEditable}">
-                        <Button Classes="tool" Command="{Binding MoveUpCommand}" ToolTip.Tip="{loc:Str Collections.UpAlt}">
+                        <Button AutomationProperties.Name="{loc:Str Collections.UpAlt}" Classes="tool" Command="{Binding MoveUpCommand}" ToolTip.Tip="{loc:Str Collections.UpAlt}">
                             <ic:SymbolIcon Symbol="ArrowUp" FontSize="14" />
                         </Button>
-                        <Button Classes="tool" Command="{Binding MoveDownCommand}" ToolTip.Tip="{loc:Str Collections.DownAlt}">
+                        <Button AutomationProperties.Name="{loc:Str Collections.DownAlt}" Classes="tool" Command="{Binding MoveDownCommand}" ToolTip.Tip="{loc:Str Collections.DownAlt}">
                             <ic:SymbolIcon Symbol="ArrowDown" FontSize="14" />
                         </Button>
-                        <Button Classes="tool" Command="{Binding RemoveFileCommand}" ToolTip.Tip="{loc:Str Collections.RemoveFromListDelTheFile}">
+                        <Button AutomationProperties.Name="{loc:Str Collections.RemoveFromListDelTheFile}" Classes="tool" Command="{Binding RemoveFileCommand}" ToolTip.Tip="{loc:Str Collections.RemoveFromListDelTheFile}">
                             <ic:SymbolIcon Symbol="Dismiss" FontSize="14" />
                         </Button>
                     </StackPanel>
                     <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding FilesTitle}" />
                 </DockPanel>
                 <Panel>
-                    <ListBox x:Name="FilesList"
+                    <ListBox x:Name="FilesList" AutomationProperties.Name="{loc:Str A11y.CollectionEntries}"
                              Classes="results"
                              ItemsSource="{Binding Files}"
                              SelectedItem="{Binding SelectedFile, Mode=TwoWay}"

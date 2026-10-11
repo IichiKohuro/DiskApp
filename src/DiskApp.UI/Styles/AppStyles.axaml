@@ -1,7 +1,28 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:DiskApp.UI.Localization"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
     <!-- Общие стили поверх FluentAvalonia: карточки, второстепенный текст, списки результатов, поле поиска.
          Цвета только из ресурсов темы (DynamicResource), чтобы светлая и тёмная темы и акцент системы работали сами. -->
+
+    <!-- Кнопка меню навигации из шаблона FluentAvalonia: без имени Экранный диктор читал «Avalonia.Controls.TextBlock» (этап 9.4) -->
+    <Style Selector="ui|FANavigationView /template/ Button#TogglePaneButton">
+        <Setter Property="AutomationProperties.Name" Value="{loc:Str A11y.NavigationMenu}" />
+    </Style>
+
+    <!-- Группа настроек называется своим заголовком; кнопка-заголовок в шаблоне FluentAvalonia тоже: её содержимое —
+         элемент строки, и без имени она звучала как имя типа -->
+    <Style Selector="ui|FASettingsExpander">
+        <Setter Property="AutomationProperties.Name" Value="{Binding $self.Header}" />
+    </Style>
+    <Style Selector="ui|FASettingsExpander /template/ Expander /template/ ToggleButton#ToggleButton">
+        <Setter Property="AutomationProperties.Name" Value="{Binding $parent[ui:FASettingsExpander].Header}" />
+    </Style>
+
+    <!-- Строка настройки называется своей подписью: иначе её имя — имя типа FluentAvalonia -->
+    <Style Selector="ui|FASettingsExpanderItem">
+        <Setter Property="AutomationProperties.Name" Value="{Binding $self.Content}" />
+    </Style>
 
     <!-- Карточка: фон слоя, тонкая обводка, радиус 8 -->
     <Style Selector="Border.card">
@@ -59,10 +80,10 @@
     </Style>
     <!-- Чипы фильтров и подсказок под полем быстрого поиска -->
     <Style Selector="Button.filter, Button.suggestion">
-        <Setter Property="Padding" Value="10,3" />
-        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="MinHeight" Value="32" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="CornerRadius" Value="16" />
         <Setter Property="BorderThickness" Value="1" />
     </Style>
     <Style Selector="Button.filter">
@@ -78,12 +99,13 @@
         <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
     </Style>
     <Style Selector="Button.suggestion.history">
-        <Setter Property="CornerRadius" Value="12,0,0,12" />
+        <Setter Property="CornerRadius" Value="16,0,0,16" />
     </Style>
     <Style Selector="Button.remove">
         <Setter Property="Padding" Value="6,0" />
         <Setter Property="MinHeight" Value="0" />
-        <Setter Property="CornerRadius" Value="0,12,12,0" />
+        <Setter Property="MinWidth" Value="32" />
+        <Setter Property="CornerRadius" Value="0,16,16,0" />
         <Setter Property="BorderThickness" Value="0,1,1,1" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
     </Style>
@@ -117,7 +139,8 @@
     <!-- Кнопки панели команд «Обзора»: компактные, без рамки -->
     <Style Selector=":is(Button).tool">
         <Setter Property="Padding" Value="8,6" />
-        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="MinWidth" Value="32" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
     </Style>
 
@@ -150,7 +173,7 @@
 
     <!-- Поле поиска в заголовке главного окна -->
     <Style Selector="TextBox.header-search">
-        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="MinHeight" Value="32" />
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="CornerRadius" Value="6" />
@@ -202,7 +225,7 @@
         <Setter Property="MinHeight" Value="40" />
     </Style>
     <Style Selector=":is(Control).compact Grid.hit">
-        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="MinHeight" Value="32" />
     </Style>
     <Style Selector=":is(Control).compact ListBox.results ListBoxItem">
         <Setter Property="Padding" Value="8,1" />
@@ -215,8 +238,8 @@
     <Style Selector="Button.swatch">
         <Setter Property="Padding" Value="3" />
         <Setter Property="Margin" Value="2" />
-        <Setter Property="MinWidth" Value="0" />
-        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="MinWidth" Value="32" />
+        <Setter Property="MinHeight" Value="32" />
         <Setter Property="CornerRadius" Value="15" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />

@@ -14,7 +14,7 @@
          содержимое страницы с плавным переходом. Страницы подбираются по DataTemplates из App.axaml. -->
     <Panel>
     <ui:FANavigationView x:Name="Navigation"
-                         PaneDisplayMode="Left"
+                         PaneDisplayMode="Auto"
                          OpenPaneLength="236"
                          CompactModeThresholdWidth="640"
                          ExpandedModeThresholdWidth="960"
@@ -44,6 +44,7 @@
                         Spacing="8"
                         Margin="16,8,16,8"
                         Background="Transparent"
+                        AutomationProperties.Name="{Binding IndexStatusShort}"
                         ToolTip.Tip="{Binding IndexStatusDetail}">
                 <Ellipse Classes="health"
                          Classes.indexing="{Binding IsHealthIndexing}"
@@ -52,7 +53,7 @@
                          Classes.starting="{Binding IsHealthStarting}"
                          Width="8" Height="8"
                          VerticalAlignment="Center" />
-                <TextBlock Classes="secondary" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding IndexStatusShort}" />
+                <TextBlock Classes="secondary" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding IndexStatusShort}" IsVisible="{Binding #Navigation.IsPaneOpen}" />
             </StackPanel>
         </ui:FANavigationView.PaneFooter>
 

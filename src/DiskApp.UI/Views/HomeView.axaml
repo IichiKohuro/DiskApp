@@ -28,21 +28,21 @@
 
             <!-- Быстрые действия -->
             <Grid ColumnDefinitions="*,16,*,16,*">
-                <Button Grid.Column="0" x:Name="QuickSearchCard" Classes="card" Command="{Binding OpenQuickSearchCommand}">
+                <Button AutomationProperties.Name="{loc:Str Home.QuickSearch}" Grid.Column="0" x:Name="QuickSearchCard" Classes="card" Command="{Binding OpenQuickSearchCommand}">
                     <StackPanel Spacing="8">
                         <ic:SymbolIcon Symbol="Search" FontSize="24" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Left" />
                         <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Home.QuickSearch}" />
                         <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" ><Run Text="{Binding Hotkeys.QuickSearchText}" /><Run Text="{loc:Str Home.HotkeyHintSuffix}" /></TextBlock>
                     </StackPanel>
                 </Button>
-                <Button Grid.Column="2" Classes="card" Command="{Binding OpenBrowseCommand}">
+                <Button AutomationProperties.Name="{loc:Str Home.BrowseFolders}" Grid.Column="2" Classes="card" Command="{Binding OpenBrowseCommand}">
                     <StackPanel Spacing="8">
                         <ic:SymbolIcon Symbol="FolderOpen" FontSize="24" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Left" />
                         <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Home.BrowseFolders}" />
                         <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{loc:Str Home.RootsTreeAndListLikeFile}" />
                     </StackPanel>
                 </Button>
-                <Button Grid.Column="4" Classes="card" Command="{Binding OpenInboxCommand}">
+                <Button AutomationProperties.Name="{loc:Str Home.SortTheInbox}" Grid.Column="4" Classes="card" Command="{Binding OpenInboxCommand}">
                     <StackPanel Spacing="8">
                         <ic:SymbolIcon Symbol="MailInbox" FontSize="24" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Left" />
                         <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Home.SortTheInbox}" />
@@ -54,7 +54,7 @@
             <!-- Корни индекса -->
             <StackPanel Spacing="8">
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" x:Name="AddRootButton" Click="OnAddRootClick">
+                    <Button AutomationProperties.Name="{loc:Str Home.AddFolder}" DockPanel.Dock="Right" x:Name="AddRootButton" Click="OnAddRootClick">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <ic:SymbolIcon Symbol="FolderAdd" FontSize="16" />
                             <TextBlock Text="{loc:Str Home.AddFolder}" />
@@ -90,17 +90,17 @@
                                     <TextBlock Grid.Row="2" Grid.Column="1" Classes="state" Margin="0,8,0,0" FontSize="13" TextWrapping="Wrap" Text="{Binding StateText}" />
                                     <ProgressBar Grid.Row="2" Grid.Column="1" VerticalAlignment="Bottom" Margin="0,0,0,-4" IsIndeterminate="True" IsVisible="{Binding IsScanning}" />
                                     <StackPanel Grid.Row="3" Grid.Column="1" Spacing="2" Margin="0,6,0,0">
-                                        <TextBlock Classes="secondary" FontSize="12" Text="{Binding SummaryText}" IsVisible="{Binding SummaryText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                                        <TextBlock Classes="secondary" FontSize="12" Text="{Binding LastScanText}" />
+                                        <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{Binding SummaryText}" IsVisible="{Binding SummaryText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                        <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{Binding LastScanText}" />
                                     </StackPanel>
                                     <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="0,10,0,0">
-                                        <Button Command="{Binding RescanCommand}" ToolTip.Tip="{loc:Str Home.FullScanAgain}">
+                                        <Button AutomationProperties.Name="{loc:Str Home.FullScanAgain}" Command="{Binding RescanCommand}" ToolTip.Tip="{loc:Str Home.FullScanAgain}">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <ic:SymbolIcon Symbol="ArrowClockwise" FontSize="14" />
                                                 <TextBlock Text="{loc:Str Home.Rescan}" />
                                             </StackPanel>
                                         </Button>
-                                        <Button Command="{Binding TogglePauseCommand}" IsVisible="{Binding CanPause}">
+                                        <Button AutomationProperties.Name="{Binding PauseText}" Command="{Binding TogglePauseCommand}" IsVisible="{Binding CanPause}">
                                             <TextBlock Text="{Binding PauseText}" />
                                         </Button>
                                     </StackPanel>
@@ -123,7 +123,7 @@
                                     Command="{Binding OpenQuickSearchCommand}" />
                             <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Home.RecentFiles}" VerticalAlignment="Center" />
                         </DockPanel>
-                        <ListBox x:Name="RecentList"
+                        <ListBox x:Name="RecentList" AutomationProperties.Name="{loc:Str Home.RecentFiles}"
                                  Classes="results files"
                                  ItemsSource="{Binding RecentFiles}"
                                  ItemTemplate="{StaticResource FileHitTemplate}"
@@ -141,7 +141,7 @@
                 <Border Classes="card" Padding="12" IsVisible="{Binding HasPinned}">
                     <StackPanel Spacing="8">
                         <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Margin="4,0" Text="{loc:Str Home.Pinned}" />
-                        <ListBox Classes="results files"
+                        <ListBox Classes="results files" AutomationProperties.Name="{loc:Str Home.Pinned}"
                                  ItemsSource="{Binding PinnedFiles}"
                                  ItemTemplate="{StaticResource FileHitTemplate}"
                                  SelectionMode="Single" />
@@ -152,7 +152,7 @@
                 <Border Classes="card" Padding="12" IsVisible="{Binding HasChangedToday}">
                     <StackPanel Spacing="8">
                         <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Margin="4,0" Text="{loc:Str Home.ChangedInTheLastDay}" />
-                        <ListBox Classes="results files"
+                        <ListBox Classes="results files" AutomationProperties.Name="{loc:Str Home.ChangedInTheLastDay}"
                                  ItemsSource="{Binding ChangedToday}"
                                  ItemTemplate="{StaticResource FileHitTemplate}"
                                  SelectionMode="Single" />
