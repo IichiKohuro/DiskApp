@@ -14,6 +14,7 @@ using DiskApp.Infrastructure.Settings;
 using DiskApp.Infrastructure.Sqlite;
 using DiskApp.Infrastructure.Sqlite.Repositories;
 using DiskApp.Infrastructure.Sqlite.Search;
+using DiskApp.Server.Endpoints;
 using DiskApp.Server.Hosting;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -61,6 +62,7 @@ public static class ServerServiceCollectionExtensions
         AddIndexing(services);
         AddSearch(services);
 
+        services.AddSingleton<EntryLookup>();
         services.AddHostedService<ServerStartupService>();
         services.AddProblemDetails();
         services.ConfigureHttpJsonOptions(static json => json.SerializerOptions.TypeInfoResolverChain.Insert(0, DiskAppJsonContext.Default));

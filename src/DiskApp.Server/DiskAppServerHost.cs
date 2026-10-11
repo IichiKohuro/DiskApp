@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
+using Scalar.AspNetCore;
 
 namespace DiskApp.Server;
 
@@ -55,12 +58,30 @@ public sealed class DiskAppServerHost : IAsyncDisposable
         builder.WebHost.UseUrls(options.Url);
         builder.WebHost.ConfigureKestrel(static kestrel => kestrel.AddServerHeader = false);
         builder.Services.AddDiskAppServer(options);
+        var development = builder.Environment.IsDevelopment();
+        if (development)
+        {
+            builder.Services.AddOpenApi(static openApi => openApi.AddDocumentTransformer(static (document, _, _) =>
+            {
+                document.Info.Title = "DiskApp API";
+                document.Info.Description = "Локальный API DiskApp: корни и индекс, поиск, записи и действия, избранное, теги, коллекции, настройки.";
+                return Task.CompletedTask;
+            }));
+        }
+
         configureServices?.Invoke(builder.Services);
 
         var app = builder.Build();
         app.UseDiskAppServer();
         configureApp?.Invoke(app);
         app.MapDiskAppApi();
+        if (development)
+        {
+            // Документ /openapi/v1.json и Scalar UI /scalar — только при разработке.
+            app.MapOpenApi();
+            app.MapScalarApiReference();
+        }
+
         return new DiskAppServerHost(app);
     }
 

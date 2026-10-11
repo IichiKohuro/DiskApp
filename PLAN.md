@@ -55,7 +55,7 @@
 
 ### Текущая позиция
 
-> **Этап 4 → подэтап 4.3 «Endpoints».** 4.1 и 4.2 готовы 2026-10-11: сервер внутри процесса десктопа, `/health`, ProblemDetails, контракты API и хаба.
+> **Этап 4 → подэтап 4.4 «SignalR».** 4.1–4.3 готовы 2026-10-11: сервер внутри процесса десктопа, `/health`, ProblemDetails, контракты API и хаба, endpoints корней, поиска, записей, избранного, тегов, коллекций и настроек (операции — вместе с 4.5).
 > 2026-10-11: этап 3 закрыт — парсер запроса с фильтрами на RU и EN, исполнение через FTS5 trigram и префикс по `name_folded`, фильтр `in:` диапазонами путей, ранжирование с пресетами, нечёткий поиск, подсветка, кэш уточнения, подсказки и история. На синтетической базе в 1 млн записей p95 всех запросов от 1,9 до 44,5 мс (бюджет 50 мс); 761 тест зелёный. Даты в SQLite переведены в целые тики (ADR-0007): база 389 МБ против бюджета 250 МБ — нужен ответ на вопрос 15. Дальше: 4.1 хост → 4.2 контракты → 4.3 endpoints.
 
 ### Протокол сессии
@@ -430,14 +430,14 @@
 
 #### 4.3 Endpoints (Minimal API, группы)
 
-- [ ] Roots: `GET /roots`, `POST /roots`, `PUT /roots/{id}`, `DELETE /roots/{id}`, `POST /roots/{id}/rescan`, `POST /roots/{id}/pause`, `POST /roots/{id}/resume`, `POST /index/rebuild`, `GET /index/status`
-- [ ] Search: `GET /search?q&limit&cursor&sort`, `POST /search` для сложных запросов, `GET /suggest?q`, `GET /history`, `DELETE /history/{id}`, `DELETE /history`
-- [ ] Entries: `GET /entries/{id}`, `GET /entries/{id}/children`, `GET /browse?path` (только внутри корней), `GET /entries/{id}/icon` (PNG, ETag), `GET /entries/{id}/thumbnail?size`, `GET /entries/{id}/content` (поток с Range — для удалённых клиентов)
-- [ ] Actions: `POST /entries/{id}/open`, `/open-with`, `/reveal`, `/properties`, `/run-as-admin`; каждое открытие пишет в `usage`
+- [x] Roots: `GET /roots`, `POST /roots`, `PUT /roots/{id}`, `DELETE /roots/{id}`, `POST /roots/{id}/rescan`, `POST /roots/{id}/pause`, `POST /roots/{id}/resume`, `POST /index/rebuild`, `GET /index/status` — пауза отдельного корня добавлена в `IndexerService`; удаление сначала отключает корень (задача отменяется и дожидается), файлы не трогает
+- [x] Search: `GET /search?q&limit&cursor&sort`, `POST /search` для сложных запросов, `GET /suggest?q`, `GET /history`, `DELETE /history/{id}`, `DELETE /history` — запись истории удаляется `DELETE /history/entry?query=` (у истории ключ — текст запроса); курсор — непрозрачная строка Base64Url; запрос попадает в историю через `open?query=`
+- [x] Entries: `GET /entries/{id}`, `GET /entries/{id}/children`, `GET /browse?path` (только внутри корней), `GET /entries/{id}/icon` (PNG, ETag), `GET /entries/{id}/thumbnail?size`, `GET /entries/{id}/content` (поток с Range — для удалённых клиентов) — путь вне корней — 403; облачные заглушки не отдаются; иконки — через `IIconProvider`, без реализации (этап 7.4) — 501
+- [x] Actions: `POST /entries/{id}/open`, `/open-with`, `/reveal`, `/properties`, `/run-as-admin`; каждое открытие пишет в `usage` — через `IPlatformShell`, без реализации (этап 7.3) — 501; ошибка оболочки — 422 с кодом
 - [ ] Operations: `POST /operations` (copy | move | rename | delete | create-folder | create-file, политика конфликтов), `GET /operations`, `GET /operations/{id}`, `POST /operations/{id}/cancel`, `POST /operations/{id}/decision`, `POST /operations/{id}/undo`, `POST /upload` (multipart в целевую папку)
-- [ ] Favorites, Tags, Collections: CRUD; `POST /entries/{id}/tags`; `GET /recent`; `GET /pinned`
-- [ ] Settings: `GET /settings`, `PATCH /settings` (частичное обновление с валидацией); `GET /app/info`
-- [ ] OpenAPI (`Microsoft.AspNetCore.OpenApi`) и Scalar UI в Development; описания и примеры для всех endpoints
+- [x] Favorites, Tags, Collections: CRUD; `POST /entries/{id}/tags`; `GET /recent`; `GET /pinned`
+- [x] Settings: `GET /settings`, `PATCH /settings` (частичное обновление с валидацией); `GET /app/info` — JSON Merge Patch: `null` возвращает значение по умолчанию, неизвестное поле и значение вне диапазона — 400; новые настройки применяются к индексатору и поиску после перезапуска (живое применение — этап 9)
+- [x] OpenAPI (`Microsoft.AspNetCore.OpenApi`) и Scalar UI в Development; описания и примеры для всех endpoints — `/openapi/v1.json` и `/scalar`; описания и сводки у всех endpoints, примеры — в описаниях параметров
 
 #### 4.4 SignalR
 

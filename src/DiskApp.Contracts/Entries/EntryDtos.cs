@@ -1,3 +1,5 @@
+using DiskApp.Contracts.Library;
+
 namespace DiskApp.Contracts.Entries;
 
 /// <summary>
@@ -61,6 +63,9 @@ public sealed record EntryDto
 
     /// <summary>Когда открывали последний раз.</summary>
     public DateTimeOffset? LastOpenedUtc { get; init; }
+
+    /// <summary>Теги записи; <c>null</c> — тегов нет.</summary>
+    public IReadOnlyList<TagDto>? Tags { get; init; }
 
     /// <summary>Оценка ранжирования (только в поиске).</summary>
     public double? Score { get; init; }

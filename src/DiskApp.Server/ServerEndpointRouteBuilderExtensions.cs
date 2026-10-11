@@ -26,7 +26,8 @@ public static class ServerEndpointRouteBuilderExtensions
     }
 
     /// <summary>
-    /// Маршруты: <c>/health</c> и группа <c>/api/v1</c>.
+    /// Маршруты: <c>/health</c> и API <c>/api/v1</c> — корни и индекс, поиск, записи и действия, избранное, теги,
+    /// коллекции, настройки.
     /// </summary>
     /// <returns>Группа <c>/api/v1</c> для дополнительных маршрутов.</returns>
     public static RouteGroupBuilder MapDiskAppApi(this IEndpointRouteBuilder endpoints)
@@ -34,6 +35,11 @@ public static class ServerEndpointRouteBuilderExtensions
         ArgumentNullException.ThrowIfNull(endpoints);
 
         endpoints.MapHealth();
+        endpoints.MapRoots();
+        endpoints.MapSearch();
+        endpoints.MapEntries();
+        endpoints.MapLibrary();
+        endpoints.MapSettings();
         return endpoints.MapGroup(ApiRoutes.V1.Prefix);
     }
 }

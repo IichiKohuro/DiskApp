@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 using DiskApp.Contracts.App;
@@ -24,6 +25,7 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(SettingsDto))]
 [JsonSerializable(typeof(RootDto))]
 [JsonSerializable(typeof(IReadOnlyList<RootDto>))]
+[JsonSerializable(typeof(RootDto[]))]
 [JsonSerializable(typeof(CreateRootRequest))]
 [JsonSerializable(typeof(UpdateRootRequest))]
 [JsonSerializable(typeof(IndexStatusDto))]
@@ -31,12 +33,14 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(RootStatusChangedDto))]
 [JsonSerializable(typeof(EntryDto))]
 [JsonSerializable(typeof(IReadOnlyList<EntryDto>))]
+[JsonSerializable(typeof(EntryDto[]))]
 [JsonSerializable(typeof(BrowseResponse))]
 [JsonSerializable(typeof(EntriesChangedDto))]
 [JsonSerializable(typeof(SearchRequest))]
 [JsonSerializable(typeof(SearchResponse))]
 [JsonSerializable(typeof(SuggestResponse))]
 [JsonSerializable(typeof(IReadOnlyList<HistoryEntryDto>))]
+[JsonSerializable(typeof(HistoryEntryDto[]))]
 [JsonSerializable(typeof(OperationRequest))]
 [JsonSerializable(typeof(OperationDto))]
 [JsonSerializable(typeof(IReadOnlyList<OperationDto>))]
@@ -46,15 +50,18 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(ConflictDecisionDto))]
 [JsonSerializable(typeof(TagDto))]
 [JsonSerializable(typeof(IReadOnlyList<TagDto>))]
+[JsonSerializable(typeof(TagDto[]))]
 [JsonSerializable(typeof(TagRequest))]
 [JsonSerializable(typeof(EntryTagsRequest))]
 [JsonSerializable(typeof(CollectionDto))]
 [JsonSerializable(typeof(IReadOnlyList<CollectionDto>))]
+[JsonSerializable(typeof(CollectionDto[]))]
 [JsonSerializable(typeof(CollectionRequest))]
 [JsonSerializable(typeof(CollectionItemsRequest))]
 [JsonSerializable(typeof(FavoriteRequest))]
 [JsonSerializable(typeof(FavoritesOrderRequest))]
 [JsonSerializable(typeof(HubStatusDto))]
+[JsonSerializable(typeof(JsonObject))]
 public sealed partial class DiskAppJsonContext : JsonSerializerContext
 {
 }
