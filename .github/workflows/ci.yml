@@ -57,6 +57,17 @@ jobs:
       - name: Форматирование
         run: dotnet format --verify-no-changes --no-restore
 
+      # Этап 10.1: бюджеты на малых объёмах без порогов — машины CI медленнее и шумнее; шаг падает только на исключении.
+      # Полный прогон на 1 млн записей — scripts/measure.ps1 перед релизом.
+      - name: Бюджеты производительности (дымовой прогон)
+        shell: pwsh
+        run: |
+          $output = dotnet run -c Release --no-build --project tests/DiskApp.Benchmarks -- smoke 2>&1 | ForEach-Object { "$_" }
+          $code = $LASTEXITCODE
+          $output | Write-Host
+          @('## Бюджеты производительности, дымовой прогон', '', '```text') + $output + @('```') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          exit $code
+
       - name: Сводка покрытия
         if: ${{ !cancelled() }}
         shell: pwsh
