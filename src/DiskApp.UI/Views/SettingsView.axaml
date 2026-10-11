@@ -124,6 +124,33 @@
                 </ui:FASettingsExpander.Footer>
             </ui:FASettingsExpander>
 
+            <TextBlock Classes="section" Text="Интеграция с Проводником" />
+            <ui:FASettingsExpander Header="«Отправить» → DiskApp" Description="Ярлык в меню «Отправить»: выбранные файлы кладутся в папку, которую вы выберете">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Send" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding SendToEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Контекстное меню" Description="«Добавить в DiskApp» для файлов, «Открыть в DiskApp» и «Добавить в индекс» для папок">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="List" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding ContextMenuEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Ссылки diskapp://" Description="Ссылка diskapp://search?q=… открывает поиск с запросом">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Link" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding ProtocolEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
+            <TextBlock Margin="16,-2,16,6" TextWrapping="Wrap" Opacity="0.75" FontSize="12" Text="{Binding IntegrationNote}" IsVisible="{Binding HasIntegrationNote}" />
+
             <TextBlock Classes="section" Text="О программе" />
             <ui:FASettingsExpander Header="DiskApp" Description="{Binding VersionText}">
                 <ui:FASettingsExpander.IconSource>

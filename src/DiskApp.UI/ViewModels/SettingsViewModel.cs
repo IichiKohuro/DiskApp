@@ -29,11 +29,12 @@ public sealed partial class SettingsViewModel : PageViewModel
     private readonly IThemeService _themes;
     private readonly ISearchService _search;
     private readonly IAutoStartService _autoStart;
+    private readonly IShellIntegrationService _integration;
 
     /// <summary>
     /// Создаёт страницу и запускает загрузку корней индекса (<see cref="Initialization"/>).
     /// </summary>
-    public SettingsViewModel(IThemeService themes, ISearchService search, HotkeyStatus hotkeys, IAutoStartService? autoStart = null)
+    public SettingsViewModel(IThemeService themes, ISearchService search, HotkeyStatus hotkeys, IAutoStartService? autoStart = null, IShellIntegrationService? integration = null)
         : base(PageKeys.Settings, "Настройки", FASymbol.Settings)
     {
         ArgumentNullException.ThrowIfNull(themes);
@@ -43,6 +44,11 @@ public sealed partial class SettingsViewModel : PageViewModel
         _themes = themes;
         _search = search;
         _autoStart = autoStart ?? new NullAutoStartService();
+        _integration = integration ?? new NullShellIntegrationService();
+        IsIntegrationSupported = _integration.IsSupported;
+        SendToEnabled = _integration.IsEnabled(ShellIntegrationFeature.SendTo);
+        ContextMenuEnabled = _integration.IsEnabled(ShellIntegrationFeature.ContextMenu);
+        ProtocolEnabled = _integration.IsEnabled(ShellIntegrationFeature.Protocol);
         Hotkeys = hotkeys;
 
         Themes =
@@ -62,7 +68,7 @@ public sealed partial class SettingsViewModel : PageViewModel
         CloseToTray = true;
         RemindAboutInbox = true;
 
-        VersionText = $"Версия {ReadVersion()} · прототип интерфейса на макетных данных";
+        VersionText = $"Версия {ReadVersion()} · альфа";
         Initialization = RefreshAsync();
     }
 
@@ -139,6 +145,55 @@ public sealed partial class SettingsViewModel : PageViewModel
         foreach (var root in status.Roots)
         {
             Roots.Add(root);
+        }
+    }
+
+    /// <summary>Интеграции с Проводником поддерживаются.</summary>
+    public bool IsIntegrationSupported { get; }
+
+    /// <summary>Ярлык «DiskApp» в «Отправить».</summary>
+    [ObservableProperty]
+    public partial bool SendToEnabled { get; set; }
+
+    /// <summary>Пункты контекстного меню Проводника.</summary>
+    [ObservableProperty]
+    public partial bool ContextMenuEnabled { get; set; }
+
+    /// <summary>Ссылки <c>diskapp://</c>.</summary>
+    [ObservableProperty]
+    public partial bool ProtocolEnabled { get; set; }
+
+    /// <summary>Ошибка изменения интеграции; пусто — всё хорошо.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasIntegrationNote))]
+    public partial string IntegrationNote { get; set; } = string.Empty;
+
+    /// <summary>Есть ли сообщение об интеграции.</summary>
+    public bool HasIntegrationNote => IntegrationNote.Length > 0;
+
+    partial void OnSendToEnabledChanged(bool value) => ApplyIntegration(ShellIntegrationFeature.SendTo, value, enabled => SendToEnabled = enabled);
+
+    partial void OnContextMenuEnabledChanged(bool value) => ApplyIntegration(ShellIntegrationFeature.ContextMenu, value, enabled => ContextMenuEnabled = enabled);
+
+    partial void OnProtocolEnabledChanged(bool value) => ApplyIntegration(ShellIntegrationFeature.Protocol, value, enabled => ProtocolEnabled = enabled);
+
+    private void ApplyIntegration(ShellIntegrationFeature feature, bool value, Action<bool> restore)
+    {
+        // Значение из конструктора совпадает с системой: менять нечего.
+        if (_integration is null || !_integration.IsSupported || value == _integration.IsEnabled(feature))
+        {
+            return;
+        }
+
+        try
+        {
+            _integration.SetEnabled(feature, value);
+            IntegrationNote = string.Empty;
+        }
+        catch (InvalidOperationException exception)
+        {
+            IntegrationNote = exception.Message;
+            restore(_integration.IsEnabled(feature));
         }
     }
 

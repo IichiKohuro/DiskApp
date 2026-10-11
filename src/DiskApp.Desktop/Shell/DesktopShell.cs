@@ -4,6 +4,9 @@ using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
+using Avalonia.Input.Platform;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 
 using DiskApp.Client;
@@ -36,7 +39,11 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     private const string IconUri = "avares://DiskApp/Assets/DiskApp.ico";
     private static readonly TimeSpan OperationsCheckTimeout = TimeSpan.FromSeconds(2);
 
+    private static readonly TimeSpan ImportBatchWindow = TimeSpan.FromMilliseconds(400);
+
     private readonly IClassicDesktopStyleApplicationLifetime _lifetime;
+    private readonly List<string> _pendingImport = [];
+    private readonly Lock _importGate = new();
     private readonly IServiceProvider _services;
     private readonly InstanceNames _names;
     private readonly ILogger _log;
@@ -135,6 +142,42 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         _mainWindow.Show();
         _mainWindow.Activate();
+    }
+
+    // Проводник запускает пункт меню отдельно для каждого выбранного файла: запросы, пришедшие за 400 мс, —
+    // одно окно «Добавить».
+    private void QueueImport(IReadOnlyList<string> paths)
+    {
+        lock (_importGate)
+        {
+            _pendingImport.AddRange(paths);
+            if (_pendingImport.Count != paths.Count)
+            {
+                return;
+            }
+        }
+
+        _ = FlushImportAsync();
+    }
+
+    private async Task FlushImportAsync()
+    {
+        await Task.Delay(ImportBatchWindow).ConfigureAwait(true);
+        string[] paths;
+        lock (_importGate)
+        {
+            paths = [.. _pendingImport.Distinct(StringComparer.OrdinalIgnoreCase)];
+            _pendingImport.Clear();
+        }
+
+        await AddFilesAsync(paths).ConfigureAwait(true);
+    }
+
+    /// <inheritdoc />
+    public Task AddFilesAsync(IReadOnlyList<string> paths)
+    {
+        ShowMainWindow();
+        return _services.GetRequiredService<IAddFilesService>().AddAsync(paths);
     }
 
     /// <inheritdoc />
@@ -245,6 +288,17 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         if (startup.Page is { } page)
         {
             NavigateTo(page);
+        }
+
+        if (startup.Import is { Count: > 0 } import)
+        {
+            QueueImport(import);
+        }
+
+        if (startup.BrowsePath is { Length: > 0 } browsePath)
+        {
+            NavigateTo(PageKeys.Browse);
+            _ = _services.GetRequiredService<BrowseViewModel>().NavigateAsync(browsePath);
         }
 
         if (startup.ShowSearch)
@@ -585,6 +639,40 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
     private void ToggleQuickSearch() => _quickSearch?.Toggle(CursorPosition());
 
+    private async Task AddFromClipboardAsync(Window window)
+    {
+        if (window.Clipboard is not { } clipboard)
+        {
+            return;
+        }
+
+        var add = _services.GetRequiredService<IAddFilesService>();
+        try
+        {
+            if (await clipboard.TryGetFilesAsync() is { Length: > 0 } files)
+            {
+                await add.AddAsync([.. files.Select(static file => file.TryGetLocalPath()).OfType<string>()]);
+            }
+            else if (await clipboard.TryGetBitmapAsync() is { } bitmap)
+            {
+                await add.AddImageAsync(stream =>
+                {
+                    bitmap.Save(stream, new Avalonia.Media.Imaging.PngBitmapEncoderOptions());
+                    return Task.CompletedTask;
+                });
+            }
+            else
+            {
+                await add.AddTextAsync(await clipboard.TryGetTextAsync() ?? string.Empty);
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _log.Warning(exception, "Буфер обмена не сохранился в файл");
+            _services.GetRequiredService<IInfoBarService>().Show("Не удалось сохранить буфер обмена", exception.Message, FAInfoBarSeverity.Error);
+        }
+    }
+
     private MainWindow CreateMainWindow()
     {
         var viewModel = _services.GetRequiredService<MainViewModel>();
@@ -597,6 +685,16 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         var settings = _services.GetRequiredService<ISettingsStore<AppSettings>>();
         window.CloseToTray = () => settings.Current.Tray.CloseToTray;
         window.ExitRequested += (_, _) => Exit();
+
+        // Ctrl+Shift+V — содержимое буфера обмена в файл (PLAN.md, этап 8.5).
+        window.AddHandler(InputElement.KeyDownEvent, (_, e) =>
+        {
+            if (e.Key == Avalonia.Input.Key.V && e.KeyModifiers == (Avalonia.Input.KeyModifiers.Control | Avalonia.Input.KeyModifiers.Shift))
+            {
+                e.Handled = true;
+                _ = AddFromClipboardAsync(window);
+            }
+        }, Avalonia.Interactivity.RoutingStrategies.Tunnel);
 
         var hotkeys = _services.GetRequiredService<HotkeyStatus>();
         if (!hotkeys.IsRegistered)

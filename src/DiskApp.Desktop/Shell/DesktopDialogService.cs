@@ -101,6 +101,34 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
         return new ConflictAnswer(choice, applyToAll.IsChecked == true);
     }
 
+    /// <inheritdoc />
+    public async Task<bool> ShowAddFilesAsync(DiskApp.UI.ViewModels.AddFilesViewModel dialog)
+    {
+        ArgumentNullException.ThrowIfNull(dialog);
+
+        var window = mainWindow();
+        var content = new DiskApp.UI.Views.AddFilesView { DataContext = dialog };
+        var box = new FAContentDialog
+        {
+            Title = "Добавить",
+            Content = content,
+            PrimaryButtonText = "Добавить",
+            CloseButtonText = "Отмена",
+            DefaultButton = FAContentDialogButton.Primary,
+            IsPrimaryButtonEnabled = dialog.CanAdd,
+        };
+
+        // Кнопка доступна, когда выбрано место.
+        dialog.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DiskApp.UI.ViewModels.AddFilesViewModel.CanAdd))
+            {
+                box.IsPrimaryButtonEnabled = dialog.CanAdd;
+            }
+        };
+        return await box.ShowAsync(window) == FAContentDialogResult.Primary;
+    }
+
     private static TextBlock Describe(string label, long size, DateTimeOffset modified)
         => new() { Text = $"{label}: {DiskApp.UI.Text.Formatting.Size(size)}, изменён {modified.ToLocalTime():dd.MM.yyyy HH:mm}" };
 }

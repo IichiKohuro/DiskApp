@@ -229,6 +229,15 @@ public sealed partial class HomeViewModel : PageViewModel
         return added.Count;
     }
 
+    /// <summary>
+    /// Сценарий «Добавить» для брошенных на главную файлов: выбрать место и положить туда.
+    /// </summary>
+    public Task AddFilesAsync(IReadOnlyList<string> paths)
+    {
+        ArgumentNullException.ThrowIfNull(paths);
+        return _commands.AddFilesAsync(paths);
+    }
+
     /// <summary>Показывает ошибку действия на главной.</summary>
     public void ReportError(string title, Exception exception)
     {

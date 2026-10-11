@@ -14,4 +14,7 @@ public interface IAppCommands
 
     /// <summary>Открывает страницу главного окна по ключу (<see cref="ViewModels.PageKeys"/>).</summary>
     void NavigateTo(string pageKey);
+
+    /// <summary>Сценарий «Добавить»: спросить место и положить туда файлы (PLAN.md, этап 8.5).</summary>
+    Task AddFilesAsync(IReadOnlyList<string> paths);
 }

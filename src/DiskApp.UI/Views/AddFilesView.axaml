@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="460"
+             x:Class="DiskApp.UI.Views.AddFilesView"
+             x:DataType="vm:AddFilesViewModel">
+    <!-- Окно «Добавить» (PLAN.md, этап 8.5): что добавляется, поиск папки, варианты (Входящие, недавние, закреплённые,
+         найденные), копировать или переместить. Кнопки — у диалога. -->
+    <StackPanel Spacing="10" Width="480">
+        <TextBlock TextWrapping="Wrap">
+            <Run Text="Добавить " />
+            <Run FontWeight="SemiBold" Text="{Binding SourcesText}" />
+        </TextBlock>
+        <TextBox x:Name="QueryBox" PlaceholderText="Найти папку по имени" Text="{Binding Query, Mode=TwoWay}">
+            <TextBox.InnerLeftContent>
+                <ic:SymbolIcon Symbol="Search" FontSize="14" Margin="8,0,0,0" VerticalAlignment="Center" />
+            </TextBox.InnerLeftContent>
+        </TextBox>
+        <ListBox Height="220"
+                 ItemsSource="{Binding Targets}"
+                 SelectedItem="{Binding SelectedTarget, Mode=TwoWay}"
+                 SelectionMode="Single">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:AddTarget">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <ic:SymbolIcon Symbol="{Binding Symbol}" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                        <StackPanel Grid.Column="1" Spacing="1">
+                            <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Classes="tertiary" FontSize="11" Text="{Binding Path}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Classes="tertiary" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center" Text="{Binding Hint}" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Classes="secondary" FontSize="12" TextTrimming="CharacterEllipsis" Text="{Binding TargetText}" />
+        <StackPanel Orientation="Horizontal" Spacing="16">
+            <RadioButton GroupName="AddMode" Content="Копировать" IsChecked="{Binding !Move}" />
+            <RadioButton GroupName="AddMode" Content="Переместить" IsChecked="{Binding Move, Mode=TwoWay}" IsEnabled="{Binding CanMove}" />
+        </StackPanel>
+        <TextBlock Classes="tertiary" FontSize="11" TextWrapping="Wrap" IsVisible="{Binding !CanMove}"
+                   Text="Файлы вне корней индекса копируются; исходные остаются на месте." />
+    </StackPanel>
+</UserControl>

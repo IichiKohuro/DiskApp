@@ -54,5 +54,8 @@ public static class DesignData
         public void NavigateTo(string pageKey)
         {
         }
+
+        /// <inheritdoc />
+        public Task AddFilesAsync(IReadOnlyList<string> paths) => Task.CompletedTask;
     }
 }

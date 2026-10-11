@@ -67,7 +67,7 @@ public partial class HomeView : UserControl
     }
 
     private static void OnDragOver(object? sender, DragEventArgs e)
-        => e.DragEffects = e.DataTransfer.Contains(DataFormat.File) ? DragDropEffects.Link : DragDropEffects.None;
+        => e.DragEffects = e.DataTransfer.Contains(DataFormat.File) ? DragDropEffects.Copy | DragDropEffects.Link : DragDropEffects.None;
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
@@ -76,13 +76,14 @@ public partial class HomeView : UserControl
             return;
         }
 
-        var folders = items.OfType<IStorageFolder>().Select(static folder => folder.TryGetLocalPath()).OfType<string>().ToArray();
-        if (folders.Length == 0)
+        // Только папки — добавить в индекс; если есть файлы — сценарий «Добавить»: выбрать место и положить туда.
+        var paths = items.Select(static item => item.TryGetLocalPath()).OfType<string>().ToArray();
+        if (items.All(static item => item is IStorageFolder))
         {
-            viewModel.ReportError("Нужна папка", new InvalidOperationException("Перетащите папку, чтобы добавить её в индекс; файлы сюда не копируются."));
+            _ = viewModel.AddRootsAsync(paths);
             return;
         }
 
-        _ = viewModel.AddRootsAsync(folders);
+        _ = viewModel.AddFilesAsync(paths);
     }
 }

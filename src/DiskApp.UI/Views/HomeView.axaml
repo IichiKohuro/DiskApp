@@ -64,7 +64,7 @@
                     <StackPanel Spacing="6" HorizontalAlignment="Center">
                         <ic:SymbolIcon Symbol="FolderAdd" FontSize="32" HorizontalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                         <TextBlock HorizontalAlignment="Center" Text="Добавьте папку или диск, по которым искать" />
-                        <TextBlock Classes="secondary" FontSize="12" HorizontalAlignment="Center" Text="Кнопкой «Добавить папку» или перетащите папку из Проводника на эту страницу" />
+                        <TextBlock Classes="secondary" FontSize="12" HorizontalAlignment="Center" Text="Кнопкой «Добавить папку» или перетащите папку из Проводника на эту страницу; файлы, брошенные сюда, кладутся в выбранную папку" />
                     </StackPanel>
                 </Border>
                 <ItemsControl ItemsSource="{Binding Roots}">

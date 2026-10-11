@@ -59,6 +59,11 @@ public interface IDialogService
     /// Спросить, что делать с конфликтом имён: заменить, пропустить, оставить оба или отменить операцию.
     /// </summary>
     Task<DiskApp.UI.Models.ConflictAnswer> ResolveConflictAsync(DiskApp.UI.Models.ConflictInfo conflict);
+
+    /// <summary>
+    /// Показать окно «Добавить»; <c>true</c> — пользователь выбрал место и нажал «Добавить».
+    /// </summary>
+    Task<bool> ShowAddFilesAsync(DiskApp.UI.ViewModels.AddFilesViewModel dialog);
 }
 
 /// <summary>

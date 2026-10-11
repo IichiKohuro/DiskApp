@@ -33,6 +33,48 @@ public sealed record AppSettings
 
     /// <summary>Трей и запуск.</summary>
     public TraySettings Tray { get; set; } = new();
+
+    /// <summary>Добавление файлов: «Входящие», недавние места, имя файла из буфера обмена.</summary>
+    public AddSettings Add { get; set; } = new();
+}
+
+/// <summary>
+/// Добавление файлов (PLAN.md, этап 8.5).
+/// </summary>
+public sealed record AddSettings
+{
+    /// <summary>Сколько недавних мест помнить.</summary>
+    public const int RecentLimit = 8;
+
+    /// <summary>Папка «Входящие» — место по умолчанию для добавленного; <c>null</c> — первый корень.</summary>
+    public string? InboxPath { get; set; }
+
+    /// <summary>Недавние папки назначения, самые свежие первыми.</summary>
+    public IReadOnlyList<string> RecentTargets { get; set; } = [];
+
+    /// <summary>Шаблон имени файла из буфера обмена: <c>{date}</c>, <c>{time}</c>, <c>{title}</c>.</summary>
+    public string ClipboardNameTemplate { get; set; } = "{date}_{time}_{title}";
+
+    /// <summary>Равенство по содержимому: недавние места сравниваются поэлементно, а не по ссылке.</summary>
+    public bool Equals(AddSettings? other)
+        => other is not null
+            && InboxPath == other.InboxPath
+            && ClipboardNameTemplate == other.ClipboardNameTemplate
+            && RecentTargets.SequenceEqual(other.RecentTargets);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(InboxPath);
+        hash.Add(ClipboardNameTemplate);
+        foreach (var target in RecentTargets)
+        {
+            hash.Add(target);
+        }
+
+        return hash.ToHashCode();
+    }
 }
 
 /// <summary>

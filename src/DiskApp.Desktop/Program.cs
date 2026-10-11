@@ -136,12 +136,17 @@ internal static class Program
             services.AddSingleton<IRootsService, ApiRootsService>();
             services.AddSingleton<IBrowseService, ApiBrowseService>();
             services.AddSingleton<IOperationsService, ApiOperationsService>();
+            services.AddSingleton<IAddPreferences, SettingsAddPreferences>();
+            services.AddSingleton<IAddFilesService, AddFilesService>();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));
             services.AddSingleton<IAutoStartService>(_ => OperatingSystem.IsWindows() && Environment.ProcessPath is { } executable
                 ? new RegistryAutoStartService(executable, paths.IsPortable)
                 : new NullAutoStartService());
+            services.AddSingleton<IShellIntegrationService>(_ => OperatingSystem.IsWindows() && Environment.ProcessPath is { } executable
+                ? new ShellIntegrationService(executable, paths.IsPortable)
+                : new NullShellIntegrationService());
 
             // Настоящие действия оболочки (открыть, Проводник, свойства, корзина) и иконки Windows — только здесь, не в тестовых хостах.
             if (OperatingSystem.IsWindows())
