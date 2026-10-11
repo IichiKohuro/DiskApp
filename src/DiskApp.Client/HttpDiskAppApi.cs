@@ -169,6 +169,10 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
         => SendAsync(HttpMethod.Post, ApiRoutes.V1.Entry(id) + "/tags", new EntryTagsRequest { TagIds = tagIds }, Json.EntryTagsRequest, Json.EntryDto, cancellationToken);
 
     /// <inheritdoc />
+    public Task<ResolveEntriesResponse> ResolveEntriesAsync(IReadOnlyList<string> paths, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Post, ApiRoutes.V1.ResolveEntries, new ResolveEntriesRequest { Paths = paths }, Json.ResolveEntriesRequest, Json.ResolveEntriesResponse, cancellationToken);
+
+    /// <inheritdoc />
     public Task<OperationDto> EnqueueOperationAsync(OperationRequest request, CancellationToken cancellationToken = default)
         => SendAsync(HttpMethod.Post, ApiRoutes.V1.Operations, request, Json.OperationRequest, Json.OperationDto, cancellationToken);
 

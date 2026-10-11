@@ -95,6 +95,9 @@ public static class ApiRoutes
         /// <summary>Содержимое папки по пути внутри корней.</summary>
         public const string Browse = Prefix + "/browse";
 
+        /// <summary>Записи индекса по списку путей.</summary>
+        public const string ResolveEntries = Prefix + "/entries/resolve";
+
         /// <summary>Файловые операции: постановка и список.</summary>
         public const string Operations = Prefix + "/operations";
 

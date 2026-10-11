@@ -49,6 +49,7 @@ public sealed class ClientApiTests
         var collection = await api.CreateCollectionAsync(new CollectionRequest { Name = "Отчёты", Kind = CollectionKind.Manual }, TestContext.Current.CancellationToken);
         await api.SetCollectionItemsAsync(collection.Id, [hit.Id], TestContext.Current.CancellationToken);
         var items = await api.GetCollectionItemsAsync(collection.Id, TestContext.Current.CancellationToken);
+        var resolved = await api.ResolveEntriesAsync([hit.FullPath, Path.Combine(context.Files.FullPath, "missing.txt")], TestContext.Current.CancellationToken);
         var settings = await api.PatchSettingsAsync(new JsonObject { ["search"] = new JsonObject { ["pageSize"] = 80 } }, TestContext.Current.CancellationToken);
         var status = await api.GetIndexStatusAsync(TestContext.Current.CancellationToken);
         var roots = await api.GetRootsAsync(TestContext.Current.CancellationToken);
@@ -64,6 +65,8 @@ public sealed class ClientApiTests
         recent.ShouldHaveSingleItem().Id.ShouldBe(hit.Id);
         favorites.ShouldHaveSingleItem().IsFavorite.ShouldBeTrue();
         items.ShouldHaveSingleItem().Id.ShouldBe(hit.Id);
+        resolved.Entries.ShouldHaveSingleItem().Id.ShouldBe(hit.Id);
+        resolved.Missing.ShouldHaveSingleItem().ShouldEndWith("missing.txt");
         settings.Search.PageSize.ShouldBe(80);
         status.State.ShouldBe(IndexerState.Idle);
         roots.ShouldHaveSingleItem().Id.ShouldBe(root.Id);

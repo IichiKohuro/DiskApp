@@ -110,6 +110,9 @@ public interface IDiskAppApi
     /// <summary>Заменить набор тегов записи.</summary>
     Task<EntryDto> SetEntryTagsAsync(long id, IReadOnlyList<long> tagIds, CancellationToken cancellationToken = default);
 
+    /// <summary>Записи индекса по списку путей (до <see cref="ResolveEntriesRequest.MaxPaths"/>).</summary>
+    Task<ResolveEntriesResponse> ResolveEntriesAsync(IReadOnlyList<string> paths, CancellationToken cancellationToken = default);
+
     /// <summary>Поставить файловую операцию.</summary>
     Task<OperationDto> EnqueueOperationAsync(OperationRequest request, CancellationToken cancellationToken = default);
 

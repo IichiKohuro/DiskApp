@@ -56,6 +56,8 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(TagDto[]))]
 [JsonSerializable(typeof(TagRequest))]
 [JsonSerializable(typeof(EntryTagsRequest))]
+[JsonSerializable(typeof(ResolveEntriesRequest))]
+[JsonSerializable(typeof(ResolveEntriesResponse))]
 [JsonSerializable(typeof(CollectionDto))]
 [JsonSerializable(typeof(IReadOnlyList<CollectionDto>))]
 [JsonSerializable(typeof(CollectionDto[]))]

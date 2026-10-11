@@ -86,6 +86,98 @@ internal static class EntryEndpoints
             .WithName("SetEntryTags")
             .WithSummary("Теги записи")
             .WithDescription("Заменяет набор тегов записи; неизвестный тег — 400.");
+
+        entries.MapPost(ApiRoutes.V1.ResolveEntries, ResolveAsync)
+            .WithName("ResolveEntries")
+            .WithSummary("Записи по путям")
+            .WithDescription("Записи индекса для списка путей (до 1 000): импорт списков и перетаскивание в коллекции. Пути вне корней и без записи в индексе возвращаются в Missing.");
+    }
+
+    private static async Task<Results<Ok<ResolveEntriesResponse>, ValidationProblem>> ResolveAsync(
+        ResolveEntriesRequest request,
+        IRootRepository roots,
+        IFileIndexRepository entries,
+        PathNormalizer paths,
+        EntryLookup lookup,
+        CancellationToken cancellationToken)
+    {
+        if (request.Paths.Count > ResolveEntriesRequest.MaxPaths)
+        {
+            return ApiProblems.Invalid("paths", $"Не больше {ResolveEntriesRequest.MaxPaths} путей за запрос.");
+        }
+
+        var all = await roots.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        var found = new List<FileEntry>();
+        var seen = new HashSet<long>();
+        var missing = new List<string>();
+        foreach (var raw in request.Paths)
+        {
+            var entry = await FindByPathAsync(raw, all, entries, paths, cancellationToken).ConfigureAwait(false);
+            if (entry is null)
+            {
+                missing.Add(raw);
+            }
+            else if (seen.Add(entry.Id))
+            {
+                found.Add(entry);
+            }
+        }
+
+        var items = await lookup.ToDtosAsync(found, cancellationToken).ConfigureAwait(false);
+        return TypedResults.Ok(new ResolveEntriesResponse(items, missing));
+    }
+
+    /// <summary>
+    /// Запись индекса по абсолютному пути: самый глубокий корень, внутри которого лежит путь, и относительный путь в нём.
+    /// Индекс хранит путь в настоящем регистре, поэтому для пути в другом регистре настоящее написание берётся с диска.
+    /// </summary>
+    private static async Task<FileEntry?> FindByPathAsync(string? raw, IReadOnlyList<Root> roots, IFileIndexRepository entries, PathNormalizer paths, CancellationToken cancellationToken)
+    {
+        if (!paths.TryNormalize(raw, out var normalized))
+        {
+            return null;
+        }
+
+        var root = roots.Where(candidate => paths.IsNestedIn(normalized, candidate.Path)).MaxBy(static candidate => candidate.Path.Length);
+        if (root is null || !paths.TryGetRelativePath(root.Path, normalized, out var relPath) || relPath.Length == 0)
+        {
+            return null;
+        }
+
+        return await entries.GetByPathAsync(root.Id, relPath, cancellationToken).ConfigureAwait(false)
+            ?? (ActualCase(root.Path, relPath) is { } actual && !string.Equals(actual, relPath, StringComparison.Ordinal)
+                ? await entries.GetByPathAsync(root.Id, actual, cancellationToken).ConfigureAwait(false)
+                : null);
+    }
+
+    /// <summary>Относительный путь в настоящем регистре, как на диске; <c>null</c> — такого пути нет.</summary>
+    private static string? ActualCase(string rootPath, string relPath)
+    {
+        var current = rootPath;
+        var parts = new List<string>();
+        foreach (var part in relPath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
+        {
+            string? match;
+            try
+            {
+                // Шаблон без подстановочных знаков совпадает с одним именем, а сравнение в Windows не учитывает регистр.
+                match = Directory.Exists(current) ? Directory.EnumerateFileSystemEntries(current, part).FirstOrDefault() : null;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                return null;
+            }
+
+            if (match is null)
+            {
+                return null;
+            }
+
+            parts.Add(Path.GetFileName(match));
+            current = match;
+        }
+
+        return string.Join(Path.DirectorySeparatorChar, parts);
     }
 
     private static async Task<Results<Ok<EntryDto>, ProblemHttpResult>> GetAsync(long id, EntryLookup lookup, CancellationToken cancellationToken)
