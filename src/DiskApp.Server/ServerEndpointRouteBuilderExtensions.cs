@@ -14,7 +14,8 @@ namespace DiskApp.Server;
 public static class ServerEndpointRouteBuilderExtensions
 {
     /// <summary>
-    /// Промежуточные слои: краткий журнал запросов, обработчик исключений и коды ошибок в формате ProblemDetails.
+    /// Промежуточные слои: краткий журнал запросов, обработчик исключений и коды ошибок в формате ProblemDetails,
+    /// проверки локального режима (loopback, чужой Origin, токен сессии).
     /// </summary>
     public static IApplicationBuilder UseDiskAppServer(this IApplicationBuilder app)
     {
@@ -23,6 +24,7 @@ public static class ServerEndpointRouteBuilderExtensions
         app.UseMiddleware<RequestLoggingMiddleware>();
         app.UseExceptionHandler();
         app.UseStatusCodePages();
+        app.UseMiddleware<LocalSecurityMiddleware>();
         return app;
     }
 

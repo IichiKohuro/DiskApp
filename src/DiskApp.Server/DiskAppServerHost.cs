@@ -42,6 +42,10 @@ public sealed class DiskAppServerHost : IAsyncDisposable
         Action<WebApplication>? configureApp = null)
     {
         ArgumentNullException.ThrowIfNull(options);
+        if (!IsLoopbackUrl(options.Url))
+        {
+            throw new ArgumentException($"Адрес «{options.Url}» не loopback: доступ из сети появится вместе с удалённым доступом (этап 13).", nameof(options));
+        }
 
         var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions
         {
@@ -56,7 +60,12 @@ public sealed class DiskAppServerHost : IAsyncDisposable
         // Журнал задаёт оболочка (Serilog у десктопа); без неё сервер молчит.
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls(options.Url);
-        builder.WebHost.ConfigureKestrel(static kestrel => kestrel.AddServerHeader = false);
+        builder.WebHost.ConfigureKestrel(kestrel =>
+        {
+            kestrel.AddServerHeader = false;
+            kestrel.Limits.MaxRequestBodySize = options.MaxRequestBodyBytes;
+            kestrel.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
+        });
         builder.Services.AddDiskAppServer(options);
         var development = builder.Environment.IsDevelopment();
         if (development)
@@ -102,4 +111,8 @@ public sealed class DiskAppServerHost : IAsyncDisposable
 
     /// <inheritdoc />
     public ValueTask DisposeAsync() => _app.DisposeAsync();
+
+    private static bool IsLoopbackUrl(string url)
+        => Uri.TryCreate(url.Replace("://+:", "://plus:", StringComparison.Ordinal).Replace("://*:", "://star:", StringComparison.Ordinal), UriKind.Absolute, out var uri)
+            && (uri.IsLoopback || (System.Net.IPAddress.TryParse(uri.Host.Trim('[', ']'), out var address) && System.Net.IPAddress.IsLoopback(address)));
 }

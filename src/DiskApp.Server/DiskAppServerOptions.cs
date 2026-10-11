@@ -23,4 +23,16 @@ public sealed record DiskAppServerOptions
 
     /// <summary>Запускать индексатор вместе с сервером. Тесты API выключают его, чтобы не трогать диск.</summary>
     public bool StartIndexer { get; init; } = true;
+
+    /// <summary>
+    /// Токен сессии (флаг): если задан, каждый запрос, кроме <c>/health</c>, должен нести его в заголовке
+    /// <c>X-DiskApp-Token</c> — так другие локальные процессы не управляют файлами через API.
+    /// </summary>
+    public string? SessionToken { get; init; }
+
+    /// <summary>Наибольший размер тела обычного запроса; загрузка файлов задаёт свой предел.</summary>
+    public long MaxRequestBodyBytes { get; init; } = 10 * 1024 * 1024;
+
+    /// <summary>Случайный токен сессии: 32 байта в Base64Url.</summary>
+    public static string CreateSessionToken() => System.Buffers.Text.Base64Url.EncodeToString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
 }

@@ -160,6 +160,21 @@ public static class ApiRoutes
 }
 
 /// <summary>
+/// Заголовки API.
+/// </summary>
+public static class ApiHeaders
+{
+    /// <summary>
+    /// Токен сессии, если сервер его требует (флаг): случайная строка, известная только десктопу. Хаб принимает её
+    /// также в параметре <see cref="SessionTokenQuery"/> (браузерный WebSocket не умеет заголовки).
+    /// </summary>
+    public const string SessionToken = "X-DiskApp-Token";
+
+    /// <summary>Параметр запроса с токеном сессии для хаба.</summary>
+    public const string SessionTokenQuery = "access_token";
+}
+
+/// <summary>
 /// Хаб SignalR: адрес и методы, которые вызывает клиент.
 /// </summary>
 public static class HubRoutes
