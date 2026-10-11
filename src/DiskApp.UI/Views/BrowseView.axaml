@@ -48,7 +48,16 @@
                     </Button.Flyout>
                 </Button>
             </StackPanel>
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="8,0,0,0">
+            <TextBox x:Name="AddressBox" Text="{Binding AddressText, Mode=TwoWay}" PlaceholderText="Путь к папке внутри корней · Ctrl+L">
+                <TextBox.KeyBindings>
+                    <KeyBinding Gesture="Enter" Command="{Binding GoToAddressCommand}" />
+                </TextBox.KeyBindings>
+            </TextBox>
+        </DockPanel>
+
+        <!-- Крошки -->
+        <DockPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" Margin="8,0,0,8" VerticalAlignment="Center">
                 <TextBox Width="140" PlaceholderText="Фильтр в папке" Text="{Binding Filter, Mode=TwoWay}" />
                 <ComboBox Width="120" ItemsSource="{Binding KindOptions}" SelectedItem="{Binding SelectedKind, Mode=TwoWay}" ToolTip.Tip="Вид файлов" />
                 <ComboBox Width="140" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSort, Mode=TwoWay}" ToolTip.Tip="Сортировка" />
@@ -59,19 +68,11 @@
                     <ic:SymbolIcon Symbol="Grid" FontSize="16" />
                 </ToggleButton>
             </StackPanel>
-            <TextBox x:Name="AddressBox" Text="{Binding AddressText, Mode=TwoWay}" PlaceholderText="Путь к папке внутри корней · Ctrl+L">
-                <TextBox.KeyBindings>
-                    <KeyBinding Gesture="Enter" Command="{Binding GoToAddressCommand}" />
-                </TextBox.KeyBindings>
-            </TextBox>
+            <ui:FABreadcrumbBar x:Name="Breadcrumbs"
+                                Margin="8,0,0,8"
+                                VerticalAlignment="Center"
+                                ItemsSource="{Binding Crumbs}" />
         </DockPanel>
-
-        <!-- Крошки -->
-        <ui:FABreadcrumbBar Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
-                            x:Name="Breadcrumbs"
-                            Margin="8,0,0,8"
-                            ItemsSource="{Binding Crumbs}">
-        </ui:FABreadcrumbBar>
 
         <!-- Дерево корней и папок -->
         <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="0" Classes="card" Padding="4">
