@@ -20,6 +20,10 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<ISearchService, SampleSearchService>();
         services.AddSingleton<IThemeService, AppThemeService>();
         services.AddSingleton<HotkeyStatus>();
+        services.AddSingleton<IDispatcher, AvaloniaDispatcher>();
+        services.AddSingleton(static provider => new Lazy<MainViewModel>(provider.GetRequiredService<MainViewModel>));
+        services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IInfoBarService, InfoBarService>();
 
         // ViewModel страниц живут столько же, сколько приложение: состояние поиска и настроек переживает закрытие окон.
         services.AddSingleton<MainViewModel>();

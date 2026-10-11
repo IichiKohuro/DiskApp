@@ -10,14 +10,18 @@ namespace DiskApp.UI.Services;
 /// <param name="SearchQuery">Показать быстрый поиск с этим запросом (пустая строка — без запроса); <c>null</c> — не показывать.</param>
 /// <param name="Portable">Портативный режим: данные рядом с исполняемым файлом.</param>
 /// <param name="Exit">Завершить запущенный экземпляр штатно (скрипты, установщик); если он не запущен — ничего не делать.</param>
+/// <param name="AddPaths">Папки, которые добавить корнями (<c>--add &lt;пути…&gt;</c>, «Отправить» в Проводнике); <c>null</c> — нет.</param>
 public sealed record StartupArguments(
     bool Minimized,
     bool Show,
     bool OpenSettings,
     string? SearchQuery,
     bool Portable,
-    bool Exit = false)
+    bool Exit = false,
+    IReadOnlyList<string>? AddPaths = null)
 {
+    /// <summary>Схема ссылок DiskApp: <c>diskapp://search?q=…</c>, <c>diskapp://open?path=…</c>.</summary>
+    public const string UriScheme = "diskapp";
     /// <summary>Аргументы по умолчанию: обычный запуск с главным окном.</summary>
     public static StartupArguments Default { get; } = new(false, false, false, null, false);
 
@@ -38,6 +42,7 @@ public sealed record StartupArguments(
         var portable = false;
         var exit = false;
         string? search = null;
+        List<string>? add = null;
 
         for (var i = 0; i < args.Count; i++)
         {
@@ -63,6 +68,19 @@ public sealed record StartupArguments(
                 case "--exit":
                     exit = true;
                     break;
+                case "--add":
+                    add ??= [];
+                    if (inlineValue is not null)
+                    {
+                        add.Add(inlineValue);
+                    }
+
+                    while (i + 1 < args.Count && !args[i + 1].StartsWith("--", StringComparison.Ordinal) && !IsAppUri(args[i + 1]))
+                    {
+                        add.Add(args[++i]);
+                    }
+
+                    break;
                 case "--search":
                     if (inlineValue is not null)
                     {
@@ -79,10 +97,42 @@ public sealed record StartupArguments(
 
                     break;
                 default:
+                    if (IsAppUri(argument) && ParseUri(argument) is { } query)
+                    {
+                        search = query;
+                    }
+
                     break;
             }
         }
 
-        return new StartupArguments(minimized, show, settings, search, portable, exit);
+        return new StartupArguments(minimized, show, settings, search, portable, exit, add is { Count: > 0 } ? add : null);
+    }
+
+    private static bool IsAppUri(string argument) => argument.StartsWith(UriScheme + ":", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Запрос быстрого поиска из ссылки: <c>search?q=</c> — сам запрос, <c>open?path=</c> — имя файла (открытие по пути
+    /// появится с обзором, этап 8).
+    /// </summary>
+    private static string? ParseUri(string argument)
+    {
+        if (!Uri.TryCreate(argument, UriKind.Absolute, out var uri))
+        {
+            return null;
+        }
+
+        var action = (uri.Host.Length > 0 ? uri.Host : uri.AbsolutePath.Trim('/')).ToLowerInvariant();
+        var parameters = uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Select(static pair => pair.Split('=', 2))
+            .Where(static pair => pair.Length == 2)
+            .GroupBy(static pair => pair[0].ToLowerInvariant())
+            .ToDictionary(static group => group.Key, static group => Uri.UnescapeDataString(group.First()[1].Replace('+', ' ')), StringComparer.Ordinal);
+        return action switch
+        {
+            "search" => parameters.GetValueOrDefault("q") ?? string.Empty,
+            "open" when parameters.TryGetValue("path", out var path) => Path.GetFileName(path.TrimEnd('\\', '/')),
+            _ => null,
+        };
     }
 }

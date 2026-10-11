@@ -60,6 +60,36 @@ public sealed class StartupArgumentsTests
     }
 
     [Fact]
+    public void Parse_Add_CollectsPathsUntilNextFlag()
+    {
+        // Act
+        var parsed = StartupArguments.Parse(["--add", @"D:\Работа", @"E:\Фото", "--show", "--add=F:\\Архив"]);
+
+        // Assert
+        parsed.AddPaths.ShouldBe([@"D:\Работа", @"E:\Фото", @"F:\Архив"]);
+        parsed.Show.ShouldBeTrue();
+        StartupArguments.Parse(["--show"]).AddPaths.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("diskapp://search?q=%D0%BE%D1%82%D1%87%D0%B5%D1%82+ext%3Apdf", "отчет ext:pdf")]
+    [InlineData("diskapp://search", "")]
+    [InlineData("DISKAPP://open?path=D%3A%5CWork%5Creport.pdf", "report.pdf")]
+    public void Parse_AppUri_OpensQuickSearch(string uri, string expectedQuery)
+    {
+        // Act
+        var parsed = StartupArguments.Parse([uri]);
+
+        // Assert
+        parsed.ShowSearch.ShouldBeTrue();
+        parsed.SearchQuery.ShouldBe(expectedQuery);
+    }
+
+    [Fact]
+    public void Parse_UnknownAppUri_IsIgnored()
+        => StartupArguments.Parse(["diskapp://unknown?x=1"]).ShouldBe(StartupArguments.Default);
+
+    [Fact]
     public void Parse_SearchFollowedByFlag_DoesNotSwallowFlag()
     {
         // Act

@@ -28,11 +28,12 @@ public sealed partial class SettingsViewModel : PageViewModel
 {
     private readonly IThemeService _themes;
     private readonly ISearchService _search;
+    private readonly IAutoStartService _autoStart;
 
     /// <summary>
     /// Создаёт страницу и запускает загрузку корней индекса (<see cref="Initialization"/>).
     /// </summary>
-    public SettingsViewModel(IThemeService themes, ISearchService search, HotkeyStatus hotkeys)
+    public SettingsViewModel(IThemeService themes, ISearchService search, HotkeyStatus hotkeys, IAutoStartService? autoStart = null)
         : base(PageKeys.Settings, "Настройки", FASymbol.Settings)
     {
         ArgumentNullException.ThrowIfNull(themes);
@@ -41,6 +42,7 @@ public sealed partial class SettingsViewModel : PageViewModel
 
         _themes = themes;
         _search = search;
+        _autoStart = autoStart ?? new NullAutoStartService();
         Hotkeys = hotkeys;
 
         Themes =
@@ -54,7 +56,9 @@ public sealed partial class SettingsViewModel : PageViewModel
         UseSystemAccent = true;
         UseBackdropEffects = true;
         ShowOnCursorScreen = true;
-        StartWithWindows = false;
+        IsAutoStartSupported = _autoStart.IsSupported;
+        StartWithWindows = _autoStart.IsEnabled;
+        AutoStartNote = _autoStart.Warning;
         CloseToTray = true;
         RemindAboutInbox = true;
 
@@ -87,6 +91,17 @@ public sealed partial class SettingsViewModel : PageViewModel
     /// <summary>Запускать вместе с Windows.</summary>
     [ObservableProperty]
     public partial bool StartWithWindows { get; set; }
+
+    /// <summary>Переключатель автозапуска доступен.</summary>
+    public bool IsAutoStartSupported { get; }
+
+    /// <summary>Предупреждение или ошибка автозапуска; пусто — нечего сказать.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAutoStartNote))]
+    public partial string AutoStartNote { get; set; }
+
+    /// <summary>Есть пояснение к автозапуску.</summary>
+    public bool HasAutoStartNote => AutoStartNote.Length > 0;
 
     /// <summary>Закрывать главное окно в трей.</summary>
     [ObservableProperty]
@@ -124,6 +139,25 @@ public sealed partial class SettingsViewModel : PageViewModel
         foreach (var root in status.Roots)
         {
             Roots.Add(root);
+        }
+    }
+
+    partial void OnStartWithWindowsChanged(bool value)
+    {
+        if (_autoStart is null || value == _autoStart.IsEnabled || !_autoStart.IsSupported)
+        {
+            return;
+        }
+
+        try
+        {
+            _autoStart.SetEnabled(value);
+            AutoStartNote = _autoStart.Warning;
+        }
+        catch (InvalidOperationException exception)
+        {
+            AutoStartNote = exception.Message;
+            StartWithWindows = _autoStart.IsEnabled;
         }
     }
 

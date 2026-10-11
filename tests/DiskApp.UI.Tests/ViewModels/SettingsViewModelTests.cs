@@ -70,4 +70,71 @@ public sealed class SettingsViewModelTests
         viewModel.Hotkeys.IsRegistered.ShouldBeTrue();
         HotkeyStatus.DefaultQuickSearchText.ShouldBe("Ctrl + Alt + D");
     }
+
+    [Fact]
+    public void StartWithWindows_Toggled_ChangesSystemAutoStart()
+    {
+        // Arrange
+        var autoStart = new FakeAutoStart { Warning = "Портативная копия" };
+        var viewModel = new SettingsViewModel(Substitute.For<IThemeService>(), new SampleSearchService(), new HotkeyStatus(), autoStart);
+
+        // Act
+        var initial = viewModel.StartWithWindows;
+        viewModel.StartWithWindows = true;
+
+        // Assert
+        initial.ShouldBeFalse();
+        autoStart.IsEnabled.ShouldBeTrue();
+        viewModel.IsAutoStartSupported.ShouldBeTrue();
+        viewModel.AutoStartNote.ShouldBe("Портативная копия");
+        viewModel.HasAutoStartNote.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void StartWithWindows_SystemRefuses_RevertsAndExplains()
+    {
+        // Arrange
+        var autoStart = new FakeAutoStart { Refuse = true };
+        var viewModel = new SettingsViewModel(Substitute.For<IThemeService>(), new SampleSearchService(), new HotkeyStatus(), autoStart);
+
+        // Act
+        viewModel.StartWithWindows = true;
+
+        // Assert
+        viewModel.StartWithWindows.ShouldBeFalse();
+        viewModel.AutoStartNote.ShouldContain("не дала");
+    }
+
+    [Fact]
+    public void StartWithWindows_Unsupported_IsDisabled()
+    {
+        // Act
+        var viewModel = new SettingsViewModel(Substitute.For<IThemeService>(), new SampleSearchService(), new HotkeyStatus());
+
+        // Assert
+        viewModel.IsAutoStartSupported.ShouldBeFalse();
+        viewModel.StartWithWindows.ShouldBeFalse();
+        viewModel.HasAutoStartNote.ShouldBeTrue();
+    }
+
+    private sealed class FakeAutoStart : IAutoStartService
+    {
+        public bool Refuse { get; init; }
+
+        public bool IsSupported => true;
+
+        public bool IsEnabled { get; private set; }
+
+        public string Warning { get; init; } = string.Empty;
+
+        public void SetEnabled(bool enabled)
+        {
+            if (Refuse)
+            {
+                throw new InvalidOperationException("Windows не дала изменить автозапуск.");
+            }
+
+            IsEnabled = enabled;
+        }
+    }
 }

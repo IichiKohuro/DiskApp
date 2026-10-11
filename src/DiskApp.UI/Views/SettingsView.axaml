@@ -53,8 +53,9 @@
                         <TextBlock Text="{Binding Hotkeys.QuickSearchText}" FontSize="13" />
                     </Border>
                 </ui:FASettingsExpander.Footer>
-                <ui:FASettingsExpanderItem Content="{Binding Hotkeys.Message}"
-                                           IsVisible="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                <ui:FASettingsExpanderItem IsVisible="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <TextBlock Text="{Binding Hotkeys.Message}" TextWrapping="Wrap" />
+                </ui:FASettingsExpanderItem>
             </ui:FASettingsExpander>
             <ui:FASettingsExpander Header="Разбор входящих" Description="Открыть сессию разбора «Загрузок»">
                 <ui:FASettingsExpander.IconSource>
@@ -102,9 +103,10 @@
                     <ui:FASymbolIconSource Symbol="Go" />
                 </ui:FASettingsExpander.IconSource>
                 <ui:FASettingsExpander.Footer>
-                    <ToggleSwitch IsChecked="{Binding StartWithWindows, Mode=TwoWay}" OnContent="Вкл" OffContent="Выкл" />
+                    <ToggleSwitch IsChecked="{Binding StartWithWindows, Mode=TwoWay}" IsEnabled="{Binding IsAutoStartSupported}" OnContent="Вкл" OffContent="Выкл" />
                 </ui:FASettingsExpander.Footer>
             </ui:FASettingsExpander>
+            <TextBlock Margin="16,-2,16,6" TextWrapping="Wrap" Opacity="0.75" FontSize="12" Text="{Binding AutoStartNote}" IsVisible="{Binding HasAutoStartNote}" />
             <ui:FASettingsExpander Header="Закрывать главное окно в трей" Description="Крестик прячет окно; выход — из меню трея">
                 <ui:FASettingsExpander.IconSource>
                     <ui:FASymbolIconSource Symbol="BackToWindow" />
