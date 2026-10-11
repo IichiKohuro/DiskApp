@@ -2899,46 +2899,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>Sections for appearance, search, the search window, the index, keys and data. Every change is saved and applied right away, without a restart.</value>
+    <value>Downloads and files received in messengers go to your work folders: pick the files, a work folder (keys 1–9), a subfolder or a new one and tags, then press Ctrl+Enter. The move can be undone from the notice.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Settings like in Windows 11</value>
+    <value>Sorting inboxes</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>The interface language is picked in settings or taken from Windows and switches on the fly.</value>
+    <value>Inboxes and work folders are searched together; tags move with the file, and tag: finds it in the new place.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Russian and English</value>
+    <value>Search across all folders</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Favorites (Ctrl+D), your own collections and saved searches, all on one page.</value>
+    <value>Settings keep a backup, folders are rechecked after sleep, and an unreachable network folder no longer slows down the others.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Collections</value>
+    <value>More reliable</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Ctrl+T in search and browse assigns tags; the tag: filter finds tagged files.</value>
+    <value>Files with é or й from archives made on a Mac are found by a query typed on the keyboard.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Colored tags</value>
+    <value>Names from macOS</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Tree, list and tiles, like in File Explorer. Copying and moving run in the background and can be cancelled; Ctrl+Z undoes the last action.</value>
+    <value>Windows are drawn without the GPU, about 95 MB when idle. The blurred search window background is turned on in Appearance → Hardware acceleration.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Browse and operations</value>
-  </data>
-  <data name="WhatsNew.6.Text" xml:space="preserve">
-    <value>Drag files in, pick DiskApp in the Send to menu or in File Explorer, or press Ctrl+Shift+V, then choose where to put them.</value>
-  </data>
-  <data name="WhatsNew.6.Title" xml:space="preserve">
-    <value>The Add window</value>
-  </data>
-  <data name="WhatsNew.7.Text" xml:space="preserve">
-    <value>A wizard helps pick folders, the hotkey and the theme, and tips along the way point out filters and drag and drop.</value>
-  </data>
-  <data name="WhatsNew.7.Title" xml:space="preserve">
-    <value>First run and tips</value>
+    <value>Less memory</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>

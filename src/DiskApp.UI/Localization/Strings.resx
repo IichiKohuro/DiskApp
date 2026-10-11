@@ -2899,46 +2899,34 @@
     <value> записей</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>Разделы для внешнего вида, поиска, окна поиска, индекса, клавиш и данных. Каждое изменение сохраняется и применяется сразу, без перезапуска.</value>
+    <value>«Загрузки» и полученные в мессенджерах файлы раскладываются по рабочим папкам: выберите файлы, рабочую папку (клавиши 1–9), подпапку или новую папку и теги — и Ctrl+Enter. Перенос отменяется из уведомления.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Настройки как в Windows 11</value>
+    <value>Разбор складов</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>Язык интерфейса выбирается в настройках или берётся из Windows и меняется на лету.</value>
+    <value>Склады и рабочие папки ищутся вместе; теги переезжают с файлом, и tag: находит его на новом месте.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Русский и английский</value>
+    <value>Поиск по всем папкам</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Избранное (Ctrl+D), свои коллекции и сохранённые запросы — всё под рукой на одной странице.</value>
+    <value>Настройки хранят резервную копию, после сна папки перепроверяются, а недоступная сетевая папка не тормозит остальные.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Коллекции</value>
+    <value>Надёжнее</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Ctrl+T в поиске и обзоре назначает теги; фильтр tag: находит отмеченные файлы.</value>
+    <value>Файлы с «é» или «й» из архивов, созданных на Mac, находятся запросом, набранным с клавиатуры.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Цветные теги</value>
+    <value>Имена из macOS</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Дерево, список и плитка, как в Проводнике. Копирование и перемещение идут в фоне, их можно отменить, Ctrl+Z возвращает последнее действие.</value>
+    <value>Окна рисуются без видеокарты — около 95 МБ в простое. Размытый фон окна поиска включается в «Внешний вид → Аппаратное ускорение».</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Обзор и операции</value>
-  </data>
-  <data name="WhatsNew.6.Text" xml:space="preserve">
-    <value>Перетащите файлы, выберите DiskApp в меню «Отправить» или в Проводнике, нажмите Ctrl+Shift+V — и выберите, куда положить.</value>
-  </data>
-  <data name="WhatsNew.6.Title" xml:space="preserve">
-    <value>Окно «Добавить»</value>
-  </data>
-  <data name="WhatsNew.7.Text" xml:space="preserve">
-    <value>Мастер помогает выбрать папки, клавишу и тему, а подсказки по ходу работы показывают фильтры и перетаскивание.</value>
-  </data>
-  <data name="WhatsNew.7.Title" xml:space="preserve">
-    <value>Первый запуск и подсказки</value>
+    <value>Меньше памяти</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Понятно</value>
