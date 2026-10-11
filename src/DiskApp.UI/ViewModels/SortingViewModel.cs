@@ -865,20 +865,18 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private async Task LoadInboxesAsync()
     {
         var selected = SelectedInbox?.Folder?.Path;
-        _all.Clear();
-        Inboxes.Clear();
-        HasNoInboxes = _folders.Inboxes.Count == 0;
         var all = new InboxFilter(null, L.T("Sorting.AllInboxes"));
-        Inboxes.Add(all);
+        var filters = new List<InboxFilter> { all };
+        var items = new List<SortItem>();
         foreach (var folder in _folders.Inboxes)
         {
             var filter = new InboxFilter(folder, folder.Title);
             filter.IsMain = _folders.Main == folder;
-            Inboxes.Add(filter);
+            filters.Add(filter);
             try
             {
                 var listing = await _browse.ListAsync(folder.Path, BrowseSort.Modified, descending: true);
-                _all.AddRange(listing.Items.Select(entry => new SortItem(entry, folder)));
+                items.AddRange(listing.Items.Select(entry => new SortItem(entry, folder)));
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -886,7 +884,18 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             }
         }
 
-        _all.Sort(static (left, right) => right.Entry.Modified.CompareTo(left.Entry.Modified));
+        // Обновления могут пересечься — бейдж при запуске и вход на страницу: список собирается целиком и подменяется
+        // за раз, иначе файлы удвоятся.
+        items.Sort(static (left, right) => right.Entry.Modified.CompareTo(left.Entry.Modified));
+        _all.Clear();
+        _all.AddRange(items);
+        HasNoInboxes = _folders.Inboxes.Count == 0;
+        Inboxes.Clear();
+        foreach (var filter in filters)
+        {
+            Inboxes.Add(filter);
+        }
+
         UpdateCounts();
         SelectedInbox = Inboxes.FirstOrDefault(filter => filter.Folder is not null && selected is not null && SamePath(filter.Folder.Path, selected)) ?? all;
         ShowItems();

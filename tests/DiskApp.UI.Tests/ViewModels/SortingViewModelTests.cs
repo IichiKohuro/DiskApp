@@ -61,6 +61,31 @@ public sealed class SortingViewModelTests
     }
 
     [Fact]
+    public async Task Refresh_Overlapping_DoesNotDuplicateFiles()
+    {
+        // Arrange: при запуске сразу на «Разборе» бейдж и вход на страницу обновляют её одновременно — оба ждут листинг
+        var gate = new TaskCompletionSource();
+        var downloads = new FolderListing(Downloads, 1, null, [File(Downloads, "ТЗ 417.docx", hoursAgo: 1), File(Downloads, "setup.exe", hoursAgo: 30)], false);
+        _browse.ListAsync(Downloads, Arg.Any<BrowseSort>(), Arg.Any<bool>(), Arg.Any<CancellationToken>()).Returns(async _ =>
+        {
+            await gate.Task;
+            return downloads;
+        });
+        var page = Create();
+
+        // Act
+        var first = page.RefreshAsync();
+        var second = page.RefreshAsync();
+        gate.SetResult();
+        await Task.WhenAll(first, second);
+
+        // Assert
+        page.Items.Select(static item => item.Entry.Name).ShouldBe(["ТЗ 417.docx", "схема.pdf", "setup.exe"]);
+        page.Inboxes.Count.ShouldBe(3);
+        page.BadgeValue.ShouldBe(3);
+    }
+
+    [Fact]
     public async Task SelectInbox_ShowsOnlyItsFiles()
     {
         // Arrange
