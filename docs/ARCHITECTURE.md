@@ -456,7 +456,7 @@ flowchart TB
 | Окна в стиле Windows 11 | `Backdrop.ApplyMica` (Mica с fallback), `WindowEffects` (`DwmSetWindowAttribute` для углов, `GetCursorPos` для показа у курсора) | Desktop | есть (0.6) |
 | Автозапуск | `HKCU\…\CurrentVersion\Run` | Desktop | 6 |
 | Интеграции оболочки | `shell:sendto`, `HKCU\Software\Classes\*\shell\DiskApp`, протокол `diskapp://` | Desktop | 8 |
-| Quick Switch диалогов | Win32 (`#32770`, `WM_SETTEXT`) или UI Automation, за флагом | Desktop | 8 |
+| Quick Switch диалогов | `FileDialogBridge`: диалог `#32770` со списком Проводника, поле имени файла (`cmb13`, `edt1`), путь через `WM_SETTEXT`, синхронный `WM_COMMAND(IDOK)` через `SendMessageTimeoutW`, возврат имени файла. `QuickSwitchController` держит флаг `experimental.quickSwitch` и второе сочетание (`Ctrl+Alt+G`, id 2 в том же `MessageWindow`), выбор папки — режим быстрого поиска `BeginFolderPick` (ADR-0008) | Desktop | есть (8.6) |
 | Источник файла | Поток `Zone.Identifier` (`HostUrl`, `ReferrerUrl`) | Infrastructure | 17 |
 | `IUserActivityMonitor` | `GetLastInputInfo`, `SHQueryUserNotificationState`, `GetForegroundWindow` + класс процесса, `CapabilityAccessManager\ConsentStore` (микрофон, камера), `WTSRegisterSessionNotification` (блокировка сеанса), `GetSystemPowerStatus` | Desktop | 17 |
 
