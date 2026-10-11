@@ -4,6 +4,7 @@ using DiskApp.Core.Domain;
 using DiskApp.Core.Indexing;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
+using DiskApp.Core.Search;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.Builder;
@@ -93,6 +94,7 @@ internal static class RootEndpoints
         CreateRootRequest request,
         IRootRepository repository,
         IndexerService indexer,
+        SearchService search,
         PathNormalizer paths,
         CancellationToken cancellationToken)
     {
@@ -127,6 +129,8 @@ internal static class RootEndpoints
             },
             cancellationToken).ConfigureAwait(false);
 
+        // Поиск держит корни в кэше: новый корень должен попасть в ответы сразу, а не через несколько секунд.
+        search.InvalidateCaches();
         await indexer.RefreshRootsAsync(cancellationToken).ConfigureAwait(false);
         return TypedResults.Created(ApiRoutes.V1.Root(root.Id), root.ToDto());
     }
@@ -136,6 +140,7 @@ internal static class RootEndpoints
         UpdateRootRequest request,
         IRootRepository repository,
         IndexerService indexer,
+        SearchService search,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.Label))
@@ -163,6 +168,7 @@ internal static class RootEndpoints
             MaxDepth = request.MaxDepth,
         };
         await repository.UpdateAsync(updated, cancellationToken).ConfigureAwait(false);
+        search.InvalidateCaches();
         await indexer.RefreshRootsAsync(cancellationToken).ConfigureAwait(false);
         return TypedResults.Ok(WithLiveStatus(updated, indexer.GetStatuses().ToDictionary(static status => status.RootId)));
     }
@@ -171,6 +177,7 @@ internal static class RootEndpoints
         long id,
         IRootRepository repository,
         IndexerService indexer,
+        SearchService search,
         CancellationToken cancellationToken)
     {
         var root = await repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -187,6 +194,7 @@ internal static class RootEndpoints
         }
 
         await repository.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+        search.InvalidateCaches();
         return TypedResults.NoContent();
     }
 

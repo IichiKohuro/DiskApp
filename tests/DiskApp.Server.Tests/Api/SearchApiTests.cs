@@ -44,6 +44,25 @@ public sealed class SearchApiTests
     }
 
     [Fact]
+    public async Task Get_RightAfterAddingRoot_ReturnsFullPathsOfItsEntries()
+    {
+        // Arrange: поиск заполняет кэш корней, потом добавляется второй корень.
+        await using var context = await ServerTestContext.StartAsync();
+        context.Files.CreateFile(Path.Combine("first", "alpha-note.txt"), "a");
+        context.Files.CreateFile(Path.Combine("second", "alpha-plan.txt"), "b");
+        await context.AddRootAsync("first");
+        await context.GetAsync(ApiRoutes.V1.Search + "?q=alpha", DiskAppJsonContext.Default.SearchResponse);
+
+        // Act
+        var second = await context.AddRootAsync("second");
+        var page = await context.GetAsync(ApiRoutes.V1.Search + "?q=alpha", DiskAppJsonContext.Default.SearchResponse);
+
+        // Assert
+        var plan = page.Items.Single(static item => item.Name == "alpha-plan.txt");
+        plan.FullPath.ShouldBe(Path.Combine(second.Path, "alpha-plan.txt"), "кэш корней поиска сброшен при добавлении корня");
+    }
+
+    [Fact]
     public async Task Post_SameRequest_MatchesGet()
     {
         // Arrange

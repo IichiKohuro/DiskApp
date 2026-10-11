@@ -78,6 +78,7 @@ public static class ServerServiceCollectionExtensions
             provider.GetRequiredService<IPathChangeSink>(),
             provider.GetRequiredService<ILogger<FileOperationService>>()));
         services.AddHostedService<ServerStartupService>();
+        services.AddHostedService<SearchCacheInvalidator>();
         services.AddProblemDetails();
         services.ConfigureHttpJsonOptions(static json => json.SerializerOptions.TypeInfoResolverChain.Insert(0, DiskAppJsonContext.Default));
         AddRealtime(services);
