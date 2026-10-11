@@ -49,6 +49,9 @@ public sealed record Hotkey(HotkeyModifiers Modifiers, string Key)
         new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "Space"),
     ];
 
+    /// <summary>Сочетание Quick Switch по умолчанию (PLAN.md, этап 8.6, ADR-0008).</summary>
+    public static Hotkey DefaultQuickSwitch { get; } = new(HotkeyModifiers.Control | HotkeyModifiers.Alt, "G");
+
     /// <summary>Подпись для интерфейса: «Ctrl + Alt + D».</summary>
     public string DisplayText => string.Join(" + ", Parts());
 

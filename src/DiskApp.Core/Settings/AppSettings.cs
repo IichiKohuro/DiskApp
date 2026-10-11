@@ -36,6 +36,22 @@ public sealed record AppSettings
 
     /// <summary>Добавление файлов: «Входящие», недавние места, имя файла из буфера обмена.</summary>
     public AddSettings Add { get; set; } = new();
+
+    /// <summary>Экспериментальные функции: выключены по умолчанию.</summary>
+    public ExperimentalSettings Experimental { get; set; } = new();
+}
+
+/// <summary>
+/// Экспериментальные функции (PLAN.md, решение по вопросу 4): работают на внутренностях Windows, поэтому включаются
+/// только явно.
+/// </summary>
+public sealed record ExperimentalSettings
+{
+    /// <summary>
+    /// Quick Switch (этап 8.6, ADR-0008): сочетание <see cref="HotkeySettings.QuickSwitch"/> в стандартном диалоге
+    /// «Сохранить» или «Открыть» переводит диалог в папку, выбранную в быстром поиске.
+    /// </summary>
+    public bool QuickSwitch { get; set; }
 }
 
 /// <summary>
@@ -87,6 +103,9 @@ public sealed record HotkeySettings
 
     /// <summary>Разбор входящих.</summary>
     public string Triage { get; set; } = "Ctrl+Alt+I";
+
+    /// <summary>Quick Switch в диалогах «Сохранить» и «Открыть»; действует, только если функция включена.</summary>
+    public string QuickSwitch { get; set; } = "Ctrl+Alt+G";
 }
 
 /// <summary>

@@ -30,11 +30,18 @@ public sealed partial class SettingsViewModel : PageViewModel
     private readonly ISearchService _search;
     private readonly IAutoStartService _autoStart;
     private readonly IShellIntegrationService _integration;
+    private readonly IQuickSwitchSettings _quickSwitch;
 
     /// <summary>
     /// Создаёт страницу и запускает загрузку корней индекса (<see cref="Initialization"/>).
     /// </summary>
-    public SettingsViewModel(IThemeService themes, ISearchService search, HotkeyStatus hotkeys, IAutoStartService? autoStart = null, IShellIntegrationService? integration = null)
+    public SettingsViewModel(
+        IThemeService themes,
+        ISearchService search,
+        HotkeyStatus hotkeys,
+        IAutoStartService? autoStart = null,
+        IShellIntegrationService? integration = null,
+        IQuickSwitchSettings? quickSwitch = null)
         : base(PageKeys.Settings, "Настройки", FASymbol.Settings)
     {
         ArgumentNullException.ThrowIfNull(themes);
@@ -49,6 +56,11 @@ public sealed partial class SettingsViewModel : PageViewModel
         SendToEnabled = _integration.IsEnabled(ShellIntegrationFeature.SendTo);
         ContextMenuEnabled = _integration.IsEnabled(ShellIntegrationFeature.ContextMenu);
         ProtocolEnabled = _integration.IsEnabled(ShellIntegrationFeature.Protocol);
+        _quickSwitch = quickSwitch ?? new NullQuickSwitchSettings();
+        IsQuickSwitchSupported = _quickSwitch.IsSupported;
+        QuickSwitchEnabled = _quickSwitch.IsEnabled;
+        QuickSwitchDescription = $"Экспериментально. {_quickSwitch.HotkeyText} в окне «Сохранить» или «Открыть» любой программы — "
+            + "выбор папки в DiskApp, и диалог переходит в неё";
         Hotkeys = hotkeys;
 
         Themes =
@@ -176,6 +188,35 @@ public sealed partial class SettingsViewModel : PageViewModel
     partial void OnContextMenuEnabledChanged(bool value) => ApplyIntegration(ShellIntegrationFeature.ContextMenu, value, enabled => ContextMenuEnabled = enabled);
 
     partial void OnProtocolEnabledChanged(bool value) => ApplyIntegration(ShellIntegrationFeature.Protocol, value, enabled => ProtocolEnabled = enabled);
+
+    /// <summary>Quick Switch поддерживается.</summary>
+    public bool IsQuickSwitchSupported { get; }
+
+    /// <summary>Описание Quick Switch с действующим сочетанием клавиш.</summary>
+    public string QuickSwitchDescription { get; }
+
+    /// <summary>Quick Switch включён.</summary>
+    [ObservableProperty]
+    public partial bool QuickSwitchEnabled { get; set; }
+
+    partial void OnQuickSwitchEnabledChanged(bool value)
+    {
+        if (_quickSwitch is null || !_quickSwitch.IsSupported || value == _quickSwitch.IsEnabled)
+        {
+            return;
+        }
+
+        try
+        {
+            _quickSwitch.SetEnabled(value);
+            IntegrationNote = string.Empty;
+        }
+        catch (InvalidOperationException exception)
+        {
+            IntegrationNote = exception.Message;
+            QuickSwitchEnabled = _quickSwitch.IsEnabled;
+        }
+    }
 
     private void ApplyIntegration(ShellIntegrationFeature feature, bool value, Action<bool> restore)
     {

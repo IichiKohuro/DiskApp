@@ -151,6 +151,10 @@ internal static class Program
             // Настоящие действия оболочки (открыть, Проводник, свойства, корзина) и иконки Windows — только здесь, не в тестовых хостах.
             if (OperatingSystem.IsWindows())
             {
+                services.AddSingleton<QuickSwitchController>();
+                services.AddSingleton<IQuickSwitchSettings>(static provider => OperatingSystem.IsWindows()
+                    ? provider.GetRequiredService<QuickSwitchController>()
+                    : new NullQuickSwitchSettings());
                 services.AddSingleton<DiskApp.Core.Abstractions.IPlatformShell, DiskApp.Infrastructure.Platform.Windows.WindowsPlatformShell>();
                 services.AddSingleton<DiskApp.Core.Abstractions.IIconProvider, DiskApp.Infrastructure.Platform.Windows.WindowsIconProvider>();
             }

@@ -120,6 +120,12 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
     /// <inheritdoc />
     public void ShowQuickSearch()
     {
+        LeaveFolderPick();
+        ShowQuickSearchWindow();
+    }
+
+    private void ShowQuickSearchWindow()
+    {
         if (_quickSearch is null)
         {
             return;
@@ -243,6 +249,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         {
             _hotkey?.Dispose();
             _hotkey = null;
+            _services.GetService<QuickSwitchController>()?.Dispose();
             _messageWindow?.Dispose();
             _messageWindow = null;
         }
@@ -383,6 +390,7 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
 
         var settings = _services.GetRequiredService<ISettingsStore<AppSettings>>();
         RegisterQuickSearchHotkey(settings.Current.Hotkeys.QuickSearch);
+        _services.GetService<QuickSwitchController>()?.Attach(_messageWindow, OnQuickSwitchPressed);
         _settingsSubscription = settings.Subscribe(changed => Dispatcher.UIThread.Post(() =>
         {
             ApplyMotion(changed);
@@ -637,7 +645,72 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         }
     }
 
-    private void ToggleQuickSearch() => _quickSearch?.Toggle(CursorPosition());
+    private void ToggleQuickSearch()
+    {
+        LeaveFolderPick();
+        _quickSearch?.Toggle(CursorPosition());
+    }
+
+    /// <summary>
+    /// Обычный показ поиска отменяет незавершённый выбор папки для диалога: окно могли закрыть щелчком мимо.
+    /// </summary>
+    private void LeaveFolderPick()
+    {
+        var viewModel = _services.GetRequiredService<QuickSearchViewModel>();
+        if (viewModel.IsPickingFolder)
+        {
+            viewModel.CancelFolderPick();
+            viewModel.Query = string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Quick Switch (PLAN.md, этап 8.6, ADR-0008): в стандартном диалоге «Сохранить» или «Открыть» — выбор папки в
+    /// быстром поиске, затем переход диалога в неё; без диалога — подсказка.
+    /// </summary>
+    [SupportedOSPlatform("windows")]
+    private void OnQuickSwitchPressed()
+    {
+        var viewModel = _services.GetRequiredService<QuickSearchViewModel>();
+        if (FileDialogBridge.FromForeground() is not { } dialog)
+        {
+            _log.Information("Quick Switch: на переднем плане нет стандартного диалога файлов");
+            ShowQuickSearch();
+            viewModel.ReportFolderPickProblem(
+                "Диалог сохранения не найден",
+                $"Откройте «Сохранить как» или «Открыть» в программе и нажмите {_services.GetRequiredService<QuickSwitchController>().HotkeyText} в нём.");
+            return;
+        }
+
+        viewModel.BeginFolderPick(folder => NavigateDialogAsync(dialog, folder));
+        ShowQuickSearchWindow();
+    }
+
+    [SupportedOSPlatform("windows")]
+    private async Task NavigateDialogAsync(FileDialogTarget dialog, string folder)
+    {
+        var result = await FileDialogBridge.NavigateAsync(dialog, folder).ConfigureAwait(true);
+        _log.Information("Quick Switch: {Result}", result);
+        if (result == QuickSwitchResult.Navigated)
+        {
+            return;
+        }
+
+        var (title, message) = result switch
+        {
+            QuickSwitchResult.DialogClosed => ("Диалог уже закрыт", "Окно «Сохранить» или «Открыть» закрылось, пока выбиралась папка."),
+            QuickSwitchResult.FolderMissing => ("Папки больше нет", "Выбранная папка удалена или недоступна: индекс обновится сам."),
+            _ => ("Диалог не перешёл в папку", "Путь скопирован в буфер обмена: вставьте его в поле имени файла и нажмите Enter."),
+        };
+
+        if (result == QuickSwitchResult.Failed)
+        {
+            await _services.GetRequiredService<IClipboardService>().SetTextAsync(folder).ConfigureAwait(true);
+        }
+
+        ShowQuickSearch();
+        _services.GetRequiredService<QuickSearchViewModel>().ReportFolderPickProblem(title, message);
+    }
 
     private async Task AddFromClipboardAsync(Window window)
     {

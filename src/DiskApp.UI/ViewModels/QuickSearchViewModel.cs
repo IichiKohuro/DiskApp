@@ -289,6 +289,11 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// <returns><c>true</c>, если строка была выбрана.</returns>
     public async Task<bool> OpenSelectedAsync()
     {
+        if (await TryPickFolderAsync())
+        {
+            return true;
+        }
+
         if (SelectedResult is not { } hit)
         {
             return false;
@@ -314,6 +319,15 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// </summary>
     public void Escape()
     {
+        // Выбор папки для диалога отменяется сразу: окно закрывается, диалог остаётся как был.
+        if (IsPickingFolder)
+        {
+            CancelFolderPick();
+            Query = string.Empty;
+            CloseRequested?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
         if (Query.Length > 0)
         {
             Query = string.Empty;

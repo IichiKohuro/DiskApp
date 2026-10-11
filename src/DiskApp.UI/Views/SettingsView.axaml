@@ -149,6 +149,14 @@
                     <ToggleSwitch IsChecked="{Binding ProtocolEnabled, Mode=TwoWay}" IsEnabled="{Binding IsIntegrationSupported}" OnContent="Вкл" OffContent="Выкл" />
                 </ui:FASettingsExpander.Footer>
             </ui:FASettingsExpander>
+            <ui:FASettingsExpander Header="Quick Switch" Description="{Binding QuickSwitchDescription}">
+                <ui:FASettingsExpander.IconSource>
+                    <ui:FASymbolIconSource Symbol="Folder" />
+                </ui:FASettingsExpander.IconSource>
+                <ui:FASettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding QuickSwitchEnabled, Mode=TwoWay}" IsEnabled="{Binding IsQuickSwitchSupported}" OnContent="Вкл" OffContent="Выкл" />
+                </ui:FASettingsExpander.Footer>
+            </ui:FASettingsExpander>
             <TextBlock Margin="16,-2,16,6" TextWrapping="Wrap" Opacity="0.75" FontSize="12" Text="{Binding IntegrationNote}" IsVisible="{Binding HasIntegrationNote}" />
 
             <TextBlock Classes="section" Text="О программе" />
