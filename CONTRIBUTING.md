@@ -227,7 +227,8 @@ public void Scan_FolderWithNestedFiles_IndexesAllEntries()
 | Решение из раздела 2 PLAN.md | docs/ADR/NNNN-….md, журнал изменений плана, docs/ARCHITECTURE.md |
 | Структура проектов, конвейеры, API | docs/ARCHITECTURE.md |
 | Экран или сценарий интерфейса | docs/QA_CHECKLIST.md |
-| Любой подэтап | PLAN.md (чекбоксы, статус, «Текущая позиция», журнал), CHANGELOG.md (раздел Unreleased) |
+| Любой подэтап | PLAN.md (чекбоксы, статус, «Текущая позиция», «Порядок работ», журнал), CHANGELOG.md (раздел Unreleased) |
+| Пользователь уточнил или изменил замысел продукта | docs/VISION.md (его словами), затем PLAN.md: сверка и журнал |
 
 ## 9. Зависимости
 

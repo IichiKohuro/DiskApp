@@ -193,6 +193,8 @@ flowchart LR
 
 ### Схема (V001 реализована в этапе 1.3; таблицы этапов 16 и 17 отмечены и появятся позже)
 
+Пересмотр 2026-10-11 (ADR-0012, ADR-0013, PLAN.md решение 25): `collectors` и `warehouses` не создаются — накопители и рабочие папки живут в настройках (`AppSettings.Sorting`). Состояния файлов в накопителях (17.1) займут таблицу вместо `triage_items`, журнал решений `triage_decisions` заменит история файлов (этап 20). Появятся авто-теги папок (этап 19) и напоминания (этап 21.4). Диаграмма ниже — исходный замысел; она обновится вместе с миграциями этих этапов.
+
 ```mermaid
 erDiagram
     roots ||--o{ entries : contains
@@ -421,7 +423,7 @@ Endpoints проверяют, что все пути лежат в добавл�
 | Окно | Назначение | Особенности |
 |---|---|---|
 | `QuickSearchWindow` | Быстрый поиск | Без рамки, поверх всех, Acrylic, скруглённые углы через DWM, создаётся заранее, скрывается по `Esc` и потере фокуса |
-| `TriageWindow` | Сессия разбора входящих (этап 17) | Тот же стиль; склады кнопками с закреплёнными номерами |
+| `DropWindow` | Окно Drag&Drop у значка в трее (этап 18, ADR-0011) | Тот же стиль; у области уведомлений, не прячется при потере фокуса; области «Бросить в накопитель» и (18.3) «Разложить по рабочей папке». Заменяет задуманное `TriageWindow` |
 | `MainWindow` | Главное окно | `NavigationView`, собственный заголовок, Mica, запоминает размер и монитор |
 
 Стиль Windows 11: FluentAvaloniaUI (`PreferSystemTheme`, `PreferUserAccentColor`), `TransparencyLevelHint` Mica → Acrylic → сплошной цвет, радиусы 8 px у окон и 4 px у контролов, Segoe UI Variable с fallback, Segoe Fluent Icons / FluentIcons, анимации 150–250 мс с учётом системного «уменьшить движение». Виртуализация во всех списках, LRU-кэш растровых иконок и миниатюр.
@@ -490,14 +492,14 @@ flowchart TB
 | `IPlatformShell` | `WindowsPlatformShell` на отдельном STA-потоке: `ShellExecuteEx` (через `Process.Start`), `SHOpenWithDialog`, `SHOpenFolderAndSelectItems`, `SHObjectProperties`, verb `runas`, корзина `SHFileOperation` с `FOF_ALLOWUNDO` (только локальные жёсткие диски — на сетевых и съёмных корзины нет, действие отклоняется), буфер Windows `CF_UNICODETEXT` и `CF_HDROP`. Регистрирует только десктоп; живые тесты — при `DISKAPP_SHELL_TESTS=1` | Infrastructure | есть (7.3) |
 | `IIconProvider` | `WindowsIconProvider`: иконка типа — `SHGetFileInfo` + `SHGetImageList` (16/32/48/256, у «jumbo» без своего кадра — обрезка), своя иконка и миниатюра — `IShellItemImageFactory`; PNG собственным кодировщиком (`Imaging/PngEncoder`), кэш в памяти (LRU) и PNG на диске в `cache\icons\v1` на неделю; иконки и миниатюры на разных STA-потоках | Infrastructure | есть (7.4) |
 | Горячая клавиша | `GlobalHotkey` + `MessageWindow`: `RegisterHotKey` с `MOD_NOREPEAT`, приём `WM_HOTKEY` собственным message-only окном (`CreateWindowEx` с `HWND_MESSAGE`); `Win32Properties` в Avalonia 12 нет. Цепочка сочетаний `Ctrl+Alt+D` → `F` → `Space` (ADR-0006), итог в `HotkeyStatus`; настраиваемое сочетание — этап 6.5 | Desktop | есть (0.6) |
-| Трей | Avalonia `TrayIcon` + `NativeMenu` (Открыть, Быстрый поиск, Настройки, Выход); щелчок переключает окно поиска | Desktop | есть (0.6) |
+| Трей | Avalonia `TrayIcon` + `NativeMenu` (Открыть, Быстрый поиск, Настройки, Выход); щелчок переключает окно поиска. С этапа 18.1 (ADR-0011): щелчок — окно Drag&Drop после интервала двойного щелчка, двойной щелчок — главное окно; если `TrayIcon` не даст второй щелчок — собственный `Shell_NotifyIcon` в `MessageWindow` | Desktop | есть (0.6), щелчки — 18 |
 | Одиночный экземпляр, IPC | `SingleInstanceGuard` (`Mutex` на пользователя и сеанс) + `InstanceServer`/`InstanceClient` (`NamedPipeServerStream`, `CurrentUserOnly`, строка JSON через source generator) | Desktop | есть (0.6) |
 | Окна в стиле Windows 11 | `Backdrop.ApplyMica` (Mica с fallback), `WindowEffects` (`DwmSetWindowAttribute` для углов, `GetCursorPos` для показа у курсора) | Desktop | есть (0.6) |
 | Автозапуск | `HKCU\…\CurrentVersion\Run` | Desktop | 6 |
 | Интеграции оболочки | `shell:sendto`, `HKCU\Software\Classes\*\shell\DiskApp`, протокол `diskapp://` | Desktop | 8 |
 | Quick Switch диалогов | `FileDialogBridge`: диалог `#32770` со списком Проводника, поле имени файла (`cmb13`, `edt1`), путь через `WM_SETTEXT`, синхронный `WM_COMMAND(IDOK)` через `SendMessageTimeoutW`, возврат имени файла. `QuickSwitchController` держит флаг `experimental.quickSwitch` и второе сочетание (`Ctrl+Alt+G`, id 2 в том же `MessageWindow`), выбор папки — режим быстрого поиска `BeginFolderPick` (ADR-0008) | Desktop | есть (8.6) |
 | Источник файла | Поток `Zone.Identifier` (`HostUrl`, `ReferrerUrl`) | Infrastructure | 17 |
-| `IUserActivityMonitor` | `GetLastInputInfo`, `SHQueryUserNotificationState`, `GetForegroundWindow` + класс процесса, `CapabilityAccessManager\ConsentStore` (микрофон, камера), `WTSRegisterSessionNotification` (блокировка сеанса), `GetSystemPowerStatus` | Desktop | 17 |
+| `IUserActivityMonitor` | `GetLastInputInfo`, `SHQueryUserNotificationState`, `WTSRegisterSessionNotification` (блокировка сеанса); опц. — `GetForegroundWindow` + класс процесса, `CapabilityAccessManager\ConsentStore` (микрофон, камера), `GetSystemPowerStatus` (ADR-0013) | Desktop | 21 |
 
 Для Linux и macOS (этап 12.7) предусмотрены реализации на `xdg-open` / `open`, SharpHook для хоткеев и корзина по спецификации freedesktop / Finder; интерфейс и клиент не меняются.
 
@@ -510,9 +512,17 @@ flowchart TB
 - **API**: `POST /api/v1/sorting/move` (`SortFilesRequest`: `sources`, `destination`, `newFolder`, `tags`) → 202 с операцией; пути через `RootGuard` (403 вне корней). Списки складов — в `GET/PATCH /api/v1/settings` (раздел `sorting`).
 - **Интерфейс**: страница «Разбор» (`SortingViewModel`, `SortingView`) вместо заглушки «Входящие». Слева — накопители чипами с числом файлов и список их содержимого из индекса (`IBrowseService`, новые сверху, множественный выбор). Справа — рабочие папки (1–9), поиск любой папки (`is:dir`), ленивое дерево подпапок с «Новой папкой» (создаётся при переносе), теги с подсказками из библиотеки, «Перенести N» (`Ctrl+Enter`, `Enter` в списке). Перенос идёт через `IOperationsService.SortAsync` и виден на странице «Операции»; уведомление с «Отменить». Бейдж навигации — число файлов на складах.
 
-Дальше по замыслу этапа 17 (ещё не сделано): очередь новых файлов со «временем успокоения» и состояниями, источник из `Zone.Identifier`, профили складов и объяснимые подсказки, правила, «умный момент» для напоминаний, быстрое окно разбора.
+Дальше — по видению пользователя (пересмотр 2026-10-11, [VISION.md](VISION.md), ADR-0011…0013):
 
-Исходный замысел модели «общий склад → профильные склады»:
+- **Рабочая папка** — путь, подпись, номер 1–9, **наследуемые авто-теги** (этап 19), **шаблоны имён** для авторазбора (17.5). Карточка папки и слежение за её переименованием — 17.2.
+- **Авто-теги** хранятся один раз у папки. `tag:x` находит явные теги и всё внутри папок с авто-тегом `x` диапазонами `rel_path`, как фильтр `in:` (раздел 6).
+- **Очередь накопителей** (17.1): «время успокоения», игнор временных файлов, состояния «новый / отложен / оставить здесь».
+- **Авторазбор** (17.5): после успокоения файл, подходящий к шаблону одной рабочей папки, переносится обычной операцией очереди; подходящий к нескольким — ждёт выбора.
+- **Окно Drag&Drop** (этап 18): бросок в основную папку-накопитель с действием как в Проводнике; источник вне корней разрешён только клиенту в этом же процессе.
+- **История файлов** (этап 20) — постоянный журнал структурных событий всех источников; перемещения из Проводника сопоставляются по имени, размеру и времени создания.
+- **Уведомления и напоминания** (этап 21) — общий модуль: `INotificationService`, `ReminderScheduler` с простым «умным моментом», карточка у трея.
+
+Исходный замысел модели «общий склад → профильные склады» (2026-10-10; профили, каскад, `TriageWindow` и общий механизм правил отменены ADR-0012, напоминания переработаны ADR-0013):
 
 - **`Collector`** (общий склад) — папка под присмотром; новые файлы после «времени успокоения» попадают в очередь `triage_items` с источником и признаками.
 - **`Warehouse`** (профильный склад) — именованное назначение с профилем (виды, расширения, ключевые слова, домены), закреплённым номером 1–9, шаблоном подпапки и, при каскаде, своим набором складов.
