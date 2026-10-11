@@ -214,7 +214,7 @@ public sealed class SearchService
             }
             else if (last.Kind == QueryTokenKind.Term && body.Length > 0)
             {
-                var folded = SearchText.Fold(body);
+                var folded = SearchText.Fold(SearchText.Compose(body));
                 foreach (var keyName in QueryParser.CanonicalKeys.Where(keyName => keyName.StartsWith(folded, StringComparison.Ordinal) && keyName != folded))
                 {
                     suggestions.Add(new SearchSuggestion($"{head}{negation}{keyName}:", keyName + ":", SuggestionKind.FilterKey));
@@ -441,7 +441,7 @@ public sealed class SearchService
 
     private async Task<IReadOnlyList<string>> SuggestValuesAsync(SearchFilterKey key, string partial, int limit, CancellationToken cancellationToken)
     {
-        var folded = SearchText.Fold(partial);
+        var folded = SearchText.Fold(SearchText.Compose(partial));
         switch (key)
         {
             case SearchFilterKey.Extension:

@@ -33,8 +33,10 @@ public sealed class SearchRanker(RankingWeights weights, DateTimeOffset now, Tim
 
         var entry = candidate.Entry;
         var name = entry.Name;
-        var folded = SearchText.Fold(name);
-        var stemLength = entry.IsDirectory || entry.Extension.Length == 0 ? name.Length : Math.Max(1, name.Length - entry.Extension.Length - 1);
+        var mapped = SearchText.FoldMapped(name);
+        var folded = mapped.Folded;
+        var composed = mapped.Composed;
+        var stemLength = entry.IsDirectory || entry.Extension.Length == 0 ? composed.Length : Math.Max(1, composed.Length - entry.Extension.Length - 1);
         var nameRanges = new List<TextRange>();
         var best = MatchKind.None;
         double match = 0;
@@ -43,9 +45,9 @@ public sealed class SearchRanker(RankingWeights weights, DateTimeOffset now, Tim
 
         foreach (var term in terms)
         {
-            var (kind, termScore, ranges) = MatchTerm(term, folded, name, stemLength);
+            var (kind, termScore, ranges) = MatchTerm(term, folded, composed, stemLength);
             match += termScore;
-            nameRanges.AddRange(ranges);
+            nameRanges.AddRange(ranges.Select(mapped.ToSource));
             minSimilarity = Math.Min(minSimilarity, kind switch
             {
                 MatchKind.None => 0,
@@ -141,14 +143,14 @@ public sealed class SearchRanker(RankingWeights weights, DateTimeOffset now, Tim
             return [];
         }
 
-        var folded = SearchText.Fold(fullPath[..directoryLength]);
+        var mapped = SearchText.FoldMapped(fullPath[..directoryLength]);
         var ranges = new List<TextRange>();
         foreach (var term in terms)
         {
-            var index = folded.IndexOf(term, StringComparison.Ordinal);
+            var index = mapped.Folded.IndexOf(term, StringComparison.Ordinal);
             if (index >= 0)
             {
-                ranges.Add(new TextRange(index, term.Length));
+                ranges.Add(mapped.ToSource(new TextRange(index, term.Length)));
             }
         }
 

@@ -1,3 +1,5 @@
+using System.Text;
+
 using DiskApp.Core.Search;
 
 using static DiskApp.Infrastructure.Tests.Search.SearchTestContext;
@@ -45,6 +47,27 @@ public sealed class SearchServiceTests
 
         // Assert
         Names(page).ShouldBe(["Отчёт за квартал.docx", "отчеты 2025.xlsx"], ignoreOrder: true);
+    }
+
+    [Theory]
+    [InlineData("caf\u00E9")]
+    [InlineData("cafe\u0301")]
+    [InlineData("йога")]
+    [InlineData("и\u0306ога")]
+    public async Task Search_ComposedAndDecomposedForms_FindEachOther(string text)
+    {
+        // Arrange: имена с macOS и из архивов часто приходят в форме NFD, запрос с клавиатуры — в NFC
+        await using var context = await CreateAsync();
+        await context.AddAsync(context.Projects, "cafe\u0301 menu.pdf", "caf\u00E9 bill.pdf", "и\u0306ога дом.txt", "йога зал.txt", "other.txt");
+
+        // Act
+        var page = await Search(context, text);
+
+        // Assert
+        var expected = text.Normalize(NormalizationForm.FormC).StartsWith('c')
+            ? new[] { "cafe\u0301 menu.pdf", "caf\u00E9 bill.pdf" }
+            : ["и\u0306ога дом.txt", "йога зал.txt"];
+        Names(page).ShouldBe(expected, ignoreOrder: true);
     }
 
     [Fact]

@@ -27,6 +27,17 @@ public sealed class SearchRankerTests
     }
 
     [Fact]
+    public void Rank_DecomposedName_HighlightIncludesCombiningMark()
+    {
+        // Act: «é» в имени записано как «e» + U+0301, запрос — в составной форме
+        var ranked = Ranker().Rank(Candidate("Cafe\u0301 menu.pdf"), [SearchText.Fold("caf\u00E9")], @"D:\x\" + "Cafe\u0301 menu.pdf", false);
+
+        // Assert
+        ranked.BestMatch.ShouldBe(MatchKind.Prefix);
+        ranked.NameHighlights.ShouldBe([new TextRange(0, 5)]);
+    }
+
+    [Fact]
     public void Rank_CamelCaseBoundary_CountsAsWordStart()
     {
         // Act

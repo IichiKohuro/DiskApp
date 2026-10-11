@@ -41,7 +41,7 @@ public static class SearchPlanner
         var excluded = new List<string>();
         foreach (var term in query.Terms)
         {
-            var folded = SearchText.Fold(term.Text.Trim());
+            var folded = SearchText.Fold(SearchText.Compose(term.Text.Trim()));
             if (folded.Length == 0)
             {
                 continue;
@@ -180,7 +180,7 @@ public static class SearchPlanner
                     Favorite = negated ? !favorite : favorite;
                     break;
                 case SearchFilterKey.Tag:
-                    AddDistinct(negated ? ExcludeTags : IncludeTags, SearchText.Fold(filter.Value.Trim()));
+                    AddDistinct(negated ? ExcludeTags : IncludeTags, SearchText.Fold(SearchText.Compose(filter.Value.Trim())));
                     break;
                 case SearchFilterKey.Folder:
                     AddFolder(filter.Value, negated, roots, paths, warnings);
@@ -217,7 +217,7 @@ public static class SearchPlanner
                 return;
             }
 
-            var name = SearchText.Fold(value.Trim().Trim(paths.Separator, '/'));
+            var name = SearchText.Fold(SearchText.Compose(value.Trim().Trim(paths.Separator, '/')));
             foreach (var root in roots)
             {
                 if (SearchText.Fold(root.Label) == name || SearchText.Fold(paths.GetFileName(root.Path)) == name)
@@ -232,7 +232,7 @@ public static class SearchPlanner
         private void AddRoot(string value, bool negated, IReadOnlyList<Root> roots, PathNormalizer paths, List<string> warnings)
         {
             var target = negated ? ExcludeRoots : IncludeRoots;
-            var folded = SearchText.Fold(value.Trim());
+            var folded = SearchText.Fold(SearchText.Compose(value.Trim()));
             var matched = roots
                 .Where(root => SearchText.Fold(root.Label) == folded
                     || SearchText.Fold(paths.GetFileName(root.Path)) == folded

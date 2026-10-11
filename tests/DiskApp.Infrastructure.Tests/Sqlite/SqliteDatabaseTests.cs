@@ -1,5 +1,6 @@
 using Dapper;
 
+using DiskApp.Core.Search;
 using DiskApp.Infrastructure.Sqlite;
 
 namespace DiskApp.Infrastructure.Tests.Sqlite;
@@ -111,6 +112,38 @@ public sealed class SqliteDatabaseTests
         File.ReadAllText(result.CorruptFilePath).ShouldBe(garbage, "повреждённый файл перемещён как есть, для разбора и восстановления");
         database.CheckIntegrity().ShouldBeTrue();
         database.GetSchemaVersion().ShouldBe(SqliteMigrator.LatestVersion);
+    }
+
+    [Fact]
+    public async Task InitializeAsync_OldFoldVersion_RefoldsDecomposedNamesOnce()
+    {
+        // Arrange: база записана до свёртки NFD — имя «Cafe» + U+0301 свёрнуто без сборки в «é»
+        using var folder = new TemporaryDirectory();
+        var path = folder.Resolve("index.db");
+        var name = "Cafe\u0301 menu.pdf";
+        await using (var old = new SqliteDatabase(path))
+        {
+            await old.InitializeAsync(TestContext.Current.CancellationToken);
+            await old.Writer.EnqueueAsync(connection =>
+            {
+                connection.Execute("INSERT INTO roots (id, path, label, created_utc) VALUES (1, 'D:\\x', 'x', 0)");
+                connection.Execute(
+                    "INSERT INTO entries (root_id, name, name_folded, created_utc, modified_utc, rel_path) VALUES (1, @Name, @Folded, 0, 0, @Name)",
+                    new { Name = name, Folded = name.ToLowerInvariant() });
+                connection.Execute("INSERT INTO entries (root_id, name, name_folded, created_utc, modified_utc, rel_path) VALUES (1, 'plain.txt', 'plain.txt', 0, 0, 'plain.txt')");
+                return connection.Execute("DELETE FROM meta WHERE key = 'search_fold_version'");
+            }, TestContext.Current.CancellationToken);
+        }
+
+        // Act
+        await using var database = new SqliteDatabase(path);
+        await database.InitializeAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        using var connection = database.Connections.Open();
+        connection.ExecuteScalar<string>("SELECT name_folded FROM entries WHERE name = @Name", new { Name = name }).ShouldBe(SearchText.Fold(name));
+        connection.ExecuteScalar<long>("SELECT COUNT(*) FROM entries_fts WHERE entries_fts MATCH @Query", new { Query = "\"caf\u00E9\"" }).ShouldBe(1);
+        connection.ExecuteScalar<string>("SELECT value FROM meta WHERE key = 'search_fold_version'").ShouldBe(SearchText.FoldVersion.ToString(System.Globalization.CultureInfo.InvariantCulture));
     }
 
     [Fact]

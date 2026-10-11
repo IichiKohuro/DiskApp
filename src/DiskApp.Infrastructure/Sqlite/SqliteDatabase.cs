@@ -52,7 +52,7 @@ public sealed class SqliteDatabase : IDisposable, IAsyncDisposable
 
     /// <summary>
     /// Готовит базу к работе: создаёт папку, проверяет существующий файл (<c>PRAGMA quick_check</c>),
-    /// повреждённый переименовывает в <c>index.corrupt-&lt;дата&gt;.db</c> и создаёт новый, применяет миграции, запускает писателя.
+    /// повреждённый переименовывает в <c>index.corrupt-&lt;дата&gt;.db</c> и создаёт новый, применяет миграции и пересчёт свёртки имён, запускает писателя.
     /// </summary>
     public async Task<DatabaseInitialization> InitializeAsync(CancellationToken cancellationToken = default)
     {
@@ -73,7 +73,12 @@ public sealed class SqliteDatabase : IDisposable, IAsyncDisposable
 
         _writer = new SqliteWriter(Connections);
         _idleTimer = new Timer(static state => ((SqliteDatabase)state!).OnIdleTick(), this, IdleCheckInterval, IdleCheckInterval);
-        var applied = await _writer.EnqueueAsync(static connection => SqliteMigrator.Apply(connection), cancellationToken).ConfigureAwait(false);
+        var applied = await _writer.EnqueueAsync(static connection =>
+        {
+            var migrations = SqliteMigrator.Apply(connection);
+            SearchFoldUpgrade.Apply(connection);
+            return migrations;
+        }, cancellationToken).ConfigureAwait(false);
 
         return new DatabaseInitialization(
             DatabasePath,
