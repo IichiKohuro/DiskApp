@@ -41,6 +41,7 @@ public static class ServerEndpointRouteBuilderExtensions
         endpoints.MapEntries();
         endpoints.MapLibrary();
         endpoints.MapSettings();
+        endpoints.MapOperations();
         endpoints.MapHub<DiskAppHub>(HubRoutes.Path);
         return endpoints.MapGroup(ApiRoutes.V1.Prefix);
     }

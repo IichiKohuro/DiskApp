@@ -1,6 +1,7 @@
 using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
 using DiskApp.Contracts.Hub;
+using DiskApp.Contracts.Operations;
 using DiskApp.Contracts.Roots;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Events;
@@ -31,7 +32,8 @@ public sealed record HubBroadcastOptions
 /// <summary>
 /// Транслятор <see cref="IIndexEventBus"/> и настроек в хаб (PLAN.md, этап 4.4). Обработчики шины только складывают
 /// события в буферы и не ждут сеть; раз в <see cref="HubBroadcastOptions.BatchInterval"/> буферы уходят клиентам:
-/// смены состояния корней, последний ход индексации каждого корня, изменения записей пакетами по корням, настройки.
+/// смены состояния корней, последний ход индексации каждого корня, ход, конфликты и завершение файловых операций,
+/// изменения записей пакетами по корням, настройки.
 /// </summary>
 internal sealed partial class HubBroadcaster(
     IIndexEventBus events,
@@ -45,6 +47,9 @@ internal sealed partial class HubBroadcaster(
     private Dictionary<long, IndexProgressDto> _progress = [];
     private Dictionary<long, List<EntryChangeDto>> _changes = [];
     private HashSet<long> _overflowed = [];
+    private Dictionary<Guid, OperationProgressDto> _operationProgress = [];
+    private List<ConflictDto> _decisions = [];
+    private List<OperationCompletedDto> _completed = [];
     private SettingsDto? _settings;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -52,6 +57,9 @@ internal sealed partial class HubBroadcaster(
         using var statusSubscription = events.Subscribe<RootStatusChangedEvent>(OnStatus);
         using var progressSubscription = events.Subscribe<IndexProgressEvent>(OnProgress);
         using var changesSubscription = events.Subscribe<EntriesChangedEvent>(OnChanges);
+        using var operationProgressSubscription = events.Subscribe<OperationProgressEvent>(OnOperationProgress);
+        using var decisionSubscription = events.Subscribe<OperationNeedsDecisionEvent>(OnDecision);
+        using var completedSubscription = events.Subscribe<OperationCompletedEvent>(OnCompleted);
         using var settingsSubscription = settings.Subscribe(OnSettings);
         using var timer = new PeriodicTimer(options.BatchInterval);
         try
@@ -76,10 +84,14 @@ internal sealed partial class HubBroadcaster(
         Dictionary<long, IndexProgressDto> progress;
         Dictionary<long, List<EntryChangeDto>> changes;
         HashSet<long> overflowed;
+        Dictionary<Guid, OperationProgressDto> operationProgress;
+        List<ConflictDto> decisions;
+        List<OperationCompletedDto> completed;
         SettingsDto? changedSettings;
         lock (_gate)
         {
-            if (_statuses.Count == 0 && _progress.Count == 0 && _changes.Count == 0 && _overflowed.Count == 0 && _settings is null)
+            if (_statuses.Count == 0 && _progress.Count == 0 && _changes.Count == 0 && _overflowed.Count == 0 && _settings is null
+                && _operationProgress.Count == 0 && _decisions.Count == 0 && _completed.Count == 0)
             {
                 return;
             }
@@ -88,6 +100,9 @@ internal sealed partial class HubBroadcaster(
             (progress, _progress) = (_progress, []);
             (changes, _changes) = (_changes, []);
             (overflowed, _overflowed) = (_overflowed, []);
+            (operationProgress, _operationProgress) = (_operationProgress, []);
+            (decisions, _decisions) = (_decisions, []);
+            (completed, _completed) = (_completed, []);
             (changedSettings, _settings) = (_settings, null);
         }
 
@@ -101,6 +116,21 @@ internal sealed partial class HubBroadcaster(
             foreach (var item in progress.Values)
             {
                 await hub.Clients.All.OnIndexProgress(item).ConfigureAwait(false);
+            }
+
+            foreach (var item in operationProgress.Values)
+            {
+                await hub.Clients.All.OnOperationProgress(item).ConfigureAwait(false);
+            }
+
+            foreach (var conflict in decisions)
+            {
+                await hub.Clients.All.OnOperationNeedsDecision(conflict).ConfigureAwait(false);
+            }
+
+            foreach (var item in completed)
+            {
+                await hub.Clients.All.OnOperationCompleted(item).ConfigureAwait(false);
             }
 
             foreach (var rootId in overflowed)
@@ -167,6 +197,30 @@ internal sealed partial class HubBroadcaster(
                 _changes.Remove(changed.RootId);
                 _overflowed.Add(changed.RootId);
             }
+        }
+    }
+
+    private void OnOperationProgress(OperationProgressEvent progress)
+    {
+        lock (_gate)
+        {
+            _operationProgress[progress.OperationId] = progress.ToDto();
+        }
+    }
+
+    private void OnDecision(OperationNeedsDecisionEvent conflict)
+    {
+        lock (_gate)
+        {
+            _decisions.Add(conflict.ToDto());
+        }
+    }
+
+    private void OnCompleted(OperationCompletedEvent completed)
+    {
+        lock (_gate)
+        {
+            _completed.Add(completed.ToDto());
         }
     }
 

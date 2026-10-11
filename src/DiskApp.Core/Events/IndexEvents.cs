@@ -97,13 +97,17 @@ public sealed record RootStatusChangedEvent(long RootId, RootStatus Status, stri
 /// <param name="ProcessedBytes">Обработано байтов.</param>
 /// <param name="TotalBytes">Всего байтов; 0, если ещё неизвестно.</param>
 /// <param name="CurrentPath">Текущий файл; <c>null</c> между файлами.</param>
+/// <param name="BytesPerSecond">Средняя скорость с начала операции.</param>
+/// <param name="Remaining">Оценка оставшегося времени; <c>null</c>, если её нет.</param>
 public sealed record OperationProgressEvent(
     Guid OperationId,
     long ProcessedItems,
     long TotalItems,
     long ProcessedBytes,
     long TotalBytes,
-    string? CurrentPath) : IIndexEvent
+    string? CurrentPath,
+    double BytesPerSecond = 0,
+    TimeSpan? Remaining = null) : IIndexEvent
 {
     /// <summary>Доля выполнения от 0 до 1 по байтам, если они известны, иначе по элементам; 0, если ничего не известно.</summary>
     public double Fraction => TotalBytes > 0
@@ -118,6 +122,25 @@ public sealed record OperationProgressEvent(
 /// <param name="Outcome">Чем закончилась.</param>
 /// <param name="Message">Сообщение об ошибке или сводка; <c>null</c>, если нечего сказать.</param>
 public sealed record OperationCompletedEvent(Guid OperationId, OperationOutcome Outcome, string? Message) : IIndexEvent;
+
+/// <summary>
+/// Файловая операция ждёт решения по конфликту имён.
+/// </summary>
+/// <param name="OperationId">Операция.</param>
+/// <param name="SourcePath">Что копируется или переносится.</param>
+/// <param name="TargetPath">Что уже есть в цели.</param>
+/// <param name="SourceSize">Размер источника.</param>
+/// <param name="SourceModifiedUtc">Изменён источник.</param>
+/// <param name="TargetSize">Размер цели.</param>
+/// <param name="TargetModifiedUtc">Изменена цель.</param>
+public sealed record OperationNeedsDecisionEvent(
+    Guid OperationId,
+    string SourcePath,
+    string TargetPath,
+    long SourceSize,
+    DateTimeOffset SourceModifiedUtc,
+    long TargetSize,
+    DateTimeOffset TargetModifiedUtc) : IIndexEvent;
 
 /// <summary>
 /// Исход файловой операции.

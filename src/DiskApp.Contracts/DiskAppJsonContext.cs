@@ -48,6 +48,8 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(OperationCompletedDto))]
 [JsonSerializable(typeof(ConflictDto))]
 [JsonSerializable(typeof(ConflictDecisionDto))]
+[JsonSerializable(typeof(OperationDto[]))]
+[JsonSerializable(typeof(UploadResponse))]
 [JsonSerializable(typeof(TagDto))]
 [JsonSerializable(typeof(IReadOnlyList<TagDto>))]
 [JsonSerializable(typeof(TagDto[]))]

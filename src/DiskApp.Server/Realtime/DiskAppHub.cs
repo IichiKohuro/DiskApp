@@ -2,6 +2,7 @@ using System.Globalization;
 
 using DiskApp.Contracts.Hub;
 using DiskApp.Core.Indexing;
+using DiskApp.Core.Operations;
 using DiskApp.Server.Mapping;
 
 using Microsoft.AspNetCore.SignalR;
@@ -12,7 +13,7 @@ namespace DiskApp.Server.Realtime;
 /// Хаб событий (PLAN.md, этап 4.4). После подключения клиент сразу получает <see cref="IDiskAppHubClient.OnStatus"/>,
 /// поэтому переподключение не теряет состояния. Изменения записей приходят только подписчикам корня.
 /// </summary>
-internal sealed class DiskAppHub(IndexerService indexer) : Hub<IDiskAppHubClient>
+internal sealed class DiskAppHub(IndexerService indexer, FileOperationService operations) : Hub<IDiskAppHubClient>
 {
     /// <summary>Группа подписчиков корня.</summary>
     public static string RootGroup(long rootId) => "root:" + rootId.ToString(CultureInfo.InvariantCulture);
@@ -31,5 +32,5 @@ internal sealed class DiskAppHub(IndexerService indexer) : Hub<IDiskAppHubClient
     public Task UnsubscribeRoot(long rootId) => Groups.RemoveFromGroupAsync(Context.ConnectionId, RootGroup(rootId));
 
     /// <summary>Текущее состояние индексации и активные операции.</summary>
-    public HubStatusDto GetStatus() => new(indexer.ToIndexStatusDto(), []);
+    public HubStatusDto GetStatus() => new(indexer.ToIndexStatusDto(), operations.GetActive().Select(static info => info.ToDto()).ToArray());
 }

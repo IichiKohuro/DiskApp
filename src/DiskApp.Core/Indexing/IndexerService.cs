@@ -18,7 +18,7 @@ namespace DiskApp.Core.Indexing;
 /// сверка. Управление: пауза, возобновление, пересканирование корня, пересборка всего индекса.
 /// Хост (сервер этапа 4) вызывает <see cref="StartAsync"/> и <see cref="DisposeAsync"/>.
 /// </summary>
-public sealed class IndexerService : IAsyncDisposable
+public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 {
     private readonly IRootRepository _roots;
     private readonly IFileIndexRepository _entries;
@@ -234,6 +234,33 @@ public sealed class IndexerService : IAsyncDisposable
 
     /// <summary>Ставит сверку корня или поддерева.</summary>
     public bool ReconcileRoot(long rootId, string relPath = "") => Enqueue(new IndexTask(rootId, IndexTaskKind.Reconcile, relPath, "Сверка по запросу"));
+
+    /// <summary>
+    /// Папки изменились снаружи индексатора (файловая операция): каждая сверяется в самом глубоком корне, который её содержит.
+    /// Пути вне корней пропускаются.
+    /// </summary>
+    public void OnPathsChanged(IReadOnlyCollection<string> absolutePaths)
+    {
+        ArgumentNullException.ThrowIfNull(absolutePaths);
+
+        var paths = _factory.Paths;
+        var roots = Sessions().Select(static session => session.Root).ToArray();
+        foreach (var path in absolutePaths)
+        {
+            if (!paths.TryNormalize(path, out var normalized))
+            {
+                continue;
+            }
+
+            var root = roots
+                .Where(candidate => paths.Comparer.Equals(candidate.Path, normalized) || paths.IsNestedIn(normalized, candidate.Path))
+                .MaxBy(static candidate => candidate.Path.Length);
+            if (root is not null && paths.TryGetRelativePath(root.Path, normalized, out var relPath))
+            {
+                Enqueue(new IndexTask(root.Id, IndexTaskKind.Reconcile, relPath, "Файловая операция"));
+            }
+        }
+    }
 
     /// <summary>
     /// Пересобирает индекс: удаляет записи всех корней и ставит полное сканирование каждого.

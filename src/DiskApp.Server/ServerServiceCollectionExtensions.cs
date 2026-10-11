@@ -5,6 +5,7 @@ using DiskApp.Core.Events;
 using DiskApp.Core.FileSystem;
 using DiskApp.Core.Indexing;
 using DiskApp.Core.Indexing.Watching;
+using DiskApp.Core.Operations;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
 using DiskApp.Core.Search;
@@ -64,6 +65,18 @@ public static class ServerServiceCollectionExtensions
         AddSearch(services);
 
         services.AddSingleton<EntryLookup>();
+        services.AddSingleton<RootGuard>();
+        services.AddSingleton<IPathChangeSink>(static provider => provider.GetRequiredService<IndexerService>());
+        services.AddSingleton(new FileOperationOptions());
+        services.AddSingleton(static provider => new FileOperationService(
+            new System.IO.Abstractions.FileSystem(),
+            provider.GetRequiredService<IIndexEventBus>(),
+            provider.GetRequiredService<IClock>(),
+            provider.GetRequiredService<PathNormalizer>(),
+            provider.GetRequiredService<FileOperationOptions>(),
+            provider.GetService<IPlatformShell>(),
+            provider.GetRequiredService<IPathChangeSink>(),
+            provider.GetRequiredService<ILogger<FileOperationService>>()));
         services.AddHostedService<ServerStartupService>();
         services.AddProblemDetails();
         services.ConfigureHttpJsonOptions(static json => json.SerializerOptions.TypeInfoResolverChain.Insert(0, DiskAppJsonContext.Default));

@@ -131,7 +131,7 @@ internal static class EntryEndpoints
         int? offset,
         int? limit,
         EntryLookup lookup,
-        IRootRepository roots,
+        RootGuard guard,
         IFileIndexRepository entries,
         PathNormalizer paths,
         CancellationToken cancellationToken)
@@ -141,16 +141,13 @@ internal static class EntryEndpoints
             return invalid;
         }
 
-        if (!paths.TryNormalize(path, out var normalized))
+        var (allowed, normalized, root) = await guard.CheckAsync(path, cancellationToken).ConfigureAwait(false);
+        if (normalized is null)
         {
             return ApiProblems.Invalid("path", "Нужен абсолютный путь.");
         }
 
-        var root = (await roots.GetAllAsync(cancellationToken).ConfigureAwait(false))
-            .Where(candidate => paths.Comparer.Equals(candidate.Path, normalized) || paths.IsNestedIn(normalized, candidate.Path))
-            .OrderByDescending(static candidate => candidate.Path.Length)
-            .FirstOrDefault();
-        if (root is null || !paths.TryGetRelativePath(root.Path, normalized, out var relPath))
+        if (!allowed || root is null || !paths.TryGetRelativePath(root.Path, normalized, out var relPath))
         {
             return TypedResults.Problem($"Путь «{normalized}» вне добавленных корней.", statusCode: StatusCodes.Status403Forbidden, title: "Доступ запрещён");
         }

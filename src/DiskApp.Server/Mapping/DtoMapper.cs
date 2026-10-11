@@ -1,11 +1,13 @@
 using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
 using DiskApp.Contracts.Library;
+using DiskApp.Contracts.Operations;
 using DiskApp.Contracts.Roots;
 using DiskApp.Contracts.Search;
 using DiskApp.Core.Domain;
 using DiskApp.Core.Events;
 using DiskApp.Core.Indexing;
+using DiskApp.Core.Operations;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
 using DiskApp.Core.Search;
@@ -229,6 +231,63 @@ internal static class DtoMapper
             AutoStart = dto.Tray.AutoStart,
         },
     };
+
+    public static FileOperationRequest ToDomain(this OperationRequest request) => new(
+        (FileOperationKind)(int)request.Kind,
+        request.Sources ?? [],
+        request.Destination,
+        request.NewName,
+        (Core.Operations.ConflictPolicy)(int)request.Conflicts,
+        request.Permanent);
+
+    public static OperationDto ToDto(this FileOperationInfo info) => new(
+        info.Id,
+        (OperationKind)(int)info.Kind,
+        (Contract.Operations.OperationState)(int)info.State,
+        info.Sources,
+        info.Destination,
+        info.CreatedUtc,
+        info.CompletedUtc,
+        info.Progress.ToDto(info.Id),
+        info.Message,
+        info.CanUndo,
+        info.PendingConflict is { } conflict ? conflict.ToDto() : null);
+
+    public static OperationProgressDto ToDto(this OperationProgress progress, Guid operationId) => new(
+        operationId,
+        progress.ProcessedItems,
+        progress.TotalItems,
+        progress.ProcessedBytes,
+        progress.TotalBytes,
+        progress.CurrentPath,
+        progress.BytesPerSecond,
+        progress.Remaining?.TotalSeconds);
+
+    public static OperationProgressDto ToDto(this OperationProgressEvent progress) => new(
+        progress.OperationId,
+        progress.ProcessedItems,
+        progress.TotalItems,
+        progress.ProcessedBytes,
+        progress.TotalBytes,
+        progress.CurrentPath,
+        progress.BytesPerSecond,
+        progress.Remaining?.TotalSeconds);
+
+    public static ConflictDto ToDto(this OperationConflict conflict) => new(
+        conflict.OperationId, conflict.SourcePath, conflict.TargetPath, conflict.SourceSize, conflict.SourceModifiedUtc, conflict.TargetSize, conflict.TargetModifiedUtc);
+
+    public static ConflictDto ToDto(this OperationNeedsDecisionEvent conflict) => new(
+        conflict.OperationId, conflict.SourcePath, conflict.TargetPath, conflict.SourceSize, conflict.SourceModifiedUtc, conflict.TargetSize, conflict.TargetModifiedUtc);
+
+    public static OperationCompletedDto ToDto(this OperationCompletedEvent completed) => new(
+        completed.OperationId,
+        completed.Outcome switch
+        {
+            OperationOutcome.Completed => Contract.Operations.OperationState.Completed,
+            OperationOutcome.Cancelled => Contract.Operations.OperationState.Cancelled,
+            _ => Contract.Operations.OperationState.Failed,
+        },
+        completed.Message);
 
     private static string PresetName(Contract.Search.RankingPreset preset) => preset switch
     {

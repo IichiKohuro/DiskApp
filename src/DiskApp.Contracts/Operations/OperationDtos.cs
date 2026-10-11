@@ -180,6 +180,13 @@ public enum ConflictResolution
 }
 
 /// <summary>
+/// Итог загрузки файлов: <c>POST /api/v1/upload</c>.
+/// </summary>
+/// <param name="Saved">Сохранённые файлы (полные пути).</param>
+/// <param name="Skipped">Пропущенные из-за конфликта имён (имена из запроса).</param>
+public sealed record UploadResponse(IReadOnlyList<string> Saved, IReadOnlyList<string> Skipped);
+
+/// <summary>
 /// Завершение операции: событие <c>OnOperationCompleted</c>.
 /// </summary>
 /// <param name="OperationId">Операция.</param>

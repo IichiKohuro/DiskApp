@@ -45,7 +45,7 @@ internal sealed class ServerTestContext : IAsyncDisposable
     {
         var data = new TemporaryDirectory("api-data");
         var files = new TemporaryDirectory("api-files");
-        var shell = withPlatform ? new FakeShell() : null;
+        var shell = withPlatform ? new FakeShell(data.CreateDirectory("_trash")) : null;
         var host = DiskAppServerHost.Create(
             new DiskAppServerOptions { Paths = AppPaths.ForDataDirectory(data.FullPath), EnvironmentName = environment },
             services =>
@@ -95,9 +95,10 @@ internal sealed class ServerTestContext : IAsyncDisposable
 }
 
 /// <summary>
-/// Оболочка ОС для тестов: запоминает вызовы, ничего не запускает; может вернуть ошибку.
+/// Оболочка ОС для тестов: запоминает вызовы, ничего не запускает; «корзина» переносит файлы во временную папку.
+/// Может вернуть ошибку.
 /// </summary>
-internal sealed class FakeShell : IPlatformShell
+internal sealed class FakeShell(string trash) : IPlatformShell
 {
     private readonly List<(string Action, string Path)> _calls = [];
 
@@ -122,7 +123,26 @@ internal sealed class FakeShell : IPlatformShell
 
     public Task<Result> ShowPropertiesAsync(string path, CancellationToken cancellationToken = default) => Record("properties", path);
 
-    public Task<Result> MoveToRecycleBinAsync(IReadOnlyList<string> paths, CancellationToken cancellationToken = default) => Record("recycle", string.Join('|', paths));
+    public Task<Result> MoveToRecycleBinAsync(IReadOnlyList<string> paths, CancellationToken cancellationToken = default)
+    {
+        if (FailWith is null)
+        {
+            foreach (var path in paths)
+            {
+                var target = Path.Combine(trash, Guid.NewGuid().ToString("N") + "-" + Path.GetFileName(path));
+                if (Directory.Exists(path))
+                {
+                    Directory.Move(path, target);
+                }
+                else if (File.Exists(path))
+                {
+                    File.Move(path, target);
+                }
+            }
+        }
+
+        return Record("recycle", string.Join('|', paths));
+    }
 
     public Task<Result> RunAsAdminAsync(string path, CancellationToken cancellationToken = default) => Record("run-as-admin", path);
 

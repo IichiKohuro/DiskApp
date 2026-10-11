@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Indexing;
+using DiskApp.Core.Operations;
 using DiskApp.Infrastructure.Sqlite;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -57,6 +58,8 @@ internal sealed class ServerStartupService(
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
+        // Операции останавливаются первыми: они сообщают индексатору о затронутых папках.
+        await services.GetRequiredService<FileOperationService>().DisposeAsync().ConfigureAwait(false);
         if (_indexer is { } indexer)
         {
             await indexer.DisposeAsync().ConfigureAwait(false);
