@@ -12,7 +12,7 @@ using FluentAvalonia.UI.Controls;
 
 namespace DiskApp.UI.ViewModels;
 
-/// <summary>Склад в фильтре над списком файлов; «Все склады» — без папки.</summary>
+/// <summary>Папка-накопитель в фильтре над списком файлов; «Все накопители» — без папки.</summary>
 public sealed partial class InboxFilter : ObservableObject
 {
     /// <summary>Создаёт фильтр.</summary>
@@ -22,7 +22,7 @@ public sealed partial class InboxFilter : ObservableObject
         Title = title;
     }
 
-    /// <summary>Склад; <c>null</c> — все склады.</summary>
+    /// <summary>Папка-накопитель; <c>null</c> — все накопители.</summary>
     public SortingFolderInfo? Folder { get; }
 
     /// <summary>Подпись.</summary>
@@ -33,7 +33,7 @@ public sealed partial class InboxFilter : ObservableObject
     [NotifyPropertyChangedFor(nameof(Text))]
     public partial int Count { get; set; }
 
-    /// <summary>Склад не прочитан: вне индекса или ещё сканируется.</summary>
+    /// <summary>Накопитель не прочитан: вне индекса или ещё сканируется.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Text))]
     public partial string? Problem { get; set; }
@@ -45,9 +45,9 @@ public sealed partial class InboxFilter : ObservableObject
     public override string ToString() => Text;
 }
 
-/// <summary>Файл или папка со склада.</summary>
+/// <summary>Файл или папка из накопителя.</summary>
 /// <param name="Entry">Запись индекса.</param>
-/// <param name="Inbox">Склад, где лежит.</param>
+/// <param name="Inbox">Накопитель, где лежит.</param>
 public sealed record SortItem(FileEntry Entry, SortingFolderInfo Inbox)
 {
     /// <summary>Когда изменён — для строки списка.</summary>
@@ -61,6 +61,15 @@ public sealed record SortItem(FileEntry Entry, SortingFolderInfo Inbox)
 
     /// <inheritdoc />
     public override string ToString() => Entry.Name;
+}
+
+/// <summary>Готовый шаблон имени при переносе.</summary>
+/// <param name="Title">Подпись в списке.</param>
+/// <param name="Template">Шаблон; пусто — имя не меняется.</param>
+public sealed record NamePreset(string Title, string Template)
+{
+    /// <inheritdoc />
+    public override string ToString() => Title;
 }
 
 /// <summary>Рабочая папка с клавишей 1–9.</summary>
@@ -166,10 +175,10 @@ public sealed partial class SortFolderNode : ObservableObject
 }
 
 /// <summary>
-/// Страница «Разбор» (PLAN.md, этап 17): файлы со складов («Загрузки», полученные в мессенджере) раскладываются по
+/// Страница «Разбор» (PLAN.md, этап 17): файлы из накопителей («Загрузки», полученные в мессенджере) раскладываются по
 /// рабочим папкам — в подпапку, при необходимости новую, с тегами. Перенос — операция общей очереди, отменяется из
-/// уведомления. Склады и рабочие папки настраиваются здесь же; папка вне индекса добавляется в него, чтобы поиск
-/// находил и склады, и рабочие папки.
+/// уведомления. Папки-накопители и рабочие папки настраиваются здесь же; папка вне индекса добавляется в него, чтобы поиск
+/// находил и накопители, и рабочие папки.
 /// </summary>
 public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 {
@@ -185,7 +194,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private IReadOnlyList<SortItem> _selection = [];
     private IReadOnlyList<string> _allTags = [];
     private SortingFolders _folders = SortingFolders.Empty;
+    private readonly Func<DateTimeOffset> _clock;
     private CancellationTokenSource? _folderSearch;
+    private bool _nameTemplateLoaded;
 
     /// <summary>
     /// Создаёт страницу.
@@ -198,9 +209,12 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         ILibraryService library,
         IRootsService roots,
         IDialogService? dialogs = null,
-        IInfoBarService? notices = null)
+        IInfoBarService? notices = null,
+        Func<DateTimeOffset>? clock = null)
         : base(PageKeys.Inbox, "Sorting.Title", FASymbol.Download)
     {
+        _clock = clock ?? (static () => DateTimeOffset.Now);
+        Tags.CollectionChanged += (_, _) => UpdateNamePreview();
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _browse = browse ?? throw new ArgumentNullException(nameof(browse));
         _operations = operations ?? throw new ArgumentNullException(nameof(operations));
@@ -211,10 +225,10 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         _notices = notices;
     }
 
-    /// <summary>Склады с числом файлов и «Все склады».</summary>
+    /// <summary>Накопители с числом файлов и «Все накопители».</summary>
     public ObservableCollection<InboxFilter> Inboxes { get; } = [];
 
-    /// <summary>Файлы выбранного склада, новые сверху.</summary>
+    /// <summary>Файлы выбранного накопителя, новые сверху.</summary>
     public ObservableCollection<SortItem> Items { get; } = [];
 
     /// <summary>Рабочие папки в порядке клавиш.</summary>
@@ -229,10 +243,33 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <summary>Теги для переносимого.</summary>
     public ObservableCollection<string> Tags { get; } = [];
 
+    /// <summary>Готовые шаблоны имени: как есть, дата в начале, теги в конце…</summary>
+    [ObservableProperty]
+    public partial IReadOnlyList<NamePreset> NamePresets { get; set; } = BuildNamePresets();
+
+    /// <summary>Выбор в списке готовых шаблонов: подставляет шаблон, сам список возвращается к подсказке.</summary>
+    [ObservableProperty]
+    public partial NamePreset? SelectedNamePreset { get; set; }
+
+    /// <summary>
+    /// Шаблон имени при переносе: своё имя или подстановки <c>{имя}</c>, <c>{дата}</c>, <c>{время}</c>, <c>{теги}</c>,
+    /// <c>{папка}</c>, <c>{№}</c>; пусто — имя не меняется.
+    /// </summary>
+    [ObservableProperty]
+    public partial string NameTemplate { get; set; } = string.Empty;
+
+    /// <summary>Как будет называться первый выбранный файл; пусто — шаблона нет или ничего не выбрано.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNamePreview))]
+    public partial string NamePreview { get; set; } = string.Empty;
+
+    /// <summary>Предпросмотр имени виден.</summary>
+    public bool HasNamePreview => NamePreview.Length > 0;
+
     /// <summary>Подходящие теги по <see cref="TagText"/>.</summary>
     public ObservableCollection<string> TagSuggestions { get; } = [];
 
-    /// <summary>Выбранный склад; «Все склады» — первый.</summary>
+    /// <summary>Выбранный накопитель; «Все накопители» — первый.</summary>
     [ObservableProperty]
     public partial InboxFilter? SelectedInbox { get; set; }
 
@@ -277,7 +314,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     [NotifyPropertyChangedFor(nameof(HasEmptyHint))]
     public partial string EmptyHint { get; set; } = string.Empty;
 
-    /// <summary>Складов ещё нет: показывается приглашение добавить.</summary>
+    /// <summary>Накопителей ещё нет: показывается приглашение добавить.</summary>
     [ObservableProperty]
     public partial bool HasNoInboxes { get; set; }
 
@@ -285,7 +322,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     [ObservableProperty]
     public partial bool HasNoWorkFolders { get; set; }
 
-    /// <summary>Идёт чтение складов.</summary>
+    /// <summary>Идёт чтение накопителей.</summary>
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
@@ -312,7 +349,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     }
 
     /// <summary>
-    /// Перечитывает склады, рабочие папки и теги.
+    /// Перечитывает накопители, рабочие папки и теги.
     /// </summary>
     public async Task RefreshAsync()
     {
@@ -320,6 +357,12 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         try
         {
             _folders = await _settings.GetAsync();
+            if (!_nameTemplateLoaded)
+            {
+                NameTemplate = _folders.NameTemplate ?? string.Empty;
+                _nameTemplateLoaded = true;
+            }
+
             ShowWorkFolders();
             await LoadInboxesAsync();
             await LoadTagsAsync();
@@ -340,6 +383,31 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         _selection = items ?? [];
         SelectedCount = _selection.Count;
         UpdateItemsText();
+        UpdateNamePreview();
+    }
+
+    /// <summary>Подставляет готовый шаблон имени.</summary>
+    [RelayCommand]
+    private void ApplyNamePreset(NamePreset? preset)
+    {
+        if (preset is not null)
+        {
+            NameTemplate = preset.Template;
+        }
+    }
+
+    /// <summary>Дописывает подстановку в шаблон имени: <c>name</c>, <c>date</c>, <c>time</c>, <c>tags</c>, <c>folder</c>, <c>n</c>.</summary>
+    [RelayCommand]
+    private void InsertNameToken(string? key)
+    {
+        if (string.IsNullOrEmpty(key))
+        {
+            return;
+        }
+
+        var template = NameTemplate.TrimEnd();
+        var separator = template.Length == 0 || template.EndsWith('_') || template.EndsWith('-') ? string.Empty : "_";
+        NameTemplate = template + separator + Token(key);
     }
 
     /// <summary>Выбирает рабочую папку по клавише 1–9.</summary>
@@ -452,9 +520,10 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         var (destination, newFolder) = target.IsNew ? (target.Parent!.Path, (string?)target.Name) : (target.Path, (string?)null);
         var items = _selection.ToArray();
         var tags = Tags.ToArray();
+        var names = NewNames(items, tags, target);
         try
         {
-            var operation = await _operations.SortAsync(new SortOperation([.. items.Select(static item => item.Entry.FullPath)], destination, newFolder, tags));
+            var operation = await _operations.SortAsync(new SortOperation([.. items.Select(static item => item.Entry.FullPath)], destination, newFolder, tags, names));
             foreach (var item in items)
             {
                 _all.Remove(item);
@@ -470,8 +539,14 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
                 _ = ReloadChildrenAsync(target.Parent!);
             }
 
+            await RememberNameTemplateAsync();
+
             var what = items.Length == 1 ? $"«{items[0].Entry.Name}»" : Formatting.Count(items.Length, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"));
             var message = tags.Length > 0 ? L.F("Sorting.MovedWithTags", what, DescribePath(target), string.Join(", ", tags)) : L.F("Sorting.Moved", what, DescribePath(target));
+            if (items.Length == 1 && names?[0] is { } renamed)
+            {
+                message += L.F("Sorting.RenamedTo", renamed);
+            }
             if (_notices is not null)
             {
                 _notices.Show(L.T("Sorting.Title"), message, FAInfoBarSeverity.Success, L.T("Sorting.Undo"), () => _ = UndoAsync(operation.Id));
@@ -485,7 +560,78 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
     private bool CanMove() => SelectedFolder is not null && SelectedCount > 0;
 
-    /// <summary>Добавляет склад: выбор папки, затем — в индекс, если её там нет.</summary>
+    // Подстановка в языке интерфейса: «{имя}» или «{name}»; шаблон понимает обе.
+    private static string Token(string key) => L.T("Sorting.Token." + key);
+
+    private static NamePreset[] BuildNamePresets() =>
+    [
+        new(L.T("Sorting.NameKeep"), string.Empty),
+        new(L.T("Sorting.NameDateFirst"), Token("date") + "_" + Token("name")),
+        new(L.T("Sorting.NameDateTimeFirst"), Token("date") + "_" + Token("time") + "_" + Token("name")),
+        new(L.T("Sorting.NameTagsLast"), Token("name") + "_" + Token("tags")),
+        new(L.T("Sorting.NameFolderFirst"), Token("folder") + "_" + Token("name")),
+    ];
+
+    // Новые имена по шаблону; null — шаблона нет или он ничего не меняет.
+    private string?[]? NewNames(SortItem[] items, IReadOnlyList<string> tags, SortFolderNode target)
+    {
+        var template = NameTemplate.Trim();
+        if (template.Length == 0)
+        {
+            return null;
+        }
+
+        var now = _clock();
+        var folder = PathText.FileName(target.Path);
+        var names = items
+            .Select((item, index) => FileNameTemplate.Apply(template, new FileNameContext(item.Entry.Name, item.Entry.Kind == FileKind.Folder, index + 1, items.Length, tags, folder, now)))
+            .ToArray();
+        var changed = names.Select((name, index) => string.Equals(name, items[index].Entry.Name, StringComparison.Ordinal) ? null : name).ToArray();
+        return changed.Any(static name => name is not null) ? changed : null;
+    }
+
+    private void UpdateNamePreview()
+    {
+        if (NameTemplate.Trim().Length == 0 || _selection.Count == 0 || SelectedFolder is not { } target)
+        {
+            NamePreview = string.Empty;
+            return;
+        }
+
+        IReadOnlyList<string> tags = TagText.Trim().Length > 0 ? [.. Tags, TagText.Trim()] : [.. Tags];
+        var first = FileNameTemplate.Apply(NameTemplate.Trim(), new FileNameContext(
+            _selection[0].Entry.Name, _selection[0].Entry.Kind == FileKind.Folder, 1, _selection.Count, tags, PathText.FileName(target.Path), _clock()));
+        NamePreview = _selection.Count > 1 ? L.F("Sorting.NamePreviewMany", first, _selection.Count - 1) : L.F("Sorting.NamePreview", first);
+    }
+
+    // Шаблон с прежним именем запоминается для следующих переносов; своё имя без {имя} — разовое и сбрасывается.
+    private async Task RememberNameTemplateAsync()
+    {
+        var template = NameTemplate.Trim();
+        var saved = _folders.NameTemplate ?? string.Empty;
+        if (template.Length > 0 && !FileNameTemplate.HasNameToken(template))
+        {
+            NameTemplate = saved;
+            return;
+        }
+
+        if (string.Equals(template, saved, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        try
+        {
+            _folders = _folders with { NameTemplate = template.Length == 0 ? null : template };
+            await _settings.SaveAsync(_folders);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.T("Sorting.Title"), L.F("Sorting.SaveFailed", exception.Message), FAInfoBarSeverity.Warning);
+        }
+    }
+
+    /// <summary>Добавляет накопитель: выбор папки, затем — в индекс, если её там нет.</summary>
     [RelayCommand]
     private async Task AddInboxAsync()
     {
@@ -515,7 +661,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
-    /// <summary>Убирает склад из списка; папка и файлы остаются.</summary>
+    /// <summary>Убирает накопитель из списка; папка и файлы остаются.</summary>
     [RelayCommand]
     private async Task RemoveInboxAsync(InboxFilter? inbox)
     {
@@ -543,11 +689,24 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     [RelayCommand]
     private Task MoveWorkFolderDownAsync(WorkFolderItem? item) => ShiftWorkFolderAsync(item, 1);
 
-    /// <summary>Перечитывает склады.</summary>
+    /// <summary>Перечитывает накопители.</summary>
     [RelayCommand]
     private Task Refresh() => PendingLoad = RefreshAsync();
 
     partial void OnSelectedInboxChanged(InboxFilter? value) => ShowItems();
+
+    partial void OnNameTemplateChanged(string value) => UpdateNamePreview();
+
+    partial void OnSelectedNamePresetChanged(NamePreset? value)
+    {
+        if (value is not null)
+        {
+            ApplyNamePreset(value);
+            SelectedNamePreset = null;
+        }
+    }
+
+    partial void OnSelectedFolderChanged(SortFolderNode? value) => UpdateNamePreview();
 
     partial void OnSelectedWorkFolderChanged(WorkFolderItem? value)
     {
@@ -561,6 +720,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
     partial void OnTagTextChanged(string value)
     {
+        UpdateNamePreview();
         TagSuggestions.Clear();
         var text = value.Trim().TrimStart('#');
         if (text.Length == 0)
@@ -577,6 +737,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <inheritdoc />
     protected override Task RelocalizeAsync()
     {
+        NamePresets = BuildNamePresets();
         OnPropertyChanged(nameof(DestinationText));
         OnPropertyChanged(nameof(MoveText));
         return RefreshAsync();
@@ -744,6 +905,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private async Task SearchFoldersAsync(string text)
     {
         var cts = new CancellationTokenSource();
+        var token = cts.Token;
         var previous = Interlocked.Exchange(ref _folderSearch, cts);
         if (previous is not null)
         {
@@ -759,8 +921,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
         try
         {
-            var result = await _search.SearchAsync("is:dir " + text, cts.Token);
-            cts.Token.ThrowIfCancellationRequested();
+            var result = await _search.SearchAsync("is:dir " + text, token);
+            token.ThrowIfCancellationRequested();
             foreach (var entry in result.Entries.Where(static entry => entry.Kind == FileKind.Folder && !entry.IsOffline).Take(12))
             {
                 FolderResults.Add(new SortingFolderInfo(entry.FullPath, entry.Name));

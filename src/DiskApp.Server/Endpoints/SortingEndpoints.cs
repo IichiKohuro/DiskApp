@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Routing;
 namespace DiskApp.Server.Endpoints;
 
 /// <summary>
-/// Разбор входящих (PLAN.md, этап 17): перенос со склада в рабочую папку, при необходимости в новую подпапку,
+/// Разбор входящих (PLAN.md, этап 17): перенос из накопителя в рабочую папку, при необходимости в новую подпапку,
 /// с тегами. Все пути — только внутри добавленных корней (403 иначе); перенос — операция общей очереди.
 /// </summary>
 internal static class SortingEndpoints
@@ -22,7 +22,7 @@ internal static class SortingEndpoints
         endpoints.MapPost(ApiRoutes.V1.SortingMove, MoveAsync)
             .WithTags("Sorting")
             .WithName("SortFiles")
-            .WithSummary("Перенести со склада в рабочую папку с тегами")
+            .WithSummary("Перенести из накопителя в рабочую папку с тегами")
             .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
@@ -54,7 +54,7 @@ internal static class SortingEndpoints
         }
 
         var newFolder = string.IsNullOrWhiteSpace(request.NewFolder) ? null : request.NewFolder;
-        var result = await sorting.MoveAsync(new SortRequest(sources, destination, newFolder, request.Tags ?? []), cancellationToken).ConfigureAwait(false);
+        var result = await sorting.MoveAsync(new SortRequest(sources, destination, newFolder, request.Tags ?? [], request.Names), cancellationToken).ConfigureAwait(false);
         if (result.TryGetValue(out var info))
         {
             return TypedResults.Accepted(ApiRoutes.V1.Operation(info.Id), info.ToDto());

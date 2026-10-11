@@ -258,6 +258,9 @@
   <data name="SettingsEndpoints.NoMoreThanPlaces" xml:space="preserve">
     <value>No more than {0} places.</value>
   </data>
+  <data name="SettingsEndpoints.TemplateLongerThan" xml:space="preserve">
+    <value>The template is longer than {0} characters.</value>
+  </data>
   <data name="SettingsEndpoints.ThePatternCannotBeEmpty" xml:space="preserve">
     <value>The pattern cannot be empty.</value>
   </data>

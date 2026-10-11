@@ -67,6 +67,7 @@ public sealed class ApiOperationsService : IOperationsService
             Destination = operation.Destination,
             NewFolder = operation.NewFolder,
             Tags = operation.Tags,
+            Names = operation.Names,
         };
         var info = Remember(ToInfo(await _api.SortFilesAsync(request, cancellationToken).ConfigureAwait(false)));
         Updated?.Invoke(this, info);

@@ -17,14 +17,15 @@ namespace DiskApp.Core.Sorting;
 /// <summary>
 /// Запрос разбора: что перенести, куда, в какую новую подпапку и с какими тегами.
 /// </summary>
-/// <param name="Sources">Нормализованные пути файлов и папок со склада.</param>
+/// <param name="Sources">Нормализованные пути файлов и папок из накопителя.</param>
 /// <param name="Destination">Нормализованный путь рабочей папки или её подпапки.</param>
 /// <param name="NewFolder">Имя новой подпапки внутри <paramref name="Destination"/>; <c>null</c> — переносить прямо в неё.</param>
 /// <param name="Tags">Теги, которые получат перенесённые элементы, вдобавок к уже имеющимся.</param>
-public sealed record SortRequest(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags);
+/// <param name="Names">Новые имена по порядку <paramref name="Sources"/>; <c>null</c> — прежние имена.</param>
+public sealed record SortRequest(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags, IReadOnlyList<string?>? Names = null);
 
 /// <summary>
-/// Разбор входящих (PLAN.md, этап 17): перенос со склада в рабочую папку одной операцией очереди с конфликтами
+/// Разбор входящих (PLAN.md, этап 17): перенос из накопителя в рабочую папку одной операцией очереди с конфликтами
 /// по правилу «оставить оба», при необходимости — в новую подпапку. Когда перенос завершился и индекс увидел файлы
 /// на новом месте, они получают прежние теги и новые. Отмена — обычный возврат результата операции.
 /// </summary>
@@ -110,7 +111,8 @@ public sealed class SortingService : IDisposable
         // Теги живут в записи индекса, а перенос между корнями создаёт новую запись: прежние теги запоминаются заранее.
         var previous = await GetTagsAsync(request.Sources, cancellationToken).ConfigureAwait(false);
 
-        var result = _operations.Enqueue(new FileOperationRequest(FileOperationKind.Move, request.Sources, destination, Conflicts: ConflictPolicy.KeepBoth));
+        var names = request.Names?.Select(static name => string.IsNullOrWhiteSpace(name) ? null : name.Trim()).ToArray();
+        var result = _operations.Enqueue(new FileOperationRequest(FileOperationKind.Move, request.Sources, destination, Conflicts: ConflictPolicy.KeepBoth, TargetNames: names));
         if (result.TryGetValue(out var info) && (tags.Length > 0 || previous.Count > 0))
         {
             _pending[info.Id] = new PendingTags(tags, previous);
@@ -146,6 +148,16 @@ public sealed class SortingService : IDisposable
         if (request.NewFolder is not null && FileOperationService.NameProblem(request.NewFolder.Trim()) is { } problem)
         {
             return new DomainError(InvalidCode, problem);
+        }
+
+        if (request.Names is { } names && names.Count != request.Sources.Count)
+        {
+            return new DomainError(InvalidCode, L.T("FileOperation.TargetNamesMismatch"));
+        }
+
+        if (request.Names?.FirstOrDefault(static name => !string.IsNullOrWhiteSpace(name) && FileOperationService.NameProblem(name.Trim()) is not null) is { } bad)
+        {
+            return new DomainError(InvalidCode, $"«{bad}»: {FileOperationService.NameProblem(bad.Trim())}");
         }
 
         if (request.Tags.Count > MaxTags)

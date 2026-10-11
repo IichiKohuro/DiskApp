@@ -64,18 +64,21 @@ public sealed record SettingsDto
     /// <summary>Знакомство с приложением.</summary>
     public OnboardingSettingsDto Onboarding { get; set; } = new();
 
-    /// <summary>Разбор: склады и рабочие папки.</summary>
+    /// <summary>Разбор: накопители и рабочие папки.</summary>
     public SortingSettingsDto Sorting { get; set; } = new();
 }
 
-/// <summary>Разбор входящих: склады и рабочие папки в порядке показа (не больше 50 в каждом списке).</summary>
+/// <summary>Разбор входящих: накопители и рабочие папки в порядке показа (не больше 50 в каждом списке).</summary>
 public sealed record SortingSettingsDto
 {
-    /// <summary>Склады — папки, куда сыплются файлы.</summary>
+    /// <summary>Накопители — папки, куда сыплются файлы.</summary>
     public IReadOnlyList<SortingFolderDto> Inboxes { get; set; } = [];
 
     /// <summary>Рабочие папки; первые девять — на клавишах 1–9.</summary>
     public IReadOnlyList<SortingFolderDto> WorkFolders { get; set; } = [];
+
+    /// <summary>Шаблон имени при переносе (<c>{имя}</c>, <c>{дата}</c>, <c>{время}</c>, <c>{теги}</c>, <c>{папка}</c>, <c>{№}</c>); пусто — без изменений.</summary>
+    public string? NameTemplate { get; set; }
 }
 
 /// <summary>Папка разбора.</summary>

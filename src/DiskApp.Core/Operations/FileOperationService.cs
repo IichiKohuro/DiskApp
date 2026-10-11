@@ -433,6 +433,22 @@ public sealed partial class FileOperationService : IAsyncDisposable
                     }
                 }
 
+                if (request.TargetNames is { } names)
+                {
+                    if (names.Count != sources.Count)
+                    {
+                        return Invalid(L.T("FileOperation.TargetNamesMismatch"));
+                    }
+
+                    foreach (var name in names.OfType<string>().Where(static name => name.Length > 0))
+                    {
+                        if (NameProblem(name) is { } problem)
+                        {
+                            return Invalid($"«{name}»: {problem}");
+                        }
+                    }
+                }
+
                 break;
             case FileOperationKind.Rename:
                 if (sources.Count != 1)
@@ -598,15 +614,16 @@ public sealed partial class FileOperationService : IAsyncDisposable
         var destination = run.Request.Destination!;
         SetTotals(run, run.Request.Sources.Select(Measure).Aggregate((0L, 0L), static (sum, item) => (sum.Item1 + item.Items, sum.Item2 + item.Bytes)));
         context.Affected.Add(destination);
-        foreach (var source in run.Request.Sources)
+        for (var index = 0; index < run.Request.Sources.Count; index++)
         {
+            var source = run.Request.Sources[index];
             token.ThrowIfCancellationRequested();
             if (move)
             {
                 context.Affected.Add(_paths.GetParent(source) ?? source);
             }
 
-            await CopyItemAsync(context, source, _paths.Combine(destination, _paths.GetFileName(source)), move, record: move, token).ConfigureAwait(false);
+            await CopyItemAsync(context, source, _paths.Combine(destination, TargetName(run.Request, index)), move, record: move, token).ConfigureAwait(false);
         }
     }
 
@@ -757,11 +774,12 @@ public sealed partial class FileOperationService : IAsyncDisposable
 
         SetTotals(run, (run.Request.Sources.Count, 0));
         context.Affected.Add(destination);
-        foreach (var source in run.Request.Sources)
+        for (var index = 0; index < run.Request.Sources.Count; index++)
         {
+            var source = run.Request.Sources[index];
             token.ThrowIfCancellationRequested();
             context.Affected.Add(_paths.GetParent(source) ?? source);
-            var target = _paths.Combine(destination, _paths.GetFileName(source));
+            var target = _paths.Combine(destination, TargetName(run.Request, index));
             if (_paths.Comparer.Equals(source, target))
             {
                 AddProgress(run, items: 1, bytes: 0, path: null);
@@ -780,6 +798,12 @@ public sealed partial class FileOperationService : IAsyncDisposable
             AddProgress(run, items: 1, bytes: 0, path: null);
         }
     }
+
+    // Имя на месте назначения: заданное для элемента (разбор с переименованием) или прежнее.
+    private string TargetName(FileOperationRequest request, int index)
+        => request.TargetNames is { } names && index < names.Count && names[index] is { Length: > 0 } name
+            ? name
+            : _paths.GetFileName(request.Sources[index]);
 
     private async Task MoveWithinVolumeAsync(RunContext context, string source, string target, CancellationToken token)
     {

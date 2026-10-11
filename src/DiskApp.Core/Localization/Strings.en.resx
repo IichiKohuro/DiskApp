@@ -66,6 +66,9 @@
   <data name="FileOperation.StoppedWhenTheAppExited" xml:space="preserve">
     <value>Stopped when the app exited.</value>
   </data>
+  <data name="FileOperation.TargetNamesMismatch" xml:space="preserve">
+    <value>There must be as many names as items to move.</value>
+  </data>
   <data name="FileOperation.TheCopyOfDidNotMatch" xml:space="preserve">
     <value>The copy of “{0}” did not match the source size; the source is kept.</value>
   </data>

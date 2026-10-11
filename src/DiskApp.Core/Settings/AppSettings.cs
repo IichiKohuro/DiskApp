@@ -49,12 +49,12 @@ public sealed record AppSettings
     /// <summary>Знакомство с приложением: мастер первого запуска, подсказки, «Что нового».</summary>
     public OnboardingSettings Onboarding { get; set; } = new();
 
-    /// <summary>Разбор: склады, куда сыплются файлы, и рабочие папки, куда их раскладывают.</summary>
+    /// <summary>Разбор: накопители, куда сыплются файлы, и рабочие папки, куда их раскладывают.</summary>
     public SortingSettings Sorting { get; set; } = new();
 }
 
 /// <summary>
-/// Разбор входящих (PLAN.md, этап 17): склады — папки, куда сами собой сыплются файлы («Загрузки», полученные
+/// Разбор входящих (PLAN.md, этап 17): накопители — папки, куда сами собой сыплются файлы («Загрузки», полученные
 /// в мессенджере), и рабочие папки, куда их раскладывают с тегами. И те и другие индексируются и ищутся как все.
 /// </summary>
 public sealed record SortingSettings
@@ -62,15 +62,21 @@ public sealed record SortingSettings
     /// <summary>Наибольшее число папок в каждом списке.</summary>
     public const int MaxFolders = 50;
 
-    /// <summary>Склады в порядке показа.</summary>
+    /// <summary>Накопители в порядке показа.</summary>
     public IReadOnlyList<SortingFolder> Inboxes { get; set; } = [];
 
     /// <summary>Рабочие папки в порядке показа; первые девять получают клавиши 1–9.</summary>
     public IReadOnlyList<SortingFolder> WorkFolders { get; set; } = [];
 
+    /// <summary>
+    /// Шаблон имени при переносе: <c>{имя}</c>, <c>{дата}</c>, <c>{время}</c>, <c>{теги}</c>, <c>{папка}</c>, <c>{№}</c>
+    /// (или те же по-английски); <c>null</c> — имена не меняются. Расширение сохраняется всегда.
+    /// </summary>
+    public string? NameTemplate { get; set; }
+
     /// <summary>Равенство по содержимому: списки сравниваются поэлементно.</summary>
     public bool Equals(SortingSettings? other)
-        => other is not null && Inboxes.SequenceEqual(other.Inboxes) && WorkFolders.SequenceEqual(other.WorkFolders);
+        => other is not null && Inboxes.SequenceEqual(other.Inboxes) && WorkFolders.SequenceEqual(other.WorkFolders) && NameTemplate == other.NameTemplate;
 
     /// <inheritdoc />
     public override int GetHashCode()
@@ -81,12 +87,14 @@ public sealed record SortingSettings
             hash.Add(folder);
         }
 
+        hash.Add(NameTemplate);
+
         return hash.ToHashCode();
     }
 }
 
 /// <summary>
-/// Папка разбора: склад или рабочая папка.
+/// Папка разбора: накопитель или рабочая папка.
 /// </summary>
 public sealed record SortingFolder
 {

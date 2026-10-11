@@ -222,6 +222,7 @@ internal static class DtoMapper
         {
             Inboxes = [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label })],
             WorkFolders = [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label })],
+            NameTemplate = settings.Sorting.NameTemplate,
         },
     };
 
@@ -297,6 +298,7 @@ internal static class DtoMapper
         {
             Inboxes = ToSortingFolders(dto.Sorting.Inboxes),
             WorkFolders = ToSortingFolders(dto.Sorting.WorkFolders),
+            NameTemplate = string.IsNullOrWhiteSpace(dto.Sorting.NameTemplate) ? null : dto.Sorting.NameTemplate.Trim(),
         },
     };
 

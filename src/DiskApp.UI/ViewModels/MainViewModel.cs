@@ -135,7 +135,7 @@ public sealed partial class MainViewModel : ViewModelBase
 
         Initialization = RefreshAsync();
 
-        // Число файлов на складах видно на бейдже сразу, а не после первого входа на страницу.
+        // Число файлов в накопителях видно на бейдже сразу, а не после первого входа на страницу.
         if (inbox is SortingViewModel sorting)
         {
             _ = sorting.RefreshAsync();
@@ -329,7 +329,7 @@ public sealed partial class MainViewModel : ViewModelBase
             IndexStatusShort = status.IsIndexing ? Capitalize(status.DescribeIndexing()) : L.T("Main.IndexIsUpToDate");
         }
 
-        // Настоящая страница разбора сама считает файлы на складах; заглушка берёт число из макетного состояния.
+        // Настоящая страница разбора сама считает файлы в накопителях; заглушка берёт число из макетного состояния.
         if (Pages.FirstOrDefault(page => page.Key == PageKeys.Inbox) is PlaceholderPageViewModel inbox)
         {
             inbox.BadgeValue = status.InboxCount;

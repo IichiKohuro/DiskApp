@@ -1138,7 +1138,7 @@
     <value>Some roots are unavailable</value>
   </data>
   <data name="Main.SortingDownloadsIntoDedicatedStoresA" xml:space="preserve">
-    <value>Sorting Downloads into dedicated stores: a “where to put it” hint, one key for the next file, undo for any decision.</value>
+    <value>Sorting Downloads into work folders: a subfolder, tags and a new name, any move can be undone.</value>
   </data>
   <data name="Main.Stage17" xml:space="preserve">
     <value>Stage 17</value>
@@ -2590,7 +2590,7 @@
     <value>TB</value>
   </data>
   <data name="Sorting.AddInbox" xml:space="preserve">
-    <value>Add an inbox</value>
+    <value>Add a collector folder</value>
   </data>
   <data name="Sorting.AddWorkFolder" xml:space="preserve">
     <value>Add a work folder</value>
@@ -2599,7 +2599,7 @@
     <value>The folder “{0}” was added to the index: search will find its files after the scan.</value>
   </data>
   <data name="Sorting.AllInboxes" xml:space="preserve">
-    <value>All inboxes</value>
+    <value>All collectors</value>
   </data>
   <data name="Sorting.BadFolderName" xml:space="preserve">
     <value>Invalid folder name.</value>
@@ -2608,13 +2608,13 @@
     <value>choose a work folder or find any folder</value>
   </data>
   <data name="Sorting.Description" xml:space="preserve">
-    <value>Files from inboxes (Downloads, files received in messengers) go to work folders, into a subfolder and with tags. Search covers both inboxes and work folders.</value>
+    <value>Files from collector folders (Downloads, files received in messengers) go to work folders: into a subfolder, with tags and a new name. Search covers both collectors and work folders.</value>
   </data>
   <data name="Sorting.Earlier" xml:space="preserve">
     <value>Earlier (lower number)</value>
   </data>
   <data name="Sorting.Files" xml:space="preserve">
-    <value>Files in inboxes</value>
+    <value>Files in collector folders</value>
   </data>
   <data name="Sorting.FindFolder" xml:space="preserve">
     <value>Find any folder…</value>
@@ -2623,16 +2623,34 @@
     <value>Found folders</value>
   </data>
   <data name="Sorting.Inbox" xml:space="preserve">
-    <value>Inbox</value>
+    <value>Collector</value>
   </data>
   <data name="Sorting.InboxEmpty" xml:space="preserve">
-    <value>The inbox is empty: everything is sorted.</value>
+    <value>Nothing here: everything is sorted.</value>
   </data>
   <data name="Sorting.InboxProblem" xml:space="preserve">
-    <value>The inbox could not be read: {0}</value>
+    <value>The folder could not be read: {0}</value>
   </data>
   <data name="Sorting.Inboxes" xml:space="preserve">
-    <value>Inboxes</value>
+    <value>Collector folders</value>
+  </data>
+  <data name="Sorting.Insert.dateTip" xml:space="preserve">
+    <value>{date}: today's date, 2026-10-11</value>
+  </data>
+  <data name="Sorting.Insert.folderTip" xml:space="preserve">
+    <value>{folder}: the destination folder name</value>
+  </data>
+  <data name="Sorting.Insert.nTip" xml:space="preserve">
+    <value>{n}: the file's number among the selected: 1, 2, 3…</value>
+  </data>
+  <data name="Sorting.Insert.nameTip" xml:space="preserve">
+    <value>{name}: the previous name without the extension</value>
+  </data>
+  <data name="Sorting.Insert.tagsTip" xml:space="preserve">
+    <value>{tags}: the move's tags joined with “_”</value>
+  </data>
+  <data name="Sorting.Insert.timeTip" xml:space="preserve">
+    <value>{time}: the current time, 14-30</value>
   </data>
   <data name="Sorting.ItemsSelected" xml:space="preserve">
     <value>{0}, {1} selected</value>
@@ -2644,7 +2662,7 @@
     <value>Later (higher number)</value>
   </data>
   <data name="Sorting.LoadFailed" xml:space="preserve">
-    <value>Inboxes could not be read: {0}</value>
+    <value>Collector folders could not be read: {0}</value>
   </data>
   <data name="Sorting.Loading" xml:space="preserve">
     <value>loading…</value>
@@ -2667,6 +2685,36 @@
   <data name="Sorting.MovedWithTags" xml:space="preserve">
     <value>{0} → {1}, tags: {2}</value>
   </data>
+  <data name="Sorting.NameDateFirst" xml:space="preserve">
+    <value>Date first</value>
+  </data>
+  <data name="Sorting.NameDateTimeFirst" xml:space="preserve">
+    <value>Date and time first</value>
+  </data>
+  <data name="Sorting.NameFolderFirst" xml:space="preserve">
+    <value>Folder first</value>
+  </data>
+  <data name="Sorting.NameKeep" xml:space="preserve">
+    <value>Unchanged</value>
+  </data>
+  <data name="Sorting.NameOnMove" xml:space="preserve">
+    <value>Name on move</value>
+  </data>
+  <data name="Sorting.NamePresets" xml:space="preserve">
+    <value>Presets</value>
+  </data>
+  <data name="Sorting.NamePreview" xml:space="preserve">
+    <value>Will be: {0}</value>
+  </data>
+  <data name="Sorting.NamePreviewMany" xml:space="preserve">
+    <value>Will be: {0} and {1} more</value>
+  </data>
+  <data name="Sorting.NameTagsLast" xml:space="preserve">
+    <value>Tags at the end</value>
+  </data>
+  <data name="Sorting.NameTemplatePlaceholder" xml:space="preserve">
+    <value>Unchanged, or your own name, {date}_{name}, {name}_{tags}…</value>
+  </data>
   <data name="Sorting.NewFolder" xml:space="preserve">
     <value>New folder</value>
   </data>
@@ -2680,13 +2728,13 @@
     <value>New subfolder in the selected folder (Ctrl+Shift+N); created on move</value>
   </data>
   <data name="Sorting.NoInboxesHint" xml:space="preserve">
-    <value>Add an inbox: a folder where files pile up by themselves, such as Downloads or files received in Skype or a messenger.</value>
+    <value>Add a collector folder: a folder where files pile up by themselves, such as Downloads or files received in Skype or a messenger.</value>
   </data>
   <data name="Sorting.NoWorkFoldersHint" xml:space="preserve">
     <value>Add work folders (the first nine get keys 1–9) or find any folder with search.</value>
   </data>
   <data name="Sorting.PickInbox" xml:space="preserve">
-    <value>Inbox: a folder where files pile up</value>
+    <value>Collector folder: where files pile up</value>
   </data>
   <data name="Sorting.PickWorkFolder" xml:space="preserve">
     <value>Work folder</value>
@@ -2695,13 +2743,16 @@
     <value>Pin the folder as a work folder</value>
   </data>
   <data name="Sorting.RemoveInbox" xml:space="preserve">
-    <value>Remove from inboxes</value>
+    <value>Remove from collectors</value>
   </data>
   <data name="Sorting.RemoveTag" xml:space="preserve">
     <value>Remove the tag</value>
   </data>
   <data name="Sorting.RemoveWorkFolder" xml:space="preserve">
     <value>Remove from work folders</value>
+  </data>
+  <data name="Sorting.RenamedTo" xml:space="preserve">
+    <value> as “{0}”</value>
   </data>
   <data name="Sorting.SaveFailed" xml:space="preserve">
     <value>Could not save: {0}</value>
@@ -2720,6 +2771,24 @@
   </data>
   <data name="Sorting.To" xml:space="preserve">
     <value>To</value>
+  </data>
+  <data name="Sorting.Token.date" xml:space="preserve">
+    <value>{date}</value>
+  </data>
+  <data name="Sorting.Token.folder" xml:space="preserve">
+    <value>{folder}</value>
+  </data>
+  <data name="Sorting.Token.n" xml:space="preserve">
+    <value>{n}</value>
+  </data>
+  <data name="Sorting.Token.name" xml:space="preserve">
+    <value>{name}</value>
+  </data>
+  <data name="Sorting.Token.tags" xml:space="preserve">
+    <value>{tags}</value>
+  </data>
+  <data name="Sorting.Token.time" xml:space="preserve">
+    <value>{time}</value>
   </data>
   <data name="Sorting.Undo" xml:space="preserve">
     <value>Undo</value>
@@ -2899,13 +2968,13 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>Downloads and files received in messengers go to your work folders: pick the files, a work folder (keys 1–9), a subfolder or a new one and tags, then press Ctrl+Enter. The move can be undone from the notice.</value>
+    <value>Downloads and files received in messengers go to your work folders: pick the files, a work folder (keys 1–9), a subfolder or a new one, tags and a name, then press Ctrl+Enter. The move can be undone from the notice.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Sorting inboxes</value>
+    <value>Sorting collector folders</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>Inboxes and work folders are searched together; tags move with the file, and tag: finds it in the new place.</value>
+    <value>Collector folders and work folders are searched together; tags move with the file, and tag: finds it in the new place.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
     <value>Search across all folders</value>
@@ -2936,5 +3005,11 @@
   </data>
   <data name="WhatsNew.Title" xml:space="preserve">
     <value>What's new in DiskApp {0}</value>
+  </data>
+  <data name="Sorting.InsertToken" xml:space="preserve">
+    <value>+ field</value>
+  </data>
+  <data name="Sorting.InsertTokenTip" xml:space="preserve">
+    <value>Insert the name, date, time, tags, folder or number into the template</value>
   </data>
 </root>

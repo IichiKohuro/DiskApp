@@ -85,13 +85,18 @@ public enum ConflictResolution
 /// <param name="NewName">Новое имя: переименование и создание.</param>
 /// <param name="Conflicts">Политика конфликтов.</param>
 /// <param name="Permanent">Удалить безвозвратно, минуя корзину.</param>
+/// <param name="TargetNames">
+/// Имена на месте назначения для копирования и переноса, по порядку <paramref name="Sources"/>; <c>null</c> в списке или
+/// без списка — прежнее имя (разбор с переименованием, этап 17).
+/// </param>
 public sealed record FileOperationRequest(
     FileOperationKind Kind,
     IReadOnlyList<string> Sources,
     string? Destination = null,
     string? NewName = null,
     ConflictPolicy Conflicts = ConflictPolicy.Ask,
-    bool Permanent = false);
+    bool Permanent = false,
+    IReadOnlyList<string?>? TargetNames = null);
 
 /// <summary>
 /// Ход операции.

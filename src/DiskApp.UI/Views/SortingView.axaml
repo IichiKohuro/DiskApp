@@ -10,7 +10,7 @@
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
              x:Class="DiskApp.UI.Views.SortingView"
              x:DataType="vm:SortingViewModel">
-    <!-- Страница «Разбор» (PLAN.md, этап 17): слева файлы со складов, справа — куда их положить: рабочая папка
+    <!-- Страница «Разбор» (PLAN.md, этап 17): слева файлы из накопителей, справа — куда их положить: рабочая папка
          (клавиши 1–9) или любая найденная, подпапка (в том числе новая), теги; Ctrl+Enter — перенести. -->
     <UserControl.Styles>
         <Style Selector="TreeViewItem" x:DataType="vm:SortFolderNode">
@@ -26,7 +26,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid Margin="16,12,16,8" RowDefinitions="Auto,*,Auto" ColumnDefinitions="*,380">
+    <Grid Margin="16,12,16,8" RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*,380">
         <DockPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Bottom">
                 <Button AutomationProperties.Name="{loc:Str Common.RefreshF5}" Classes="tool" Command="{Binding RefreshCommand}" HotKey="F5" ToolTip.Tip="{loc:Str Common.RefreshF5}">
@@ -39,7 +39,7 @@
             </StackPanel>
         </DockPanel>
 
-        <!-- Склады и их файлы -->
+        <!-- Накопители и их файлы -->
         <Border Grid.Row="1" Classes="card" Padding="8">
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="4,2,4,6">
@@ -104,56 +104,6 @@
         <!-- Куда -->
         <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="12" Margin="8,0,0,0">
             <DockPanel>
-                <!-- Перенос внизу, всегда на виду -->
-                <StackPanel DockPanel.Dock="Bottom" Spacing="8" Margin="0,10,0,0">
-                    <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap">
-                        <Run Text="{loc:Str Sorting.To}" /><Run Text=": " /><Run FontWeight="SemiBold" Text="{Binding DestinationText}" />
-                    </TextBlock>
-                    <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="36"
-                            Content="{Binding MoveText}" Command="{Binding MoveCommand}" HotKey="Ctrl+Enter"
-                            ToolTip.Tip="{loc:Str Sorting.MoveTip}" />
-                </StackPanel>
-
-                <!-- Теги -->
-                <StackPanel DockPanel.Dock="Bottom" Spacing="6" Margin="0,10,0,0">
-                    <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Sorting.Tags}" />
-                    <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding !!Tags.Count}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <Border Classes="tag" Margin="0,0,6,6">
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" />
-                                        <Button Classes="tool" Padding="2" MinWidth="0" MinHeight="0"
-                                                AutomationProperties.Name="{loc:Str Sorting.RemoveTag}" ToolTip.Tip="{loc:Str Sorting.RemoveTag}"
-                                                Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).RemoveTagCommand}" CommandParameter="{Binding}">
-                                            <ic:SymbolIcon Symbol="Dismiss" FontSize="10" />
-                                        </Button>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <TextBox x:Name="TagBox" AutomationProperties.Name="{loc:Str Sorting.Tags}" PlaceholderText="{loc:Str Sorting.TagWatermark}" Text="{Binding TagText, Mode=TwoWay}" />
-                    <ItemsControl ItemsSource="{Binding TagSuggestions}" IsVisible="{Binding !!TagSuggestions.Count}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <Button Classes="tool" Margin="0,0,4,4" Content="{Binding}"
-                                        Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).AddTagCommand}" CommandParameter="{Binding}" />
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-
                 <!-- Рабочие папки, поиск, дерево -->
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
@@ -225,7 +175,90 @@
             </DockPanel>
         </Border>
 
-        <TextBlock Grid.Row="2" Classes="secondary" FontSize="12" Margin="4,8,0,0" Text="{Binding ItemsText}" />
-        <TextBlock Grid.Row="2" Grid.Column="1" Classes="tertiary" FontSize="12" Margin="8,8,0,0" HorizontalAlignment="Right" Text="{loc:Str Sorting.KeysHint}" />
+        <!-- Полоса действия на всю ширину: имя при переносе, теги, куда и «Перенести». Дереву папок справа остаётся вся высота. -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Classes="card" Padding="12" Margin="0,8,0,0">
+            <Grid ColumnDefinitions="3*,2*,Auto">
+                <!-- Имя при переносе: как есть, своё имя или шаблон с подстановками; «Будет: …» — для первого выбранного -->
+                <StackPanel Spacing="6">
+                    <DockPanel>
+                        <ComboBox DockPanel.Dock="Right" MinWidth="150"
+                                  AutomationProperties.Name="{loc:Str Sorting.NamePresets}"
+                                  PlaceholderText="{loc:Str Sorting.NamePresets}"
+                                  ItemsSource="{Binding NamePresets}"
+                                  SelectedItem="{Binding SelectedNamePreset, Mode=TwoWay}" />
+                        <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Text="{loc:Str Sorting.NameOnMove}" />
+                    </DockPanel>
+                    <DockPanel>
+                        <DropDownButton DockPanel.Dock="Right" Margin="6,0,0,0" Classes="tool" Content="{loc:Str Sorting.InsertToken}" ToolTip.Tip="{loc:Str Sorting.InsertTokenTip}">
+                            <DropDownButton.Flyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="{loc:Str Sorting.Insert.nameTip}" Command="{Binding InsertNameTokenCommand}" CommandParameter="name" />
+                                    <MenuItem Header="{loc:Str Sorting.Insert.dateTip}" Command="{Binding InsertNameTokenCommand}" CommandParameter="date" />
+                                    <MenuItem Header="{loc:Str Sorting.Insert.timeTip}" Command="{Binding InsertNameTokenCommand}" CommandParameter="time" />
+                                    <MenuItem Header="{loc:Str Sorting.Insert.tagsTip}" Command="{Binding InsertNameTokenCommand}" CommandParameter="tags" />
+                                    <MenuItem Header="{loc:Str Sorting.Insert.folderTip}" Command="{Binding InsertNameTokenCommand}" CommandParameter="folder" />
+                                    <MenuItem Header="{loc:Str Sorting.Insert.nTip}" Command="{Binding InsertNameTokenCommand}" CommandParameter="n" />
+                                </MenuFlyout>
+                            </DropDownButton.Flyout>
+                        </DropDownButton>
+                        <TextBox AutomationProperties.Name="{loc:Str Sorting.NameOnMove}" PlaceholderText="{loc:Str Sorting.NameTemplatePlaceholder}" Text="{Binding NameTemplate, Mode=TwoWay}" />
+                    </DockPanel>
+                    <TextBlock Classes="secondary" FontSize="12" TextTrimming="CharacterEllipsis" Text="{Binding NamePreview}" IsVisible="{Binding HasNamePreview}" />
+                </StackPanel>
+
+                <!-- Теги -->
+                <StackPanel Grid.Column="1" Spacing="6" Margin="16,0,0,0">
+                    <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Sorting.Tags}" />
+                    <ItemsControl ItemsSource="{Binding Tags}" IsVisible="{Binding !!Tags.Count}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Border Classes="tag" Margin="0,0,6,6">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+                                        <Button Classes="tool" Padding="2" MinWidth="0" MinHeight="0"
+                                                AutomationProperties.Name="{loc:Str Sorting.RemoveTag}" ToolTip.Tip="{loc:Str Sorting.RemoveTag}"
+                                                Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).RemoveTagCommand}" CommandParameter="{Binding}">
+                                            <ic:SymbolIcon Symbol="Dismiss" FontSize="10" />
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBox x:Name="TagBox" AutomationProperties.Name="{loc:Str Sorting.Tags}" PlaceholderText="{loc:Str Sorting.TagWatermark}" Text="{Binding TagText, Mode=TwoWay}" />
+                    <ItemsControl ItemsSource="{Binding TagSuggestions}" IsVisible="{Binding !!TagSuggestions.Count}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Button Classes="tool" Margin="0,0,4,4" Content="{Binding}"
+                                        Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).AddTagCommand}" CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Куда и перенос -->
+                <StackPanel Grid.Column="2" Spacing="8" Margin="16,0,0,0" Width="260" VerticalAlignment="Bottom">
+                    <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap">
+                        <Run Text="{loc:Str Sorting.To}" /><Run Text=": " /><Run FontWeight="SemiBold" Text="{Binding DestinationText}" />
+                    </TextBlock>
+                    <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" MinHeight="36"
+                            Content="{Binding MoveText}" Command="{Binding MoveCommand}" HotKey="Ctrl+Enter"
+                            ToolTip.Tip="{loc:Str Sorting.MoveTip}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="3" Classes="secondary" FontSize="12" Margin="4,8,0,0" Text="{Binding ItemsText}" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Classes="tertiary" FontSize="12" Margin="8,8,0,0" HorizontalAlignment="Right" Text="{loc:Str Sorting.KeysHint}" />
     </Grid>
 </UserControl>

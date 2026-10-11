@@ -66,6 +66,9 @@
   <data name="FileOperation.StoppedWhenTheAppExited" xml:space="preserve">
     <value>Остановлена при выходе из приложения.</value>
   </data>
+  <data name="FileOperation.TargetNamesMismatch" xml:space="preserve">
+    <value>Имён должно быть столько же, сколько переносимых элементов.</value>
+  </data>
   <data name="FileOperation.TheCopyOfDidNotMatch" xml:space="preserve">
     <value>Копия «{0}» не совпала по размеру с источником; источник оставлен.</value>
   </data>

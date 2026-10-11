@@ -7,7 +7,7 @@ using FluentAvalonia.UI.Controls;
 namespace DiskApp.UI.Tests.ViewModels;
 
 /// <summary>
-/// Страница «Разбор» (PLAN.md, этап 17): склады с числом файлов и новыми сверху, рабочие папки на клавишах 1–9,
+/// Страница «Разбор» (PLAN.md, этап 17): накопители с числом файлов и новыми сверху, рабочие папки на клавишах 1–9,
 /// дерево подпапок с новой папкой, теги с подсказками, перенос с отменой, добавление папок в индекс.
 /// </summary>
 public sealed class SortingViewModelTests
@@ -53,7 +53,7 @@ public sealed class SortingViewModelTests
         await page.RefreshAsync();
 
         // Assert
-        page.Inboxes.Select(static inbox => inbox.Text).ShouldBe(["Все склады · 3", "Загрузки · 2", "Skype · 1"]);
+        page.Inboxes.Select(static inbox => inbox.Text).ShouldBe(["Все накопители · 3", "Загрузки · 2", "Skype · 1"]);
         page.Items.Select(static item => item.Entry.Name).ShouldBe(["ТЗ 417.docx", "схема.pdf", "setup.exe"]);
         page.BadgeValue.ShouldBe(3);
         page.WorkFolders.Select(static item => item.Text).ShouldBe(["1 TCI2", "2 417", "3 Soft"]);
@@ -200,7 +200,7 @@ public sealed class SortingViewModelTests
 
         // Assert
         await _roots.DidNotReceive().AddAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
-        page.Inboxes.Select(static inbox => inbox.Title).ShouldBe(["Все склады", "Загрузки", "Skype", "Telegram"]);
+        page.Inboxes.Select(static inbox => inbox.Title).ShouldBe(["Все накопители", "Загрузки", "Skype", "Telegram"]);
     }
 
     [Fact]
@@ -229,7 +229,7 @@ public sealed class SortingViewModelTests
         // Assert
         page.HasNoInboxes.ShouldBeTrue();
         page.HasNoWorkFolders.ShouldBeTrue();
-        page.EmptyHint.ShouldStartWith("Добавьте склад");
+        page.EmptyHint.ShouldStartWith("Добавьте папку-накопитель");
     }
 
     [Fact]
@@ -247,7 +247,83 @@ public sealed class SortingViewModelTests
         // Assert
         page.Inboxes[0].Count.ShouldBe(2);
         page.SelectedInbox.Text.ShouldBe("Skype · !");
-        page.EmptyHint.ShouldBe("Склад не прочитан: Папки нет в индексе");
+        page.EmptyHint.ShouldBe("Папка не прочитана: Папки нет в индексе");
+    }
+
+    [Fact]
+    public async Task NamePreset_DateFirst_RenamesOnMoveAndIsRemembered()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+        page.SetSelection([.. page.Items.Take(2)]);
+        page.SelectWorkFolderByNumberCommand.Execute(2);
+
+        // Act
+        page.SelectedNamePreset = page.NamePresets.Single(static preset => preset.Title == "Дата в начале");
+        var preview = page.NamePreview;
+        await page.MoveCommand.ExecuteAsync(null);
+        var reopened = Create();
+        await reopened.RefreshAsync();
+
+        // Assert
+        page.SelectedNamePreset.ShouldBeNull("список возвращается к подсказке");
+        preview.ShouldBe("Будет: 2026-10-11_ТЗ 417.docx и ещё 1");
+        _operations.Sorted.ShouldHaveSingleItem().Names.ShouldBe(["2026-10-11_ТЗ 417.docx", "2026-10-11_схема.pdf"]);
+        page.NameTemplate.ShouldBe("{дата}_{имя}");
+        reopened.NameTemplate.ShouldBe("{дата}_{имя}", "шаблон с прежним именем запомнен в настройках");
+    }
+
+    [Fact]
+    public async Task CustomName_OneFile_RenamesOnceThenResets()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+        page.SetSelection([page.Items[0]]);
+        page.SelectWorkFolderByNumberCommand.Execute(2);
+        page.NameTemplate = "Техзадание заказчика";
+
+        // Act
+        await page.MoveCommand.ExecuteAsync(null);
+
+        // Assert
+        _operations.Sorted.ShouldHaveSingleItem().Names.ShouldBe(["Техзадание заказчика.docx"]);
+        page.NameTemplate.ShouldBeEmpty("своё имя без {имя} не запоминается для следующих файлов");
+        _settings.SaveCount.ShouldBe(0);
+        _notices.Received(1).Show("Разбор", "«ТЗ 417.docx» → 417 как «Техзадание заказчика.docx»", FAInfoBarSeverity.Success, "Отменить", Arg.Any<Action>());
+    }
+
+    [Fact]
+    public async Task InsertNameToken_AppendsWithSeparator_AndTagsGoIntoName()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+        page.SetSelection([page.Items[0]]);
+        page.SelectWorkFolderByNumberCommand.Execute(3);
+
+        // Act
+        page.InsertNameTokenCommand.Execute("name");
+        page.InsertNameTokenCommand.Execute("tags");
+        page.TagText = "заказчик";
+
+        // Assert
+        page.NameTemplate.ShouldBe("{имя}_{теги}");
+        page.NamePreview.ShouldBe("Будет: ТЗ 417_заказчик.docx");
+    }
+
+    [Fact]
+    public async Task EmptyTemplate_SendsNoNames()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+        page.SetSelection([page.Items[0]]);
+        page.SelectWorkFolderByNumberCommand.Execute(3);
+
+        // Act
+        await page.MoveCommand.ExecuteAsync(null);
+
+        // Assert
+        _operations.Sorted.ShouldHaveSingleItem().Names.ShouldBeNull();
+        page.HasNamePreview.ShouldBeFalse();
     }
 
     private static FileEntry File(string folder, string name, int hoursAgo)
@@ -260,7 +336,7 @@ public sealed class SortingViewModelTests
         => _browse.ListAsync(path, Arg.Any<BrowseSort>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(new FolderListing(path, 1, null, items, false));
 
-    private SortingViewModel Create() => new(_settings, _browse, _operations, _search, _library, _roots, _dialogs, _notices);
+    private SortingViewModel Create() => new(_settings, _browse, _operations, _search, _library, _roots, _dialogs, _notices, static () => Now);
 
     private async Task<SortingViewModel> CreateLoadedAsync()
     {

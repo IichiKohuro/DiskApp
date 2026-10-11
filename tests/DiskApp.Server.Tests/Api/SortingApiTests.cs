@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace DiskApp.Server.Tests.Api;
 
 /// <summary>
-/// Разбор через API (PLAN.md, этап 17): перенос со склада в рабочую папку и новую подпапку с тегами, прежние теги
+/// Разбор через API (PLAN.md, этап 17): перенос из накопителя в рабочую папку и новую подпапку с тегами, прежние теги
 /// сохраняются и при переносе между корнями, поиск находит файлы на новом месте; пути вне корней, неверное имя
 /// подпапки и перенос папки в саму себя отклоняются.
 /// </summary>
@@ -21,7 +21,7 @@ public sealed class SortingApiTests
     [Fact]
     public async Task Move_ToNewSubfolderWithTags_MovesAndTagsKeepingPreviousTags()
     {
-        // Arrange: склад и рабочая папка в одном корне, у одного файла уже есть тег
+        // Arrange: накопитель и рабочая папка в одном корне, у одного файла уже есть тег
         await using var context = await ServerTestContext.StartAsync();
         var report = context.Files.CreateFile(Path.Combine("Загрузки", "ТЗ 417.pdf"), "t");
         var letter = context.Files.CreateFile(Path.Combine("Загрузки", "письмо.docx"), "l");
@@ -48,7 +48,7 @@ public sealed class SortingApiTests
     [Fact]
     public async Task Move_BetweenRoots_KeepsPreviousTagsOnNewEntry()
     {
-        // Arrange: склад и рабочая папка — разные корни, перенос создаёт новую запись индекса
+        // Arrange: накопитель и рабочая папка — разные корни, перенос создаёт новую запись индекса
         await using var context = await ServerTestContext.StartAsync();
         var file = context.Files.CreateFile(Path.Combine("inbox", "схема.png"), "s");
         var work = context.Files.CreateDirectory("Soft");
@@ -63,6 +63,68 @@ public sealed class SortingApiTests
 
         // Assert
         found.Items.ShouldHaveSingleItem().FullPath.ShouldBe(Path.Combine(work, "схема.png"));
+    }
+
+    [Fact]
+    public async Task Move_WithNames_RenamesKeepingTags()
+    {
+        // Arrange
+        await using var context = await ServerTestContext.StartAsync();
+        var report = context.Files.CreateFile(Path.Combine("Загрузки", "ТЗ 417.docx"), "t");
+        var photo = context.Files.CreateFile(Path.Combine("Загрузки", "фото.jpg"), "p");
+        var work = context.Files.CreateDirectory("417");
+        await context.AddRootAsync();
+
+        // Act
+        var response = await SortAsync(context, new SortFilesRequest
+        {
+            Sources = [report, photo],
+            Destination = work,
+            Names = ["2026-10-11_ТЗ 417.docx", null],
+            Tags = ["заказчик"],
+        });
+        await WaitAsync(context, response);
+        var tagged = await context.GetAsync(ApiRoutes.V1.Search + "?q=" + Uri.EscapeDataString("tag:заказчик"), DiskAppJsonContext.Default.SearchResponse);
+
+        // Assert
+        File.Exists(Path.Combine(work, "2026-10-11_ТЗ 417.docx")).ShouldBeTrue();
+        File.Exists(Path.Combine(work, "фото.jpg")).ShouldBeTrue("без имени — прежнее");
+        tagged.Items.Select(static item => item.Name).ShouldBe(["2026-10-11_ТЗ 417.docx", "фото.jpg"], ignoreOrder: true);
+    }
+
+    [Theory]
+    [InlineData("bad|name.txt")]
+    [InlineData("CON.txt")]
+    public async Task Move_InvalidName_Returns400(string name)
+    {
+        // Arrange
+        await using var context = await ServerTestContext.StartAsync();
+        var file = context.Files.CreateFile(Path.Combine("in", "a.txt"), "a");
+        var work = context.Files.CreateDirectory("work");
+        await context.AddRootAsync();
+
+        // Act
+        var response = await SortAsync(context, new SortFilesRequest { Sources = [file], Destination = work, Names = [name] });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        File.Exists(file).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Move_NamesCountMismatch_Returns400()
+    {
+        // Arrange
+        await using var context = await ServerTestContext.StartAsync();
+        var file = context.Files.CreateFile(Path.Combine("in", "a.txt"), "a");
+        var work = context.Files.CreateDirectory("work");
+        await context.AddRootAsync();
+
+        // Act
+        var response = await SortAsync(context, new SortFilesRequest { Sources = [file], Destination = work, Names = ["x.txt", "y.txt"] });
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]

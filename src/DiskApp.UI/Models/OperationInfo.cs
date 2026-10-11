@@ -154,10 +154,11 @@ public sealed record ConflictAnswer(ConflictChoice Choice, bool ApplyToAll);
 public sealed record NewOperation(FileOperationKind Kind, IReadOnlyList<string> Sources, string? Destination, string? NewName = null);
 
 /// <summary>
-/// Перенос со склада в рабочую папку (PLAN.md, этап 17).
+/// Перенос из накопителя в рабочую папку (PLAN.md, этап 17).
 /// </summary>
 /// <param name="Sources">Что перенести.</param>
 /// <param name="Destination">Рабочая папка или её подпапка.</param>
 /// <param name="NewFolder">Новая подпапка внутри <paramref name="Destination"/>; <c>null</c> — прямо в неё.</param>
 /// <param name="Tags">Теги для перенесённого.</param>
-public sealed record SortOperation(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags);
+/// <param name="Names">Новые имена по порядку <paramref name="Sources"/>; <c>null</c> — прежние.</param>
+public sealed record SortOperation(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags, IReadOnlyList<string?>? Names = null);

@@ -1138,7 +1138,7 @@
     <value>Часть корней недоступна</value>
   </data>
   <data name="Main.SortingDownloadsIntoDedicatedStoresA" xml:space="preserve">
-    <value>Разбор «Загрузок» по профильным складам: подсказка «куда положить», одна клавиша — следующий файл, отмена любого решения.</value>
+    <value>Разбор «Загрузок» по рабочим папкам: подпапка, теги и новое имя, отмена любого переноса.</value>
   </data>
   <data name="Main.Stage17" xml:space="preserve">
     <value>Этап 17</value>
@@ -2590,7 +2590,7 @@
     <value>ТБ</value>
   </data>
   <data name="Sorting.AddInbox" xml:space="preserve">
-    <value>Добавить склад</value>
+    <value>Добавить папку-накопитель</value>
   </data>
   <data name="Sorting.AddWorkFolder" xml:space="preserve">
     <value>Добавить рабочую папку</value>
@@ -2599,7 +2599,7 @@
     <value>Папка «{0}» добавлена в индекс: поиск найдёт её файлы после сканирования.</value>
   </data>
   <data name="Sorting.AllInboxes" xml:space="preserve">
-    <value>Все склады</value>
+    <value>Все накопители</value>
   </data>
   <data name="Sorting.BadFolderName" xml:space="preserve">
     <value>Недопустимое имя папки.</value>
@@ -2608,13 +2608,13 @@
     <value>выберите рабочую папку или найдите любую</value>
   </data>
   <data name="Sorting.Description" xml:space="preserve">
-    <value>Файлы со складов («Загрузки», полученные в мессенджерах) раскладываются по рабочим папкам: в подпапку и с тегами. Поиск находит и склады, и рабочие папки.</value>
+    <value>Файлы из папок-накопителей («Загрузки», полученные в мессенджерах) раскладываются по рабочим папкам: в подпапку, с тегами и новым именем. Поиск находит и накопители, и рабочие папки.</value>
   </data>
   <data name="Sorting.Earlier" xml:space="preserve">
     <value>Раньше (меньшая цифра)</value>
   </data>
   <data name="Sorting.Files" xml:space="preserve">
-    <value>Файлы на складах</value>
+    <value>Файлы в папках-накопителях</value>
   </data>
   <data name="Sorting.FindFolder" xml:space="preserve">
     <value>Найти любую папку…</value>
@@ -2623,16 +2623,34 @@
     <value>Найденные папки</value>
   </data>
   <data name="Sorting.Inbox" xml:space="preserve">
-    <value>Склад</value>
+    <value>Накопитель</value>
   </data>
   <data name="Sorting.InboxEmpty" xml:space="preserve">
-    <value>На складе пусто — всё разобрано.</value>
+    <value>Здесь пусто — всё разобрано.</value>
   </data>
   <data name="Sorting.InboxProblem" xml:space="preserve">
-    <value>Склад не прочитан: {0}</value>
+    <value>Папка не прочитана: {0}</value>
   </data>
   <data name="Sorting.Inboxes" xml:space="preserve">
-    <value>Склады</value>
+    <value>Папки-накопители</value>
+  </data>
+  <data name="Sorting.Insert.dateTip" xml:space="preserve">
+    <value>{дата} — сегодняшняя дата, 2026-10-11</value>
+  </data>
+  <data name="Sorting.Insert.folderTip" xml:space="preserve">
+    <value>{папка} — имя папки, куда переносится файл</value>
+  </data>
+  <data name="Sorting.Insert.nTip" xml:space="preserve">
+    <value>{№} — номер файла среди выбранных: 1, 2, 3…</value>
+  </data>
+  <data name="Sorting.Insert.nameTip" xml:space="preserve">
+    <value>{имя} — прежнее имя без расширения</value>
+  </data>
+  <data name="Sorting.Insert.tagsTip" xml:space="preserve">
+    <value>{теги} — теги переноса через «_»</value>
+  </data>
+  <data name="Sorting.Insert.timeTip" xml:space="preserve">
+    <value>{время} — текущее время, 14-30</value>
   </data>
   <data name="Sorting.ItemsSelected" xml:space="preserve">
     <value>{0}, выбрано {1}</value>
@@ -2644,7 +2662,7 @@
     <value>Позже (большая цифра)</value>
   </data>
   <data name="Sorting.LoadFailed" xml:space="preserve">
-    <value>Склады не прочитаны: {0}</value>
+    <value>Папки-накопители не прочитаны: {0}</value>
   </data>
   <data name="Sorting.Loading" xml:space="preserve">
     <value>загрузка…</value>
@@ -2667,6 +2685,36 @@
   <data name="Sorting.MovedWithTags" xml:space="preserve">
     <value>{0} → {1}, теги: {2}</value>
   </data>
+  <data name="Sorting.NameDateFirst" xml:space="preserve">
+    <value>Дата в начале</value>
+  </data>
+  <data name="Sorting.NameDateTimeFirst" xml:space="preserve">
+    <value>Дата и время в начале</value>
+  </data>
+  <data name="Sorting.NameFolderFirst" xml:space="preserve">
+    <value>Папка в начале</value>
+  </data>
+  <data name="Sorting.NameKeep" xml:space="preserve">
+    <value>Как есть</value>
+  </data>
+  <data name="Sorting.NameOnMove" xml:space="preserve">
+    <value>Имя при переносе</value>
+  </data>
+  <data name="Sorting.NamePresets" xml:space="preserve">
+    <value>Готовые варианты</value>
+  </data>
+  <data name="Sorting.NamePreview" xml:space="preserve">
+    <value>Будет: {0}</value>
+  </data>
+  <data name="Sorting.NamePreviewMany" xml:space="preserve">
+    <value>Будет: {0} и ещё {1}</value>
+  </data>
+  <data name="Sorting.NameTagsLast" xml:space="preserve">
+    <value>Теги в конце</value>
+  </data>
+  <data name="Sorting.NameTemplatePlaceholder" xml:space="preserve">
+    <value>Как есть — или своё имя, {дата}_{имя}, {имя}_{теги}…</value>
+  </data>
   <data name="Sorting.NewFolder" xml:space="preserve">
     <value>Новая папка</value>
   </data>
@@ -2680,13 +2728,13 @@
     <value>Новая подпапка в выбранной папке (Ctrl+Shift+N); создаётся при переносе</value>
   </data>
   <data name="Sorting.NoInboxesHint" xml:space="preserve">
-    <value>Добавьте склад — папку, куда сами собой сыплются файлы: «Загрузки», полученные файлы Skype или мессенджера.</value>
+    <value>Добавьте папку-накопитель — куда сами собой сыплются файлы: «Загрузки», полученные файлы Skype или мессенджера.</value>
   </data>
   <data name="Sorting.NoWorkFoldersHint" xml:space="preserve">
     <value>Добавьте рабочие папки — первые девять получат клавиши 1–9 — или найдите любую папку поиском.</value>
   </data>
   <data name="Sorting.PickInbox" xml:space="preserve">
-    <value>Склад — папка, куда сыплются файлы</value>
+    <value>Папка-накопитель — куда сыплются файлы</value>
   </data>
   <data name="Sorting.PickWorkFolder" xml:space="preserve">
     <value>Рабочая папка</value>
@@ -2695,13 +2743,16 @@
     <value>Закрепить папку как рабочую</value>
   </data>
   <data name="Sorting.RemoveInbox" xml:space="preserve">
-    <value>Убрать из складов</value>
+    <value>Убрать из накопителей</value>
   </data>
   <data name="Sorting.RemoveTag" xml:space="preserve">
     <value>Убрать тег</value>
   </data>
   <data name="Sorting.RemoveWorkFolder" xml:space="preserve">
     <value>Убрать из рабочих папок</value>
+  </data>
+  <data name="Sorting.RenamedTo" xml:space="preserve">
+    <value> как «{0}»</value>
   </data>
   <data name="Sorting.SaveFailed" xml:space="preserve">
     <value>Не удалось сохранить: {0}</value>
@@ -2720,6 +2771,24 @@
   </data>
   <data name="Sorting.To" xml:space="preserve">
     <value>Куда</value>
+  </data>
+  <data name="Sorting.Token.date" xml:space="preserve">
+    <value>{дата}</value>
+  </data>
+  <data name="Sorting.Token.folder" xml:space="preserve">
+    <value>{папка}</value>
+  </data>
+  <data name="Sorting.Token.n" xml:space="preserve">
+    <value>{№}</value>
+  </data>
+  <data name="Sorting.Token.name" xml:space="preserve">
+    <value>{имя}</value>
+  </data>
+  <data name="Sorting.Token.tags" xml:space="preserve">
+    <value>{теги}</value>
+  </data>
+  <data name="Sorting.Token.time" xml:space="preserve">
+    <value>{время}</value>
   </data>
   <data name="Sorting.Undo" xml:space="preserve">
     <value>Отменить</value>
@@ -2899,13 +2968,13 @@
     <value> записей</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>«Загрузки» и полученные в мессенджерах файлы раскладываются по рабочим папкам: выберите файлы, рабочую папку (клавиши 1–9), подпапку или новую папку и теги — и Ctrl+Enter. Перенос отменяется из уведомления.</value>
+    <value>«Загрузки» и полученные в мессенджерах файлы раскладываются по рабочим папкам: выберите файлы, рабочую папку (клавиши 1–9), подпапку или новую папку, теги и имя — и Ctrl+Enter. Перенос отменяется из уведомления.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Разбор складов</value>
+    <value>Разбор папок-накопителей</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>Склады и рабочие папки ищутся вместе; теги переезжают с файлом, и tag: находит его на новом месте.</value>
+    <value>Папки-накопители и рабочие папки ищутся вместе; теги переезжают с файлом, и tag: находит его на новом месте.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
     <value>Поиск по всем папкам</value>
@@ -2936,5 +3005,11 @@
   </data>
   <data name="WhatsNew.Title" xml:space="preserve">
     <value>Что нового в DiskApp {0}</value>
+  </data>
+  <data name="Sorting.InsertToken" xml:space="preserve">
+    <value>+ подстановка</value>
+  </data>
+  <data name="Sorting.InsertTokenTip" xml:space="preserve">
+    <value>Вставить в шаблон имя, дату, время, теги, папку или номер</value>
   </data>
 </root>

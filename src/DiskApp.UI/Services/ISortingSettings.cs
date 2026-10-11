@@ -5,7 +5,7 @@ using DiskApp.UI.Text;
 
 namespace DiskApp.UI.Services;
 
-/// <summary>Папка разбора: склад или рабочая папка.</summary>
+/// <summary>Папка разбора: накопитель или рабочая папка.</summary>
 /// <param name="Path">Полный путь.</param>
 /// <param name="Label">Подпись; <c>null</c> — имя папки.</param>
 public sealed record SortingFolderInfo(string Path, string? Label = null)
@@ -17,17 +17,18 @@ public sealed record SortingFolderInfo(string Path, string? Label = null)
     public override string ToString() => Title;
 }
 
-/// <summary>Склады и рабочие папки в порядке показа.</summary>
-/// <param name="Inboxes">Склады — куда сыплются файлы.</param>
+/// <summary>Накопители и рабочие папки в порядке показа.</summary>
+/// <param name="Inboxes">Накопители — куда сыплются файлы.</param>
 /// <param name="WorkFolders">Рабочие папки — куда их раскладывают; первые девять — на клавишах 1–9.</param>
-public sealed record SortingFolders(IReadOnlyList<SortingFolderInfo> Inboxes, IReadOnlyList<SortingFolderInfo> WorkFolders)
+/// <param name="NameTemplate">Запомненный шаблон имени при переносе; <c>null</c> — имена не меняются.</param>
+public sealed record SortingFolders(IReadOnlyList<SortingFolderInfo> Inboxes, IReadOnlyList<SortingFolderInfo> WorkFolders, string? NameTemplate = null)
 {
-    /// <summary>Ни складов, ни рабочих папок.</summary>
+    /// <summary>Ни накопителей, ни рабочих папок.</summary>
     public static SortingFolders Empty { get; } = new([], []);
 }
 
 /// <summary>
-/// Склады и рабочие папки разбора (PLAN.md, этап 17): хранятся в настройках приложения.
+/// Накопители и рабочие папки разбора (PLAN.md, этап 17): хранятся в настройках приложения.
 /// </summary>
 public interface ISortingSettings
 {
@@ -51,7 +52,8 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
         var settings = await _api.GetSettingsAsync(cancellationToken).ConfigureAwait(false);
         return new SortingFolders(
             [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label))],
-            [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label))]);
+            [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label))],
+            settings.Sorting.NameTemplate);
     }
 
     /// <inheritdoc />
@@ -64,6 +66,7 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
             {
                 ["inboxes"] = ToJson(folders.Inboxes),
                 ["workFolders"] = ToJson(folders.WorkFolders),
+                ["nameTemplate"] = folders.NameTemplate,
             },
         };
         return _api.PatchSettingsAsync(patch, cancellationToken);

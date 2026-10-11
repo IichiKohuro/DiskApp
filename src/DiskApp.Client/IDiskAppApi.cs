@@ -119,7 +119,7 @@ public interface IDiskAppApi
     /// <summary>Поставить файловую операцию.</summary>
     Task<OperationDto> EnqueueOperationAsync(OperationRequest request, CancellationToken cancellationToken = default);
 
-    /// <summary>Разбор: перенести со склада в рабочую папку с тегами (операция очереди).</summary>
+    /// <summary>Разбор: перенести из накопителя в рабочую папку с тегами (операция очереди).</summary>
     Task<OperationDto> SortFilesAsync(SortFilesRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Операции.</summary>

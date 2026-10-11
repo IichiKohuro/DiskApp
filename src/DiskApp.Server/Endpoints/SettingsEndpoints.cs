@@ -219,6 +219,10 @@ internal static partial class SettingsEndpoints
 
         ValidateSortingFolders(settings.Sorting.Inboxes, "sorting.inboxes", errors);
         ValidateSortingFolders(settings.Sorting.WorkFolders, "sorting.workFolders", errors);
+        if (settings.Sorting.NameTemplate is { Length: > 200 })
+        {
+            errors["sorting.nameTemplate"] = [L.F("SettingsEndpoints.TemplateLongerThan", 200)];
+        }
 
         for (var i = 0; i < settings.Indexing.Exclusions.Count; i++)
         {
