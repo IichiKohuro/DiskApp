@@ -402,7 +402,9 @@ Endpoints проверяют, что все пути лежат в добавл�
 
 Прототип интерфейса (2026-10-10) собран до ядра на макетных данных: `ISearchService` с реализацией `SampleSearchService` в `DiskApp.UI` заменяется обёрткой над `IDiskAppApi` в этапе 5, интерфейс при этом не меняется. Команды оболочки (`IAppCommands`: показать поиск, главное окно, страницу по ключу) реализует `DesktopShell` в `DiskApp.Desktop`, который владеет треем, хоткеем и окнами и разбирает аргументы запуска (`StartupArguments`). `MainWindow` наследует `FAAppWindow` FluentAvalonia (заголовок и системные кнопки в стиле Windows 11), Mica включает `Backdrop.ApplyMica` с fallback на сплошной цвет темы; `QuickSearchWindow` — окно без рамки с `ExperimentalAcrylicBorder` и скруглением через `DwmSetWindowAttribute`. Страницы подбираются по `DataTemplate` из `App.axaml`, без рефлексии; подсветка совпадений — контрол `HighlightTextBlock`.
 
-Состав оболочки и интерфейса после этапа 0:
+С этапа 7 (2026-10-11) окна работают с настоящим индексом: `ApiSearchService` переводит ответы `IDiskAppApi` в модели интерфейса (подсветка диапазонами сервера, подписи и доступность корней, ход индексации), пустой запрос показывает секции «Недавно открытые», «Закреплённые», «Недавно изменённые» строками-заголовками, которые не выбираются. Действия над файлом — `IFileActions` (`ApiFileActions`): действия оболочки идут запросами к серверу, корзина и переименование — операциями его очереди с ожиданием итога, буфер обмена — `IClipboardService`, который десктоп реализует через оболочку Windows (`ShellClipboardService`). Клавиши быстрого поиска связаны с командами в одном месте — `QuickSearchKeyMap` (клавиши редактирования остаются полю запроса); `F2` и `Del` открывают панель под списком (новое имя, подтверждение корзины), итог действия показывает `InfoBar` в окне поиска, контекстное меню строки открывается правой кнопкой, `Tab` или `Shift+F10`.
+
+Состав оболочки и интерфейса после этапа 7.3:
 
 ```mermaid
 flowchart TB
@@ -424,9 +426,9 @@ flowchart TB
     subgraph UI["DiskApp.UI"]
         MainVM["MainViewModel<br/>страницы · InfoBar · состояние индекса"]
         Pages["HomeViewModel · SettingsViewModel<br/>SearchPage · заглушки разделов"]
-        QSVM["QuickSearchViewModel<br/>debounce 60 мс · клавиатура"]
-        Search["ISearchService"]
-        Sample["SampleSearchService<br/>макет до этапа 5"]
+        QSVM["QuickSearchViewModel<br/>debounce 60 мс · QuickSearchKeyMap · действия"]
+        Search["ISearchService · IFileActions"]
+        Sample["ApiSearchService · ApiFileActions<br/>клиент API; макеты — для превью и тестов"]
         Status["HotkeyStatus · IThemeService"]
         MainWin --> MainVM --> Pages
         QSWin --> QSVM
@@ -444,7 +446,7 @@ flowchart TB
 
 | Интерфейс (Core) | Windows-реализация | Где живёт | Этап |
 |---|---|---|---|
-| `IPlatformShell` | `ShellExecuteEx`, `SHOpenWithDialog`, `SHOpenFolderAndSelectItems`, `IFileOperation`, буфер обмена с `DataFormats.Files` | Infrastructure | 7 |
+| `IPlatformShell` | `WindowsPlatformShell` на отдельном STA-потоке: `ShellExecuteEx` (через `Process.Start`), `SHOpenWithDialog`, `SHOpenFolderAndSelectItems`, `SHObjectProperties`, verb `runas`, корзина `SHFileOperation` с `FOF_ALLOWUNDO` (только локальные жёсткие диски — на сетевых и съёмных корзины нет, действие отклоняется), буфер Windows `CF_UNICODETEXT` и `CF_HDROP`. Регистрирует только десктоп; живые тесты — при `DISKAPP_SHELL_TESTS=1` | Infrastructure | есть (7.3) |
 | `IIconProvider` | `SHGetFileInfo`, `IShellItemImageFactory`, кэш PNG на диске | Infrastructure | 7 |
 | Горячая клавиша | `GlobalHotkey` + `MessageWindow`: `RegisterHotKey` с `MOD_NOREPEAT`, приём `WM_HOTKEY` собственным message-only окном (`CreateWindowEx` с `HWND_MESSAGE`); `Win32Properties` в Avalonia 12 нет. Цепочка сочетаний `Ctrl+Alt+D` → `F` → `Space` (ADR-0006), итог в `HotkeyStatus`; настраиваемое сочетание — этап 6.5 | Desktop | есть (0.6) |
 | Трей | Avalonia `TrayIcon` + `NativeMenu` (Открыть, Быстрый поиск, Настройки, Выход); щелчок переключает окно поиска | Desktop | есть (0.6) |

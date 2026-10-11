@@ -93,4 +93,42 @@ public sealed class PathTextTests
         shortened.ShouldContain("…");
         shortened.ShouldEndWith(".txt");
     }
+
+    [Theory]
+    [InlineData(@"D:\Docs\a.txt", "b.txt", @"D:\Docs\b.txt")]
+    [InlineData("/home/user/a.txt", "b.txt", "/home/user/b.txt")]
+    [InlineData(@"D:\Docs\Папка\", "Новая", @"D:\Docs\Новая")]
+    [InlineData("a.txt", "b.txt", "b.txt")]
+    public void WithFileName_KeepsFolderAndSeparator(string path, string name, string expected)
+    {
+        // Act & Assert
+        PathText.WithFileName(path, name).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Отчёт.docx", 5)]
+    [InlineData("archive.tar.gz", 11)]
+    [InlineData(".gitignore", 10)]
+    [InlineData("README", 6)]
+    public void StemLength_SelectsNameWithoutExtension(string name, int expected)
+    {
+        // Act & Assert
+        PathText.StemLength(name).ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("Отчёт Q3.docx", null)]
+    [InlineData(".gitignore", null)]
+    [InlineData("  ", "Имя не может быть пустым.")]
+    [InlineData("a/b.txt", "Имя не может содержать символы \\ / : * ? \" < > |.")]
+    [InlineData("вопрос?.txt", "Имя не может содержать символы \\ / : * ? \" < > |.")]
+    [InlineData("name.", "Имя не может заканчиваться точкой или пробелом.")]
+    [InlineData("name ", "Имя не может заканчиваться точкой или пробелом.")]
+    [InlineData("nul.txt", "«nul.txt» — зарезервированное имя Windows.")]
+    [InlineData("COM1", "«COM1» — зарезервированное имя Windows.")]
+    public void ValidateFileName_WindowsRules(string name, string? expected)
+    {
+        // Act & Assert
+        PathText.ValidateFileName(name).ShouldBe(expected);
+    }
 }
