@@ -273,6 +273,17 @@ public sealed partial class BrowseViewModel : PageViewModel
     /// <summary>Есть ли ошибка.</summary>
     public bool HasError => ErrorText.Length > 0;
 
+    /// <summary>
+    /// Подсказка вместо пустого списка (PLAN.md, этап 9.3): корней нет, папка пуста или фильтр ничего не оставил; пусто —
+    /// в списке есть записи.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasEmptyHint))]
+    public partial string EmptyHint { get; set; } = string.Empty;
+
+    /// <summary>Показать подсказку вместо пустого списка.</summary>
+    public bool HasEmptyHint => EmptyHint.Length > 0;
+
     /// <summary>Можно вернуться назад.</summary>
     public bool CanGoBack => _back.Count > 0;
 
@@ -602,6 +613,7 @@ public sealed partial class BrowseViewModel : PageViewModel
         else if (roots.Count == 0)
         {
             StatusText = L.T("Browse.NoRootsYetAddAFolder");
+            EmptyHint = L.T("Browse.EmptyNoRoots");
         }
     }
 
@@ -709,6 +721,12 @@ public sealed partial class BrowseViewModel : PageViewModel
         }
 
         StatusText = text;
+        if (CurrentPath is not null)
+        {
+            EmptyHint = Items.Count > 0 || HasError ? string.Empty
+                : _listing.Count > 0 ? L.T("Browse.EmptyFilter")
+                : L.T("Browse.EmptyFolder");
+        }
     }
 
     private void NotifyHistory()

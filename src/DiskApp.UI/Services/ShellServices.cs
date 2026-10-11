@@ -85,6 +85,9 @@ public interface IDialogService
 
     /// <summary>Выбор папки (PLAN.md, этап 9.1: корни индекса, «Входящие»); <c>null</c> — отменено.</summary>
     Task<string?> PickFolderAsync(string title);
+
+    /// <summary>«Что нового» после обновления (PLAN.md, этап 9.3).</summary>
+    Task ShowWhatsNewAsync(DiskApp.UI.ViewModels.WhatsNewViewModel dialog);
 }
 
 /// <summary>

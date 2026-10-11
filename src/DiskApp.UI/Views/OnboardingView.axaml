@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="DiskApp.UI.Views.OnboardingView"
+             x:DataType="vm:OnboardingViewModel">
+    <!-- Мастер первого запуска (PLAN.md, этап 9.3) поверх главного окна: папки → горячая клавиша → автозапуск → тема и язык →
+         готово с ходом индексации. -->
+    <Panel>
+        <Border Background="{DynamicResource SolidBackgroundFillColorBaseBrush}" />
+        <Border Classes="card" MaxWidth="640" Margin="24" Padding="28,24" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <DockPanel>
+                <!-- Кнопки -->
+                <DockPanel DockPanel.Dock="Bottom" Margin="0,20,0,0">
+                    <Button DockPanel.Dock="Left" Content="{loc:Str Onboarding.Skip}" Command="{Binding SkipCommand}" IsVisible="{Binding !IsDone}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <Button Content="{loc:Str Onboarding.Back}" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}" />
+                        <Button Classes="accent" MinWidth="120" Content="{Binding NextText}" Command="{Binding NextCommand}" />
+                    </StackPanel>
+                </DockPanel>
+
+                <StackPanel Spacing="14">
+                    <TextBlock Classes="tertiary" FontSize="12" Text="{Binding StepText}" />
+                    <TextBlock Theme="{StaticResource TitleTextBlockStyle}" TextWrapping="Wrap" Text="{Binding StepTitle}" />
+                    <TextBlock Classes="secondary" TextWrapping="Wrap" Text="{Binding StepSubtitle}" />
+
+                    <!-- Папки -->
+                    <StackPanel Spacing="6" IsVisible="{Binding IsFolders}">
+                        <ScrollViewer MaxHeight="300">
+                            <ItemsControl ItemsSource="{Binding Folders}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:FolderChoice">
+                                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" IsEnabled="{Binding CanToggle}" Margin="0,2">
+                                            <Grid ColumnDefinitions="Auto,*">
+                                                <ic:SymbolIcon Symbol="{Binding Symbol}" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                                <StackPanel Grid.Column="1" Spacing="1">
+                                                    <TextBlock Text="{Binding Title}" />
+                                                    <TextBlock Classes="tertiary" FontSize="11" TextTrimming="CharacterEllipsis" Text="{Binding Path}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </CheckBox>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <Button HorizontalAlignment="Left" Command="{Binding AddFolderCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <ic:SymbolIcon Symbol="FolderAdd" FontSize="16" />
+                                <TextBlock Text="{loc:Str Onboarding.AddFolder}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Горячая клавиша -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsHotkey}">
+                        <Border Classes="chip accent" HorizontalAlignment="Left" Padding="16,8">
+                            <TextBlock FontSize="18" Text="{Binding Hotkeys.QuickSearchText}" />
+                        </Border>
+                        <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{Binding Hotkeys.Message}"
+                                   IsVisible="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        <Button HorizontalAlignment="Left" Content="{loc:Str Onboarding.HotkeyTry}" Command="{Binding TryQuickSearchCommand}" />
+                    </StackPanel>
+
+                    <!-- Автозапуск -->
+                    <ToggleSwitch IsVisible="{Binding IsStartup}" IsChecked="{Binding StartWithWindows, Mode=TwoWay}" IsEnabled="{Binding IsAutoStartSupported}"
+                                  OnContent="{loc:Str Onboarding.StartWithWindows}" OffContent="{loc:Str Onboarding.StartWithWindows}" />
+
+                    <!-- Тема и язык -->
+                    <Grid IsVisible="{Binding IsAppearance}" ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="10">
+                        <TextBlock VerticalAlignment="Center" Text="{loc:Str Onboarding.Theme}" />
+                        <ComboBox Grid.Column="1" MinWidth="220" ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" />
+                        <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="{loc:Str Onboarding.Language}" />
+                        <ComboBox Grid.Row="1" Grid.Column="1" MinWidth="220" ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" />
+                    </Grid>
+
+                    <!-- Готово -->
+                    <StackPanel Spacing="10" IsVisible="{Binding IsDone}">
+                        <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsIndexing}" />
+                        <TextBlock Text="{Binding ProgressText}" />
+                        <Button HorizontalAlignment="Left" Command="{Binding TryQuickSearchCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <ic:SymbolIcon Symbol="Search" FontSize="16" />
+                                <TextBlock Text="{loc:Str Onboarding.TryQuickSearch}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCautionBrush}"
+                               Text="{Binding Note}" IsVisible="{Binding HasNote}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Panel>
+</UserControl>

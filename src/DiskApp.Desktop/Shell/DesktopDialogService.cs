@@ -223,6 +223,21 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
         return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
     }
 
+    /// <inheritdoc />
+    public async Task ShowWhatsNewAsync(DiskApp.UI.ViewModels.WhatsNewViewModel dialog)
+    {
+        ArgumentNullException.ThrowIfNull(dialog);
+
+        var box = new FAContentDialog
+        {
+            Title = dialog.Title,
+            Content = new DiskApp.UI.Views.WhatsNewView { DataContext = dialog },
+            CloseButtonText = L.T("WhatsNew.Close"),
+            DefaultButton = FAContentDialogButton.Close,
+        };
+        await box.ShowAsync(mainWindow());
+    }
+
     private static TextBlock Describe(string label, long size, DateTimeOffset modified)
         => new() { Text = L.F("DesktopDialog.Modified", label, DiskApp.UI.Text.Formatting.Size(size), modified.ToLocalTime()) };
 }

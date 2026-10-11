@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.Versioning;
+using System.Text.Json.Nodes;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -67,6 +68,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     private MainWindow? _mainWindow;
     private QuickSearchWindow? _quickSearch;
     private bool _exiting;
+    private bool _whatsNewPending;
 
     /// <summary>
     /// Создаёт оболочку; окна, трей и приём аргументов появляются в <see cref="Start"/>.
@@ -119,6 +121,10 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _instanceServer.Start();
 
         ApplyArguments(startup, initialLaunch: true);
+        if (!startup.Exit)
+        {
+            _ = StartOnboardingAsync();
+        }
 
         _log.Information("Оболочка запущена через {StartupMs} мс: хоткей {HotkeyState}, аргументы {Arguments}",
             StartupTimer.Milliseconds,
@@ -195,7 +201,147 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         _mainWindow.Show();
         _mainWindow.Activate();
+
+        if (_whatsNewPending)
+        {
+            _whatsNewPending = false;
+            Dispatcher.UIThread.Post(() => _ = ShowWhatsNewAsync(), DispatcherPriority.Background);
+        }
     }
+
+    /// <summary>
+    /// Мастер первого запуска и «Что нового» (PLAN.md, этап 9.3). Мастер открывается, пока он не пройден и в индексе
+    /// нет ни одной папки; если папки уже есть (обновление с версии без мастера), он считается пройденным. После
+    /// обновления версии при следующем показе главного окна открывается «Что нового»; обучающие подсказки включаются
+    /// после мастера или после «Что нового», чтобы не перекрывать их.
+    /// </summary>
+    private async Task StartOnboardingAsync()
+    {
+        try
+        {
+            var onboarding = _services.GetRequiredService<ISettingsStore<AppSettings>>().Current.Onboarding;
+            if (!onboarding.Completed)
+            {
+                var roots = await _services.GetRequiredService<IRootsService>().GetRootsAsync().ConfigureAwait(false);
+                if (roots.Count == 0)
+                {
+                    await Dispatcher.UIThread.InvokeAsync(ShowOnboardingAsync);
+                    return;
+                }
+
+                await _services.GetRequiredService<ISettingsService>()
+                    .PatchAsync(new JsonObject { ["onboarding"] = new JsonObject { ["completed"] = true } })
+                    .ConfigureAwait(false);
+            }
+
+            if (onboarding.LastSeenVersion != AppVersion.Current)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    _whatsNewPending = true;
+                    if (_mainWindow is { IsVisible: true })
+                    {
+                        ShowMainWindow();
+                    }
+                });
+                return;
+            }
+
+            await EnableTipsAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _log.Warning(exception, "Не удалось проверить, пройден ли мастер первого запуска");
+        }
+    }
+
+    /// <inheritdoc />
+    public void StartOnboarding()
+    {
+        if (_services.GetRequiredService<MainViewModel>().IsOnboarding)
+        {
+            ShowMainWindow();
+            return;
+        }
+
+        _services.GetService<SettingsTipsService>()?.Reset();
+        _ = ShowOnboardingSafeAsync();
+    }
+
+    private async Task ShowOnboardingSafeAsync()
+    {
+        try
+        {
+            await ShowOnboardingAsync();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _log.Warning(exception, "Мастер первого запуска не открылся");
+        }
+    }
+
+    private async Task ShowOnboardingAsync()
+    {
+        var wizard = _services.GetRequiredService<OnboardingViewModel>();
+        await wizard.LoadAsync();
+        _services.GetRequiredService<MainViewModel>().StartOnboarding(wizard);
+
+        // После обработчика главного окна (оно уже перешло на главную): включить подсказки и показать первую.
+        wizard.Completed += (_, _) =>
+        {
+            _services.GetService<SettingsTipsService>()?.Enable();
+            ShowHomeTips();
+        };
+        ShowMainWindow();
+        _log.Information("Открыт мастер первого запуска");
+    }
+
+    private async Task ShowWhatsNewAsync()
+    {
+        try
+        {
+            await _services.GetRequiredService<IDialogService>().ShowWhatsNewAsync(new WhatsNewViewModel());
+
+            // Версия запоминается после показа: если окно не открылось, «Что нового» покажется в следующий раз.
+            await _services.GetRequiredService<ISettingsService>()
+                .PatchAsync(new JsonObject { ["onboarding"] = new JsonObject { ["lastSeenVersion"] = AppVersion.Current } });
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _log.Warning(exception, "Окно «Что нового» не показано");
+        }
+
+        await EnableTipsAsync();
+    }
+
+    private async Task EnableTipsAsync()
+    {
+        if (_services.GetService<SettingsTipsService>() is not { } tips)
+        {
+            return;
+        }
+
+        try
+        {
+            await tips.LoadAsync().ConfigureAwait(false);
+            ShowHomeTips();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _log.Warning(exception, "Состояние обучающих подсказок не прочитано");
+        }
+    }
+
+    private void ShowHomeTips() => Dispatcher.UIThread.Post(
+        () =>
+        {
+            var main = _services.GetRequiredService<MainViewModel>();
+            if (_mainWindow is { IsVisible: true, IsActive: true } && main.SelectedPage is HomeViewModel home && !main.IsOnboarding)
+            {
+                home.ShowTips();
+            }
+        },
+        DispatcherPriority.Background);
 
     // Проводник запускает пункт меню отдельно для каждого выбранного файла: запросы, пришедшие за 400 мс, —
     // одно окно «Добавить».

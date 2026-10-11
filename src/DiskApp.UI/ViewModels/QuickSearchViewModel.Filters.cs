@@ -93,6 +93,30 @@ public sealed partial class QuickSearchViewModel
         }
     }
 
+    /// <summary>
+    /// Подсказка о фильтрах открыта (PLAN.md, этап 9.3). Она встроена в окно, а не всплывает отдельным окном: всплывающее
+    /// окно забирало бы фокус, и окно поиска пряталось бы при потере фокуса.
+    /// </summary>
+    [ObservableProperty]
+    public partial bool IsFiltersTipOpen { get; set; }
+
+    /// <summary>
+    /// Показать подсказку о фильтрах, если она ещё не показывалась; вызывает окно после показа. Подсказка считается
+    /// показанной сразу и закрывается кнопкой или вводом запроса.
+    /// </summary>
+    public void ShowTips()
+    {
+        if (!IsFiltersTipOpen && _tips.ShouldShow(Services.Tips.Filters))
+        {
+            IsFiltersTipOpen = true;
+            _tips.MarkShown(Services.Tips.Filters);
+        }
+    }
+
+    /// <summary>Закрыть подсказку о фильтрах.</summary>
+    [RelayCommand]
+    private void DismissFiltersTip() => IsFiltersTipOpen = false;
+
     /// <summary>Показывает или прячет чипы фильтров.</summary>
     [RelayCommand]
     private void ToggleFilters() => ShowFilters = !ShowFilters;

@@ -177,6 +177,15 @@
   <data name="Browse.Documents" xml:space="preserve">
     <value>Documents</value>
   </data>
+  <data name="Browse.EmptyFilter" xml:space="preserve">
+    <value>The filter matches nothing. Clear it to see everything in the folder.</value>
+  </data>
+  <data name="Browse.EmptyFolder" xml:space="preserve">
+    <value>This folder is empty. Drag files here from File Explorer or paste them with Ctrl+V.</value>
+  </data>
+  <data name="Browse.EmptyNoRoots" xml:space="preserve">
+    <value>No roots yet. Add a folder on the home page or in settings, and its tree and files appear here.</value>
+  </data>
   <data name="Browse.FileKind" xml:space="preserve">
     <value>File kind</value>
   </data>
@@ -1077,6 +1086,102 @@
   <data name="NullAutoStart.AutostartIsNotSupportedOnThis" xml:space="preserve">
     <value>Autostart is not supported on this platform yet.</value>
   </data>
+  <data name="Onboarding.AddFolder" xml:space="preserve">
+    <value>Add folder…</value>
+  </data>
+  <data name="Onboarding.Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Onboarding.ChooseFolder" xml:space="preserve">
+    <value>Folder to search</value>
+  </data>
+  <data name="Onboarding.CouldNotGetRoots" xml:space="preserve">
+    <value>Could not get the roots:</value>
+  </data>
+  <data name="Onboarding.Finish" xml:space="preserve">
+    <value>Finish</value>
+  </data>
+  <data name="Onboarding.Folder.Desktop" xml:space="preserve">
+    <value>Desktop</value>
+  </data>
+  <data name="Onboarding.Folder.Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Onboarding.Folder.Downloads" xml:space="preserve">
+    <value>Downloads</value>
+  </data>
+  <data name="Onboarding.Folder.Music" xml:space="preserve">
+    <value>Music</value>
+  </data>
+  <data name="Onboarding.Folder.Pictures" xml:space="preserve">
+    <value>Pictures</value>
+  </data>
+  <data name="Onboarding.Folder.Videos" xml:space="preserve">
+    <value>Videos</value>
+  </data>
+  <data name="Onboarding.HotkeyTry" xml:space="preserve">
+    <value>Try it</value>
+  </data>
+  <data name="Onboarding.Indexed" xml:space="preserve">
+    <value>{0} in the index</value>
+  </data>
+  <data name="Onboarding.Indexing" xml:space="preserve">
+    <value>Indexing: {0} found</value>
+  </data>
+  <data name="Onboarding.Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Onboarding.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Onboarding.NotAllFoldersAdded" xml:space="preserve">
+    <value>Not all folders were added:</value>
+  </data>
+  <data name="Onboarding.Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="Onboarding.StartWithWindows" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="Onboarding.StepOf" xml:space="preserve">
+    <value>Step {0} of {1}</value>
+  </data>
+  <data name="Onboarding.Subtitle.Appearance" xml:space="preserve">
+    <value>You can keep them as in Windows; change them later in settings.</value>
+  </data>
+  <data name="Onboarding.Subtitle.Done" xml:space="preserve">
+    <value>Indexing is already running: search finds files as the scan goes. Try quick search right now.</value>
+  </data>
+  <data name="Onboarding.Subtitle.Folders" xml:space="preserve">
+    <value>Check the folders — DiskApp indexes them and finds files in a fraction of a second. You can add and remove folders later in settings.</value>
+  </data>
+  <data name="Onboarding.Subtitle.Hotkey" xml:space="preserve">
+    <value>{0} opens the search window over any program. Start typing a name; Enter opens the file.</value>
+  </data>
+  <data name="Onboarding.Subtitle.Startup" xml:space="preserve">
+    <value>So the hotkey works right after sign-in, DiskApp can start minimized to the tray.</value>
+  </data>
+  <data name="Onboarding.Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Onboarding.Title.Appearance" xml:space="preserve">
+    <value>Theme and language</value>
+  </data>
+  <data name="Onboarding.Title.Done" xml:space="preserve">
+    <value>All set</value>
+  </data>
+  <data name="Onboarding.Title.Folders" xml:space="preserve">
+    <value>Where should DiskApp look?</value>
+  </data>
+  <data name="Onboarding.Title.Hotkey" xml:space="preserve">
+    <value>Search from anywhere</value>
+  </data>
+  <data name="Onboarding.Title.Startup" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="Onboarding.TryQuickSearch" xml:space="preserve">
+    <value>Open quick search</value>
+  </data>
   <data name="OperationItem.Cancelled" xml:space="preserve">
     <value>Cancelled</value>
   </data>
@@ -1968,6 +2073,15 @@
   <data name="Settings.NormalInformation" xml:space="preserve">
     <value>Normal (Information)</value>
   </data>
+  <data name="Settings.Onboarding" xml:space="preserve">
+    <value>Getting started</value>
+  </data>
+  <data name="Settings.OnboardingDescription" xml:space="preserve">
+    <value>The first-run wizard: folders, hotkey, startup, theme. Tips are shown again.</value>
+  </data>
+  <data name="Settings.OnboardingRun" xml:space="preserve">
+    <value>Run again</value>
+  </data>
   <data name="Settings.OnceADay" xml:space="preserve">
     <value>Once a day</value>
   </data>
@@ -2415,6 +2529,27 @@
   <data name="Time.Yesterday" xml:space="preserve">
     <value>yesterday</value>
   </data>
+  <data name="Tips.Drop.Text" xml:space="preserve">
+    <value>Drop a folder from File Explorer onto this page to add it to the index. Files go to the Add window.</value>
+  </data>
+  <data name="Tips.Drop.Title" xml:space="preserve">
+    <value>Drag a folder here</value>
+  </data>
+  <data name="Tips.Filters.Text" xml:space="preserve">
+    <value>Type filters in the search box: type:pdf, ext:docx, modified:week, tag:work. Type "?" to see the whole syntax; Ctrl+F hides and shows the chips.</value>
+  </data>
+  <data name="Tips.Filters.Title" xml:space="preserve">
+    <value>Filters right in the query</value>
+  </data>
+  <data name="Tips.GotIt" xml:space="preserve">
+    <value>Got it</value>
+  </data>
+  <data name="Tips.Hotkey.Text" xml:space="preserve">
+    <value>{0} opens search over any program — no need to switch to DiskApp.</value>
+  </data>
+  <data name="Tips.Hotkey.Title" xml:space="preserve">
+    <value>Search from anywhere</value>
+  </data>
   <data name="TrayStatus.DiskAppIndexIsUpToDate" xml:space="preserve">
     <value>DiskApp — index is up to date</value>
   </data>
@@ -2438,5 +2573,56 @@
   </data>
   <data name="TrayStatus.Entries" xml:space="preserve">
     <value> entries</value>
+  </data>
+  <data name="WhatsNew.1.Text" xml:space="preserve">
+    <value>Sections for appearance, search, the search window, the index, keys and data. Every change is saved and applied right away, without a restart.</value>
+  </data>
+  <data name="WhatsNew.1.Title" xml:space="preserve">
+    <value>Settings like in Windows 11</value>
+  </data>
+  <data name="WhatsNew.2.Text" xml:space="preserve">
+    <value>The interface language is picked in settings or taken from Windows and switches on the fly.</value>
+  </data>
+  <data name="WhatsNew.2.Title" xml:space="preserve">
+    <value>Russian and English</value>
+  </data>
+  <data name="WhatsNew.3.Text" xml:space="preserve">
+    <value>Favorites (Ctrl+D), your own collections and saved searches, all on one page.</value>
+  </data>
+  <data name="WhatsNew.3.Title" xml:space="preserve">
+    <value>Collections</value>
+  </data>
+  <data name="WhatsNew.4.Text" xml:space="preserve">
+    <value>Ctrl+T in search and browse assigns tags; the tag: filter finds tagged files.</value>
+  </data>
+  <data name="WhatsNew.4.Title" xml:space="preserve">
+    <value>Colored tags</value>
+  </data>
+  <data name="WhatsNew.5.Text" xml:space="preserve">
+    <value>Tree, list and tiles, like in File Explorer. Copying and moving run in the background and can be cancelled; Ctrl+Z undoes the last action.</value>
+  </data>
+  <data name="WhatsNew.5.Title" xml:space="preserve">
+    <value>Browse and operations</value>
+  </data>
+  <data name="WhatsNew.6.Text" xml:space="preserve">
+    <value>Drag files in, pick DiskApp in the Send to menu or in File Explorer, or press Ctrl+Shift+V, then choose where to put them.</value>
+  </data>
+  <data name="WhatsNew.6.Title" xml:space="preserve">
+    <value>The Add window</value>
+  </data>
+  <data name="WhatsNew.7.Text" xml:space="preserve">
+    <value>A wizard helps pick folders, the hotkey and the theme, and tips along the way point out filters and drag and drop.</value>
+  </data>
+  <data name="WhatsNew.7.Title" xml:space="preserve">
+    <value>First run and tips</value>
+  </data>
+  <data name="WhatsNew.Close" xml:space="preserve">
+    <value>Got it</value>
+  </data>
+  <data name="WhatsNew.Show" xml:space="preserve">
+    <value>What's new</value>
+  </data>
+  <data name="WhatsNew.Title" xml:space="preserve">
+    <value>What's new in DiskApp {0}</value>
   </data>
 </root>

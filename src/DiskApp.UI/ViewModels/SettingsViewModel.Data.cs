@@ -179,6 +179,14 @@ public sealed partial class SettingsViewModel
 
     partial void OnQuickSwitchHotkeyChanged(string value) => OnPropertyChanged(nameof(QuickSwitchHotkeyText));
 
+    /// <summary>Пройти мастер первого запуска заново; обучающие подсказки покажутся снова (PLAN.md, этап 9.3).</summary>
+    [RelayCommand]
+    private void RestartOnboarding() => _commands?.StartOnboarding();
+
+    /// <summary>«Что нового» в этой версии (PLAN.md, этап 9.3).</summary>
+    [RelayCommand]
+    private Task ShowWhatsNewAsync() => _dialogs?.ShowWhatsNewAsync(new WhatsNewViewModel()) ?? Task.CompletedTask;
+
     /// <summary>Начать запись сочетания.</summary>
     [RelayCommand]
     private void StartRecording(HotkeyTarget target)

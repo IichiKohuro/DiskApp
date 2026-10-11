@@ -57,5 +57,10 @@ public static class DesignData
 
         /// <inheritdoc />
         public Task AddFilesAsync(IReadOnlyList<string> paths) => Task.CompletedTask;
+
+        /// <inheritdoc />
+        public void StartOnboarding()
+        {
+        }
     }
 }

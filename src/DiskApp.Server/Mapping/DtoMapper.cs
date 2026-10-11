@@ -211,6 +211,12 @@ internal static class DtoMapper
             ShowDate = settings.Popup.ShowDate,
         },
         Diagnostics = new DiagnosticsSettingsDto { LogLevel = settings.Diagnostics.LogLevel },
+        Onboarding = new OnboardingSettingsDto
+        {
+            Completed = settings.Onboarding.Completed,
+            LastSeenVersion = settings.Onboarding.LastSeenVersion,
+            TipsShown = settings.Onboarding.TipsShown,
+        },
     };
 
     /// <summary>
@@ -274,6 +280,12 @@ internal static class DtoMapper
             ShowDate = dto.Popup.ShowDate,
         },
         Diagnostics = current.Diagnostics with { LogLevel = dto.Diagnostics.LogLevel },
+        Onboarding = current.Onboarding with
+        {
+            Completed = dto.Onboarding.Completed,
+            LastSeenVersion = string.IsNullOrWhiteSpace(dto.Onboarding.LastSeenVersion) ? null : dto.Onboarding.LastSeenVersion,
+            TipsShown = dto.Onboarding.TipsShown ?? [],
+        },
     };
 
     public static FileOperationRequest ToDomain(this OperationRequest request) => new(

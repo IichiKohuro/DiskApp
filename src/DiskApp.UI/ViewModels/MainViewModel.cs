@@ -184,6 +184,30 @@ public sealed partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     public partial bool ReduceMotion { get; set; }
 
+    /// <summary>Мастер первого запуска; <c>null</c> — не показывается (этап 9.3).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsOnboarding))]
+    public partial OnboardingViewModel? Onboarding { get; set; }
+
+    /// <summary>Мастер первого запуска открыт.</summary>
+    public bool IsOnboarding => Onboarding is not null;
+
+    /// <summary>
+    /// Показывает мастер первого запуска поверх страниц; когда он закрывается, открывается главная.
+    /// </summary>
+    public void StartOnboarding(OnboardingViewModel onboarding)
+    {
+        ArgumentNullException.ThrowIfNull(onboarding);
+        onboarding.Completed += (_, _) =>
+        {
+            Onboarding = null;
+            onboarding.Dispose();
+            NavigateTo(PageKeys.Home);
+            _ = RefreshAsync();
+        };
+        Onboarding = onboarding;
+    }
+
     /// <summary>
     /// Переходит на страницу по ключу.
     /// </summary>

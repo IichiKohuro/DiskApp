@@ -117,6 +117,14 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
     [ObservableProperty]
     public partial string FilesText { get; set; } = string.Empty;
 
+    /// <summary>Подсказка вместо пустого списка (PLAN.md, этап 9.3); пусто — записи есть.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasEmptyHint))]
+    public partial string EmptyHint { get; set; } = string.Empty;
+
+    /// <summary>Показать подсказку вместо пустого списка.</summary>
+    public bool HasEmptyHint => EmptyHint.Length > 0;
+
     /// <summary>Ошибка загрузки; пусто — всё хорошо.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
@@ -273,18 +281,22 @@ public sealed partial class CollectionsViewModel : PageViewModel, IPageLifecycle
             }
 
             SelectedFile = Files.FirstOrDefault(hit => hit.Entry.Id == selected);
-            FilesText = entries.Count > 0
-                ? Formatting.Count(entries.Count, L.T("Common.Entry.One"), L.T("Common.Entry.Few"), L.T("Common.Entry.Many"))
+            EmptyHint = entries.Count > 0
+                ? string.Empty
                 : list.Kind switch
                 {
                     CollectionListKind.Favorites => L.T("Collections.NoFavoritesYetCtrlDPins"),
                     CollectionListKind.SavedQuery => L.T("Collections.NothingMatchesTheQuery"),
                     _ => L.T("Collections.TheCollectionIsEmptyDropFiles"),
                 };
+            FilesText = entries.Count > 0
+                ? Formatting.Count(entries.Count, L.T("Common.Entry.One"), L.T("Common.Entry.Few"), L.T("Common.Entry.Many"))
+                : EmptyHint;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             Files.Clear();
+            EmptyHint = string.Empty;
             FilesText = L.T("Collections.CouldNotLoadEntries") + exception.Message;
         }
     }

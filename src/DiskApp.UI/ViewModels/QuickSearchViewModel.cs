@@ -33,6 +33,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     private IndexStatus? _status;
     private FileDetails? _details;
     private readonly ITagEditor? _tagEditor;
+    private readonly ITipsService _tips = new NoTips();
 
     /// <summary>
     /// Создаёт ViewModel с макетными действиями над файлами (превью) и сразу загружает подборку (<see cref="PendingRefresh"/>).
@@ -48,10 +49,12 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// <param name="search">Поиск.</param>
     /// <param name="actions">Действия над файлами.</param>
     /// <param name="tagEditor">Диалог тегов; без него пункт «Теги…» скрыт.</param>
-    public QuickSearchViewModel(ISearchService search, IFileActions actions, ITagEditor? tagEditor = null)
+    /// <param name="tips">Обучающие подсказки; без них подсказка о фильтрах не показывается.</param>
+    public QuickSearchViewModel(ISearchService search, IFileActions actions, ITagEditor? tagEditor = null, ITipsService? tips = null)
         : this(search, actions, static () => DateTimeOffset.Now)
     {
         _tagEditor = tagEditor;
+        _tips = tips ?? new NoTips();
     }
 
     /// <summary>
@@ -356,6 +359,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
     partial void OnQueryChanged(string value)
     {
+        IsFiltersTipOpen = false;
         OnQueryEdited();
         PendingRefresh = RefreshAsync();
     }

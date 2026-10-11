@@ -45,6 +45,45 @@ public sealed record AppSettings
 
     /// <summary>Диагностика: уровень журнала.</summary>
     public DiagnosticsSettings Diagnostics { get; set; } = new();
+
+    /// <summary>Знакомство с приложением: мастер первого запуска, подсказки, «Что нового».</summary>
+    public OnboardingSettings Onboarding { get; set; } = new();
+}
+
+/// <summary>
+/// Знакомство с приложением (PLAN.md, этап 9.3).
+/// </summary>
+public sealed record OnboardingSettings
+{
+    /// <summary>Мастер первого запуска пройден или пропущен.</summary>
+    public bool Completed { get; set; }
+
+    /// <summary>Версия, «Что нового» которой уже показано; <c>null</c> — ещё ни одной.</summary>
+    public string? LastSeenVersion { get; set; }
+
+    /// <summary>Обучающие подсказки, которые уже показаны: <c>hotkey</c>, <c>filters</c>, <c>drop</c>.</summary>
+    public IReadOnlyList<string> TipsShown { get; set; } = [];
+
+    /// <summary>Равенство по содержимому: показанные подсказки сравниваются поэлементно.</summary>
+    public bool Equals(OnboardingSettings? other)
+        => other is not null
+            && Completed == other.Completed
+            && LastSeenVersion == other.LastSeenVersion
+            && TipsShown.SequenceEqual(other.TipsShown);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Completed);
+        hash.Add(LastSeenVersion);
+        foreach (var tip in TipsShown)
+        {
+            hash.Add(tip);
+        }
+
+        return hash.ToHashCode();
+    }
 }
 
 /// <summary>

@@ -54,6 +54,22 @@ public sealed record SettingsDto
 
     /// <summary>Диагностика.</summary>
     public DiagnosticsSettingsDto Diagnostics { get; set; } = new();
+
+    /// <summary>Знакомство с приложением.</summary>
+    public OnboardingSettingsDto Onboarding { get; set; } = new();
+}
+
+/// <summary>Знакомство с приложением.</summary>
+public sealed record OnboardingSettingsDto
+{
+    /// <summary>Мастер первого запуска пройден или пропущен.</summary>
+    public bool Completed { get; set; }
+
+    /// <summary>Версия, «Что нового» которой уже показано.</summary>
+    public string? LastSeenVersion { get; set; }
+
+    /// <summary>Показанные обучающие подсказки.</summary>
+    public IReadOnlyList<string> TipsShown { get; set; } = [];
 }
 
 /// <summary>Горячие клавиши.</summary>

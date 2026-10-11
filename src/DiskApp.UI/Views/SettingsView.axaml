@@ -472,7 +472,16 @@
                     <ui:FASettingsExpander Header="DiskApp" Description="{Binding VersionText}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Help" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <HyperlinkButton Content="{loc:Str Settings.RepositoryOnGitHub}" NavigateUri="{Binding RepositoryUri}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="{loc:Str WhatsNew.Show}" Command="{Binding ShowWhatsNewCommand}" />
+                                <HyperlinkButton Content="{loc:Str Settings.RepositoryOnGitHub}" NavigateUri="{Binding RepositoryUri}" />
+                            </StackPanel>
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.Onboarding}" Description="{loc:Str Settings.OnboardingDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Star" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <Button Content="{loc:Str Settings.OnboardingRun}" Command="{Binding RestartOnboardingCommand}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
                     <ui:FASettingsExpander Header="{loc:Str Settings.Updates}" Description="{Binding UpdatesText}">

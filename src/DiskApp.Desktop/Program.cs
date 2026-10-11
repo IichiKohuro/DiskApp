@@ -147,6 +147,8 @@ internal static class Program
             services.AddSingleton<ILibraryService, ApiLibraryService>();
             services.AddSingleton<ISettingsService, ApiSettingsService>();
             services.AddSingleton<ITagEditor, TagEditor>();
+            services.AddSingleton<SettingsTipsService>();
+            services.AddSingleton<ITipsService>(static provider => provider.GetRequiredService<SettingsTipsService>());
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IHotkeyChecker>(static provider => provider.GetRequiredService<DesktopShell>());

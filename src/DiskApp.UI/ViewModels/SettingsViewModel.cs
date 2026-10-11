@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Reflection;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -33,6 +32,7 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
     private readonly IShellIntegrationService _integration;
     private readonly IQuickSwitchSettings _quickSwitch;
     private readonly IDialogService? _dialogs;
+    private readonly IAppCommands? _commands;
     private readonly IInfoBarService? _notices;
 
     /// <summary>
@@ -50,7 +50,8 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         IInfoBarService? notices = null,
         IRootsService? roots = null,
         IAppMaintenance? maintenance = null,
-        IHotkeyChecker? hotkeyChecker = null)
+        IHotkeyChecker? hotkeyChecker = null,
+        IAppCommands? commands = null)
         : base(PageKeys.Settings, "Settings.Settings", FASymbol.Settings)
     {
         ArgumentNullException.ThrowIfNull(themes);
@@ -65,6 +66,7 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         _roots = roots ?? new SampleRootsService();
         _maintenance = maintenance ?? new NullAppMaintenance();
         _hotkeyChecker = hotkeyChecker;
+        _commands = commands;
         _themes = themes;
         _search = search;
         _autoStart = autoStart ?? new NullAutoStartService();
@@ -97,7 +99,7 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         CloseToTray = true;
         RemindAboutInbox = true;
 
-        VersionText = L.F("Settings.VersionAlpha", ReadVersion());
+        VersionText = L.F("Settings.VersionAlpha", AppVersion.Current);
         Categories =
         [
             new SettingsCategory("appearance", L.T("Settings.Appearance"), FASymbol.ColorBackground),
@@ -328,15 +330,4 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         Save("appearance", "theme", value.Theme.ToString());
     }
 
-    private static string ReadVersion()
-    {
-        var informational = typeof(SettingsViewModel).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-        if (string.IsNullOrWhiteSpace(informational))
-        {
-            return typeof(SettingsViewModel).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
-        }
-
-        var plus = informational.IndexOf('+', StringComparison.Ordinal);
-        return plus > 0 ? informational[..plus] : informational;
-    }
 }

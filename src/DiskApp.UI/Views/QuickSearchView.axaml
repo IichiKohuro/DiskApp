@@ -255,6 +255,30 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
+
+            <!-- Обучающая подсказка о фильтрах (этап 9.3): один раз после мастера, поверх списка. Встроена в окно, а не
+                 всплывает: всплывающее окно забрало бы фокус, и окно поиска спряталось бы. -->
+            <Border VerticalAlignment="Top"
+                    Margin="16,4,16,0"
+                    Padding="16,12"
+                    CornerRadius="8"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource SurfaceStrokeColorFlyoutBrush}"
+                    Background="{DynamicResource SolidBackgroundFillColorQuarternaryBrush}"
+                    BoxShadow="0 8 16 0 #40000000"
+                    IsVisible="{Binding IsFiltersTipOpen}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Bottom" HorizontalAlignment="Right" Margin="0,10,0,0" Focusable="False"
+                            Content="{loc:Str Tips.GotIt}" Command="{Binding DismissFiltersTipCommand}" />
+                    <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <ic:SymbolIcon Symbol="Lightbulb" FontSize="18" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Tips.Filters.Title}" />
+                        </StackPanel>
+                        <TextBlock TextWrapping="Wrap" Text="{loc:Str Tips.Filters.Text}" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
         </Panel>
 
         <!-- Панель действия: новое имя (F2) или подтверждение корзины (Del). Enter — да, Esc — отмена. -->

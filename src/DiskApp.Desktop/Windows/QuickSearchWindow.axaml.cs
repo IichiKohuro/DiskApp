@@ -94,6 +94,7 @@ public partial class QuickSearchWindow : Window
 
         Activate();
         SearchView.FocusQuery();
+        Dispatcher.UIThread.Post(() => _viewModel?.ShowTips(), DispatcherPriority.Background);
 
         // Замер S1: от вызова до первого кадра. Первый показ включает построение шаблонов, последующие — только показ.
         RequestAnimationFrame(_ => Log.Debug("Окно поиска: показ №{Number} за {Milliseconds:F0} мс до первого кадра", showNumber, watch.Elapsed.TotalMilliseconds));

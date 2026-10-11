@@ -25,6 +25,7 @@ public sealed partial class HomeViewModel : PageViewModel
     private readonly IRootsService _roots;
     private readonly IInfoBarService? _notices;
     private readonly Func<DateTimeOffset> _clock;
+    private readonly ITipsService _tips;
 
     /// <summary>
     /// Создаёт страницу с макетными корнями (превью) и сразу запускает загрузку данных (<see cref="Initialization"/>).
@@ -37,8 +38,8 @@ public sealed partial class HomeViewModel : PageViewModel
     /// <summary>
     /// Создаёт страницу приложения.
     /// </summary>
-    public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, IRootsService roots, IInfoBarService notices)
-        : this(search, commands, hotkeys, roots, notices, static () => DateTimeOffset.Now)
+    public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, IRootsService roots, IInfoBarService notices, ITipsService? tips = null)
+        : this(search, commands, hotkeys, roots, notices, static () => DateTimeOffset.Now, tips)
     {
     }
 
@@ -54,6 +55,11 @@ public sealed partial class HomeViewModel : PageViewModel
     /// Создаёт страницу с заданными корнями, уведомлениями и часами (для тестов).
     /// </summary>
     public HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, IRootsService roots, IInfoBarService? notices, Func<DateTimeOffset> clock)
+        : this(search, commands, hotkeys, roots, notices, clock, null)
+    {
+    }
+
+    private HomeViewModel(ISearchService search, IAppCommands commands, HotkeyStatus hotkeys, IRootsService roots, IInfoBarService? notices, Func<DateTimeOffset> clock, ITipsService? tips)
         : base(PageKeys.Home, "Home.Home", FASymbol.Home)
     {
         ArgumentNullException.ThrowIfNull(search);
@@ -67,6 +73,7 @@ public sealed partial class HomeViewModel : PageViewModel
         _roots = roots;
         _notices = notices;
         _clock = clock;
+        _tips = tips ?? new NoTips();
         Hotkeys = hotkeys;
 
         Greeting = GreetingFor(clock().Hour);
@@ -138,6 +145,56 @@ public sealed partial class HomeViewModel : PageViewModel
 
     /// <summary>Корней нет: показать приглашение добавить папку.</summary>
     public bool HasNoRoots => Roots.Count == 0;
+
+    /// <summary>Подсказка о горячей клавише открыта (PLAN.md, этап 9.3).</summary>
+    [ObservableProperty]
+    public partial bool IsHotkeyTipOpen { get; set; }
+
+    /// <summary>Подсказка о перетаскивании папок открыта.</summary>
+    [ObservableProperty]
+    public partial bool IsDropTipOpen { get; set; }
+
+    /// <summary>Текст подсказки о горячей клавише.</summary>
+    public string HotkeyTipText => L.F("Tips.Hotkey.Text", Hotkeys.QuickSearchText);
+
+    /// <summary>
+    /// Показать очередную обучающую подсказку, если она ещё не показывалась: сначала о горячей клавише, после неё — о
+    /// перетаскивании папок. Вызывает представление, когда окно на экране.
+    /// </summary>
+    public void ShowTips()
+    {
+        if (IsHotkeyTipOpen || IsDropTipOpen)
+        {
+            return;
+        }
+
+        if (_tips.ShouldShow(Tips.Hotkey))
+        {
+            OnPropertyChanged(nameof(HotkeyTipText));
+            IsHotkeyTipOpen = true;
+        }
+        else if (_tips.ShouldShow(Tips.Drop))
+        {
+            IsDropTipOpen = true;
+        }
+    }
+
+    partial void OnIsHotkeyTipOpenChanged(bool value)
+    {
+        if (!value)
+        {
+            _tips.MarkShown(Tips.Hotkey);
+            ShowTips();
+        }
+    }
+
+    partial void OnIsDropTipOpenChanged(bool value)
+    {
+        if (!value)
+        {
+            _tips.MarkShown(Tips.Drop);
+        }
+    }
 
     /// <inheritdoc />
     protected override Task RelocalizeAsync() => RefreshAsync();

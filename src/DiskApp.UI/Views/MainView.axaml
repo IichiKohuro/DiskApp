@@ -5,12 +5,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="using:DiskApp.UI.ViewModels"
+             xmlns:views="using:DiskApp.UI.Views"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
              x:Class="DiskApp.UI.Views.MainView"
              x:DataType="vm:MainViewModel"
              Design.DataContext="{x:Static vm:DesignData.Main}">
     <!-- Оболочка главного окна: NavigationView слева со страницами из MainViewModel, InfoBar для уведомлений,
          содержимое страницы с плавным переходом. Страницы подбираются по DataTemplates из App.axaml. -->
+    <Panel>
     <ui:FANavigationView x:Name="Navigation"
                          PaneDisplayMode="Left"
                          OpenPaneLength="236"
@@ -89,4 +91,9 @@
             <TransitioningContentControl x:Name="PageHost" Grid.Row="1" Content="{Binding SelectedPage}" />
         </Grid>
     </ui:FANavigationView>
+    <!-- Мастер первого запуска поверх всего окна (этап 9.3) -->
+    <Panel IsVisible="{Binding IsOnboarding}">
+        <views:OnboardingView DataContext="{Binding Onboarding}" />
+    </Panel>
+    </Panel>
 </UserControl>

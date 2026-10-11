@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="using:DiskApp.UI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
              x:Class="DiskApp.UI.Views.HomeView"
@@ -27,7 +28,7 @@
 
             <!-- Быстрые действия -->
             <Grid ColumnDefinitions="*,16,*,16,*">
-                <Button Grid.Column="0" Classes="card" Command="{Binding OpenQuickSearchCommand}">
+                <Button Grid.Column="0" x:Name="QuickSearchCard" Classes="card" Command="{Binding OpenQuickSearchCommand}">
                     <StackPanel Spacing="8">
                         <ic:SymbolIcon Symbol="Search" FontSize="24" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Left" />
                         <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Home.QuickSearch}" />
@@ -203,6 +204,20 @@
                     </Border>
                 </StackPanel>
             </Grid>
+
+            <!-- Обучающие подсказки (этап 9.3): по одной за раз, каждая — один раз после мастера первого запуска. -->
+            <ui:FATeachingTip Target="{Binding #QuickSearchCard}"
+                              IsOpen="{Binding IsHotkeyTipOpen, Mode=TwoWay}"
+                              PreferredPlacement="Bottom"
+                              Title="{loc:Str Tips.Hotkey.Title}"
+                              Subtitle="{Binding HotkeyTipText}"
+                              CloseButtonContent="{loc:Str Tips.GotIt}" />
+            <ui:FATeachingTip Target="{Binding #AddRootButton}"
+                              IsOpen="{Binding IsDropTipOpen, Mode=TwoWay}"
+                              PreferredPlacement="BottomLeft"
+                              Title="{loc:Str Tips.Drop.Title}"
+                              Subtitle="{loc:Str Tips.Drop.Text}"
+                              CloseButtonContent="{loc:Str Tips.GotIt}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -30,6 +30,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton(static provider => new Lazy<MainViewModel>(provider.GetRequiredService<MainViewModel>));
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IInfoBarService, InfoBarService>();
+        services.AddSingleton<ITipsService, NoTips>();
 
         // ViewModel страниц живут столько же, сколько приложение: состояние поиска и настроек переживает закрытие окон.
         services.AddSingleton<MainViewModel>();
@@ -41,6 +42,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<IOperationsCoordinator>(static provider => provider.GetRequiredService<OperationsViewModel>());
         services.AddSingleton<QuickSearchViewModel>();
         services.AddSingleton<SettingsViewModel>();
+        services.AddTransient<OnboardingViewModel>();
 
         return services;
     }

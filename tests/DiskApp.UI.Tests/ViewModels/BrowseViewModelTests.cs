@@ -102,6 +102,25 @@ public sealed class BrowseViewModelTests
     }
 
     [Fact]
+    public async Task EmptyHint_FilterLeavesNothing_ExplainsHowToSeeAll()
+    {
+        // Arrange
+        var (browse, _, _, _) = Create();
+        await browse.NavigateAsync(Projects + @"\DiskApp");
+
+        // Act
+        var before = browse.HasEmptyHint;
+        browse.Filter = "нет-такого-имени";
+        var hint = browse.EmptyHint;
+        browse.Filter = string.Empty;
+
+        // Assert
+        before.ShouldBeFalse();
+        hint.ShouldStartWith("Фильтр ничего не оставил");
+        browse.HasEmptyHint.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task SortByKind_GroupsByKindThenName()
     {
         // Arrange

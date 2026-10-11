@@ -136,6 +136,16 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <ui:FAProgressRing IsIndeterminate="True" Width="40" Height="40" IsVisible="{Binding IsLoading}" />
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" IsHitTestVisible="False">
+                    <StackPanel.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="HasEmptyHint" />
+                            <Binding Path="!IsLoading" />
+                        </MultiBinding>
+                    </StackPanel.IsVisible>
+                    <ic:SymbolIcon Symbol="FolderOpen" FontSize="36" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="420" Text="{Binding EmptyHint}" />
+                </StackPanel>
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" IsVisible="{Binding HasError}">
                     <ic:SymbolIcon Symbol="FolderProhibited" FontSize="36" HorizontalAlignment="Center" Foreground="{DynamicResource SystemFillColorCautionBrush}" />
                     <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="420" Text="{Binding ErrorText}" />

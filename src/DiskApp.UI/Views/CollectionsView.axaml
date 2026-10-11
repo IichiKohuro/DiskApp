@@ -93,24 +93,31 @@
                     </StackPanel>
                     <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Text="{Binding FilesTitle}" />
                 </DockPanel>
-                <ListBox x:Name="FilesList"
-                         Classes="results"
-                         ItemsSource="{Binding Files}"
-                         SelectedItem="{Binding SelectedFile, Mode=TwoWay}"
-                         ItemTemplate="{StaticResource FileHitTemplate}"
-                         DragDrop.AllowDrop="True">
-                    <ListBox.ContextFlyout>
-                        <MenuFlyout>
-                            <MenuItem Header="{loc:Str Common.Open}" Command="{Binding OpenFileCommand}" CommandParameter="{x:Null}" InputGesture="Enter" />
-                            <MenuItem Header="{loc:Str Common.ShowInExplorer}" Command="{Binding RevealFileCommand}" />
-                            <MenuItem Header="{loc:Str Common.TagsEllipsis}" Command="{Binding EditFileTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditFileTags}" />
-                            <Separator IsVisible="{Binding IsEditable}" />
-                            <MenuItem Header="{loc:Str Collections.Up}" Command="{Binding MoveUpCommand}" InputGesture="Alt+Up" IsVisible="{Binding IsEditable}" />
-                            <MenuItem Header="{loc:Str Collections.Down}" Command="{Binding MoveDownCommand}" InputGesture="Alt+Down" IsVisible="{Binding IsEditable}" />
-                            <MenuItem Header="{loc:Str Collections.RemoveFromList}" Command="{Binding RemoveFileCommand}" InputGesture="Delete" IsVisible="{Binding IsEditable}" />
-                        </MenuFlyout>
-                    </ListBox.ContextFlyout>
-                </ListBox>
+                <Panel>
+                    <ListBox x:Name="FilesList"
+                             Classes="results"
+                             ItemsSource="{Binding Files}"
+                             SelectedItem="{Binding SelectedFile, Mode=TwoWay}"
+                             ItemTemplate="{StaticResource FileHitTemplate}"
+                             DragDrop.AllowDrop="True">
+                        <ListBox.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuItem Header="{loc:Str Common.Open}" Command="{Binding OpenFileCommand}" CommandParameter="{x:Null}" InputGesture="Enter" />
+                                <MenuItem Header="{loc:Str Common.ShowInExplorer}" Command="{Binding RevealFileCommand}" />
+                                <MenuItem Header="{loc:Str Common.TagsEllipsis}" Command="{Binding EditFileTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditFileTags}" />
+                                <Separator IsVisible="{Binding IsEditable}" />
+                                <MenuItem Header="{loc:Str Collections.Up}" Command="{Binding MoveUpCommand}" InputGesture="Alt+Up" IsVisible="{Binding IsEditable}" />
+                                <MenuItem Header="{loc:Str Collections.Down}" Command="{Binding MoveDownCommand}" InputGesture="Alt+Down" IsVisible="{Binding IsEditable}" />
+                                <MenuItem Header="{loc:Str Collections.RemoveFromList}" Command="{Binding RemoveFileCommand}" InputGesture="Delete" IsVisible="{Binding IsEditable}" />
+                            </MenuFlyout>
+                        </ListBox.ContextFlyout>
+                    </ListBox>
+                    <!-- Пустое состояние с подсказкой (этап 9.3); список под ним по-прежнему принимает перетаскивание. -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" IsHitTestVisible="False" IsVisible="{Binding HasEmptyHint}">
+                        <ic:SymbolIcon Symbol="Collections" FontSize="36" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                        <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="360" Text="{Binding EmptyHint}" />
+                    </StackPanel>
+                </Panel>
             </DockPanel>
         </Border>
 

@@ -261,6 +261,25 @@ public sealed class CollectionsViewModelTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task EmptyCollection_ShowsHintInsteadOfList()
+    {
+        // Arrange
+        await _library.CreateCollectionAsync("Пустая", CollectionType.Manual, null, TestContext.Current.CancellationToken);
+        var page = await CreateLoadedAsync();
+
+        // Act
+        page.SelectedList = page.Lists.Single(static item => item.Title == "Пустая");
+        await page.PendingLoad;
+        var emptyHint = page.EmptyHint;
+        page.SelectedList = Manual(page);
+        await page.PendingLoad;
+
+        // Assert
+        emptyHint.ShouldStartWith("Коллекция пуста");
+        page.HasEmptyHint.ShouldBeFalse("в коллекции есть записи");
+    }
+
     private static CollectionListItem Manual(CollectionsViewModel page)
         => page.Lists.Single(static item => item.Kind == CollectionListKind.Manual && item.Title == "Проект DiskApp");
 

@@ -30,6 +30,48 @@ public partial class HomeView : UserControl
 
     private HomeViewModel? ViewModel => DataContext as HomeViewModel;
 
+    private WindowBase? _window;
+
+    /// <inheritdoc />
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        _window = TopLevel.GetTopLevel(this) as WindowBase;
+        if (_window is not null)
+        {
+            _window.Activated += OnWindowActivated;
+            if (_window.IsActive)
+            {
+                ScheduleTips();
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        if (_window is not null)
+        {
+            _window.Activated -= OnWindowActivated;
+            _window = null;
+        }
+
+        base.OnDetachedFromVisualTree(e);
+    }
+
+    private void OnWindowActivated(object? sender, EventArgs e) => ScheduleTips();
+
+    // Подсказки открываются, когда страница уже на экране и разложена: иначе им не к чему привязаться.
+    private void ScheduleTips() => Avalonia.Threading.Dispatcher.UIThread.Post(
+        () =>
+        {
+            if (IsEffectivelyVisible && _window is { IsVisible: true })
+            {
+                ViewModel?.ShowTips();
+            }
+        },
+        Avalonia.Threading.DispatcherPriority.Background);
+
     private void OnFileDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (ViewModel is { } viewModel

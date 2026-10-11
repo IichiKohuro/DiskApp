@@ -177,6 +177,15 @@
   <data name="Browse.Documents" xml:space="preserve">
     <value>Документы</value>
   </data>
+  <data name="Browse.EmptyFilter" xml:space="preserve">
+    <value>Фильтр ничего не оставил. Сотрите его, чтобы увидеть все записи папки.</value>
+  </data>
+  <data name="Browse.EmptyFolder" xml:space="preserve">
+    <value>Папка пуста. Перетащите сюда файлы из Проводника или вставьте их Ctrl+V.</value>
+  </data>
+  <data name="Browse.EmptyNoRoots" xml:space="preserve">
+    <value>Корней пока нет. Добавьте папку на главной или в настройках — здесь появятся её дерево и файлы.</value>
+  </data>
   <data name="Browse.FileKind" xml:space="preserve">
     <value>Вид файлов</value>
   </data>
@@ -1077,6 +1086,102 @@
   <data name="NullAutoStart.AutostartIsNotSupportedOnThis" xml:space="preserve">
     <value>Автозапуск на этой платформе пока не поддерживается.</value>
   </data>
+  <data name="Onboarding.AddFolder" xml:space="preserve">
+    <value>Добавить папку…</value>
+  </data>
+  <data name="Onboarding.Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="Onboarding.ChooseFolder" xml:space="preserve">
+    <value>Папка для поиска</value>
+  </data>
+  <data name="Onboarding.CouldNotGetRoots" xml:space="preserve">
+    <value>Не удалось получить корни: </value>
+  </data>
+  <data name="Onboarding.Finish" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="Onboarding.Folder.Desktop" xml:space="preserve">
+    <value>Рабочий стол</value>
+  </data>
+  <data name="Onboarding.Folder.Documents" xml:space="preserve">
+    <value>Документы</value>
+  </data>
+  <data name="Onboarding.Folder.Downloads" xml:space="preserve">
+    <value>Загрузки</value>
+  </data>
+  <data name="Onboarding.Folder.Music" xml:space="preserve">
+    <value>Музыка</value>
+  </data>
+  <data name="Onboarding.Folder.Pictures" xml:space="preserve">
+    <value>Изображения</value>
+  </data>
+  <data name="Onboarding.Folder.Videos" xml:space="preserve">
+    <value>Видео</value>
+  </data>
+  <data name="Onboarding.HotkeyTry" xml:space="preserve">
+    <value>Попробовать</value>
+  </data>
+  <data name="Onboarding.Indexed" xml:space="preserve">
+    <value>В индексе {0}</value>
+  </data>
+  <data name="Onboarding.Indexing" xml:space="preserve">
+    <value>Индексация: найдено {0}</value>
+  </data>
+  <data name="Onboarding.Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Onboarding.Next" xml:space="preserve">
+    <value>Далее</value>
+  </data>
+  <data name="Onboarding.NotAllFoldersAdded" xml:space="preserve">
+    <value>Не все папки добавлены: </value>
+  </data>
+  <data name="Onboarding.Skip" xml:space="preserve">
+    <value>Пропустить</value>
+  </data>
+  <data name="Onboarding.StartWithWindows" xml:space="preserve">
+    <value>Запускать вместе с Windows</value>
+  </data>
+  <data name="Onboarding.StepOf" xml:space="preserve">
+    <value>Шаг {0} из {1}</value>
+  </data>
+  <data name="Onboarding.Subtitle.Appearance" xml:space="preserve">
+    <value>Можно оставить как в Windows; поменять можно в настройках.</value>
+  </data>
+  <data name="Onboarding.Subtitle.Done" xml:space="preserve">
+    <value>Индексация уже идёт: поиск находит файлы по мере обхода. Попробуйте быстрый поиск прямо сейчас.</value>
+  </data>
+  <data name="Onboarding.Subtitle.Folders" xml:space="preserve">
+    <value>Отметьте папки — DiskApp проиндексирует их и будет находить файлы за доли секунды. Папки можно добавить и убрать потом в настройках.</value>
+  </data>
+  <data name="Onboarding.Subtitle.Hotkey" xml:space="preserve">
+    <value>{0} открывает окно поиска поверх любой программы. Начните вводить имя, Enter откроет файл.</value>
+  </data>
+  <data name="Onboarding.Subtitle.Startup" xml:space="preserve">
+    <value>Чтобы горячая клавиша работала сразу после входа, DiskApp может стартовать свёрнутым в трей.</value>
+  </data>
+  <data name="Onboarding.Theme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Onboarding.Title.Appearance" xml:space="preserve">
+    <value>Тема и язык</value>
+  </data>
+  <data name="Onboarding.Title.Done" xml:space="preserve">
+    <value>Всё готово</value>
+  </data>
+  <data name="Onboarding.Title.Folders" xml:space="preserve">
+    <value>Где искать файлы?</value>
+  </data>
+  <data name="Onboarding.Title.Hotkey" xml:space="preserve">
+    <value>Поиск из любого места</value>
+  </data>
+  <data name="Onboarding.Title.Startup" xml:space="preserve">
+    <value>Запуск вместе с Windows</value>
+  </data>
+  <data name="Onboarding.TryQuickSearch" xml:space="preserve">
+    <value>Открыть быстрый поиск</value>
+  </data>
   <data name="OperationItem.Cancelled" xml:space="preserve">
     <value>Отменена</value>
   </data>
@@ -1968,6 +2073,15 @@
   <data name="Settings.NormalInformation" xml:space="preserve">
     <value>Обычно (Information)</value>
   </data>
+  <data name="Settings.Onboarding" xml:space="preserve">
+    <value>Знакомство с DiskApp</value>
+  </data>
+  <data name="Settings.OnboardingDescription" xml:space="preserve">
+    <value>Мастер первого запуска: папки, клавиша, автозапуск, тема. Подсказки покажутся снова.</value>
+  </data>
+  <data name="Settings.OnboardingRun" xml:space="preserve">
+    <value>Пройти заново</value>
+  </data>
   <data name="Settings.OnceADay" xml:space="preserve">
     <value>Раз в сутки</value>
   </data>
@@ -2415,6 +2529,27 @@
   <data name="Time.Yesterday" xml:space="preserve">
     <value>вчера</value>
   </data>
+  <data name="Tips.Drop.Text" xml:space="preserve">
+    <value>Папку из Проводника можно бросить на эту страницу — она добавится в индекс. Файлы попадут в окно «Добавить».</value>
+  </data>
+  <data name="Tips.Drop.Title" xml:space="preserve">
+    <value>Перетащите папку сюда</value>
+  </data>
+  <data name="Tips.Filters.Text" xml:space="preserve">
+    <value>Пишите фильтры в строке поиска: type:pdf, ext:docx, modified:week, tag:работа. Введите «?», чтобы увидеть весь синтаксис; Ctrl+F прячет и показывает чипы.</value>
+  </data>
+  <data name="Tips.Filters.Title" xml:space="preserve">
+    <value>Фильтры прямо в запросе</value>
+  </data>
+  <data name="Tips.GotIt" xml:space="preserve">
+    <value>Понятно</value>
+  </data>
+  <data name="Tips.Hotkey.Text" xml:space="preserve">
+    <value>{0} открывает поиск поверх любой программы — переключаться в DiskApp не нужно.</value>
+  </data>
+  <data name="Tips.Hotkey.Title" xml:space="preserve">
+    <value>Поиск из любого места</value>
+  </data>
   <data name="TrayStatus.DiskAppIndexIsUpToDate" xml:space="preserve">
     <value>DiskApp — индекс актуален</value>
   </data>
@@ -2438,5 +2573,56 @@
   </data>
   <data name="TrayStatus.Entries" xml:space="preserve">
     <value> записей</value>
+  </data>
+  <data name="WhatsNew.1.Text" xml:space="preserve">
+    <value>Разделы для внешнего вида, поиска, окна поиска, индекса, клавиш и данных. Каждое изменение сохраняется и применяется сразу, без перезапуска.</value>
+  </data>
+  <data name="WhatsNew.1.Title" xml:space="preserve">
+    <value>Настройки как в Windows 11</value>
+  </data>
+  <data name="WhatsNew.2.Text" xml:space="preserve">
+    <value>Язык интерфейса выбирается в настройках или берётся из Windows и меняется на лету.</value>
+  </data>
+  <data name="WhatsNew.2.Title" xml:space="preserve">
+    <value>Русский и английский</value>
+  </data>
+  <data name="WhatsNew.3.Text" xml:space="preserve">
+    <value>Избранное (Ctrl+D), свои коллекции и сохранённые запросы — всё под рукой на одной странице.</value>
+  </data>
+  <data name="WhatsNew.3.Title" xml:space="preserve">
+    <value>Коллекции</value>
+  </data>
+  <data name="WhatsNew.4.Text" xml:space="preserve">
+    <value>Ctrl+T в поиске и обзоре назначает теги; фильтр tag: находит отмеченные файлы.</value>
+  </data>
+  <data name="WhatsNew.4.Title" xml:space="preserve">
+    <value>Цветные теги</value>
+  </data>
+  <data name="WhatsNew.5.Text" xml:space="preserve">
+    <value>Дерево, список и плитка, как в Проводнике. Копирование и перемещение идут в фоне, их можно отменить, Ctrl+Z возвращает последнее действие.</value>
+  </data>
+  <data name="WhatsNew.5.Title" xml:space="preserve">
+    <value>Обзор и операции</value>
+  </data>
+  <data name="WhatsNew.6.Text" xml:space="preserve">
+    <value>Перетащите файлы, выберите DiskApp в меню «Отправить» или в Проводнике, нажмите Ctrl+Shift+V — и выберите, куда положить.</value>
+  </data>
+  <data name="WhatsNew.6.Title" xml:space="preserve">
+    <value>Окно «Добавить»</value>
+  </data>
+  <data name="WhatsNew.7.Text" xml:space="preserve">
+    <value>Мастер помогает выбрать папки, клавишу и тему, а подсказки по ходу работы показывают фильтры и перетаскивание.</value>
+  </data>
+  <data name="WhatsNew.7.Title" xml:space="preserve">
+    <value>Первый запуск и подсказки</value>
+  </data>
+  <data name="WhatsNew.Close" xml:space="preserve">
+    <value>Понятно</value>
+  </data>
+  <data name="WhatsNew.Show" xml:space="preserve">
+    <value>Что нового</value>
+  </data>
+  <data name="WhatsNew.Title" xml:space="preserve">
+    <value>Что нового в DiskApp {0}</value>
   </data>
 </root>
