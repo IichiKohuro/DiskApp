@@ -136,6 +136,12 @@ internal static class Program
             services.AddSingleton<IAutoStartService>(_ => OperatingSystem.IsWindows() && Environment.ProcessPath is { } executable
                 ? new RegistryAutoStartService(executable, paths.IsPortable)
                 : new NullAutoStartService());
+
+            // Настоящие действия оболочки (открыть, Проводник, свойства, корзина) — только здесь, не в тестовых хостах.
+            if (OperatingSystem.IsWindows())
+            {
+                services.AddSingleton<DiskApp.Core.Abstractions.IPlatformShell, DiskApp.Infrastructure.Platform.Windows.WindowsPlatformShell>();
+            }
         });
         Log.Information("Контейнер сервера и оболочки собран через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
         return host;
