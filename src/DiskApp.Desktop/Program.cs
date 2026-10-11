@@ -148,6 +148,12 @@ internal static class Program
             services.AddSingleton<ITagEditor, TagEditor>();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
+            services.AddSingleton<IHotkeyChecker>(static provider => provider.GetRequiredService<DesktopShell>());
+            services.AddSingleton<IAppMaintenance>(static provider => new DesktopMaintenance(
+                provider.GetRequiredService<DiskApp.Core.Abstractions.IAppPaths>(),
+                provider.GetRequiredService<IDiskAppApi>(),
+                provider.GetRequiredService<Serilog.ILogger>(),
+                provider.GetService<IIconCache>()));
             services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));
             services.AddSingleton<IAutoStartService>(_ => OperatingSystem.IsWindows() && Environment.ProcessPath is { } executable
                 ? new RegistryAutoStartService(executable, paths.IsPortable)

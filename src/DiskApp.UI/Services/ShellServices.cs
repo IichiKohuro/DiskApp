@@ -77,11 +77,11 @@ public interface IDialogService
     /// <returns>Имя и цвет или <c>null</c>, если отменено.</returns>
     Task<(string Name, string? Color)?> EditTagAsync(string title, string name, string? color, string primaryText);
 
-    /// <summary>Выбор файла для сохранения списка; <c>null</c> — отменено.</summary>
-    Task<string?> PickSaveFileAsync(string title, string suggestedName);
+    /// <summary>Выбор файла для сохранения: список путей (<c>txt</c>) или настройки (<c>json</c>); <c>null</c> — отменено.</summary>
+    Task<string?> PickSaveFileAsync(string title, string suggestedName, string extension = "txt");
 
-    /// <summary>Выбор текстового файла для чтения списка; <c>null</c> — отменено.</summary>
-    Task<string?> PickOpenFileAsync(string title);
+    /// <summary>Выбор файла для чтения: список путей (<c>txt</c>) или настройки (<c>json</c>); <c>null</c> — отменено.</summary>
+    Task<string?> PickOpenFileAsync(string title, string extension = "txt");
 
     /// <summary>Выбор папки (PLAN.md, этап 9.1: корни индекса, «Входящие»); <c>null</c> — отменено.</summary>
     Task<string?> PickFolderAsync(string title);

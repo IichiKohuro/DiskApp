@@ -33,9 +33,10 @@ namespace DiskApp.Desktop.Shell;
 /// приём аргументов от вторых экземпляров, главное окно (создаётся при первом обращении) и заранее созданное
 /// окно быстрого поиска. Реализует <see cref="IAppCommands"/> для интерфейса.
 /// </summary>
-internal sealed class DesktopShell : IAppCommands, IDisposable
+internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 {
     private const int SearchHotkeyId = 1;
+    private const int ProbeHotkeyId = 99;
     private const string IconUri = "avares://DiskApp/Assets/DiskApp.ico";
     private static readonly TimeSpan OperationsCheckTimeout = TimeSpan.FromSeconds(2);
 
@@ -134,6 +135,44 @@ internal sealed class DesktopShell : IAppCommands, IDisposable
         // Индекс мог измениться, пока окно было скрыто: подборка и результаты перечитываются при каждом показе.
         _ = _services.GetRequiredService<QuickSearchViewModel>().ActivateAsync();
         _quickSearch.ShowAt(PopupAnchor());
+    }
+
+    /// <inheritdoc />
+    public string? Check(Hotkey hotkey, HotkeyTarget target)
+    {
+        ArgumentNullException.ThrowIfNull(hotkey);
+
+        if (!OperatingSystem.IsWindows() || _messageWindow is null)
+        {
+            return "глобальные сочетания работают только в Windows.";
+        }
+
+        var quickSwitch = _services.GetService<QuickSwitchController>();
+        var current = target == HotkeyTarget.QuickSearch ? _activeHotkey : quickSwitch?.RegisteredHotkey;
+        var other = target == HotkeyTarget.QuickSearch ? quickSwitch?.RegisteredHotkey : _activeHotkey;
+        if (hotkey == current)
+        {
+            return null;
+        }
+
+        if (hotkey == other)
+        {
+            return target == HotkeyTarget.QuickSearch ? "это сочетание уже у Quick Switch." : "это сочетание уже у быстрого поиска.";
+        }
+
+        if (HotkeyKeys.ToVirtualKey(hotkey.Key) is not { } virtualKey)
+        {
+            return "клавиша не поддерживается.";
+        }
+
+        // Пробная регистрация: если Windows отдала сочетание, оно свободно; сразу освобождаем его.
+        if (!NativeMethods.RegisterHotKey(_messageWindow.Handle, ProbeHotkeyId, (uint)hotkey.Modifiers | NativeMethods.ModNoRepeat, virtualKey))
+        {
+            return "сочетание занято другим приложением.";
+        }
+
+        NativeMethods.UnregisterHotKey(_messageWindow.Handle, ProbeHotkeyId);
+        return null;
     }
 
     /// <inheritdoc />

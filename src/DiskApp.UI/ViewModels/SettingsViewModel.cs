@@ -47,7 +47,9 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         ISettingsService? settings = null,
         IDialogService? dialogs = null,
         IInfoBarService? notices = null,
-        IRootsService? roots = null)
+        IRootsService? roots = null,
+        IAppMaintenance? maintenance = null,
+        IHotkeyChecker? hotkeyChecker = null)
         : base(PageKeys.Settings, "Настройки", FASymbol.Settings)
     {
         ArgumentNullException.ThrowIfNull(themes);
@@ -60,6 +62,8 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         _dialogs = dialogs;
         _notices = notices;
         _roots = roots ?? new SampleRootsService();
+        _maintenance = maintenance ?? new NullAppMaintenance();
+        _hotkeyChecker = hotkeyChecker;
         _themes = themes;
         _search = search;
         _autoStart = autoStart ?? new NullAutoStartService();
@@ -132,6 +136,7 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
     {
         await RefreshAsync();
         await LoadSettingsAsync();
+        await RefreshDataAsync();
     }
 
     /// <summary>Доступные темы.</summary>

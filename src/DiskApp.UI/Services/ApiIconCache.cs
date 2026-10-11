@@ -29,6 +29,9 @@ public sealed class ApiIconCache(IDiskAppApi api) : IIconCache
     }
 
     /// <inheritdoc />
+    public void Clear() => _images.Clear();
+
+    /// <inheritdoc />
     public Task<IImage?> GetAsync(FileEntry entry, int size, bool thumbnail, CancellationToken cancellationToken = default)
     {
         if (Key(entry, size, thumbnail) is not { } key)

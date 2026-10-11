@@ -41,4 +41,21 @@
     <InternalsVisibleTo Include="DiskApp.Desktop.Tests" />
   </ItemGroup>
 
+  <!-- Сторонние компоненты для раздела «О программе» (PLAN.md, этап 9.1): список строится при сборке из версий пакетов
+       Directory.Packages.props; пакеты тестов и инструментов в поставку не входят и в список не попадают. -->
+  <Target Name="WriteThirdPartyList" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <_ThirdPartyPackage Include="@(PackageVersion)"
+                          Exclude="xunit.v3;Microsoft.Testing.Extensions.CodeCoverage;Microsoft.Testing.Extensions.TrxReport;Shouldly;NSubstitute;BenchmarkDotNet;Avalonia.Headless;AvaloniaUI.DiagnosticsSupport" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)third-party.txt"
+                      Lines="@(_ThirdPartyPackage->'%(Identity) %(Version)')"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(IntermediateOutputPath)third-party.txt" LogicalName="DiskApp.ThirdParty.txt" />
+      <FileWrites Include="$(IntermediateOutputPath)third-party.txt" />
+    </ItemGroup>
+  </Target>
+
 </Project>

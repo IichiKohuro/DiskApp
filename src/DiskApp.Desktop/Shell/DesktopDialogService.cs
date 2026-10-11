@@ -189,29 +189,32 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
     }
 
     /// <inheritdoc />
-    public async Task<string?> PickSaveFileAsync(string title, string suggestedName)
+    public async Task<string?> PickSaveFileAsync(string title, string suggestedName, string extension = "txt")
     {
         var file = await mainWindow().StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
             Title = title,
             SuggestedFileName = suggestedName,
-            DefaultExtension = "txt",
-            FileTypeChoices = [new FilePickerFileType("Текстовый файл") { Patterns = ["*.txt"] }],
+            DefaultExtension = extension,
+            FileTypeChoices = [FileType(extension)],
         });
         return file?.TryGetLocalPath();
     }
 
     /// <inheritdoc />
-    public async Task<string?> PickOpenFileAsync(string title)
+    public async Task<string?> PickOpenFileAsync(string title, string extension = "txt")
     {
         var files = await mainWindow().StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = title,
             AllowMultiple = false,
-            FileTypeFilter = [new FilePickerFileType("Текстовый файл") { Patterns = ["*.txt"] }, FilePickerFileTypes.All],
+            FileTypeFilter = [FileType(extension), FilePickerFileTypes.All],
         });
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
+
+    private static FilePickerFileType FileType(string extension)
+        => new(extension == "json" ? "Настройки JSON" : "Текстовый файл") { Patterns = ["*." + extension] };
 
     /// <inheritdoc />
     public async Task<string?> PickFolderAsync(string title)

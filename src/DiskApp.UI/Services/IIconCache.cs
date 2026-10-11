@@ -20,4 +20,7 @@ public interface IIconCache
     /// Иконка или миниатюра; <c>null</c> — показывать заглушку по виду файла.
     /// </summary>
     Task<IImage?> GetAsync(FileEntry entry, int size, bool thumbnail, CancellationToken cancellationToken = default);
+
+    /// <summary>Забывает загруженные растры: после очистки кэша на диске (PLAN.md, этап 9.1).</summary>
+    void Clear();
 }

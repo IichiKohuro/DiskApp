@@ -5,6 +5,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:ic="using:FluentIcons.Avalonia"
              xmlns:vm="using:DiskApp.UI.ViewModels"
+             xmlns:svc="using:DiskApp.UI.Services"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="900"
              x:Class="DiskApp.UI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel"
@@ -98,14 +99,38 @@
                                            IsExpanded="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Keyboard" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <Border Classes="chip" Padding="10,4">
-                                <TextBlock Text="{Binding Hotkeys.QuickSearchText}" FontSize="13" />
-                            </Border>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Classes="chip" Padding="10,4" IsVisible="{Binding !IsRecordingQuickSearch}">
+                                    <TextBlock Text="{Binding Hotkeys.QuickSearchText}" FontSize="13" />
+                                </Border>
+                                <Border Classes="chip accent" Padding="10,4" IsVisible="{Binding IsRecordingQuickSearch}">
+                                    <TextBlock Text="Нажмите сочетание… Esc — отмена" FontSize="13" />
+                                </Border>
+                                <Button Content="Изменить" Command="{Binding StartRecordingCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSearch}" />
+                                <Button Content="По умолчанию" Command="{Binding ResetHotkeyCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSearch}" />
+                            </StackPanel>
                         </ui:FASettingsExpander.Footer>
                         <ui:FASettingsExpanderItem IsVisible="{Binding Hotkeys.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                             <TextBlock Text="{Binding Hotkeys.Message}" TextWrapping="Wrap" />
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="Quick Switch" Description="Сочетание в окне «Сохранить» или «Открыть»; действует, если Quick Switch включён в «Интеграциях»">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Folder" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Classes="chip" Padding="10,4" IsVisible="{Binding !IsRecordingQuickSwitch}">
+                                    <TextBlock Text="{Binding QuickSwitchHotkeyText}" FontSize="13" />
+                                </Border>
+                                <Border Classes="chip accent" Padding="10,4" IsVisible="{Binding IsRecordingQuickSwitch}">
+                                    <TextBlock Text="Нажмите сочетание… Esc — отмена" FontSize="13" />
+                                </Border>
+                                <Button Content="Изменить" Command="{Binding StartRecordingCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSwitch}" />
+                                <Button Content="По умолчанию" Command="{Binding ResetHotkeyCommand}" CommandParameter="{x:Static svc:HotkeyTarget.QuickSwitch}" />
+                            </StackPanel>
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <TextBlock Margin="16,-2,16,6" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                               Text="{Binding HotkeyNote}" IsVisible="{Binding HasHotkeyNote}" />
                     <ui:FASettingsExpander Header="Разбор входящих" Description="Сессия разбора «Загрузок» — появится на этапе 17">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Download" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
@@ -221,7 +246,7 @@
                                 <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
                                     <ic:SymbolIcon Grid.RowSpan="2" Symbol="Folder" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                                     <StackPanel Grid.Column="1" Spacing="1">
-                                        <TextBlock Text="{Binding Root.Path}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Root.Path}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Root.Path}" />
                                         <TextBlock Classes="tertiary" FontSize="12" Text="{Binding StateText}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
@@ -393,11 +418,44 @@
                 <!-- Данные -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=data}">
                     <TextBlock Classes="section" Text="Данные" />
+                    <ui:FASettingsExpander Header="Папка данных" Description="{Binding DataDirectoryText}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Folder" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <Button Content="Открыть" Command="{Binding OpenDataFolderCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="Индекс" Description="{Binding IndexSizeText}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Library" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <Button Content="Пересобрать…" Command="{Binding RebuildIndexCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="Кэш иконок и миниатюр" Description="{Binding CacheSizeText}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Pictures" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <Button Content="Очистить…" Command="{Binding ClearCacheCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="Перенос настроек" Description="Сохранить настройки в файл JSON или загрузить их на другом компьютере">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Save" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Content="Сохранить в файл…" Command="{Binding ExportSettingsCommand}" />
+                                <Button Content="Загрузить…" Command="{Binding ImportSettingsCommand}" />
+                            </StackPanel>
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
                     <ui:FASettingsExpander Header="Журнал" Description="Подробность файла журнала; меняется сразу">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Document" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>
-                            <ComboBox ItemsSource="{Binding LogLevels}" SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}" MinWidth="220" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ComboBox ItemsSource="{Binding LogLevels}" SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}" MinWidth="220" />
+                                <Button Content="Открыть папку" Command="{Binding OpenLogsFolderCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
+                            </StackPanel>
                         </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="Резервные копии" Description="Расписание, места хранения и восстановление появятся вместе с модулем резервного копирования (этап 16)">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Sync" /></ui:FASettingsExpander.IconSource>
                     </ui:FASettingsExpander>
                 </StackPanel>
 
@@ -409,6 +467,32 @@
                         <ui:FASettingsExpander.Footer>
                             <HyperlinkButton Content="Репозиторий на GitHub" NavigateUri="{Binding RepositoryUri}" />
                         </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="Обновления" Description="{Binding UpdatesText}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Download" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <HyperlinkButton Content="Релизы" NavigateUri="{Binding ReleasesUri}" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="Сообщить о проблеме" Description="Опишите, что произошло; журнал — в разделе «Данные»">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Alert" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <HyperlinkButton Content="Issues на GitHub" NavigateUri="{Binding IssuesUri}" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="Сторонние компоненты" Description="Библиотеки с открытым кодом в этой сборке; лицензии — на страницах пакетов" ItemsSource="{Binding ThirdParty}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Library" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.ItemTemplate>
+                            <DataTemplate x:DataType="svc:ThirdPartyComponent">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock VerticalAlignment="Center">
+                                        <Run Text="{Binding Name}" />
+                                        <Run Text="{Binding Version}" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                    </TextBlock>
+                                    <HyperlinkButton Grid.Column="1" Content="Пакет и лицензия" NavigateUri="{Binding Link}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ui:FASettingsExpander.ItemTemplate>
                     </ui:FASettingsExpander>
                 </StackPanel>
             </StackPanel>

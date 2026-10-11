@@ -20,6 +20,17 @@ internal sealed class LruCache<TKey, TValue>
         _capacity = capacity;
     }
 
+    /// <summary>Удаляет все элементы.</summary>
+    public void Clear()
+    {
+        lock (_gate)
+        {
+            _map.Clear();
+            _order.Clear();
+        }
+    }
+
+    /// <summary>Ищет элемент и делает его самым свежим.</summary>
     public bool TryGet(TKey key, out TValue value)
     {
         lock (_gate)

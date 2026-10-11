@@ -51,6 +51,9 @@ internal sealed class QuickSwitchController : IQuickSwitchSettings, IDisposable
     /// <summary>Сочетание сейчас зарегистрировано.</summary>
     public bool IsRegistered => _hotkey is not null;
 
+    /// <summary>Зарегистрированное сочетание или <c>null</c>.</summary>
+    public Hotkey? RegisteredHotkey => _registered;
+
     /// <summary>
     /// Подключает окно сообщений и обработчик нажатия; если функция включена — регистрирует сочетание.
     /// Ошибка регистрации при запуске только пишется в журнал: функция экспериментальная и не должна мешать старту.
