@@ -4,6 +4,8 @@ using Avalonia.Controls.Documents;
 using Avalonia.Data;
 using Avalonia.Media;
 
+using DiskApp.UI.Models;
+
 namespace DiskApp.UI.Controls;
 
 /// <summary>
@@ -20,6 +22,10 @@ public sealed class HighlightTextBlock : UserControl
     /// <summary>Свойство <see cref="Highlight"/>.</summary>
     public static readonly StyledProperty<string?> HighlightProperty =
         AvaloniaProperty.Register<HighlightTextBlock, string?>(nameof(Highlight));
+
+    /// <summary>Свойство <see cref="HighlightRanges"/>.</summary>
+    public static readonly StyledProperty<IReadOnlyList<HighlightRange>?> HighlightRangesProperty =
+        AvaloniaProperty.Register<HighlightTextBlock, IReadOnlyList<HighlightRange>?>(nameof(HighlightRanges));
 
     /// <summary>Свойство <see cref="HighlightBrush"/>.</summary>
     public static readonly StyledProperty<IBrush?> HighlightBrushProperty =
@@ -62,6 +68,15 @@ public sealed class HighlightTextBlock : UserControl
     }
 
     /// <summary>Цвет подсвеченных фрагментов.</summary>
+    /// <summary>
+    /// Готовые диапазоны совпадений (с сервера, в том числе нечёткие); если заданы, слова <see cref="Highlight"/> не ищутся.
+    /// </summary>
+    public IReadOnlyList<HighlightRange>? HighlightRanges
+    {
+        get => GetValue(HighlightRangesProperty);
+        set => SetValue(HighlightRangesProperty, value);
+    }
+
     public IBrush? HighlightBrush
     {
         get => GetValue(HighlightBrushProperty);
@@ -117,6 +132,35 @@ public sealed class HighlightTextBlock : UserControl
             }
         }
 
+        return Join(text, marks);
+    }
+
+    /// <summary>
+    /// Делит текст на части по готовым диапазонам; диапазоны за пределами текста обрезаются.
+    /// </summary>
+    public static IReadOnlyList<(string Text, bool IsMatch)> Split(string text, IReadOnlyList<HighlightRange> ranges)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(ranges);
+
+        if (text.Length == 0)
+        {
+            return [];
+        }
+
+        var marks = new bool[text.Length];
+        foreach (var range in ranges)
+        {
+            var start = Math.Clamp(range.Start, 0, text.Length);
+            var end = Math.Clamp(range.Start + range.Length, start, text.Length);
+            Array.Fill(marks, true, start, end - start);
+        }
+
+        return Join(text, marks);
+    }
+
+    private static List<(string Text, bool IsMatch)> Join(string text, bool[] marks)
+    {
         var parts = new List<(string, bool)>();
         var position = 0;
         while (position < text.Length)
@@ -142,6 +186,7 @@ public sealed class HighlightTextBlock : UserControl
 
         if (change.Property == TextProperty
             || change.Property == HighlightProperty
+            || change.Property == HighlightRangesProperty
             || change.Property == HighlightBrushProperty
             || change.Property == HighlightFontWeightProperty)
         {
@@ -160,7 +205,9 @@ public sealed class HighlightTextBlock : UserControl
 
         inlines.Clear();
 
-        foreach (var (part, isMatch) in Split(Text ?? string.Empty, Highlight))
+        var text = Text ?? string.Empty;
+        var parts = HighlightRanges is { } ranges ? Split(text, ranges) : Split(text, Highlight);
+        foreach (var (part, isMatch) in parts)
         {
             var run = new Run(part);
             if (isMatch)

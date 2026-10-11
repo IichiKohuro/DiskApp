@@ -127,6 +127,9 @@ internal static class Program
             services.AddSingleton(lifetime);
             services.AddSingleton(names);
             services.AddDiskAppUi();
+
+            // Окна работают с настоящим индексом через клиент API, а не с макетом.
+            services.AddSingleton<ISearchService, ApiSearchService>();
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IDialogService>(static provider => new DesktopDialogService(provider.GetRequiredService<DesktopShell>().MainWindowForDialogs));

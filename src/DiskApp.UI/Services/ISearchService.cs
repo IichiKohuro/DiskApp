@@ -25,7 +25,11 @@ public interface ISearchService
     Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// Отмечает, что запись открыта пользователем: она поднимается в недавних и в ранжировании.
+    /// Открывает запись приложением по умолчанию и отмечает открытие: запись поднимается в недавних и в ранжировании,
+    /// а запрос, из которого её открыли, попадает в историю.
     /// </summary>
-    Task RecordOpenedAsync(FileEntry entry, CancellationToken cancellationToken);
+    /// <param name="entry">Запись.</param>
+    /// <param name="query">Запрос, из которого открыли; <c>null</c> — открыли не из поиска.</param>
+    /// <param name="cancellationToken">Отмена.</param>
+    Task OpenAsync(FileEntry entry, string? query, CancellationToken cancellationToken);
 }

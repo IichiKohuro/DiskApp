@@ -53,7 +53,7 @@ public sealed class SampleSearchServiceTests
     }
 
     [Fact]
-    public async Task RecordOpenedAsync_ExistingEntry_MovesItToFrontOfRecent()
+    public async Task OpenAsync_ExistingEntry_MovesItToFrontOfRecent()
     {
         // Arrange
         var service = new SampleSearchService(static () => Now);
@@ -61,7 +61,7 @@ public sealed class SampleSearchServiceTests
         var target = before[^1];
 
         // Act
-        await service.RecordOpenedAsync(target, TestContext.Current.CancellationToken);
+        await service.OpenAsync(target, "запрос", TestContext.Current.CancellationToken);
         var after = await service.GetRecentAsync(TestContext.Current.CancellationToken);
 
         // Assert

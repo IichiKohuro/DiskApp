@@ -206,6 +206,100 @@ public sealed class QuickSearchViewModelTests
         result.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task Query_ServerFails_ShowsErrorAndRecoversOnNextQuery()
+    {
+        // Arrange
+        var search = new FlakySearchService { FailSearch = true };
+        using var viewModel = new QuickSearchViewModel(search, static () => Now) { DebounceDelay = TimeSpan.Zero };
+        await viewModel.PendingRefresh;
+
+        // Act
+        viewModel.Query = "бюджет";
+        await viewModel.PendingRefresh;
+        var failedText = viewModel.StatusText;
+        var failed = viewModel.HasError;
+        search.FailSearch = false;
+        viewModel.Query = "бюджет 2026";
+        await viewModel.PendingRefresh;
+
+        // Assert
+        failed.ShouldBeTrue();
+        failedText.ShouldContain("Нет связи с сервером поиска");
+        viewModel.HasError.ShouldBeFalse();
+        viewModel.Results.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public async Task OpenSelectedAsync_ServerFails_ShowsErrorAndDoesNotRaiseFileOpened()
+    {
+        // Arrange
+        var search = new FlakySearchService { FailOpen = true };
+        using var viewModel = new QuickSearchViewModel(search, static () => Now) { DebounceDelay = TimeSpan.Zero };
+        var raised = false;
+        viewModel.FileOpened += (_, _) => raised = true;
+        viewModel.Query = "бюджет";
+        await viewModel.PendingRefresh;
+
+        // Act
+        var result = await viewModel.OpenSelectedAsync();
+
+        // Assert
+        result.ShouldBeFalse();
+        raised.ShouldBeFalse();
+        viewModel.HasError.ShouldBeTrue();
+        viewModel.StatusText.ShouldContain("Не удалось открыть");
+        search.LastOpenQuery.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task OpenSelectedAsync_WithQuery_PassesTrimmedQueryToService()
+    {
+        // Arrange
+        var search = new FlakySearchService();
+        using var viewModel = new QuickSearchViewModel(search, static () => Now) { DebounceDelay = TimeSpan.Zero };
+        viewModel.Query = "  бюджет ";
+        await viewModel.PendingRefresh;
+
+        // Act
+        await viewModel.OpenSelectedAsync();
+
+        // Assert
+        search.LastOpenQuery.ShouldBe("бюджет");
+    }
+
     private static QuickSearchViewModel Create()
         => new(new SampleSearchService(static () => Now), static () => Now) { DebounceDelay = TimeSpan.Zero };
+
+    /// <summary>
+    /// Макетный поиск, который по флагу падает, как недоступный сервер.
+    /// </summary>
+    private sealed class FlakySearchService : ISearchService
+    {
+        private readonly SampleSearchService _inner = new(static () => Now);
+
+        public bool FailSearch { get; set; }
+
+        public bool FailOpen { get; set; }
+
+        public string? LastOpenQuery { get; private set; }
+
+        public Task<SearchResult> SearchAsync(string query, CancellationToken cancellationToken)
+            => FailSearch ? throw new HttpRequestException("сервер не отвечает") : _inner.SearchAsync(query, cancellationToken);
+
+        public Task<IReadOnlyList<FileEntry>> GetRecentAsync(CancellationToken cancellationToken) => _inner.GetRecentAsync(cancellationToken);
+
+        public Task<IndexStatus> GetIndexStatusAsync(CancellationToken cancellationToken) => _inner.GetIndexStatusAsync(cancellationToken);
+
+        public Task OpenAsync(FileEntry entry, string? query, CancellationToken cancellationToken)
+        {
+            if (FailOpen)
+            {
+                throw new HttpRequestException("сервер не отвечает");
+            }
+
+            LastOpenQuery = query;
+            return _inner.OpenAsync(entry, query, cancellationToken);
+        }
+    }
 }

@@ -48,11 +48,27 @@ public enum FileKind
 }
 
 /// <summary>
+/// Диапазон подсветки совпадения в тексте (индексы символов UTF-16).
+/// </summary>
+/// <param name="Start">Начало.</param>
+/// <param name="Length">Длина.</param>
+public readonly record struct HighlightRange(int Start, int Length);
+
+/// <summary>
 /// Запись индекса в том виде, в каком её показывает интерфейс. До появления контрактов API (этап 4–5)
 /// это единственная модель файла в <c>DiskApp.UI</c>; затем она заполняется из DTO клиента.
 /// </summary>
 public sealed record FileEntry
 {
+    /// <summary>Идентификатор записи на сервере; 0 — запись макета.</summary>
+    public long Id { get; init; }
+
+    /// <summary>Ключ иконки сервера (<c>folder</c>, <c>ext:pdf</c>, <c>entry:42</c>); пусто — иконка по виду.</summary>
+    public string IconKey { get; init; } = string.Empty;
+
+    /// <summary>Совпадения в имени, найденные сервером (в том числе нечёткие); <c>null</c> — подсвечивать слова запроса.</summary>
+    public IReadOnlyList<HighlightRange>? NameHighlights { get; init; }
+
     /// <summary>Полный путь. Разделитель — как в индексе; интерфейс не трогает его, чтобы не ломать сетевые и портативные пути.</summary>
     public required string FullPath { get; init; }
 

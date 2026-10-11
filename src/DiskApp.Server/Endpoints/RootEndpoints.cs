@@ -61,7 +61,7 @@ internal static class RootEndpoints
 
         var index = endpoints.MapGroup(string.Empty).WithTags("Index");
 
-        index.MapGet(ApiRoutes.V1.IndexStatus, GetStatus)
+        index.MapGet(ApiRoutes.V1.IndexStatus, GetStatusAsync)
             .WithName("GetIndexStatus")
             .WithSummary("Состояние индексации")
             .WithDescription("Общее состояние для иконки трея и состояние каждого корня с ходом выполняемой задачи.");
@@ -208,7 +208,8 @@ internal static class RootEndpoints
     private static Results<NoContent, ProblemHttpResult> Resume(long id, IndexerService indexer)
         => indexer.ResumeRoot(id) ? TypedResults.NoContent() : ApiProblems.NotFound($"Корень {id} не подключён к индексации.");
 
-    private static Ok<IndexStatusDto> GetStatus(IndexerService indexer) => TypedResults.Ok(indexer.ToIndexStatusDto());
+    private static async Task<Ok<IndexStatusDto>> GetStatusAsync(IndexerService indexer, IFileIndexRepository entries, CancellationToken cancellationToken)
+        => TypedResults.Ok(indexer.ToIndexStatusDto() with { TotalEntries = await entries.CountAsync(cancellationToken).ConfigureAwait(false) });
 
     private static Ok<IndexStatusDto> PauseAll(IndexerService indexer)
     {

@@ -91,7 +91,7 @@ public sealed class SampleSearchService : ISearchService
     }
 
     /// <inheritdoc />
-    public Task RecordOpenedAsync(FileEntry entry, CancellationToken cancellationToken)
+    public Task OpenAsync(FileEntry entry, string? query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(entry);
         cancellationToken.ThrowIfCancellationRequested();

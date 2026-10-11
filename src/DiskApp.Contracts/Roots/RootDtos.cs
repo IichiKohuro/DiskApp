@@ -92,7 +92,8 @@ public sealed record UpdateRootRequest
 /// <param name="State">Общее состояние для иконки трея.</param>
 /// <param name="IsPaused">Пауза включена.</param>
 /// <param name="Roots">Состояние по корням.</param>
-public sealed record IndexStatusDto(IndexerState State, bool IsPaused, IReadOnlyList<RootIndexStatusDto> Roots);
+/// <param name="TotalEntries">Записей в индексе (только в <c>GET /api/v1/index/status</c>).</param>
+public sealed record IndexStatusDto(IndexerState State, bool IsPaused, IReadOnlyList<RootIndexStatusDto> Roots, long? TotalEntries = null);
 
 /// <summary>Общее состояние индексации.</summary>
 public enum IndexerState

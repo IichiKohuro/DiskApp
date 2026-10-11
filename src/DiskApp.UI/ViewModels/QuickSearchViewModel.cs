@@ -92,6 +92,10 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     [ObservableProperty]
     public partial bool IsSearching { get; set; }
 
+    /// <summary>Последний запрос или открытие завершились ошибкой; текст — в <see cref="StatusText"/>.</summary>
+    [ObservableProperty]
+    public partial bool HasError { get; set; }
+
     /// <summary>Показать «ничего не найдено».</summary>
     [ObservableProperty]
     public partial bool ShowEmptyState { get; set; }
@@ -149,6 +153,11 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         {
             // Пользователь продолжил ввод: этот запрос устарел.
         }
+        catch (Exception exception) when (!token.IsCancellationRequested)
+        {
+            // Сервер недоступен или вернул ошибку: окно не падает, следующая буква повторит запрос.
+            ShowError("Нет связи с сервером поиска: " + exception.Message);
+        }
         finally
         {
             if (ReferenceEquals(_pending, cts))
@@ -200,7 +209,17 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
             return false;
         }
 
-        await _search.RecordOpenedAsync(hit.Entry, CancellationToken.None);
+        try
+        {
+            var query = Query.Trim();
+            await _search.OpenAsync(hit.Entry, query.Length > 0 ? query : null, CancellationToken.None);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            ShowError($"Не удалось открыть «{hit.Entry.Name}»: {exception.Message}");
+            return false;
+        }
+
         FileOpened?.Invoke(this, hit.Entry);
         return true;
     }
@@ -229,8 +248,16 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
     partial void OnQueryChanged(string value) => PendingRefresh = RefreshAsync();
 
+    private void ShowError(string message)
+    {
+        HasError = true;
+        StatusText = message;
+        ShowEmptyState = false;
+    }
+
     private void ShowRecent(IReadOnlyList<FileEntry> recent, IndexStatus status)
     {
+        HasError = false;
         ReplaceResults(recent, string.Empty);
         SectionHeader = recent.Count > 0 ? "Недавно открытые" : string.Empty;
         StatusText = $"{Formatting.Count(status.TotalEntries, "файл", "файла", "файлов")} в индексе · начните вводить имя";
@@ -240,6 +267,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
     private void ShowSearchResult(SearchResult result)
     {
+        HasError = false;
         ReplaceResults(result.Entries, Query.Trim());
         SectionHeader = string.Empty;
 
@@ -252,7 +280,8 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         }
 
         var elapsed = Math.Max(1, (int)Math.Round(result.Elapsed.TotalMilliseconds));
-        StatusText = $"{Formatting.Count(result.TotalCount, "результат", "результата", "результатов")} · {elapsed} мс";
+        var count = Formatting.Count(result.TotalCount, "результат", "результата", "результатов");
+        StatusText = (result.IsTotalApproximate ? count.Replace(" ", "+ ", StringComparison.Ordinal) : count) + $" · {elapsed} мс";
         ShowEmptyState = false;
         ShowResults = true;
     }

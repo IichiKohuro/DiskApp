@@ -31,6 +31,7 @@
                                    IsVisible="{Binding IsFavorite}" />
                     <c:HighlightTextBlock Text="{Binding Entry.Name}"
                                           Highlight="{Binding Highlight}"
+                                          HighlightRanges="{Binding Entry.NameHighlights}"
                                           FontSize="14"
                                           VerticalAlignment="Center" />
                 </DockPanel>

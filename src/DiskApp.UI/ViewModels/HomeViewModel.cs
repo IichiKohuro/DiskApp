@@ -147,7 +147,7 @@ public sealed partial class HomeViewModel : PageViewModel
             return;
         }
 
-        await _search.RecordOpenedAsync(hit.Entry, CancellationToken.None);
+        await _search.OpenAsync(hit.Entry, null, CancellationToken.None);
         LastOpenedText = $"Открыт «{hit.Entry.Name}» — в прототипе файл не запускается, это появится в этапе 7.3";
         await RefreshAsync();
     }
