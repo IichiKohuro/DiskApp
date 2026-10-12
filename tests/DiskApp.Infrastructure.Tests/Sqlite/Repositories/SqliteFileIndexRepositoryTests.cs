@@ -84,6 +84,23 @@ public sealed class SqliteFileIndexRepositoryTests
     }
 
     [Fact]
+    public async Task UpsertAsync_EntryWrittenBeforeItsParent_NextScanLinksParent()
+    {
+        // Arrange: наблюдатель записал файл, пока пересборка индекса ещё не дошла до его папки
+        await using var context = await CreateAsync();
+        await context.UpsertAsync(1, context.Entry("docs/report.pdf"));
+        (await context.GetAsync("docs/report.pdf")).ParentId.ShouldBeNull();
+
+        // Act
+        var result = await context.UpsertAsync(2, context.Entry("docs", isDirectory: true), context.Entry("docs/report.pdf"));
+
+        // Assert
+        result.ShouldBe(new Core.Repositories.UpsertResult(1, 1, 0));
+        var docs = await context.GetAsync("docs");
+        (await context.GetAsync("docs/report.pdf")).ParentId.ShouldBe(docs.Id);
+    }
+
+    [Fact]
     public async Task SweepAsync_EntriesWithoutCurrentScan_AreRemoved()
     {
         // Arrange

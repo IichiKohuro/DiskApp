@@ -16,10 +16,14 @@ namespace DiskApp.Infrastructure.Sqlite.Repositories;
 /// </summary>
 public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepository
 {
+    // Без изменений — только при живой связи с родителем. Потерять её запись может одним путём: её вставили раньше
+    // родителя (наблюдатель во время пересборки индекса), и parent_id остался NULL; такую запись чинит UpdateSql.
+    // Неверного ненулевого родителя не бывает: удаление папки каскадом удаляет детей.
     private const string MarkUnchangedSql = """
         UPDATE entries SET scan_id = $scan
         WHERE root_id = $root AND rel_path = $rel_path AND is_dir = $is_dir AND name = $name
           AND size = $size AND modified_utc = $modified AND attributes = $attributes
+          AND (parent_id IS NOT NULL OR $parent_rel_path IS NULL)
         """;
 
     private const string InsertSql = """
