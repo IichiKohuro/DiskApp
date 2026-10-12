@@ -191,9 +191,9 @@ flowchart LR
 
 Репозитории (этап 1.4, `Sqlite/Repositories`) реализуют интерфейсы `DiskApp.Core.Repositories`: чтение в отдельном соединении на пуле потоков, запись через `SqliteWriter`. `SqliteFileIndexRepository.UpsertAsync` — три подготовленных запроса на строку в одной транзакции: пометить неизменённую строку текущим `scan_id` (совпали размер, время, атрибуты, имя), вставить новую (`ON CONFLICT DO NOTHING`), иначе обновить; родитель определяется подзапросом по `rel_path` родительской папки, поэтому папки в пакете идут раньше детей. Поддеревья удаляются и переименовываются диапазоном `rel_path >= 'путь\' AND rel_path < 'путь]'` по индексу `UNIQUE(root_id, rel_path)`; число удалённых считается отдельным `COUNT` в той же транзакции, потому что каскад по `parent_id` удаляет детей раньше, чем до них доходит `DELETE`.
 
-### Схема (V001 — этап 1.3, V002 — этап 19, V003 — этап 17.1; таблицы этапов 16 и 17 отмечены и появятся позже)
+### Схема (V001 — этап 1.3, V002 — этап 19, V003 — этап 17.1, V004 — этап 23; таблицы этапов 16 и 17 отмечены и появятся позже)
 
-Пересмотр 2026-10-11 (ADR-0012, ADR-0013, PLAN.md решение 25): `collectors` и `warehouses` не создаются — накопители и рабочие папки живут в настройках (`AppSettings.Sorting`). Состояния файлов в накопителях (17.1) займут таблицу вместо `triage_items`, журнал решений `triage_decisions` заменит история файлов (этап 20). Авто-теги папок — таблица `folder_tags` (V002, этап 19); появятся напоминания (этап 21.4). Диаграмма ниже — исходный замысел с `folder_tags`; она обновится вместе с миграциями этих этапов.
+Пересмотр 2026-10-11 (ADR-0012, ADR-0013, PLAN.md решение 25): `collectors` и `warehouses` не создаются — накопители и рабочие папки живут в настройках (`AppSettings.Sorting`). Состояния файлов в накопителях (17.1) займут таблицу вместо `triage_items`, журнал решений `triage_decisions` заменит история файлов (этап 20). Авто-теги папок — таблица `folder_tags` (V002, этап 19); появятся напоминания (этап 21.4). Заметки (V004, этап 23, ADR-0014) — `notes` и свои теги `note_tags` с `note_tag_links`, никак не связанные с `tags` файлов. Диаграмма ниже — исходный замысел с `folder_tags`, `inbox_states` и заметками; она обновится вместе с миграциями этих этапов.
 
 ```mermaid
 erDiagram
@@ -209,6 +209,8 @@ erDiagram
     entries ||--o| triage_items : queued_as
     warehouses ||--o{ triage_decisions : receives
     triage_items ||--o{ triage_decisions : decided_by
+    notes ||--o{ note_tag_links : tagged
+    note_tags ||--o{ note_tag_links : used_in
 
     roots {
         integer id PK
@@ -267,6 +269,26 @@ erDiagram
         text path PK
         integer state
         integer changed_utc
+    }
+    notes {
+        integer id PK
+        text title
+        text body
+        text search_folded
+        integer is_pinned
+        integer created_utc
+        integer modified_utc
+        integer deleted_utc
+    }
+    note_tags {
+        integer id PK
+        text name
+        text name_folded
+        text color
+    }
+    note_tag_links {
+        integer note_id PK
+        integer tag_id PK
     }
     collections {
         integer id PK
@@ -402,9 +424,10 @@ flowchart LR
 | Operations | `operations`, `operations/{id}`, `cancel`, `decision`, `undo`, `upload` | Раздел 8; загрузка до 2 ГБ |
 | Sorting | `sorting/move`, `sorting/drop`, `sorting/inbox`, `sorting/inbox/state` | Раздел 11: перенос и бросок — операции очереди; очередь накопителей с состояниями (этап 17.1) |
 | Library | `favorites`, `favorites/order`, `pinned`, `recent`, `tags`, `auto-tags`, `collections`, `collections/{id}/items` | Порядок избранного, ручные коллекции и сохранённые запросы; `auto-tags` (этап 19) — `GET` всех папок с авто-тегами, `PUT` заменяет набор папки (до 20 тегов, папка внутри корней — иначе 400 или 403, нет папки — 404; пустой список снимает и у пропавшей), недостающие теги создаются |
+| Notes | `notes`, `notes/{id}`, `notes/{id}/restore`, `note-tags`, `note-tags/{id}` | Этап 23: список — закреплённые сверху, затем новые; `q` — все слова в заголовке или тексте (`instr` по свёрнутому тексту), `tagId`, `deleted=true` — корзина; чтение списка чистит корзину старше 30 дней. `DELETE` — в корзину, `permanent=true` — навсегда и только из корзины (иначе 404). Теги в запросе — по именам, недостающие создаются; до 20 тегов, текст до 1 млн символов — иначе 400; одноимённый тег заметок — 409 |
 | Settings, App | `settings` (GET и PATCH), `app/info` | PATCH — JSON Merge Patch: `null` возвращает значение по умолчанию, неизвестное поле и значение вне диапазона — 400 |
 
-Контракты — `DiskApp.Contracts`: DTO по областям (`App`, `Roots`, `Entries`, `Search`, `Operations`, `Library`, `Hub`), `DiskAppJsonContext` с source generation (web-умолчания: camelCase, без учёта регистра при чтении; перечисления строками, как в коде; `null` не пишется). Перечисления контрактов повторяют доменные по именам и порядку — это проверяет тест, перевод — `DtoMapper` приведением. Свойства запросов объявлены с `set`: генератор System.Text.Json иначе затирает значения по умолчанию у полей, которых нет в JSON. Форму ответов стерегут снимки JSON в тестах. OpenAPI (`/openapi/v1.json`) и Scalar UI (`/scalar`) — только в Development.
+Контракты — `DiskApp.Contracts`: DTO по областям (`App`, `Roots`, `Entries`, `Search`, `Operations`, `Library`, `Notes`, `Hub`), `DiskAppJsonContext` с source generation (web-умолчания: camelCase, без учёта регистра при чтении; перечисления строками, как в коде; `null` не пишется). Перечисления контрактов повторяют доменные по именам и порядку — это проверяет тест, перевод — `DtoMapper` приведением. Свойства запросов объявлены с `set`: генератор System.Text.Json иначе затирает значения по умолчанию у полей, которых нет в JSON. Форму ответов стерегут снимки JSON в тестах. OpenAPI (`/openapi/v1.json`) и Scalar UI (`/scalar`) — только в Development.
 
 SignalR: хаб `DiskAppHub : Hub<IDiskAppHubClient>` на `/hubs/diskapp`, JSON-протокол на том же контексте, keep-alive 10 с, таймаут клиента 30 с. Методы клиента: `SubscribeRoot`, `UnsubscribeRoot`, `GetStatus`. Сразу после подключения сервер присылает `OnStatus` (состояние индексации и активные операции), поэтому переподключение ничего не теряет. `HubBroadcaster` подписан на шину событий: обработчики только складывают события в буферы, раз в 250 мс уходят смены состояния корней (`OnRootStatusChanged`), последний ход индексации каждого корня (`OnIndexProgress`, не чаще четырёх раз в секунду), ход, конфликты и завершение операций, изменения папок (`OnEntriesChanged`) и настройки (`OnSettingsChanged`). Изменения папок получают только подписчики корня, пакетами до 500; при лавине больше 10 000 за интервал приходит один сигнал «перечитайте корень». Индексатор сообщает об изменениях на уровне папок, клиент перечитывает открытые папки.
 
@@ -456,8 +479,11 @@ Endpoints проверяют, что все пути лежат в добавл�
 | «Добавить» | `AddFilesViewModel` | `IAddFilesService`, `IAddPreferences` | Выбор папки для файлов извне, буфер обмена в файл |
 | Коллекции | `CollectionsViewModel` | `ILibraryService` | Избранное, ручные коллекции, сохранённые запросы; добавление перетаскиванием и из списка путей через `entries/resolve`, порядок, выгрузка путей |
 | Теги | `TagsViewModel`, диалог `TagPickerViewModel` через `ITagEditor` | `ILibraryService` | Теги с цветами палитры `TagPalette`, файлы тега поиском `tag:`, отметки нескольким файлам с третьим состоянием |
+| Заметки (этап 23) | `NotesViewModel`, `NoteItem`; поле тегов — `AutoTagsEditorViewModel` со своей подсказкой | `INotesService` (`ApiNotesService`, макет `SampleNotesService`) | Список с поиском (пауза 250 мс) и фильтром по тегу, правка и просмотр Markdown, автосохранение через 0,8 с и при смене заметки — снимком текста той заметки, в которой печатали; сохранения идут по одному; черновик попадает на сервер с первым словом; удаление с «Отменить», корзина |
 
-Страница, которой важна видимость, реализует `IPageLifecycle`: `MainViewModel` вызывает `OnNavigatedTo` и `OnNavigatedFrom` при смене страницы. «Коллекции» так перечитывают данные при входе и обновляют сохранённый запрос раз в 15 секунд, пока страница открыта. Чипы тегов в строках берут цвет из `FileEntry.TagColors` (конвертер `TagConverters.Brush`).
+Страница, которой важна видимость, реализует `IPageLifecycle`: `MainViewModel` вызывает `OnNavigatedTo` и `OnNavigatedFrom` при смене страницы. «Коллекции» так перечитывают данные при входе и обновляют сохранённый запрос раз в 15 секунд, пока страница открыта; «Заметки» при уходе сохраняют недописанное. Чипы тегов в строках берут цвет из `FileEntry.TagColors` (конвертер `TagConverters.Brush`).
+
+Просмотр заметок — контрол `MarkdownView` (ADR-0014): Markdig (`UseTaskLists`, `UseAutoLinks`, `UseEmphasisExtras`, `UsePreciseSourceLocation`) разбирает текст, блоки становятся `TextBlock`, `StackPanel` и `Border` со стилями темы. Флажок пункта — `CheckBox`; щелчок сообщает `TaskToggled` с позицией `[` в тексте, и страница меняет `[ ]` на `[x]` (`MarkdownView.ToggleTask`). Ссылки и пути Windows в тексте — `MarkdownLink` (подчёркнутый `Run` цвета акцента): абзац ловит щелчок попаданием в прямоугольники текста ссылки (`LinkAt`), поэтому ссылка переносится вместе со строкой. Путь открывается через `ILauncher` — папка или файл, если они есть; веб-адрес — только `http`, `https` и `mailto` (`WebAddress`). Перенос строки в тексте — перенос и в просмотре.
 
 Состав оболочки и интерфейса после этапа 7:
 
