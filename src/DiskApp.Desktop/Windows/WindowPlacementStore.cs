@@ -22,19 +22,51 @@ internal sealed record WindowStateFile
 {
     /// <summary>Главное окно.</summary>
     public WindowPlacement? Main { get; set; }
+
+    /// <summary>Ширина панелей за разделителями: «sorting.destinations» → 420.</summary>
+    public Dictionary<string, double>? Panels { get; set; }
 }
 
 /// <summary>
-/// Запоминает положение главного окна между запусками (PLAN.md, этап 6.7) в <c>window-state.json</c> рядом с настройками.
-/// Испорченный файл не мешает запуску: окно откроется по центру.
+/// Запоминает положение главного окна между запусками (PLAN.md, этап 6.7) и ширину панелей страниц в
+/// <c>window-state.json</c> рядом с настройками. Испорченный файл не мешает запуску: окно откроется по центру.
 /// </summary>
 internal sealed class WindowPlacementStore(string path)
 {
     /// <summary>Сколько пикселей заголовка должно попадать на экран, чтобы окно можно было схватить мышью.</summary>
     public const int MinimumVisible = 80;
 
+    // Окно и панели пишут один файл из разных мест: чтение и запись — по очереди.
+    private static readonly Lock Gate = new();
+
     /// <summary>Сохранённое положение главного окна или <c>null</c>.</summary>
-    public WindowPlacement? LoadMain()
+    public WindowPlacement? LoadMain() => Read()?.Main is { Width: > 0, Height: > 0 } placement ? placement : null;
+
+    /// <summary>Сохраняет положение главного окна; ошибка записи не мешает выходу.</summary>
+    public void SaveMain(WindowPlacement placement) => Update(state => state.Main = placement);
+
+    /// <summary>Сохранённая ширина панелей; пусто — не меняли.</summary>
+    public IReadOnlyDictionary<string, double> LoadPanels()
+        => Read()?.Panels is { } panels
+            ? panels.Where(static panel => double.IsFinite(panel.Value) && panel.Value > 0).ToDictionary(StringComparer.Ordinal)
+            : new Dictionary<string, double>(StringComparer.Ordinal);
+
+    /// <summary>Сохраняет ширину панелей, не трогая положение окна.</summary>
+    public void SavePanels(IReadOnlyDictionary<string, double> panels)
+    {
+        ArgumentNullException.ThrowIfNull(panels);
+        Update(state => state.Panels = new Dictionary<string, double>(panels, StringComparer.Ordinal));
+    }
+
+    private WindowStateFile? Read()
+    {
+        lock (Gate)
+        {
+            return ReadFile();
+        }
+    }
+
+    private WindowStateFile? ReadFile()
     {
         try
         {
@@ -44,7 +76,7 @@ internal sealed class WindowPlacementStore(string path)
             }
 
             using var stream = File.OpenRead(path);
-            return JsonSerializer.Deserialize(stream, WindowStateJsonContext.Default.WindowStateFile)?.Main is { Width: > 0, Height: > 0 } placement ? placement : null;
+            return JsonSerializer.Deserialize(stream, WindowStateJsonContext.Default.WindowStateFile);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -52,19 +84,23 @@ internal sealed class WindowPlacementStore(string path)
         }
     }
 
-    /// <summary>Сохраняет положение главного окна; ошибка записи не мешает выходу.</summary>
-    public void SaveMain(WindowPlacement placement)
+    private void Update(Action<WindowStateFile> change)
     {
-        try
+        lock (Gate)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            var temporary = path + ".tmp";
-            File.WriteAllText(temporary, JsonSerializer.Serialize(new WindowStateFile { Main = placement }, WindowStateJsonContext.Default.WindowStateFile));
-            File.Move(temporary, path, overwrite: true);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            Serilog.Log.Warning(exception, "Положение окна не сохранено в {Path}", path);
+            try
+            {
+                var state = ReadFile() ?? new WindowStateFile();
+                change(state);
+                Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                var temporary = path + ".tmp";
+                File.WriteAllText(temporary, JsonSerializer.Serialize(state, WindowStateJsonContext.Default.WindowStateFile));
+                File.Move(temporary, path, overwrite: true);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Serilog.Log.Warning(exception, "Состояние окна не сохранено в {Path}", path);
+            }
         }
     }
 

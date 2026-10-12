@@ -27,6 +27,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<ISortingSettings, SampleSortingSettings>();
         services.AddSingleton<IInboxService>(static provider => new BrowseInboxService(provider.GetRequiredService<IBrowseService>(), provider.GetRequiredService<ISortingSettings>()));
         services.AddSingleton<INotesService, SampleNotesService>();
+        services.AddSingleton<ILayoutStore, MemoryLayoutStore>();
         services.AddSingleton<IThemeService, AppThemeService>();
         services.AddSingleton<HotkeyStatus>();
         services.AddSingleton<IDispatcher, AvaloniaDispatcher>();
@@ -50,7 +51,9 @@ public static class UiServiceCollectionExtensions
             provider.GetService<IDialogService>(),
             provider.GetService<IInfoBarService>(),
             inbox: provider.GetService<IInboxService>(),
-            dispatcher: provider.GetService<IDispatcher>()));
+            dispatcher: provider.GetService<IDispatcher>(),
+            actions: provider.GetService<IFileActions>(),
+            layout: provider.GetService<ILayoutStore>()));
         services.AddSingleton<TagsViewModel>();
         services.AddSingleton<NotesViewModel>();
         services.AddSingleton<OperationsViewModel>();

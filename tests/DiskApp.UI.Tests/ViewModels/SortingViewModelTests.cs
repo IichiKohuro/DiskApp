@@ -263,6 +263,125 @@ public sealed class SortingViewModelTests
     }
 
     [Fact]
+    public async Task WorkFolderThatIsRoot_NotMarkedMissing_UnlessRootOffline()
+    {
+        // Arrange: папку вне индекса «Разбор» добавляет корнем, а у корня записи в индексе нет (замечание 2026-10-12)
+        _library.ResolveAsync(Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>()).Returns(new ResolveResult([], [Soft, Work417]));
+        _roots.GetRootsAsync(Arg.Any<CancellationToken>()).Returns([
+            new RootInfo { Id = 2, Label = "Work", Path = @"D:\Work" },
+            new RootInfo { Id = 3, Label = "Soft", Path = @"D:\Soft\" },
+            new RootInfo { Id = 4, Label = "417", Path = Work417, State = RootState.Offline },
+        ]);
+
+        // Act
+        var page = await CreateLoadedAsync();
+
+        // Assert
+        page.WorkFolders.Single(static item => item.Folder.Path == Soft).IsMissing.ShouldBeFalse();
+        page.WorkFolders.Single(static item => item.Folder.Path == Work417).IsMissing.ShouldBeTrue("диск корня отключён — папки сейчас нет");
+    }
+
+    [Fact]
+    public async Task WorkFolderChip_NumberSeparateFromLabel()
+    {
+        // Arrange: подпись начинается с числа — «1 10S-417» читалось как одно
+        var page = await CreateLoadedAsync();
+
+        // Act
+        var first = page.WorkFolders[0];
+
+        // Assert
+        first.HasNumber.ShouldBeTrue();
+        first.NumberText.ShouldBe("1");
+        first.Folder.Title.ShouldBe("TCI2");
+        first.Text.ShouldBe("1 TCI2", "для чтения с экрана — по-прежнему вместе");
+    }
+
+    [Fact]
+    public async Task NameAndTagsButtons_ShowWhatIsSet_ClearRemovesIt()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+        var plainName = page.NameButtonText;
+        var plainTags = page.TagsButtonText;
+
+        // Act
+        page.NameTemplate = "{дата}_{имя}";
+        page.AddTagCommand.Execute("заказчик");
+        page.AddTagCommand.Execute("срочно");
+        var setName = page.NameButtonText;
+        var setTags = page.TagsButtonText;
+        var canClear = (page.ClearNameTemplateCommand.CanExecute(null), page.ClearTagsCommand.CanExecute(null));
+        page.ClearNameTemplateCommand.Execute(null);
+        page.ClearTagsCommand.Execute(null);
+
+        // Assert
+        plainName.ShouldBe("Имя");
+        plainTags.ShouldBe("Теги");
+        setName.ShouldBe("Имя: {дата}_{имя}");
+        setTags.ShouldBe("Теги: заказчик, срочно");
+        canClear.ShouldBe((true, true));
+        page.HasNameTemplate.ShouldBeFalse();
+        page.HasTags.ShouldBeFalse();
+        page.NameButtonText.ShouldBe("Имя");
+        page.ClearTagsCommand.CanExecute(null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task OpenItem_OpensFileToLookAtIt_RevealShowsItInFolder()
+    {
+        // Arrange: посмотреть, что в файле, прежде чем решить, куда его положить (замечание 2026-10-12)
+        var actions = Substitute.For<IFileActions>();
+        var page = new SortingViewModel(_settings, _browse, _operations, _search, _library, _roots, _dialogs, _notices, static () => Now, actions: actions);
+        await page.RefreshAsync();
+        page.SetSelection([page.Items[1]]);
+
+        // Act
+        await page.OpenItemCommand.ExecuteAsync(page.Items[0]);
+        await page.OpenItemCommand.ExecuteAsync(null);
+        await page.RevealItemCommand.ExecuteAsync(null);
+
+        // Assert
+        await _search.Received(1).OpenAsync(page.Items[0].Entry, null, Arg.Any<CancellationToken>());
+        await _search.Received(1).OpenAsync(page.Items[1].Entry, null, Arg.Any<CancellationToken>());
+        await actions.Received(1).RevealAsync(page.Items[1].Entry, Arg.Any<CancellationToken>());
+        page.CanReveal.ShouldBeTrue();
+        Create().CanReveal.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task OpenItem_Fails_ShowsError()
+    {
+        // Arrange
+        _search.OpenAsync(Arg.Any<FileEntry>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(Task.FromException(new InvalidOperationException("нет приложения")));
+        var page = await CreateLoadedAsync();
+
+        // Act
+        await page.OpenItemCommand.ExecuteAsync(page.Items[0]);
+
+        // Assert
+        _notices.Received(1).Show("Не удалось открыть «ТЗ 417.docx»", "нет приложения", FAInfoBarSeverity.Error);
+    }
+
+    [Fact]
+    public void DestinationWidth_FromLayoutWithinLimits_SavedWhenDragged()
+    {
+        // Arrange
+        var layout = new MemoryLayoutStore();
+        layout.SetWidth("sorting.destinations", 5000);
+
+        // Act
+        var page = new SortingViewModel(_settings, _browse, _operations, _search, _library, _roots, layout: layout);
+        var restored = page.DestinationColumnWidth;
+        page.DestinationColumnWidth = new Avalonia.Controls.GridLength(450);
+
+        // Assert
+        restored.Value.ShouldBe(SortingViewModel.MaxDestinationWidth);
+        layout.GetWidth("sorting.destinations").ShouldBe(450);
+        Create().DestinationColumnWidth.Value.ShouldBe(SortingViewModel.DefaultDestinationWidth);
+    }
+
+    [Fact]
     public async Task EditWorkFolder_SavesLabelAndNumber()
     {
         // Arrange

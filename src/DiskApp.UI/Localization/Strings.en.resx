@@ -2617,7 +2617,7 @@
     <value>{0}, {1} selected</value>
   </data>
   <data name="Sorting.KeysHint" xml:space="preserve">
-    <value>1–9: work folder · Ctrl+Enter: move</value>
+    <value>1–9 — work folder · double-click — open file · Ctrl+Enter — move</value>
   </data>
   <data name="Sorting.Later" xml:space="preserve">
     <value>Later (higher number)</value>
@@ -3387,5 +3387,50 @@ Project folder: D:\Work\417</value>
   </data>
   <data name="Notes.Untitled" xml:space="preserve">
     <value>Untitled</value>
+  </data>
+  <data name="Sorting.ClearName" xml:space="preserve">
+    <value>Don't rename</value>
+  </data>
+  <data name="Sorting.ClearTags" xml:space="preserve">
+    <value>Remove all</value>
+  </data>
+  <data name="Sorting.NameButton" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Sorting.NameButtonSet" xml:space="preserve">
+    <value>Name: {0}</value>
+  </data>
+  <data name="Sorting.NameButtonTip" xml:space="preserve">
+    <value>Rename on move: your own name or a template</value>
+  </data>
+  <data name="Sorting.NameHint" xml:space="preserve">
+    <value>Empty — files keep their names. A template with {name} is remembered after a move; a plain name is used just this once.</value>
+  </data>
+  <data name="Sorting.OpenFailed" xml:space="preserve">
+    <value>Couldn't open “{0}”</value>
+  </data>
+  <data name="Sorting.OpenFile" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Sorting.ResizePanels" xml:space="preserve">
+    <value>Panel width</value>
+  </data>
+  <data name="Sorting.RevealFile" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="Sorting.TagsButton" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Sorting.TagsButtonSet" xml:space="preserve">
+    <value>Tags: {0}</value>
+  </data>
+  <data name="Sorting.TagsButtonTip" xml:space="preserve">
+    <value>Tags the moved files will get</value>
+  </data>
+  <data name="Sorting.TagsHint" xml:space="preserve">
+    <value>All moved files get them, along with the folder's auto-tags.</value>
+  </data>
+  <data name="Notes.ListWidth" xml:space="preserve">
+    <value>List width</value>
   </data>
 </root>

@@ -1,4 +1,7 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
+
+using Avalonia.Controls;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -112,8 +115,14 @@ public sealed record NamePreset(string Title, string Template)
 /// <param name="IsMissing">Папки нет в индексе: переименована, перенесена или удалена (этап 17.2).</param>
 public sealed record WorkFolderItem(int Number, SortingFolderInfo Folder, bool IsMissing = false)
 {
-    /// <summary>Подпись кнопки: «2 417».</summary>
+    /// <summary>Подпись для чтения с экрана и списков: «2 417».</summary>
     public string Text => Number > 0 ? $"{Number} {Folder.Title}" : Folder.Title;
+
+    /// <summary>Клавиша папки — на чипе отдельной плашкой, чтобы «1» не сливалась с подписью «10S-417».</summary>
+    public string NumberText => Number > 0 ? Number.ToString(CultureInfo.InvariantCulture) : string.Empty;
+
+    /// <summary>У папки есть клавиша 1–9.</summary>
+    public bool HasNumber => Number > 0;
 
     /// <summary>Подсказка: путь, а если папки нет в индексе — что с ней делать (этап 17.2).</summary>
     public string Tip => IsMissing ? L.F("Sorting.WorkFolderMissing", Folder.Path) : Folder.Path;
@@ -220,6 +229,19 @@ public sealed partial class SortFolderNode : ObservableObject
 /// </summary>
 public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 {
+    /// <summary>Ширина панели рабочих папок по умолчанию.</summary>
+    public const double DefaultDestinationWidth = 380;
+
+    /// <summary>Уже нельзя: не помещаются чипы и дерево.</summary>
+    public const double MinDestinationWidth = 280;
+
+    /// <summary>Шире нельзя: файлам накопителя тоже нужно место.</summary>
+    public const double MaxDestinationWidth = 900;
+
+    private const string DestinationsLayoutKey = "sorting.destinations";
+
+    private readonly IFileActions? _actions;
+    private readonly ILayoutStore? _layout;
     private readonly ISortingSettings _settings;
     private readonly IBrowseService _browse;
     private readonly IOperationsService _operations;
@@ -258,6 +280,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <param name="clock">Часы.</param>
     /// <param name="inbox">Очередь накопителей (этап 17.1); <c>null</c> — по листингу папок (превью, тесты).</param>
     /// <param name="dispatcher">UI-поток для событий очереди; <c>null</c> — вызывать сразу.</param>
+    /// <param name="actions">Действия над файлом: «Показать в папке»; <c>null</c> — пункта нет.</param>
+    /// <param name="layout">Ширина панели рабочих папок между запусками; <c>null</c> — не запоминается.</param>
     public SortingViewModel(
         ISortingSettings settings,
         IBrowseService browse,
@@ -269,11 +293,24 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         IInfoBarService? notices = null,
         Func<DateTimeOffset>? clock = null,
         IInboxService? inbox = null,
-        IDispatcher? dispatcher = null)
+        IDispatcher? dispatcher = null,
+        IFileActions? actions = null,
+        ILayoutStore? layout = null)
         : base(PageKeys.Inbox, "Sorting.Title", FASymbol.Download)
     {
         _clock = clock ?? (static () => DateTimeOffset.Now);
-        Tags.CollectionChanged += (_, _) => UpdateNamePreview();
+        _actions = actions;
+
+        // Ширина из прошлого запуска ставится до подписки на изменения: в файл попадает только то, что меняли.
+        DestinationColumnWidth = new GridLength(Math.Clamp(layout?.GetWidth(DestinationsLayoutKey) ?? DefaultDestinationWidth, MinDestinationWidth, MaxDestinationWidth));
+        _layout = layout;
+        Tags.CollectionChanged += (_, _) =>
+        {
+            UpdateNamePreview();
+            OnPropertyChanged(nameof(TagsButtonText));
+            OnPropertyChanged(nameof(HasTags));
+            ClearTagsCommand.NotifyCanExecuteChanged();
+        };
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _browse = browse ?? throw new ArgumentNullException(nameof(browse));
         _operations = operations ?? throw new ArgumentNullException(nameof(operations));
@@ -341,7 +378,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
     /// <summary>Папка назначения в дереве.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DestinationText), nameof(DestinationAutoTagsText), nameof(HasDestinationAutoTags))]
+    [NotifyPropertyChangedFor(nameof(DestinationText), nameof(DestinationAutoTagsText), nameof(HasDestinationAutoTags), nameof(HasDestination))]
     [NotifyCanExecuteChangedFor(nameof(MoveCommand), nameof(StartNewFolderCommand))]
     public partial SortFolderNode? SelectedFolder { get; set; }
 
@@ -424,6 +461,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <summary>Кнопка под списком: «Оставленные здесь: 3» или «Скрыть оставленные».</summary>
     public string KeptText => ShowKept ? L.T("Sorting.HideKept") : L.F("Sorting.ShowKept", KeptCount);
 
+    /// <summary>Папка назначения выбрана.</summary>
+    public bool HasDestination => SelectedFolder is not null;
+
     /// <summary>Куда пойдут файлы: «417 › Переписка».</summary>
     public string DestinationText => SelectedFolder is { } folder ? DescribePath(folder) : L.T("Sorting.ChooseDestination");
 
@@ -439,6 +479,25 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     public string MoveText => SelectedCount > 0
         ? L.F("Sorting.MoveItems", Formatting.Count(SelectedCount, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")))
         : L.T("Sorting.Move");
+
+    /// <summary>Шаблон имени задан: файлы переименуются при переносе.</summary>
+    public bool HasNameTemplate => NameTemplate.Trim().Length > 0;
+
+    /// <summary>Кнопка имени в полосе переноса: «Имя» или «Имя: {дата}_{имя}» — что задано, видно без раскрытия.</summary>
+    public string NameButtonText => HasNameTemplate ? L.F("Sorting.NameButtonSet", NameTemplate.Trim()) : L.T("Sorting.NameButton");
+
+    /// <summary>Заданы теги для переносимого.</summary>
+    public bool HasTags => Tags.Count > 0;
+
+    /// <summary>Кнопка тегов в полосе переноса: «Теги» или «Теги: ТЗ, 417».</summary>
+    public string TagsButtonText => HasTags ? L.F("Sorting.TagsButtonSet", string.Join(", ", Tags)) : L.T("Sorting.TagsButton");
+
+    /// <summary>Есть «Показать в папке».</summary>
+    public bool CanReveal => _actions is not null;
+
+    /// <summary>Ширина панели рабочих папок: тянется разделителем и запоминается между запусками.</summary>
+    [ObservableProperty]
+    public partial GridLength DestinationColumnWidth { get; set; }
 
     /// <summary>Завершается, когда закончилась последняя загрузка (для тестов).</summary>
     public Task PendingLoad { get; private set; } = Task.CompletedTask;
@@ -606,6 +665,59 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         if (tag is not null)
         {
             Tags.Remove(tag);
+        }
+    }
+
+    /// <summary>Снимает все теги переносимого.</summary>
+    [RelayCommand(CanExecute = nameof(HasTags))]
+    private void ClearTags()
+    {
+        Tags.Clear();
+        TagText = string.Empty;
+    }
+
+    /// <summary>Убирает шаблон имени: файлы перенесутся с прежними именами.</summary>
+    [RelayCommand(CanExecute = nameof(HasNameTemplate))]
+    private void ClearNameTemplate() => NameTemplate = string.Empty;
+
+    /// <summary>
+    /// Открывает файл в его приложении — посмотреть, что внутри, прежде чем решить, куда его положить. Без аргумента —
+    /// первый выбранный.
+    /// </summary>
+    [RelayCommand]
+    private async Task OpenItemAsync(SortItem? item)
+    {
+        if ((item ?? (_selection.Count > 0 ? _selection[0] : null)) is not { } target)
+        {
+            return;
+        }
+
+        try
+        {
+            await _search.OpenAsync(target.Entry, null, CancellationToken.None);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.F("Sorting.OpenFailed", target.Entry.Name), exception.Message, FAInfoBarSeverity.Error);
+        }
+    }
+
+    /// <summary>Показывает файл в Проводнике.</summary>
+    [RelayCommand]
+    private async Task RevealItemAsync(SortItem? item)
+    {
+        if (_actions is null || (item ?? (_selection.Count > 0 ? _selection[0] : null)) is not { } target)
+        {
+            return;
+        }
+
+        try
+        {
+            await _actions.RevealAsync(target.Entry);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.F("Sorting.OpenFailed", target.Entry.Name), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -928,7 +1040,21 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
     partial void OnShowKeptChanged(bool value) => ShowItems(keepSelection: true);
 
-    partial void OnNameTemplateChanged(string value) => UpdateNamePreview();
+    partial void OnNameTemplateChanged(string value)
+    {
+        UpdateNamePreview();
+        OnPropertyChanged(nameof(HasNameTemplate));
+        OnPropertyChanged(nameof(NameButtonText));
+        ClearNameTemplateCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnDestinationColumnWidthChanged(GridLength value)
+    {
+        if (value.IsAbsolute)
+        {
+            _layout?.SetWidth(DestinationsLayoutKey, value.Value);
+        }
+    }
 
     partial void OnSelectedNamePresetChanged(NamePreset? value)
     {
@@ -1427,6 +1553,12 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             try
             {
                 missing.UnionWith((await _library.ResolveAsync([.. _folders.WorkFolders.Select(static folder => folder.Path)])).Missing);
+                if (missing.Count > 0)
+                {
+                    // Папка вне индекса добавляется корнем, а у самого корня записи в индексе нет — он есть, если доступен.
+                    var roots = await _roots.GetRootsAsync();
+                    missing.RemoveWhere(path => roots.Any(root => SamePath(root.Path, path) && root.State is not (RootState.Offline or RootState.Error)));
+                }
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {

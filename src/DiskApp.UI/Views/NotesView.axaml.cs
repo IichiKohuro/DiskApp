@@ -20,6 +20,13 @@ public partial class NotesView : UserControl
     {
         InitializeComponent();
         Preview.TaskToggled += (_, toggle) => _viewModel?.ToggleTask(toggle);
+        ListSplitter.DragCompleted += (_, _) =>
+        {
+            if (_viewModel is not null)
+            {
+                _viewModel.ListColumnWidth = RootGrid.ColumnDefinitions[0].Width;
+            }
+        };
     }
 
     /// <inheritdoc />
@@ -34,6 +41,7 @@ public partial class NotesView : UserControl
         if (_viewModel is not null)
         {
             _viewModel.EditorFocusRequested += OnEditorFocusRequested;
+            RootGrid.ColumnDefinitions[0].Width = _viewModel.ListColumnWidth;
         }
 
         base.OnDataContextChanged(e);

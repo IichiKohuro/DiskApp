@@ -11,9 +11,10 @@ using DiskApp.UI.ViewModels;
 namespace DiskApp.UI.Views;
 
 /// <summary>
-/// Страница «Разбор»: выбор нескольких файлов в списке, <c>1…9</c> — рабочая папка, <c>Enter</c> в списке или
-/// <c>Ctrl+Enter</c> где угодно — перенести, <c>Enter</c> в поле тега — добавить тег, в поле поиска — первая найденная
-/// папка, в поле имени — создать подпапку, <c>Esc</c> — отменить ввод имени.
+/// Страница «Разбор»: выбор нескольких файлов в списке, двойной щелчок — открыть файл, <c>1…9</c> — рабочая папка,
+/// <c>Enter</c> в списке или <c>Ctrl+Enter</c> где угодно — перенести, <c>Enter</c> в поле тега — добавить тег, в поле
+/// шаблона имени — закрыть панель, в поле поиска — первая найденная папка, в поле имени — создать подпапку, <c>Esc</c> —
+/// отменить ввод имени. Ширина панели рабочих папок — разделителем, её помнит ViewModel.
 /// </summary>
 public partial class SortingView : UserControl
 {
@@ -26,6 +27,15 @@ public partial class SortingView : UserControl
     {
         InitializeComponent();
         ItemsList.SelectionChanged += (_, _) => ViewModel?.SetSelection([.. ItemsList.SelectedItems?.OfType<SortItem>() ?? []]);
+        ItemsList.DoubleTapped += (_, e) =>
+        {
+            // Посмотреть файл, прежде чем решить, куда его положить.
+            if ((e.Source as Control)?.DataContext is SortItem item)
+            {
+                ViewModel?.OpenItemCommand.Execute(item);
+                e.Handled = true;
+            }
+        };
         FolderResultsList.SelectionChanged += (_, _) =>
         {
             if (FolderResultsList.SelectedItem is SortingFolderInfo folder)
@@ -34,6 +44,19 @@ public partial class SortingView : UserControl
             }
         };
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+
+        // Поля имени и тегов — во всплывающих панелях: клавиши оттуда до страницы не доходят, ловятся на самих полях.
+        TagBox.AddHandler(KeyDownEvent, OnPopupBoxKeyDown, RoutingStrategies.Tunnel);
+        NameBox.AddHandler(KeyDownEvent, OnPopupBoxKeyDown, RoutingStrategies.Tunnel);
+        ((Flyout)NameButton.Flyout!).Opened += (_, _) => Dispatcher.UIThread.Post(() => NameBox.Focus(), DispatcherPriority.Input);
+        ((Flyout)TagsButton.Flyout!).Opened += (_, _) => Dispatcher.UIThread.Post(() => TagBox.Focus(), DispatcherPriority.Input);
+        PanelsSplitter.DragCompleted += (_, _) =>
+        {
+            if (ViewModel is { } viewModel)
+            {
+                viewModel.DestinationColumnWidth = RootGrid.ColumnDefinitions[2].Width;
+            }
+        };
         DataContextChanged += (_, _) => Subscribe();
     }
 
@@ -50,6 +73,7 @@ public partial class SortingView : UserControl
         if (_subscribed is not null)
         {
             _subscribed.PropertyChanged += OnViewModelChanged;
+            RootGrid.ColumnDefinitions[2].Width = _subscribed.DestinationColumnWidth;
         }
     }
 
@@ -58,6 +82,31 @@ public partial class SortingView : UserControl
         if (e.PropertyName == nameof(SortingViewModel.IsNamingFolder) && _subscribed is { IsNamingFolder: true })
         {
             Dispatcher.UIThread.Post(() => NewFolderBox.Focus(), DispatcherPriority.Input);
+        }
+        else if (e.PropertyName == nameof(SortingViewModel.DestinationColumnWidth) && _subscribed is { } viewModel
+            && RootGrid.ColumnDefinitions[2].Width != viewModel.DestinationColumnWidth)
+        {
+            RootGrid.ColumnDefinitions[2].Width = viewModel.DestinationColumnWidth;
+        }
+    }
+
+    // Enter в поле тега добавляет тег, в поле шаблона имени — закрывает панель: имя уже применено.
+    private void OnPopupBoxKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (ViewModel is not { } viewModel || e.Key != Key.Enter || e.KeyModifiers != KeyModifiers.None)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(sender, TagBox) && viewModel.TagText.Trim().Length > 0)
+        {
+            viewModel.AddTagCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (ReferenceEquals(sender, NameBox))
+        {
+            NameButton.Flyout?.Hide();
+            e.Handled = true;
         }
     }
 
@@ -94,12 +143,7 @@ public partial class SortingView : UserControl
             return;
         }
 
-        if (box == TagBox && e.Key == Key.Enter)
-        {
-            viewModel.AddTagCommand.Execute(null);
-            e.Handled = true;
-        }
-        else if (box == NewFolderBox && e.Key == Key.Enter)
+        if (box == NewFolderBox && e.Key == Key.Enter)
         {
             viewModel.ConfirmNewFolderCommand.Execute(null);
             e.Handled = true;

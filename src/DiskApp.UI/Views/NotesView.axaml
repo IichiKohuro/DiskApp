@@ -15,8 +15,14 @@
     <UserControl.KeyBindings>
         <KeyBinding Gesture="Ctrl+N" Command="{Binding NewNoteCommand}" />
     </UserControl.KeyBindings>
-    <Grid Margin="16,12,16,8" RowDefinitions="Auto,*" ColumnDefinitions="320,*">
-        <DockPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
+    <!-- Колонки: список, разделитель (ширина списка запоминается), заметка -->
+    <Grid x:Name="RootGrid" Margin="16,12,16,8" RowDefinitions="Auto,*">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320" MinWidth="220" MaxWidth="700" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" MinWidth="320" />
+        </Grid.ColumnDefinitions>
+        <DockPanel Grid.ColumnSpan="3" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right" VerticalAlignment="Bottom" Classes="accent" Command="{Binding NewNoteCommand}" ToolTip.Tip="Ctrl+N"
                     AutomationProperties.Name="{loc:Str Notes.New}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -90,8 +96,14 @@
             </DockPanel>
         </Border>
 
+        <!-- Разделитель: ширина списка тянется мышью и запоминается -->
+        <GridSplitter x:Name="ListSplitter" Grid.Row="1" Grid.Column="1" ResizeDirection="Columns" Background="Transparent"
+                      AutomationProperties.Name="{loc:Str Notes.ListWidth}" ToolTip.Tip="{loc:Str Notes.ListWidth}" />
+        <Border Grid.Row="1" Grid.Column="1" Width="3" Height="36" CornerRadius="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                IsHitTestVisible="False" Background="{DynamicResource ControlStrongStrokeColorDefaultBrush}" Opacity="0.5" />
+
         <!-- Заметка -->
-        <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="12" Margin="8,0,0,0">
+        <Border Grid.Row="1" Grid.Column="2" Classes="card" Padding="12">
             <Panel>
                 <DockPanel IsVisible="{Binding HasNote}">
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">

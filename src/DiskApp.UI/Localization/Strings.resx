@@ -2617,7 +2617,7 @@
     <value>{0}, выбрано {1}</value>
   </data>
   <data name="Sorting.KeysHint" xml:space="preserve">
-    <value>1–9 — рабочая папка · Ctrl+Enter — перенести</value>
+    <value>1–9 — рабочая папка · двойной щелчок — открыть файл · Ctrl+Enter — перенести</value>
   </data>
   <data name="Sorting.Later" xml:space="preserve">
     <value>Позже (большая цифра)</value>
@@ -3387,5 +3387,50 @@
   </data>
   <data name="Notes.Untitled" xml:space="preserve">
     <value>Без названия</value>
+  </data>
+  <data name="Sorting.ClearName" xml:space="preserve">
+    <value>Не переименовывать</value>
+  </data>
+  <data name="Sorting.ClearTags" xml:space="preserve">
+    <value>Снять все</value>
+  </data>
+  <data name="Sorting.NameButton" xml:space="preserve">
+    <value>Имя</value>
+  </data>
+  <data name="Sorting.NameButtonSet" xml:space="preserve">
+    <value>Имя: {0}</value>
+  </data>
+  <data name="Sorting.NameButtonTip" xml:space="preserve">
+    <value>Переименовать при переносе: своё имя или шаблон</value>
+  </data>
+  <data name="Sorting.NameHint" xml:space="preserve">
+    <value>Пусто — файлы сохранят свои имена. Шаблон с {имя} запоминается после переноса, своё имя — только на этот раз.</value>
+  </data>
+  <data name="Sorting.OpenFailed" xml:space="preserve">
+    <value>Не удалось открыть «{0}»</value>
+  </data>
+  <data name="Sorting.OpenFile" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="Sorting.ResizePanels" xml:space="preserve">
+    <value>Ширина панелей</value>
+  </data>
+  <data name="Sorting.RevealFile" xml:space="preserve">
+    <value>Показать в папке</value>
+  </data>
+  <data name="Sorting.TagsButton" xml:space="preserve">
+    <value>Теги</value>
+  </data>
+  <data name="Sorting.TagsButtonSet" xml:space="preserve">
+    <value>Теги: {0}</value>
+  </data>
+  <data name="Sorting.TagsButtonTip" xml:space="preserve">
+    <value>Теги, которые получат перенесённые файлы</value>
+  </data>
+  <data name="Sorting.TagsHint" xml:space="preserve">
+    <value>Получат все переносимые файлы — вместе с авто-тегами папки.</value>
+  </data>
+  <data name="Notes.ListWidth" xml:space="preserve">
+    <value>Ширина списка</value>
   </data>
 </root>

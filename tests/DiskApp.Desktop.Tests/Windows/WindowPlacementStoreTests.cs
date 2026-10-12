@@ -44,6 +44,47 @@ public sealed class WindowPlacementStoreTests : IDisposable
     public void Load_MissingFile_ReturnsNull()
         => new WindowPlacementStore(_directory.Resolve("none.json")).LoadMain().ShouldBeNull();
 
+    [Fact]
+    public void Panels_SavedNextToWindow_NeitherOverwritesTheOther()
+    {
+        // Arrange: ширина панелей и положение окна — в одном файле, пишутся из разных мест
+        var store = new WindowPlacementStore(_directory.Resolve("window-state.json"));
+        var placement = new WindowPlacement(10, 20, 1200, 800, false);
+
+        // Act
+        store.SaveMain(placement);
+        store.SavePanels(new Dictionary<string, double> { ["sorting.destinations"] = 455 });
+        store.SaveMain(placement with { Maximized = true });
+        var panels = store.LoadPanels();
+
+        // Assert
+        store.LoadMain().ShouldBe(placement with { Maximized = true });
+        panels.ShouldHaveSingleItem().ShouldBe(new KeyValuePair<string, double>("sorting.destinations", 455));
+    }
+
+    [Fact]
+    public void LayoutStore_RemembersWidthAcrossRestart_WritesOnlyWhenChanged()
+    {
+        // Arrange
+        var path = _directory.Resolve("window-state.json");
+        using (var first = new DesktopLayoutStore(new WindowPlacementStore(path)))
+        {
+            first.SetWidth("notes.list", 401.6);
+            first.SetWidth("bad", double.NaN);
+        }
+
+        // Act: «перезапуск» — новое хранилище читает файл
+        using var second = new DesktopLayoutStore(new WindowPlacementStore(path));
+        var stamp = File.GetLastWriteTimeUtc(path);
+        second.Flush();
+
+        // Assert
+        second.GetWidth("notes.list").ShouldBe(402);
+        second.GetWidth("bad").ShouldBeNull();
+        second.GetWidth("sorting.destinations").ShouldBeNull();
+        File.GetLastWriteTimeUtc(path).ShouldBe(stamp, "без изменений файл не переписывается");
+    }
+
     [Theory]
     [InlineData(100, 100, true)]
     [InlineData(1900, 100, false)]

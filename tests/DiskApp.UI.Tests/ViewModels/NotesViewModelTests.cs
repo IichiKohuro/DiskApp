@@ -269,6 +269,24 @@ public sealed class NotesViewModelTests
         (await _service.GetNotesAsync(cancellationToken: TestContext.Current.CancellationToken)).Single().Body.ShouldBe("- [x] позвонить");
     }
 
+    [Fact]
+    public void ListWidth_FromLayoutWithinLimits_SavedWhenDragged()
+    {
+        // Arrange
+        var layout = new MemoryLayoutStore();
+        layout.SetWidth("notes.list", 100);
+
+        // Act
+        var page = new NotesViewModel(_service, layout: layout);
+        var restored = page.ListColumnWidth;
+        page.ListColumnWidth = new Avalonia.Controls.GridLength(380);
+
+        // Assert
+        restored.Value.ShouldBe(NotesViewModel.MinListWidth);
+        layout.GetWidth("notes.list").ShouldBe(380);
+        new NotesViewModel(_service).ListColumnWidth.Value.ShouldBe(NotesViewModel.DefaultListWidth);
+    }
+
     [Theory]
     [InlineData("# Заголовок\n\nПервая **строка**\n- [ ] дело", "Первая строка · дело")]
     [InlineData("Только заголовок", "")]

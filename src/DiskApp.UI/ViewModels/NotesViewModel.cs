@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 
+using Avalonia.Controls;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -68,6 +70,17 @@ public sealed record NoteTagFilter(TagInfo? Tag, string Text)
 /// </summary>
 public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
 {
+    /// <summary>Ширина списка заметок по умолчанию.</summary>
+    public const double DefaultListWidth = 320;
+
+    /// <summary>Уже нельзя: заголовки не читаются.</summary>
+    public const double MinListWidth = 220;
+
+    /// <summary>Шире нельзя: самой заметке нужно место.</summary>
+    public const double MaxListWidth = 700;
+
+    private const string ListLayoutKey = "notes.list";
+
     private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(800);
     private static readonly TimeSpan SearchDelay = TimeSpan.FromMilliseconds(250);
 
@@ -78,6 +91,7 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     private readonly IDialogService? _dialogs;
     private readonly IInfoBarService? _notices;
     private readonly Func<DateTimeOffset> _clock;
+    private readonly ILayoutStore? _layout;
     private IReadOnlyList<TagInfo> _knownTags = [];
     private CancellationTokenSource? _saveDelay;
     private CancellationTokenSource? _searchDelay;
@@ -90,13 +104,16 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     /// <param name="dialogs">Диалоги: удаление навсегда, правка тега.</param>
     /// <param name="notices">Уведомления: «Отменить» после удаления.</param>
     /// <param name="clock">Часы.</param>
-    public NotesViewModel(INotesService notes, IDialogService? dialogs = null, IInfoBarService? notices = null, Func<DateTimeOffset>? clock = null)
+    /// <param name="layout">Ширина списка между запусками; <c>null</c> — не запоминается.</param>
+    public NotesViewModel(INotesService notes, IDialogService? dialogs = null, IInfoBarService? notices = null, Func<DateTimeOffset>? clock = null, ILayoutStore? layout = null)
         : base(PageKeys.Notes, "Notes.Title", FASymbol.Edit)
     {
         _notes = notes ?? throw new ArgumentNullException(nameof(notes));
         _dialogs = dialogs;
         _notices = notices;
         _clock = clock ?? (static () => DateTimeOffset.Now);
+        ListColumnWidth = new GridLength(Math.Clamp(layout?.GetWidth(ListLayoutKey) ?? DefaultListWidth, MinListWidth, MaxListWidth));
+        _layout = layout;
         TagFilters.Add(new NoteTagFilter(null, L.T("Notes.AllTags")));
         SelectedTagFilter = TagFilters[0];
     }
@@ -106,6 +123,10 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
 
     /// <summary>Заметки списка.</summary>
     public ObservableCollection<NoteItem> Notes { get; } = [];
+
+    /// <summary>Ширина списка: тянется разделителем и запоминается между запусками.</summary>
+    [ObservableProperty]
+    public partial GridLength ListColumnWidth { get; set; }
 
     /// <summary>Фильтры по тегу: «Все теги» и теги заметок.</summary>
     public ObservableCollection<NoteTagFilter> TagFilters { get; } = [];
@@ -388,6 +409,14 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     }
 
     partial void OnBodyChanged(string value) => QueueSave(SaveDelay);
+
+    partial void OnListColumnWidthChanged(GridLength value)
+    {
+        if (value.IsAbsolute)
+        {
+            _layout?.SetWidth(ListLayoutKey, value.Value);
+        }
+    }
 
     partial void OnSearchTextChanged(string value)
     {
