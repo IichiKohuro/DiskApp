@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
 
 using DiskApp.Contracts;
+using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
 using DiskApp.Contracts.Hub;
 using DiskApp.Contracts.Library;
@@ -14,6 +15,8 @@ using DiskApp.Contracts.Roots;
 using DiskApp.Contracts.Search;
 using DiskApp.Core.Settings;
 using DiskApp.Server.Mapping;
+
+using SortingRuleMode = DiskApp.Contracts.App.SortingRuleMode;
 
 namespace DiskApp.Server.Tests.Api;
 
@@ -129,6 +132,37 @@ public sealed class ContractSnapshotTests
                 ["request"] = JsonSerializer.SerializeToNode(
                     new SetFolderTagsRequest { Path = @"D:\Документы\417", Tags = ["ТЗ", "417"] },
                     DiskAppJsonContext.Default.SetFolderTagsRequest),
+            },
+            DiskAppJsonContext.Default.JsonObject);
+
+    [Fact]
+    public void SortingRules_MatchSnapshot()
+        => Verify(
+            new JsonObject
+            {
+                ["workFolder"] = JsonSerializer.SerializeToNode(
+                    new SortingFolderDto
+                    {
+                        Path = @"D:\Работа\417",
+                        Label = "Мост 417",
+                        Rules =
+                        [
+                            new SortingRuleDto { Pattern = "417_*" },
+                            new SortingRuleDto { Pattern = "акт*", Mode = SortingRuleMode.Suggest, Enabled = false, Inbox = @"D:\Skype", Extensions = ["pdf"], Subfolder = "Акты" },
+                        ],
+                    },
+                    DiskAppJsonContext.Default.SortingFolderDto),
+                ["inboxItem"] = JsonSerializer.SerializeToNode(
+                    new InboxItemDto(Entry with { Score = null, Match = null, NameHighlights = null, PathHighlights = null }, @"D:\Загрузки", InboxState.New, true, Stamp)
+                    {
+                        Decision = SortingDecision.Auto,
+                        Matches = [new SortingMatchDto(@"D:\Работа\417", @"D:\Работа\417", "417_*", SortingRuleMode.Auto)],
+                    },
+                    DiskAppJsonContext.Default.InboxItemDto),
+                ["preview"] = JsonSerializer.SerializeToNode(
+                    new SortingPreviewDto([new SortingPreviewItemDto(@"D:\Загрузки\акт 417.pdf", "акт 417.pdf", @"D:\Загрузки", SortingDecision.Choice, false,
+                        [new SortingMatchDto(@"D:\Работа\417", @"D:\Работа\417", "417", SortingRuleMode.Auto), new SortingMatchDto(@"D:\Работа\417", @"D:\Работа\417\Акты", "акт*", SortingRuleMode.Suggest)], null)]),
+                    DiskAppJsonContext.Default.SortingPreviewDto),
             },
             DiskAppJsonContext.Default.JsonObject);
 

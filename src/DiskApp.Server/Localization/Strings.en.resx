@@ -318,4 +318,19 @@
   <data name="Notes.TooManyTags" xml:space="preserve">
     <value>A note has at most {0} tags.</value>
   </data>
+  <data name="SettingsEndpoints.NoMoreThanRules" xml:space="preserve">
+    <value>No more than {0} templates per folder.</value>
+  </data>
+  <data name="SettingsEndpoints.RulePatternInvalid" xml:space="preserve">
+    <value>A mask is a part of a file name up to {0} characters, without «\» and «/»: for example, 417_* or *TCI2*.</value>
+  </data>
+  <data name="SettingsEndpoints.RuleModeUnknown" xml:space="preserve">
+    <value>Unknown template mode.</value>
+  </data>
+  <data name="SettingsEndpoints.RuleExtensionsInvalid" xml:space="preserve">
+    <value>Extensions go without a dot, no more than {0}: pdf, docx.</value>
+  </data>
+  <data name="SettingsEndpoints.RuleSubfolderInvalid" xml:space="preserve">
+    <value>A subfolder is a path inside the work folder: «Correspondence» or «2026\Acts».</value>
+  </data>
 </root>

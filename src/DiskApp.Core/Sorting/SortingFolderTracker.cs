@@ -77,10 +77,16 @@ public sealed class SortingFolderTracker : IDisposable
         IReadOnlyList<SortingFolder> MapAll(IReadOnlyList<SortingFolder> folders)
             => [.. folders.Select(folder => MapPath(folder.Path, oldPath, newPath, paths) is { } mapped && !ReferenceEquals(mapped, folder.Path) ? folder with { Path = mapped } : folder)];
 
+        // Условие шаблона «только из накопителя» (этап 17.5) следует за накопителем.
+        SortingFolder MapRules(SortingFolder folder)
+            => folder.Rules.Any(rule => !ReferenceEquals(MapPath(rule.Inbox, oldPath, newPath, paths), rule.Inbox))
+                ? folder with { Rules = [.. folder.Rules.Select(rule => rule with { Inbox = MapPath(rule.Inbox, oldPath, newPath, paths) })] }
+                : folder;
+
         var remapped = sorting with
         {
             Inboxes = MapAll(sorting.Inboxes),
-            WorkFolders = MapAll(sorting.WorkFolders),
+            WorkFolders = [.. MapAll(sorting.WorkFolders).Select(MapRules)],
             MainInbox = MapPath(sorting.MainInbox, oldPath, newPath, paths),
         };
         return remapped.Equals(sorting) ? sorting : remapped;

@@ -233,7 +233,7 @@ internal static class DtoMapper
         Sorting = new SortingSettingsDto
         {
             Inboxes = [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label, IncludeSubfolders = folder.IncludeSubfolders })],
-            WorkFolders = [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label, IncludeSubfolders = folder.IncludeSubfolders })],
+            WorkFolders = [.. settings.Sorting.WorkFolders.Select(static folder => folder.ToDto())],
             NameTemplate = settings.Sorting.NameTemplate,
             MainInbox = settings.Sorting.MainInbox,
             SettleSeconds = settings.Sorting.SettleSeconds,
@@ -327,13 +327,40 @@ internal static class DtoMapper
         },
     };
 
-    private static SortingFolder[] ToSortingFolders(IReadOnlyList<SortingFolderDto>? folders)
+    /// <summary>Папки разбора из DTO: пути и подписи без пробелов по краям, шаблоны — без пустых условий.</summary>
+    public static SortingFolder[] ToSortingFolders(IReadOnlyList<SortingFolderDto>? folders)
         => [.. (folders ?? []).Select(static folder => new SortingFolder
         {
             Path = folder.Path.Trim(),
             Label = string.IsNullOrWhiteSpace(folder.Label) ? null : folder.Label.Trim(),
             IncludeSubfolders = folder.IncludeSubfolders,
+            Rules = [.. (folder.Rules ?? []).Select(static rule => new SortingRule
+            {
+                Pattern = rule.Pattern?.Trim() ?? string.Empty,
+                Mode = (Core.Settings.SortingRuleMode)(int)rule.Mode,
+                Enabled = rule.Enabled,
+                Inbox = string.IsNullOrWhiteSpace(rule.Inbox) ? null : rule.Inbox.Trim(),
+                Extensions = [.. (rule.Extensions ?? []).Select(static extension => Core.Sorting.SortingRuleSet.NormalizeExtension(extension ?? string.Empty)).Where(static extension => extension.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase)],
+                Subfolder = Core.Sorting.SortingRuleSet.SubfolderPath(rule.Subfolder),
+            })],
         })];
+
+    /// <summary>Рабочая папка с шаблонами в DTO.</summary>
+    public static SortingFolderDto ToDto(this SortingFolder folder) => new()
+    {
+        Path = folder.Path,
+        Label = folder.Label,
+        IncludeSubfolders = folder.IncludeSubfolders,
+        Rules = [.. folder.Rules.Select(static rule => new SortingRuleDto
+        {
+            Pattern = rule.Pattern,
+            Mode = (Contract.App.SortingRuleMode)(int)rule.Mode,
+            Enabled = rule.Enabled,
+            Inbox = rule.Inbox,
+            Extensions = rule.Extensions,
+            Subfolder = rule.Subfolder,
+        })],
+    };
 
     public static FileOperationRequest ToDomain(this OperationRequest request) => new(
         (FileOperationKind)(int)request.Kind,
@@ -354,7 +381,10 @@ internal static class DtoMapper
         info.Progress.ToDto(info.Id),
         info.Message,
         info.CanUndo,
-        info.PendingConflict is { } conflict ? conflict.ToDto() : null);
+        info.PendingConflict is { } conflict ? conflict.ToDto() : null)
+    {
+        Origin = (Contract.Operations.OperationOrigin)(int)info.Origin,
+    };
 
     public static OperationProgressDto ToDto(this OperationProgress progress, Guid operationId) => new(
         operationId,

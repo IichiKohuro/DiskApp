@@ -22,7 +22,8 @@ namespace DiskApp.Core.Sorting;
 /// <param name="NewFolder">Имя новой подпапки внутри <paramref name="Destination"/>; <c>null</c> — переносить прямо в неё.</param>
 /// <param name="Tags">Теги, которые получат перенесённые элементы, вдобавок к уже имеющимся.</param>
 /// <param name="Names">Новые имена по порядку <paramref name="Sources"/>; <c>null</c> — прежние имена.</param>
-public sealed record SortRequest(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags, IReadOnlyList<string?>? Names = null);
+/// <param name="Origin">Кто переносит: пользователь или авторазбор (этап 17.5).</param>
+public sealed record SortRequest(IReadOnlyList<string> Sources, string Destination, string? NewFolder, IReadOnlyList<string> Tags, IReadOnlyList<string?>? Names = null, OperationOrigin Origin = OperationOrigin.User);
 
 /// <summary>
 /// Бросок файлов в папку-накопитель из окна Drag&amp;Drop (PLAN.md, этап 18.2).
@@ -120,7 +121,7 @@ public sealed class SortingService : IDisposable
         var previous = await GetTagsAsync(request.Sources, cancellationToken).ConfigureAwait(false);
 
         var names = request.Names?.Select(static name => string.IsNullOrWhiteSpace(name) ? null : name.Trim()).ToArray();
-        var result = _operations.Enqueue(new FileOperationRequest(FileOperationKind.Move, request.Sources, destination, Conflicts: ConflictPolicy.KeepBoth, TargetNames: names));
+        var result = _operations.Enqueue(new FileOperationRequest(FileOperationKind.Move, request.Sources, destination, Conflicts: ConflictPolicy.KeepBoth, TargetNames: names, Origin: request.Origin));
         if (result.TryGetValue(out var info) && (tags.Length > 0 || previous.Count > 0))
         {
             _pending[info.Id] = new PendingTags(tags, previous);

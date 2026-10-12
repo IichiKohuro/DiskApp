@@ -36,6 +36,9 @@ public sealed class ContractsTests
         { typeof(Core.Settings.ThemeMode), typeof(Contract.App.ThemeMode) },
         { typeof(Core.Settings.BackdropMode), typeof(Contract.App.BackdropMode) },
         { typeof(Core.Domain.ExclusionKind), typeof(Contract.App.ExclusionKind) },
+        { typeof(Core.Settings.SortingRuleMode), typeof(Contract.App.SortingRuleMode) },
+        { typeof(Core.Sorting.SortingDecision), typeof(Contract.Operations.SortingDecision) },
+        { typeof(Core.Operations.OperationOrigin), typeof(Contract.Operations.OperationOrigin) },
     };
 
     [Fact]
@@ -44,6 +47,8 @@ public sealed class ContractsTests
         // Arrange
         var types = typeof(DiskAppJsonContext).Assembly.GetExportedTypes()
             .Where(static type => type.Namespace?.StartsWith("DiskApp.Contracts.", StringComparison.Ordinal) == true)
+            // Text — общие помощники клиента и сервера (шаблон имени), а не DTO.
+            .Where(static type => type.Namespace != "DiskApp.Contracts.Text")
             .Where(static type => type is { IsClass: true, IsAbstract: false } || type.IsEnum)
             .ToArray();
 

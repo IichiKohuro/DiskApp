@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using DiskApp.Contracts.Text;
 using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
 using DiskApp.UI.Services;

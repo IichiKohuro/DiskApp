@@ -105,9 +105,22 @@ public static class ServerServiceCollectionExtensions
             provider.GetRequiredService<IClock>(),
             provider.GetRequiredService<PathNormalizer>(),
             new System.IO.Abstractions.FileSystem()));
+        services.AddSingleton(static provider => new AutoSortService(
+            provider.GetRequiredService<InboxService>(),
+            provider.GetRequiredService<SortingService>(),
+            provider.GetRequiredService<FileOperationService>(),
+            provider.GetRequiredService<ISettingsStore<AppSettings>>(),
+            provider.GetRequiredService<IInboxStateRepository>(),
+            provider.GetRequiredService<IRootRepository>(),
+            provider.GetRequiredService<IIndexEventBus>(),
+            provider.GetRequiredService<IClock>(),
+            provider.GetRequiredService<PathNormalizer>(),
+            new System.IO.Abstractions.FileSystem(),
+            provider.GetRequiredService<ILogger<AutoSortService>>()));
         services.AddHostedService<SortingFolderTrackerService>();
         services.AddHostedService<ServerStartupService>();
         services.AddHostedService<SearchCacheInvalidator>();
+        services.AddHostedService(static provider => provider.GetRequiredService<AutoSortService>());
         services.AddProblemDetails();
         services.ConfigureHttpJsonOptions(static json => json.SerializerOptions.TypeInfoResolverChain.Insert(0, DiskAppJsonContext.Default));
         AddRealtime(services);

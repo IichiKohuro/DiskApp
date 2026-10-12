@@ -6,6 +6,7 @@ using DiskApp.Core.Abstractions;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Settings;
 using DiskApp.Core.Sorting;
+using DiskApp.Server.Hosting;
 using DiskApp.Server.Localization;
 using DiskApp.Server.Mapping;
 
@@ -13,6 +14,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+
+using CoreDecision = DiskApp.Core.Sorting.SortingDecision;
 
 namespace DiskApp.Server.Endpoints;
 
@@ -47,20 +50,93 @@ internal static class SortingEndpoints
             .WithTags("Sorting")
             .WithName("SetInboxState")
             .WithSummary("Отложить, оставить здесь или вернуть в новые файлы накопителя");
+
+        endpoints.MapPost(ApiRoutes.V1.SortingRulesPreview, PreviewRulesAsync)
+            .WithTags("Sorting")
+            .WithName("PreviewSortingRules")
+            .WithSummary("Сухой прогон шаблонов рабочих папок: что куда ушло бы из накопителей сейчас")
+            .WithDescription("workFolders — шаблоны, которые проверить (например, несохранённая карточка); без них — шаблоны из настроек. Ничего не переносит.");
     }
 
-    private static async Task<Ok<InboxDto>> GetInboxAsync(InboxService inbox, EntryLookup lookup, CancellationToken cancellationToken)
+    private static async Task<Ok<InboxDto>> GetInboxAsync(InboxService inbox, EntryLookup lookup, ISettingsStore<AppSettings> settings, PathNormalizer paths, CancellationToken cancellationToken)
     {
         var snapshot = await inbox.GetAsync(cancellationToken).ConfigureAwait(false);
         var dtos = await lookup.ToDtosAsync([.. snapshot.Items.Select(static item => item.Entry)], cancellationToken).ConfigureAwait(false);
         var byId = dtos.ToDictionary(static dto => dto.Id);
+        var rules = new SortingRuleSet(settings.Current.Sorting.WorkFolders, paths);
         var items = snapshot.Items
             .Where(item => byId.ContainsKey(item.Entry.Id))
-            .Select(item => new InboxItemDto(byId[item.Entry.Id], item.Inbox, (InboxState)(int)item.State, snapshot.IsReady(item), item.ReadyUtc))
+            .Select(item =>
+            {
+                var verdict = rules.Match(item);
+                return new InboxItemDto(byId[item.Entry.Id], item.Inbox, ToDto(item.State), snapshot.IsReady(item), item.ReadyUtc)
+                {
+                    Decision = ToDto(verdict, item),
+                    Matches = [.. verdict.Matches.Select(ToDto)],
+                };
+            })
             .ToArray();
         var folders = snapshot.Folders.Select(static folder => new InboxFolderDto(folder.Path, folder.RootId, (Contracts.Operations.InboxProblem)(int)folder.Problem)).ToArray();
         return TypedResults.Ok(new InboxDto(folders, items, snapshot.NewCount, snapshot.NextReadyUtc, snapshot.IsTruncated));
     }
+
+    /// <summary>
+    /// Сухой прогон шаблонов (этап 17.5): что куда ушло бы из накопителей сейчас — по шаблонам из настроек или присланным
+    /// (несохранённая карточка рабочей папки). Ничего не переносит.
+    /// </summary>
+    private static async Task<Results<Ok<SortingPreviewDto>, ValidationProblem>> PreviewRulesAsync(
+        SortingPreviewRequest request,
+        InboxService inbox,
+        ISettingsStore<AppSettings> settings,
+        PathNormalizer paths,
+        IClock clock,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<SortingFolder> workFolders = settings.Current.Sorting.WorkFolders;
+        if (request.WorkFolders is { } proposed)
+        {
+            var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+            SettingsEndpoints.ValidateSortingFolders(proposed, "workFolders", errors);
+            if (errors.Count > 0)
+            {
+                return ApiProblems.Invalid(errors);
+            }
+
+            workFolders = DtoMapper.ToSortingFolders(proposed);
+        }
+
+        var snapshot = await inbox.GetAsync(cancellationToken).ConfigureAwait(false);
+        var rules = new SortingRuleSet(workFolders, paths);
+        var template = settings.Current.Sorting.NameTemplate;
+        var now = clock.UtcNow;
+        var items = snapshot.Items
+            .Select(item => (Item: item, Verdict: rules.Match(item)))
+            .Where(static pair => pair.Verdict.Decision != CoreDecision.None)
+            .Select(pair => new SortingPreviewItemDto(
+                pair.Item.FullPath,
+                pair.Item.Entry.Name,
+                pair.Item.Inbox,
+                ToDto(pair.Verdict, pair.Item),
+                SortingRuleSet.WillAutoSort(snapshot, pair.Item, pair.Verdict),
+                [.. pair.Verdict.Matches.Select(ToDto)],
+                pair.Verdict.Decision is CoreDecision.Auto or CoreDecision.Suggest
+                    ? AutoSortService.NewName(template, pair.Item, 1, 1, pair.Verdict.Matches[0].Destination, now)
+                    : null))
+            .ToArray();
+        return TypedResults.Ok(new SortingPreviewDto(items));
+    }
+
+    // «Вручную» (вернувшийся после автопереноса) — для клиента обычный новый.
+    private static InboxState ToDto(InboxItemState state) => state == InboxItemState.Manual ? InboxState.New : (InboxState)(int)state;
+
+    // «Перенесётся сам» — только у нового файла: отложенный, оставленный и вернувшийся авторазбор не трогает.
+    private static Contracts.Operations.SortingDecision ToDto(SortingVerdict verdict, InboxItem item)
+        => verdict.Decision == CoreDecision.Auto && item.State != InboxItemState.New
+            ? Contracts.Operations.SortingDecision.Suggest
+            : (Contracts.Operations.SortingDecision)(int)verdict.Decision;
+
+    private static SortingMatchDto ToDto(SortingMatch match)
+        => new(match.Folder.Path, match.Destination, match.Rule.Pattern, (Contracts.App.SortingRuleMode)(int)match.Rule.Mode);
 
     private static async Task<Results<NoContent, ValidationProblem>> SetInboxStateAsync(SetInboxStateRequest request, InboxService inbox, CancellationToken cancellationToken)
     {

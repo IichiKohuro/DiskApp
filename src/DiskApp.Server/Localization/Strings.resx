@@ -318,4 +318,19 @@
   <data name="Notes.TooManyTags" xml:space="preserve">
     <value>У заметки не больше {0} тегов.</value>
   </data>
+  <data name="SettingsEndpoints.NoMoreThanRules" xml:space="preserve">
+    <value>Не больше {0} шаблонов у папки.</value>
+  </data>
+  <data name="SettingsEndpoints.RulePatternInvalid" xml:space="preserve">
+    <value>Маска — часть имени файла до {0} символов, без «\» и «/»: например, 417_* или *TCI2*.</value>
+  </data>
+  <data name="SettingsEndpoints.RuleModeUnknown" xml:space="preserve">
+    <value>Неизвестный режим шаблона.</value>
+  </data>
+  <data name="SettingsEndpoints.RuleExtensionsInvalid" xml:space="preserve">
+    <value>Расширения — без точки и не больше {0}: pdf, docx.</value>
+  </data>
+  <data name="SettingsEndpoints.RuleSubfolderInvalid" xml:space="preserve">
+    <value>Подпапка — путь внутри рабочей папки: «Переписка» или «2026\Акты».</value>
+  </data>
 </root>

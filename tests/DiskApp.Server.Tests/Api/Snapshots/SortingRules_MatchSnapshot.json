@@ -1,0 +1,92 @@
+{
+  "workFolder": {
+    "path": "D:\\Работа\\417",
+    "label": "Мост 417",
+    "includeSubfolders": false,
+    "rules": [
+      {
+        "pattern": "417_*",
+        "mode": "Auto",
+        "enabled": true,
+        "extensions": []
+      },
+      {
+        "pattern": "акт*",
+        "mode": "Suggest",
+        "enabled": false,
+        "inbox": "D:\\Skype",
+        "extensions": [
+          "pdf"
+        ],
+        "subfolder": "Акты"
+      }
+    ]
+  },
+  "inboxItem": {
+    "entry": {
+      "id": 42,
+      "rootId": 1,
+      "parentId": 7,
+      "name": "Отчёт за 2026.pdf",
+      "fullPath": "D:\\Документы\\Отчёты\\Отчёт за 2026.pdf",
+      "relPath": "Отчёты\\Отчёт за 2026.pdf",
+      "extension": "pdf",
+      "isDirectory": false,
+      "size": 1234567,
+      "createdUtc": "2026-10-01T09:30:00+00:00",
+      "modifiedUtc": "2026-10-10T09:30:00+00:00",
+      "kind": "Pdf",
+      "iconKey": "ext:pdf",
+      "isHidden": false,
+      "isCloudPlaceholder": false,
+      "isFavorite": true,
+      "openCount": 3,
+      "lastOpenedUtc": "2026-10-11T09:30:00+00:00",
+      "tags": [
+        {
+          "id": 5,
+          "name": "работа",
+          "color": "#3366FF"
+        }
+      ]
+    },
+    "inbox": "D:\\Загрузки",
+    "state": "New",
+    "isReady": true,
+    "readyUtc": "2026-10-11T09:30:00+00:00",
+    "decision": "Auto",
+    "matches": [
+      {
+        "workFolder": "D:\\Работа\\417",
+        "destination": "D:\\Работа\\417",
+        "pattern": "417_*",
+        "mode": "Auto"
+      }
+    ]
+  },
+  "preview": {
+    "items": [
+      {
+        "path": "D:\\Загрузки\\акт 417.pdf",
+        "name": "акт 417.pdf",
+        "inbox": "D:\\Загрузки",
+        "decision": "Choice",
+        "willMove": false,
+        "matches": [
+          {
+            "workFolder": "D:\\Работа\\417",
+            "destination": "D:\\Работа\\417",
+            "pattern": "417",
+            "mode": "Auto"
+          },
+          {
+            "workFolder": "D:\\Работа\\417",
+            "destination": "D:\\Работа\\417\\Акты",
+            "pattern": "акт*",
+            "mode": "Suggest"
+          }
+        ]
+      }
+    ]
+  }
+}

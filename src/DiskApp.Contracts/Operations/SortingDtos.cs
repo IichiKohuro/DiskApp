@@ -1,3 +1,4 @@
+using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
 
 namespace DiskApp.Contracts.Operations;
@@ -96,7 +97,61 @@ public sealed record InboxFolderDto(string Path, long? RootId, InboxProblem Prob
 /// <param name="State">Состояние.</param>
 /// <param name="IsReady">Файл пришёл: не меняется дольше «времени успокоения».</param>
 /// <param name="ReadyUtc">С какого момента файл считается пришедшим.</param>
-public sealed record InboxItemDto(EntryDto Entry, string Inbox, InboxState State, bool IsReady, DateTimeOffset ReadyUtc);
+public sealed record InboxItemDto(EntryDto Entry, string Inbox, InboxState State, bool IsReady, DateTimeOffset ReadyUtc)
+{
+    /// <summary>Что подсказывают шаблоны рабочих папок (этап 17.5).</summary>
+    public SortingDecision Decision { get; set; }
+
+    /// <summary>Подошедшие шаблоны: куда класть и почему.</summary>
+    public IReadOnlyList<SortingMatchDto> Matches { get; set; } = [];
+}
+
+/// <summary>Чем кончился подбор рабочей папки по шаблонам (этап 17.5).</summary>
+public enum SortingDecision
+{
+    /// <summary>Ни один шаблон не подошёл.</summary>
+    None,
+
+    /// <summary>Подошла одна папка — предложить её первой.</summary>
+    Suggest,
+
+    /// <summary>Подошла одна папка с «переносить самим» — авторазбор перенесёт файл, когда тот придёт.</summary>
+    Auto,
+
+    /// <summary>Подошли разные папки — выбирает пользователь, сам файл не переносится.</summary>
+    Choice,
+}
+
+/// <summary>Подошедший шаблон рабочей папки.</summary>
+/// <param name="WorkFolder">Путь рабочей папки из настроек.</param>
+/// <param name="Destination">Куда класть: папка или подпапка из шаблона.</param>
+/// <param name="Pattern">Маска шаблона, как задана.</param>
+/// <param name="Mode">Режим шаблона.</param>
+public sealed record SortingMatchDto(string WorkFolder, string Destination, string Pattern, SortingRuleMode Mode);
+
+/// <summary>
+/// Сухой прогон шаблонов: <c>POST /api/v1/sorting/rules/preview</c> (этап 17.5). Ничего не переносит — показывает, что куда
+/// ушло бы из накопителей сейчас.
+/// </summary>
+public sealed record SortingPreviewRequest
+{
+    /// <summary>Рабочие папки с шаблонами, которые проверить (например, несохранённая карточка); <c>null</c> — из настроек.</summary>
+    public IReadOnlyList<SortingFolderDto>? WorkFolders { get; set; }
+}
+
+/// <summary>Итог сухого прогона: файлы накопителей, к которым подошёл хоть один шаблон.</summary>
+/// <param name="Items">Файлы, новые сверху.</param>
+public sealed record SortingPreviewDto(IReadOnlyList<SortingPreviewItemDto> Items);
+
+/// <summary>Файл накопителя в сухом прогоне.</summary>
+/// <param name="Path">Полный путь.</param>
+/// <param name="Name">Имя.</param>
+/// <param name="Inbox">Путь накопителя из настроек.</param>
+/// <param name="Decision">Что подсказывают шаблоны.</param>
+/// <param name="WillMove">Авторазбор перенесёт файл сам: одна папка, «переносить самим», файл пришёл и новый.</param>
+/// <param name="Matches">Подошедшие шаблоны.</param>
+/// <param name="NewName">Имя после переноса по шаблону имени разбора; <c>null</c> — прежнее.</param>
+public sealed record SortingPreviewItemDto(string Path, string Name, string Inbox, SortingDecision Decision, bool WillMove, IReadOnlyList<SortingMatchDto> Matches, string? NewName);
 
 /// <summary>
 /// Состояние файлов накопителя: <c>PUT /api/v1/sorting/inbox/state</c> — «отложить», «оставить здесь» или вернуть в новые.

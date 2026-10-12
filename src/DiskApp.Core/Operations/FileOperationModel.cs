@@ -60,6 +60,16 @@ public enum OperationState
     Cancelled,
 }
 
+/// <summary>Кто поставил операцию.</summary>
+public enum OperationOrigin
+{
+    /// <summary>Пользователь: интерфейс или API.</summary>
+    User,
+
+    /// <summary>Авторазбор по шаблонам рабочих папок (PLAN.md, этап 17.5).</summary>
+    AutoSort,
+}
+
 /// <summary>Решение по конфликту.</summary>
 public enum ConflictResolution
 {
@@ -89,6 +99,7 @@ public enum ConflictResolution
 /// Имена на месте назначения для копирования и переноса, по порядку <paramref name="Sources"/>; <c>null</c> в списке или
 /// без списка — прежнее имя (разбор с переименованием, этап 17).
 /// </param>
+/// <param name="Origin">Кто поставил: пользователь или авторазбор (этап 17.5).</param>
 public sealed record FileOperationRequest(
     FileOperationKind Kind,
     IReadOnlyList<string> Sources,
@@ -96,7 +107,8 @@ public sealed record FileOperationRequest(
     string? NewName = null,
     ConflictPolicy Conflicts = ConflictPolicy.Ask,
     bool Permanent = false,
-    IReadOnlyList<string?>? TargetNames = null);
+    IReadOnlyList<string?>? TargetNames = null,
+    OperationOrigin Origin = OperationOrigin.User);
 
 /// <summary>
 /// Ход операции.
@@ -170,6 +182,9 @@ public sealed record FileOperationInfo(
     /// Что куда перенесено или переименовано (с учётом «оставить оба»); заполняется, когда операция завершилась.
     /// </summary>
     public IReadOnlyList<MovedItem> Moved { get; init; } = [];
+
+    /// <summary>Кто поставил операцию: пользователь или авторазбор.</summary>
+    public OperationOrigin Origin { get; init; }
 }
 
 /// <summary>

@@ -109,7 +109,21 @@ public sealed record OperationDto(
     OperationProgressDto Progress,
     string? Message,
     bool CanUndo,
-    ConflictDto? PendingConflict);
+    ConflictDto? PendingConflict)
+{
+    /// <summary>Кто поставил операцию: пользователь или авторазбор по шаблонам рабочих папок (этап 17.5).</summary>
+    public OperationOrigin Origin { get; set; }
+}
+
+/// <summary>Кто поставил операцию.</summary>
+public enum OperationOrigin
+{
+    /// <summary>Пользователь: интерфейс или API.</summary>
+    User,
+
+    /// <summary>Авторазбор по шаблонам рабочих папок.</summary>
+    AutoSort,
+}
 
 /// <summary>
 /// Ход операции: событие <c>OnOperationProgress</c>.

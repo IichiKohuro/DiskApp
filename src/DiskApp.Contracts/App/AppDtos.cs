@@ -101,6 +101,44 @@ public sealed record SortingFolderDto
 
     /// <summary>У накопителя: в очередь попадают и файлы из подпапок.</summary>
     public bool IncludeSubfolders { get; set; }
+
+    /// <summary>У рабочей папки: шаблоны имён для авторазбора (не больше 20).</summary>
+    public IReadOnlyList<SortingRuleDto> Rules { get; set; } = [];
+}
+
+/// <summary>Что делать с файлом, подходящим к шаблону рабочей папки.</summary>
+public enum SortingRuleMode
+{
+    /// <summary>Только предлагать папку первой на странице «Разбор».</summary>
+    Suggest,
+
+    /// <summary>Переносить самим, когда файл пришёл.</summary>
+    Auto,
+}
+
+/// <summary>
+/// Шаблон имени рабочей папки (этап 17.5): маска имени (glob: <c>417_*</c>, <c>*TCI2*</c>; без <c>*</c> и <c>?</c> — где
+/// угодно в имени) и необязательные условия.
+/// </summary>
+public sealed record SortingRuleDto
+{
+    /// <summary>Маска имени файла, до 100 символов, без разделителей папок.</summary>
+    public string Pattern { get; set; } = string.Empty;
+
+    /// <summary>Переносить самим или только предлагать.</summary>
+    public SortingRuleMode Mode { get; set; } = SortingRuleMode.Auto;
+
+    /// <summary>Шаблон действует.</summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Только для файлов из этого накопителя; пусто — из любого.</summary>
+    public string? Inbox { get; set; }
+
+    /// <summary>Только для этих расширений, без точки; пусто — для любых.</summary>
+    public IReadOnlyList<string> Extensions { get; set; } = [];
+
+    /// <summary>Подпапка рабочей папки, куда класть; пусто — в саму папку.</summary>
+    public string? Subfolder { get; set; }
 }
 
 /// <summary>Знакомство с приложением.</summary>

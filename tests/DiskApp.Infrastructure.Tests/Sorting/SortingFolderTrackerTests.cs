@@ -49,6 +49,24 @@ public sealed class SortingFolderTrackerTests : IAsyncDisposable
     }
 
     [Fact]
+    public void Remap_InboxRenamed_RuleConditionFollows()
+    {
+        // Arrange: шаблон рабочей папки «только из Skype» (этап 17.5)
+        var sorting = new SortingSettings
+        {
+            Inboxes = [new SortingFolder { Path = @"D:\Skype" }],
+            WorkFolders = [new SortingFolder { Path = @"D:\Работа\417", Rules = [new SortingRule { Pattern = "417_*", Inbox = @"D:\Skype" }, new SortingRule { Pattern = "акт*" }] }],
+        };
+
+        // Act
+        var remapped = SortingFolderTracker.Remap(sorting, @"D:\Skype", @"D:\Skype Received", PathNormalizer.Windows);
+
+        // Assert
+        remapped.WorkFolders[0].Rules.Select(static rule => rule.Inbox).ShouldBe([@"D:\Skype Received", null]);
+        remapped.Inboxes[0].Path.ShouldBe(@"D:\Skype Received");
+    }
+
+    [Fact]
     public void Remap_Unrelated_ReturnsSameSettings()
     {
         // Arrange

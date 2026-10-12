@@ -20,6 +20,12 @@ public enum InboxItemState
 
     /// <summary>«Оставить здесь»: больше не предлагается к разбору.</summary>
     Kept = 2,
+
+    /// <summary>
+    /// Новый, но авторазбор его не трогает (этап 17.5): файл вернулся после автопереноса — отменой или вручную. Для интерфейса
+    /// и бейджа — обычный новый.
+    /// </summary>
+    Manual = 3,
 }
 
 /// <summary>Почему накопитель не прочитан.</summary>
@@ -67,7 +73,7 @@ public sealed record InboxSnapshot(IReadOnlyList<InboxFolderStatus> Folders, IRe
     }
 
     /// <summary>Сколько файлов ждут разбора: пришедшие и не отложенные.</summary>
-    public int NewCount => Items.Count(item => item.State == InboxItemState.New && IsReady(item));
+    public int NewCount => Items.Count(item => item.State is InboxItemState.New or InboxItemState.Manual && IsReady(item));
 
     /// <summary>Когда придёт следующий из ещё дописываемых файлов; <c>null</c> — таких нет.</summary>
     public DateTimeOffset? NextReadyUtc => Items.Where(item => !IsReady(item)).Select(static item => (DateTimeOffset?)item.ReadyUtc).Min();

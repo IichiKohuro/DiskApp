@@ -131,6 +131,9 @@ public static class ApiRoutes
         /// <summary>Состояние файлов накопителя: отложить, оставить здесь, вернуть в новые.</summary>
         public const string SortingInboxState = SortingInbox + "/state";
 
+        /// <summary>Сухой прогон шаблонов рабочих папок (этап 17.5): что куда уйдёт из накопителей сейчас.</summary>
+        public const string SortingRulesPreview = Prefix + "/sorting/rules/preview";
+
         /// <summary>Избранное: список (записи) и добавление.</summary>
         public const string Favorites = Prefix + "/favorites";
 

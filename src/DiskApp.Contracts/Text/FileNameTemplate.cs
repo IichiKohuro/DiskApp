@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace DiskApp.UI.Text;
+namespace DiskApp.Contracts.Text;
 
 /// <summary>
 /// Что подставляется в шаблон имени при переносе.

@@ -138,6 +138,9 @@ public sealed record SortingSettings
 /// </summary>
 public sealed record SortingFolder
 {
+    /// <summary>Наибольшее число шаблонов у рабочей папки.</summary>
+    public const int MaxRules = 20;
+
     /// <summary>Полный путь.</summary>
     public string Path { get; set; } = string.Empty;
 
@@ -149,6 +152,97 @@ public sealed record SortingFolder
     /// не используется.
     /// </summary>
     public bool IncludeSubfolders { get; set; }
+
+    /// <summary>
+    /// У рабочей папки: шаблоны имён (этап 17.5) — какие файлы из накопителей класть сюда самим или предлагать первыми.
+    /// У накопителя не используется.
+    /// </summary>
+    public IReadOnlyList<SortingRule> Rules { get; set; } = [];
+
+    /// <summary>Равенство по содержимому: шаблоны сравниваются поэлементно.</summary>
+    public bool Equals(SortingFolder? other)
+        => other is not null && string.Equals(Path, other.Path, StringComparison.Ordinal) && string.Equals(Label, other.Label, StringComparison.Ordinal)
+            && IncludeSubfolders == other.IncludeSubfolders && Rules.SequenceEqual(other.Rules);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Path, StringComparer.Ordinal);
+        hash.Add(Label, StringComparer.Ordinal);
+        hash.Add(IncludeSubfolders);
+        foreach (var rule in Rules)
+        {
+            hash.Add(rule);
+        }
+
+        return hash.ToHashCode();
+    }
+}
+
+/// <summary>Что делать с файлом, подходящим к шаблону рабочей папки (этап 17.5).</summary>
+public enum SortingRuleMode
+{
+    /// <summary>Только предлагать эту папку первой на странице «Разбор».</summary>
+    Suggest = 0,
+
+    /// <summary>Переносить самим, когда файл пришёл (прошло «время успокоения»).</summary>
+    Auto = 1,
+}
+
+/// <summary>
+/// Шаблон имени рабочей папки (PLAN.md, этап 17.5, ADR-0012): маска имени файла и необязательные условия. Маска — glob по
+/// имени: <c>*</c> — любые символы, <c>?</c> — один; маска без <c>*</c> и <c>?</c> ищется в любом месте имени
+/// (<c>417</c> — то же, что <c>*417*</c>).
+/// </summary>
+public sealed record SortingRule
+{
+    /// <summary>Наибольшая длина маски.</summary>
+    public const int MaxPatternLength = 100;
+
+    /// <summary>Наибольшее число расширений в условии.</summary>
+    public const int MaxExtensions = 20;
+
+    /// <summary>Маска имени: <c>417_*</c>, <c>*TCI2*</c>, <c>счёт*.pdf</c>.</summary>
+    public string Pattern { get; set; } = string.Empty;
+
+    /// <summary>Переносить самим или только предлагать.</summary>
+    public SortingRuleMode Mode { get; set; } = SortingRuleMode.Auto;
+
+    /// <summary>Шаблон действует; выключенный хранится, но не применяется.</summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Только для файлов из этого накопителя (путь из списка накопителей); <c>null</c> — из любого.</summary>
+    public string? Inbox { get; set; }
+
+    /// <summary>Только для файлов с этими расширениями, без точки (<c>pdf</c>, <c>docx</c>); пусто — с любыми.</summary>
+    public IReadOnlyList<string> Extensions { get; set; } = [];
+
+    /// <summary>Подпапка рабочей папки, куда класть (<c>Переписка</c>, <c>2026\Акты</c>); <c>null</c> — в саму папку.</summary>
+    public string? Subfolder { get; set; }
+
+    /// <summary>Равенство по содержимому: расширения сравниваются поэлементно.</summary>
+    public bool Equals(SortingRule? other)
+        => other is not null && string.Equals(Pattern, other.Pattern, StringComparison.Ordinal) && Mode == other.Mode && Enabled == other.Enabled
+            && string.Equals(Inbox, other.Inbox, StringComparison.Ordinal) && string.Equals(Subfolder, other.Subfolder, StringComparison.Ordinal)
+            && Extensions.SequenceEqual(other.Extensions, StringComparer.Ordinal);
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Pattern, StringComparer.Ordinal);
+        hash.Add(Mode);
+        hash.Add(Enabled);
+        hash.Add(Inbox, StringComparer.Ordinal);
+        hash.Add(Subfolder, StringComparer.Ordinal);
+        foreach (var extension in Extensions)
+        {
+            hash.Add(extension, StringComparer.Ordinal);
+        }
+
+        return hash.ToHashCode();
+    }
 }
 
 /// <summary>

@@ -49,6 +49,8 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(DropFilesRequest))]
 [JsonSerializable(typeof(InboxDto))]
 [JsonSerializable(typeof(SetInboxStateRequest))]
+[JsonSerializable(typeof(SortingPreviewRequest))]
+[JsonSerializable(typeof(SortingPreviewDto))]
 [JsonSerializable(typeof(NoteDto))]
 [JsonSerializable(typeof(IReadOnlyList<NoteDto>))]
 [JsonSerializable(typeof(NoteDto[]))]

@@ -275,7 +275,7 @@ internal static partial class SettingsEndpoints
     }
 
     // Папки разбора (этап 17): полные пути без повторов, не больше SortingSettings.MaxFolders в списке.
-    private static void ValidateSortingFolders(IReadOnlyList<SortingFolderDto>? folders, string field, Dictionary<string, string[]> errors)
+    internal static void ValidateSortingFolders(IReadOnlyList<SortingFolderDto>? folders, string field, Dictionary<string, string[]> errors)
     {
         folders ??= [];
         if (folders.Count > SortingSettings.MaxFolders)
@@ -295,6 +295,53 @@ internal static partial class SettingsEndpoints
             else if (!seen.Add(path.TrimEnd('\\', '/')))
             {
                 errors[$"{field}[{i}].path"] = [L.T("SettingsEndpoints.FolderListedTwice")];
+            }
+
+            ValidateSortingRules(folders[i].Rules, $"{field}[{i}].rules", errors);
+        }
+    }
+
+    // Шаблоны имён рабочей папки (этап 17.5): маска — имя файла без разделителей папок, условия — полный путь накопителя,
+    // расширения без точки, подпапка — внутри рабочей папки.
+    private static void ValidateSortingRules(IReadOnlyList<SortingRuleDto>? rules, string field, Dictionary<string, string[]> errors)
+    {
+        rules ??= [];
+        if (rules.Count > SortingFolder.MaxRules)
+        {
+            errors[field] = [L.F("SettingsEndpoints.NoMoreThanRules", SortingFolder.MaxRules)];
+            return;
+        }
+
+        for (var j = 0; j < rules.Count; j++)
+        {
+            var rule = rules[j];
+            var pattern = rule.Pattern?.Trim() ?? string.Empty;
+            if (pattern.Length == 0 || pattern.Length > SortingRule.MaxPatternLength || pattern.IndexOfAny(['\\', '/']) >= 0)
+            {
+                errors[$"{field}[{j}].pattern"] = [L.F("SettingsEndpoints.RulePatternInvalid", SortingRule.MaxPatternLength)];
+            }
+
+            if (!Enum.IsDefined(rule.Mode))
+            {
+                errors[$"{field}[{j}].mode"] = [L.T("SettingsEndpoints.RuleModeUnknown")];
+            }
+
+            if (rule.Inbox is { Length: > 0 } inbox && !Path.IsPathFullyQualified(inbox.Trim()))
+            {
+                errors[$"{field}[{j}].inbox"] = [L.T("SettingsEndpoints.AFullFolderPathIsRequired")];
+            }
+
+            var extensions = rule.Extensions ?? [];
+            if (extensions.Count > SortingRule.MaxExtensions || extensions.Any(static extension => extension is null || extension.Trim().Length > 20 || extension.IndexOfAny(['\\', '/', ':', '?', '"', '<', '>', '|']) >= 0))
+            {
+                errors[$"{field}[{j}].extensions"] = [L.F("SettingsEndpoints.RuleExtensionsInvalid", SortingRule.MaxExtensions)];
+            }
+
+            if (Core.Sorting.SortingRuleSet.SubfolderPath(rule.Subfolder) is { } subfolder
+                && (subfolder.Length > 200 || Path.IsPathRooted(subfolder) || subfolder.IndexOfAny([':', '*', '?', '"', '<', '>', '|']) >= 0
+                    || subfolder.Split('\\').Any(static part => part.Trim() is "" or "." or ".." || part.EndsWith('.') || part.EndsWith(' '))))
+            {
+                errors[$"{field}[{j}].subfolder"] = [L.T("SettingsEndpoints.RuleSubfolderInvalid")];
             }
         }
     }

@@ -392,6 +392,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
         {
             // Пока операция идёт, список переносов пополняется на её потоке; читается только после завершения.
             Moved = run.CompletedUtc is null ? [] : [.. run.Moves.Select(static move => new MovedItem(move.From, move.To))],
+            Origin = run.Request.Origin,
         };
     }
 

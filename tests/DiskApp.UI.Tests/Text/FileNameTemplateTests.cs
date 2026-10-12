@@ -1,4 +1,4 @@
-using DiskApp.UI.Text;
+using DiskApp.Contracts.Text;
 
 namespace DiskApp.UI.Tests.Text;
 
