@@ -289,9 +289,9 @@ public sealed class IndexerServiceTests
         // Act
         indexer.OnSystemResumed();
 
-        // Assert
+        // Assert: запись появляется до конца сверки, а статус возвращается к Online после неё — ждём и то и другое
         await WaitUntilAsync(async () => await context.Entries.GetByPathAsync(root.Id, "new.txt", TestContext.Current.CancellationToken) is not null);
-        indexer.GetStatuses().Single(status => status.RootId == root.Id).Status.ShouldBe(RootStatus.Online);
+        await WaitUntilAsync(() => indexer.GetStatuses().Single(status => status.RootId == root.Id).Status == RootStatus.Online);
     }
 
     [Fact]
