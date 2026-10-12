@@ -201,7 +201,7 @@ public sealed class ClientApiTests
         var roots = await withToken.GetRequiredService<IDiskAppApi>().GetRootsAsync(TestContext.Current.CancellationToken);
         var denied = await Should.ThrowAsync<DiskAppApiException>(() => withoutToken.GetRequiredService<IDiskAppApi>().GetRootsAsync(TestContext.Current.CancellationToken));
         await host.StopAsync(TestContext.Current.CancellationToken);
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
 
         // Assert
         roots.ShouldBeEmpty();

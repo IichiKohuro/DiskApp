@@ -90,7 +90,7 @@ internal static class ScanBudgetCheck
         }
         finally
         {
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
             TryDelete(workspace);
         }
     }

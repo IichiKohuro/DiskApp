@@ -41,7 +41,7 @@ internal static class SmokeCheck
         }
         finally
         {
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
             foreach (var file in new[] { database, database + "-wal", database + "-shm" })
             {
                 if (File.Exists(file))

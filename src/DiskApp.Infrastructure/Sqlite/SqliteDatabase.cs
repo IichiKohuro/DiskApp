@@ -96,8 +96,7 @@ public sealed class SqliteDatabase : IDisposable, IAsyncDisposable
     {
         try
         {
-            using var connection = new SqliteConnection(Connections.ConnectionString);
-            connection.Open();
+            using var connection = Connections.OpenWithoutPragmas();
             using var command = connection.CreateCommand();
             command.CommandText = "PRAGMA quick_check";
             using var reader = command.ExecuteReader();

@@ -93,7 +93,7 @@ internal sealed class ServerTestContext : IAsyncDisposable
         Client.Dispose();
         await Host.StopAsync(TestContext.Current.CancellationToken);
         await Host.DisposeAsync();
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
         Files.Dispose();
         Data.Dispose();
     }

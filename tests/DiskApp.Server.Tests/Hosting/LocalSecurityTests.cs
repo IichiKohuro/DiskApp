@@ -165,7 +165,7 @@ public sealed class LocalSecurityTests : IDisposable
 
     public void Dispose()
     {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
         _data.Dispose();
     }
 

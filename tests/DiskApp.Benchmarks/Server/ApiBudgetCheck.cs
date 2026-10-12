@@ -134,7 +134,7 @@ internal static class ApiBudgetCheck
             + $"макс {latencies[^1]:F1} мс, {latencies.Count / wall.Elapsed.TotalSeconds:F0} запросов/с, ошибок {errors}"));
         Console.WriteLine(allOk ? "Бюджет поиска через API выполнен: p95 < 60 мс для всех запросов." : "Бюджет поиска через API НЕ выполнен для части запросов.");
         await host.StopAsync();
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
         return allOk && errors == 0 ? 0 : 1;
     }
 

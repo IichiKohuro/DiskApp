@@ -1,16 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Общие помощники тестов: фикстуры временных папок и баз SQLite с гарантированной очисткой (PLAN.md, этап 0.4).
+  <!-- Общие помощники тестов: временные папки и деревья файлов с гарантированной очисткой (PLAN.md, этап 0.4).
        Библиотека, а не тестовый проект: без xunit, в dotnet test не попадает. Все тестовые проекты получают
-       ссылку на неё и глобальный using DiskApp.Testing автоматически из tests/Directory.Build.targets. -->
+       ссылку на неё и глобальный using DiskApp.Testing автоматически из tests/Directory.Build.targets.
+       Временная база SQLite (TemporaryDatabase) живёт в DiskApp.Infrastructure.Tests: она открывает и сбрасывает пулы
+       через SqliteConnectionFactory, а эта библиотека от src не зависит. -->
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" />
-  </ItemGroup>
 
 </Project>

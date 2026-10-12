@@ -152,7 +152,7 @@ public sealed class DiskAppServerHostTests : IDisposable
 
     public void Dispose()
     {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
         _data.Dispose();
     }
 

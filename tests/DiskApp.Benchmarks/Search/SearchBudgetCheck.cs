@@ -100,7 +100,7 @@ internal static class SearchBudgetCheck
         }
         finally
         {
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
             if (temporary)
             {
                 foreach (var file in new[] { path, path + "-wal", path + "-shm" })

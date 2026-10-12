@@ -1,6 +1,8 @@
+using DiskApp.Infrastructure.Sqlite;
+
 using Microsoft.Data.Sqlite;
 
-namespace DiskApp.Testing;
+namespace DiskApp.Infrastructure.Tests;
 
 /// <summary>
 /// Временная база SQLite в собственной <see cref="TemporaryDirectory"/>: файл появляется при первом открытии соединения,
@@ -9,8 +11,10 @@ namespace DiskApp.Testing;
 /// <remarks>
 /// База файловая, а не <c>:memory:</c>, чтобы тесты видели то же поведение, что и приложение:
 /// журнал WAL, несколько соединений к одному файлу, пул соединений Microsoft.Data.Sqlite.
+/// Соединения открываются и пулы сбрасываются через <see cref="DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory"/>:
+/// тесты идут параллельно, и сброс пулов не должен совпасть с открытием соединения в соседнем тесте.
 /// </remarks>
-public sealed class TemporaryDatabase : IDisposable
+internal sealed class TemporaryDatabase : IDisposable
 {
     private const string DatabaseFileName = "test.db";
 
@@ -52,7 +56,7 @@ public sealed class TemporaryDatabase : IDisposable
         var connection = new SqliteConnection(ConnectionString);
         try
         {
-            connection.Open();
+            SqliteConnectionFactory.OpenPooled(connection);
             return connection;
         }
         catch
@@ -69,7 +73,7 @@ public sealed class TemporaryDatabase : IDisposable
     /// </summary>
     public void Dispose()
     {
-        SqliteConnection.ClearAllPools();
+        SqliteConnectionFactory.ClearAllPools();
 
         Directory.Dispose();
     }

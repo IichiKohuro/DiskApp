@@ -140,7 +140,7 @@ dotnet format --verify-no-changes
 | `tests/DiskApp.Infrastructure.Tests` | SQLite, миграции, FTS5, файловая система, наблюдатель | то же + фикстуры |
 | `tests/DiskApp.Server.Tests` | endpoints, хаб SignalR, hosted services | то же + Kestrel на `127.0.0.1:0` |
 | `tests/DiskApp.UI.Tests` | ViewModels и представления на headless-платформе Avalonia | то же + `Avalonia.Headless`, `HeadlessTest.RunAsync` |
-| `tests/DiskApp.Testing` | общие фикстуры; не тестовый проект, подключается ко всем тестовым проектам автоматически (`tests/Directory.Build.targets`) | Microsoft.Data.Sqlite |
+| `tests/DiskApp.Testing` | общие фикстуры; не тестовый проект, подключается ко всем тестовым проектам автоматически (`tests/Directory.Build.targets`) | без зависимостей от `src/` |
 | `tests/DiskApp.Benchmarks` | бюджеты производительности (PLAN.md, раздел 8); не входит в `dotnet test` | BenchmarkDotNet |
 
 Пирамида: модульные тесты Core → интеграционные Infrastructure и Server → headless UI → ручной чеклист (`docs/QA_CHECKLIST.md`). Пакеты xunit, Shouldly, NSubstitute и глобальные `using` для них тестовые проекты получают из `tests/Directory.Build.targets`, в `.csproj` они не повторяются.
@@ -197,7 +197,7 @@ public sealed class QueryParserTests
 
 ### Фикстуры
 
-Временные папки и базы — только через фикстуры из `DiskApp.Testing`: они гарантируют очистку даже при падении теста.
+Временные папки и базы — только через фикстуры: `TemporaryDirectory` из `DiskApp.Testing` и `TemporaryDatabase` из `DiskApp.Infrastructure.Tests`. Они гарантируют очистку даже при падении теста.
 
 ```csharp
 [Fact]
@@ -216,6 +216,7 @@ public void Scan_FolderWithNestedFiles_IndexesAllEntries()
 
 - `TemporaryDirectory` — уникальная папка в `%TEMP%\DiskApp.Tests`; `CreateFile`, `CreateDirectory` и `Resolve` не выпускают за её пределы; `Dispose` снимает атрибут «только для чтения» и удаляет всё с повторными попытками.
 - `TemporaryDatabase` — файловая база SQLite в собственной `TemporaryDirectory` (а не `:memory:`, чтобы проверять WAL и несколько соединений); `OpenConnection()` возвращает открытое соединение, `Dispose` сбрасывает пул соединений и удаляет папку.
+- Пулы SQLite в тестах и замерах сбрасываются только через `SqliteConnectionFactory.ClearAllPools()`, а не `SqliteConnection.ClearAllPools()`: тесты идут параллельно, и сброс пулов без общей блокировки закрывает соединение, которое в этот миг открывает соседний тест (см. docs/ARCHITECTURE.md, этап 1.3).
 - Общая на класс фикстура (`IClassFixture<T>`) — только для дорогих ресурсов, например базы на тысячи записей; по умолчанию каждый тест создаёт своё.
 - Нестабильный тест помечается `[Fact(Skip = "…")]` со ссылкой на задачу и чинится, а не удаляется.
 

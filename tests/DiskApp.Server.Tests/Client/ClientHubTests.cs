@@ -129,7 +129,7 @@ public sealed class ClientHubTests
         files.CreateFile(Path.Combine("docs", "after-restart.txt"), "a");
         var batch = await changed.Task.WaitAsync(Wait, TestContext.Current.CancellationToken);
         await second.StopAsync(TestContext.Current.CancellationToken);
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        DiskApp.Infrastructure.Sqlite.SqliteConnectionFactory.ClearAllPools();
 
         // Assert
         states.ShouldContain(HubConnectionState.Reconnecting);
