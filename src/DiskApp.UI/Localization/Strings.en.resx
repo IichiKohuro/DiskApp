@@ -2929,34 +2929,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>A tag set on a folder goes to every file inside, including files that arrive later; tag: finds them. On Sorting, right-click a work folder → “Auto-tags…”; in Browse, “Folder auto-tags…” in the folder or tree menu. Such tags have an outline on their chips.</value>
+    <value>A new Notes page: Markdown notes with their own tags, search and pinning. The first line is the title, saving is automatic; Ctrl+N makes a new note.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Folder auto-tags</value>
+    <value>Notes</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>Sorting shows a file once its download has finished, and “Still downloading” while it hasn't. Partial downloads, service and hidden files don't appear.</value>
+    <value>In Preview, - [ ] check boxes toggle with a click and paths to folders and files open. A deleted note stays in the trash for 30 days, with Undo right away.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Files arrive when downloaded</value>
+    <value>Check boxes and links in notes</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Right-click a file on Sorting: “Postpone” moves it to the end, “Keep here” stops offering it. The badge and the tray tooltip count only new files.</value>
+    <value>One row at the bottom: destination, Name, Tags and Move. The name template and tags sit behind buttons that show what is set; the work folder number is a separate keycap.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Postpone or keep here</value>
+    <value>Simpler sorting</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Right-click the Downloads chip → “Include subfolders” to list files from messenger folders inside the inbox too.</value>
+    <value>Double-click a file on the Sorting page to open it; the row menu has Open and Show in folder.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Inbox subfolders</value>
+    <value>Look at a file before sorting it</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>A finished download shows up on Sorting by itself, and your selection stays. Waiting time and what to hide — Settings → Inbox → Inbox queue.</value>
+    <value>Drag the divider between inboxes and work folders, or next to the notes list; the width is remembered. A work folder added to the index is no longer marked “not found” by mistake.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>The list updates itself</value>
+    <value>Panel width</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>
