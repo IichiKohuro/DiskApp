@@ -3,7 +3,7 @@ using Dapper;
 namespace DiskApp.Infrastructure.Tests.Fixtures;
 
 /// <summary>
-/// Проверки фикстуры <see cref="TemporaryDatabase"/> из DiskApp.Testing: файловая база создаётся по требованию,
+/// Проверки фикстуры <see cref="TemporaryDatabase"/>: файловая база создаётся по требованию,
 /// переживает несколько соединений и бесследно удаляется вместе с журналом WAL и пулом соединений.
 /// </summary>
 public sealed class TemporaryDatabaseTests
