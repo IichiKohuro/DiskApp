@@ -3454,4 +3454,16 @@
   <data name="Sorting.NameDateTimeLast" xml:space="preserve">
     <value>Дата и время в конце</value>
   </data>
+  <data name="Sorting.MoveFailedOf" xml:space="preserve">
+    <value>Не удалось перенести {0}</value>
+  </data>
+  <data name="Sorting.MoveFailedUnknown" xml:space="preserve">
+    <value>Операция не удалась — подробности на странице «Операции».</value>
+  </data>
+  <data name="Sorting.MoveRunning" xml:space="preserve">
+    <value>Переношу {0} — ход на странице «Операции».</value>
+  </data>
+  <data name="Sorting.Retry" xml:space="preserve">
+    <value>Повторить</value>
+  </data>
 </root>

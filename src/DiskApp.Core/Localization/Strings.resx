@@ -258,4 +258,10 @@
   <data name="WindowsPlatformShell.WindowsDidNotMoveItTo" xml:space="preserve">
     <value>Windows не переместила в корзину (код {0}).</value>
   </data>
+  <data name="FileOperation.InUse" xml:space="preserve">
+    <value>«{0}» открыт в другой программе — закройте его там и повторите.</value>
+  </data>
+  <data name="FileOperation.InUseBy" xml:space="preserve">
+    <value>«{0}» открыт в программе {1} — закройте его там и повторите.</value>
+  </data>
 </root>

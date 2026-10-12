@@ -150,6 +150,58 @@ public sealed class SortingViewModelTests
     }
 
     [Fact]
+    public async Task Move_Failed_FileComesBackWithReasonAndRetry()
+    {
+        // Arrange: файл открыт в Excel — перенос не удался, а «Разбор» показывал «→ МОИ» (замечание 2026-10-12)
+        const string reason = "«ТЗ 417.docx» открыт в программе Microsoft Excel — закройте его там и повторите.";
+        _operations.SortState = FileOperationState.Failed;
+        _operations.SortMessage = reason;
+        Action? retry = null;
+        _notices.When(notices => notices.Show("Не удалось перенести «ТЗ 417.docx»", reason, FAInfoBarSeverity.Error, "Повторить", Arg.Any<Action>()))
+            .Do(call => retry = call.ArgAt<Action>(4));
+        var page = await CreateLoadedAsync();
+        page.SetSelection([page.Items.Single(static item => item.Entry.Name == "ТЗ 417.docx")]);
+        page.SelectWorkFolderByNumberCommand.Execute(2);
+
+        // Act
+        await page.MoveCommand.ExecuteAsync(null);
+        var back = page.Items.Any(static item => item.Entry.Name == "ТЗ 417.docx");
+        var successBeforeRetry = _notices.ReceivedCalls().Any(static call => call.GetArguments() is [_, _, FAInfoBarSeverity.Success, ..]);
+        _operations.SortState = FileOperationState.Completed;
+        retry.ShouldNotBeNull().Invoke();
+        var retried = await WaitAsync(() => _operations.Sorted.Count == 2);
+
+        // Assert
+        back.ShouldBeTrue("файл остался в накопителе — он снова в списке");
+        successBeforeRetry.ShouldBeFalse("«→ 417» с «Отменить» не показывается, пока файл не перенесён");
+        retried.ShouldBeTrue();
+        _operations.Sorted[1].ShouldBe(_operations.Sorted[0], "«Повторить» отправляет тот же перенос");
+        (await WaitAsync(() => _notices.ReceivedCalls().Any(call => call.GetArguments() is [string title, string text, FAInfoBarSeverity.Success, ..] && title == "Разбор" && text.StartsWith("«ТЗ 417.docx» → 417", StringComparison.Ordinal))))
+            .ShouldBeTrue("после «Повторить» — обычный итог с «Отменить»");
+    }
+
+    [Fact]
+    public async Task Move_StillRunning_ReportsOnlyWhenFinished()
+    {
+        // Arrange: долгий перенос с диска на диск — итог приходит событием очереди
+        _operations.SortState = FileOperationState.Running;
+        var page = await CreateLoadedAsync();
+        page.SetSelection([page.Items[0]]);
+        page.SelectWorkFolderByNumberCommand.Execute(2);
+
+        // Act
+        var moving = page.MoveCommand.ExecuteAsync(null);
+        var running = await WaitForOperationAsync();
+        var reportedEarly = _notices.ReceivedCalls().Any(static call => call.GetArguments() is [_, _, FAInfoBarSeverity.Success, ..]);
+        _operations.Report(running with { State = FileOperationState.Completed, CanUndo = true });
+        await moving.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        // Assert
+        reportedEarly.ShouldBeFalse("пока операция идёт, «→ 417» не показывается");
+        _notices.Received(1).Show("Разбор", Arg.Is<string>(text => text.EndsWith("→ 417", StringComparison.Ordinal)), FAInfoBarSeverity.Success, "Отменить", Arg.Any<Action>());
+    }
+
+    [Fact]
     public async Task Move_WithoutSelectionOrDestination_IsDisabled()
     {
         // Arrange
@@ -831,6 +883,37 @@ public sealed class SortingViewModelTests
         _library.GetAutoTagsAsync(Arg.Any<CancellationToken>()).Returns(folders);
         _library.SetAutoTagsAsync(Arg.Any<string>(), Arg.Any<IReadOnlyList<string>>(), Arg.Any<CancellationToken>())
             .Returns(static call => new FolderTagsInfo(call.ArgAt<string>(0), []));
+    }
+
+    private static async Task<bool> WaitAsync(Func<bool> done)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (!done())
+        {
+            if (DateTime.UtcNow > deadline)
+            {
+                return false;
+            }
+
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+
+        return true;
+    }
+
+    private async Task<OperationInfo> WaitForOperationAsync()
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+        while (true)
+        {
+            if ((await _operations.GetAllAsync(TestContext.Current.CancellationToken)).FirstOrDefault(static info => info.IsActive) is { } running)
+            {
+                return running;
+            }
+
+            DateTime.UtcNow.ShouldBeLessThan(deadline, "перенос так и не начался");
+            await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
     }
 
     private void Listing(string path, params FileEntry[] items)

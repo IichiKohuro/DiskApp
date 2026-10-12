@@ -78,7 +78,8 @@ public static class ServerServiceCollectionExtensions
             provider.GetRequiredService<FileOperationOptions>(),
             provider.GetService<IPlatformShell>(),
             provider.GetRequiredService<IPathChangeSink>(),
-            provider.GetRequiredService<ILogger<FileOperationService>>()));
+            provider.GetRequiredService<ILogger<FileOperationService>>(),
+            provider.GetService<IFileLockInspector>()));
         services.AddSingleton(static provider => new SortingService(
             provider.GetRequiredService<FileOperationService>(),
             new System.IO.Abstractions.FileSystem(),

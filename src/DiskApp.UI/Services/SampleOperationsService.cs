@@ -56,6 +56,15 @@ public sealed class SampleOperationsService : IOperationsService
     /// <summary>Переносы разбора по порядку (для тестов).</summary>
     public List<SortOperation> Sorted { get; } = [];
 
+    /// <summary>
+    /// В каком состоянии сразу вернётся перенос (тесты): завершён, не удался или ещё идёт — тогда итог сообщает
+    /// <see cref="Report"/>.
+    /// </summary>
+    public FileOperationState SortState { get; set; } = FileOperationState.Completed;
+
+    /// <summary>Сообщение неудавшегося переноса (тесты).</summary>
+    public string? SortMessage { get; set; }
+
     /// <inheritdoc />
     public Task<OperationInfo> SortAsync(SortOperation operation, CancellationToken cancellationToken = default)
     {
@@ -65,11 +74,12 @@ public sealed class SampleOperationsService : IOperationsService
         {
             Id = Guid.NewGuid(),
             Kind = FileOperationKind.Move,
-            State = FileOperationState.Completed,
+            State = SortState,
             Sources = operation.Sources,
             Destination = operation.NewFolder is { } folder ? Path.Combine(operation.Destination, folder) : operation.Destination,
             Created = DateTimeOffset.Now,
-            CanUndo = true,
+            Message = SortState == FileOperationState.Failed ? SortMessage : null,
+            CanUndo = SortState == FileOperationState.Completed,
         };
         Report(info);
         return Task.FromResult(info);

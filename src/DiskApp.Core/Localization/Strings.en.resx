@@ -258,4 +258,10 @@
   <data name="WindowsPlatformShell.WindowsDidNotMoveItTo" xml:space="preserve">
     <value>Windows did not move it to the Recycle Bin (code {0}).</value>
   </data>
+  <data name="FileOperation.InUse" xml:space="preserve">
+    <value>“{0}” is open in another program — close it there and try again.</value>
+  </data>
+  <data name="FileOperation.InUseBy" xml:space="preserve">
+    <value>“{0}” is open in {1} — close it there and try again.</value>
+  </data>
 </root>

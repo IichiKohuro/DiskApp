@@ -752,9 +752,17 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         var items = _selection.ToArray();
         var tags = Tags.ToArray();
         var names = NewNames(items, tags, target);
+        var what = items.Length == 1 ? $"«{items[0].Entry.Name}»" : Formatting.Count(items.Length, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"));
+        var message = tags.Length > 0 ? L.F("Sorting.MovedWithTags", what, DescribePath(target), string.Join(", ", tags)) : L.F("Sorting.Moved", what, DescribePath(target));
+        if (items.Length == 1 && names?[0] is { } renamed)
+        {
+            message += L.F("Sorting.RenamedTo", renamed);
+        }
+
+        var move = new PendingMove(new SortOperation([.. items.Select(static item => item.Entry.FullPath)], destination, newFolder, tags, names), what, message);
         try
         {
-            var operation = await _operations.SortAsync(new SortOperation([.. items.Select(static item => item.Entry.FullPath)], destination, newFolder, tags, names));
+            var operation = await _operations.SortAsync(move.Request);
             foreach (var item in items)
             {
                 _all.Remove(item);
@@ -771,21 +779,88 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             }
 
             await RememberNameTemplateAsync();
-
-            var what = items.Length == 1 ? $"«{items[0].Entry.Name}»" : Formatting.Count(items.Length, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"));
-            var message = tags.Length > 0 ? L.F("Sorting.MovedWithTags", what, DescribePath(target), string.Join(", ", tags)) : L.F("Sorting.Moved", what, DescribePath(target));
-            if (items.Length == 1 && names?[0] is { } renamed)
-            {
-                message += L.F("Sorting.RenamedTo", renamed);
-            }
-            if (_notices is not null)
-            {
-                _notices.Show(L.T("Sorting.Title"), message, FAInfoBarSeverity.Success, L.T("Sorting.Undo"), () => _ = UndoAsync(operation.Id));
-            }
+            await FinishMoveAsync(operation, move);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             _notices?.Show(L.T("Sorting.MoveFailed"), exception.Message, FAInfoBarSeverity.Error);
+        }
+    }
+
+    // Итог переноса — только когда операция закончилась (замечание 2026-10-12: файл, открытый в Excel, не переносился,
+    // а «Разбор» уже показал «→ МОИ»). Не удалось — файлы возвращаются в список, причина видна, есть «Повторить».
+    private async Task FinishMoveAsync(OperationInfo operation, PendingMove move)
+    {
+        var result = operation.IsActive ? await WaitFinishedAsync(operation.Id, move) : operation;
+        switch (result.State)
+        {
+            case FileOperationState.Completed:
+                _notices?.Show(L.T("Sorting.Title"), move.Message, FAInfoBarSeverity.Success, L.T("Sorting.Undo"), () => _ = UndoAsync(result.Id));
+                break;
+            case FileOperationState.Failed:
+                await LoadInboxesAsync();
+                _notices?.Show(L.F("Sorting.MoveFailedOf", move.What), result.Message ?? L.T("Sorting.MoveFailedUnknown"), FAInfoBarSeverity.Error,
+                    L.T("Sorting.Retry"), () => _ = RetryMoveAsync(move));
+                break;
+            default:
+                await LoadInboxesAsync();
+                break;
+        }
+    }
+
+    private async Task RetryMoveAsync(PendingMove move)
+    {
+        try
+        {
+            await FinishMoveAsync(await _operations.SortAsync(move.Request), move);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.T("Sorting.MoveFailed"), exception.Message, FAInfoBarSeverity.Error);
+        }
+    }
+
+    // Итог приходит событием очереди; на случай пропущенного события — опрос, сначала часто, потом раз в несколько
+    // секунд. Долгий перенос (с диска на диск) ждётся сколько нужно: о нём сообщается, что он идёт.
+    private async Task<OperationInfo> WaitFinishedAsync(Guid id, PendingMove move)
+    {
+        var finished = new TaskCompletionSource<OperationInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
+        void OnUpdated(object? sender, OperationInfo info)
+        {
+            if (info.Id == id && !info.IsActive)
+            {
+                finished.TrySetResult(info);
+            }
+        }
+
+        _operations.Updated += OnUpdated;
+        try
+        {
+            var started = DateTimeOffset.UtcNow;
+            var announced = false;
+            for (var attempt = 0; ; attempt++)
+            {
+                if ((await _operations.GetAllAsync()).FirstOrDefault(info => info.Id == id) is { IsActive: false } known)
+                {
+                    return known;
+                }
+
+                if (!announced && DateTimeOffset.UtcNow - started > TimeSpan.FromSeconds(2))
+                {
+                    announced = true;
+                    _notices?.Show(L.T("Sorting.Title"), L.F("Sorting.MoveRunning", move.What), FAInfoBarSeverity.Informational);
+                }
+
+                var delay = Task.Delay(TimeSpan.FromMilliseconds(attempt < 10 ? 300 : 3000));
+                if (await Task.WhenAny(finished.Task, delay) == finished.Task)
+                {
+                    return await finished.Task;
+                }
+            }
+        }
+        finally
+        {
+            _operations.Updated -= OnUpdated;
         }
     }
 
@@ -1685,4 +1760,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             _notices?.Show(L.T("Sorting.Undo"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
+
+    // Перенос, каким его попросили: запрос для «Повторить» и подписи уведомлений.
+    private sealed record PendingMove(SortOperation Request, string What, string Message);
 }

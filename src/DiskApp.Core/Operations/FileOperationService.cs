@@ -58,6 +58,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
     private readonly FileOperationOptions _options;
     private readonly IPlatformShell? _shell;
     private readonly IPathChangeSink? _changes;
+    private readonly IFileLockInspector? _locks;
     private readonly ILogger _logger;
     private readonly Channel<OperationRun> _queue = Channel.CreateUnbounded<OperationRun>(new UnboundedChannelOptions { SingleReader = true });
     private readonly Lock _gate = new();
@@ -79,7 +80,8 @@ public sealed partial class FileOperationService : IAsyncDisposable
         FileOperationOptions? options = null,
         IPlatformShell? shell = null,
         IPathChangeSink? changes = null,
-        ILogger<FileOperationService>? logger = null)
+        ILogger<FileOperationService>? logger = null,
+        IFileLockInspector? locks = null)
     {
         _fs = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
         _events = events ?? throw new ArgumentNullException(nameof(events));
@@ -88,6 +90,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
         _options = options ?? new FileOperationOptions();
         _shell = shell;
         _changes = changes;
+        _locks = locks;
         _logger = (ILogger?)logger ?? NullLogger.Instance;
         _idle.TrySetResult();
         _worker = Task.Run(WorkAsync);
@@ -302,6 +305,22 @@ public sealed partial class FileOperationService : IAsyncDisposable
     }
 
     private static bool IsFinished(OperationState state) => state is OperationState.Completed or OperationState.Failed or OperationState.Cancelled;
+
+    // Ошибка по элементу для пользователя. Занятый файл (ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION) объясняется
+    // по-человечески и с названием программы, которая его держит: «открыт в Microsoft Excel — закройте его и повторите».
+    private string Describe(string source, Exception exception)
+    {
+        if (exception is IOException && (exception.HResult & 0xFFFF) is 32 or 33)
+        {
+            var applications = _locks?.FindLockingApplications(source) ?? [];
+            var name = Path.GetFileName(source.TrimEnd('\\', '/')) is { Length: > 0 } fileName ? fileName : source;
+            return applications.Count > 0
+                ? L.F("FileOperation.InUseBy", name, string.Join(", ", applications))
+                : L.F("FileOperation.InUse", name);
+        }
+
+        return $"«{source}»: {exception.Message}";
+    }
 
     private static bool CanUndo(OperationRun run)
         => run.State == OperationState.Completed
@@ -646,7 +665,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            context.Errors.Add($"«{source}»: {exception.Message}");
+            context.Errors.Add(Describe(source, exception));
             return null;
         }
     }
@@ -800,7 +819,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                context.Errors.Add($"«{source}»: {exception.Message}");
+                context.Errors.Add(Describe(source, exception));
             }
 
             AddProgress(run, items: 1, bytes: 0, path: null);
@@ -951,7 +970,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                context.Errors.Add($"«{source}»: {exception.Message}");
+                context.Errors.Add(Describe(source, exception));
             }
 
             AddProgress(run, items: 1, bytes: 0, path: null);

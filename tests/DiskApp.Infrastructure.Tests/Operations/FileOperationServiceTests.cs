@@ -431,6 +431,30 @@ public sealed class FileOperationServiceTests : IAsyncDisposable
         _root.Dispose();
     }
 
+    [Theory]
+    [InlineData("Microsoft Excel", "«Пароли.csv» открыт в программе Microsoft Excel — закройте его там и повторите.")]
+    [InlineData(null, "«Пароли.csv» открыт в другой программе — закройте его там и повторите.")]
+    public async Task Move_FileOpenInAnotherProgram_FailsSayingWhichToClose(string? application, string expected)
+    {
+        Assert.SkipUnless(OperatingSystem.IsWindows(), "Занятый файл не переносится только в Windows.");
+
+        // Arrange: файл держит открытым другая программа — как Excel держал «Пароли Brave.csv» (замечание 2026-10-12)
+        var file = _root.CreateFile(Path.Combine("src", "Пароли.csv"), "сайт;логин");
+        var destination = _root.CreateDirectory("dest");
+        await using var service = new FileOperationService(new System.IO.Abstractions.FileSystem(), _events, SystemClock.Instance, PathNormalizer.Current,
+            locks: new FixedLocks(application));
+        using var held = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+        // Act
+        var info = await RunAsync(service, new FileOperationRequest(FileOperationKind.Move, [file], destination));
+
+        // Assert
+        info.State.ShouldBe(OperationState.Failed);
+        info.Message.ShouldNotBeNull().ShouldContain(expected);
+        File.Exists(file).ShouldBeTrue();
+        File.Exists(Path.Combine(destination, "Пароли.csv")).ShouldBeFalse();
+    }
+
     private FileOperationService Service(FileOperationOptions? options = null)
         => _service ??= new FileOperationService(new System.IO.Abstractions.FileSystem(), _events, SystemClock.Instance, PathNormalizer.Current, options, _shell, _sink);
 
@@ -451,6 +475,11 @@ public sealed class FileOperationServiceTests : IAsyncDisposable
         }
 
         condition().ShouldBeTrue("условие не выполнилось за отведённое время");
+    }
+
+    private sealed class FixedLocks(string? application) : IFileLockInspector
+    {
+        public IReadOnlyList<string> FindLockingApplications(string path) => application is null ? [] : [application];
     }
 
     private sealed class RecordingSink : IPathChangeSink

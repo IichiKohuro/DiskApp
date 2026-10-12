@@ -3454,4 +3454,16 @@ Project folder: D:\Work\417</value>
   <data name="Sorting.NameDateTimeLast" xml:space="preserve">
     <value>Date and time last</value>
   </data>
+  <data name="Sorting.MoveFailedOf" xml:space="preserve">
+    <value>Couldn't move {0}</value>
+  </data>
+  <data name="Sorting.MoveFailedUnknown" xml:space="preserve">
+    <value>The operation failed — see the Operations page for details.</value>
+  </data>
+  <data name="Sorting.MoveRunning" xml:space="preserve">
+    <value>Moving {0} — progress is on the Operations page.</value>
+  </data>
+  <data name="Sorting.Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
 </root>
