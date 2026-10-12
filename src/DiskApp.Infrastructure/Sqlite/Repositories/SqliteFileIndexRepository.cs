@@ -124,6 +124,23 @@ public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepo
     }
 
     /// <inheritdoc />
+    public Task<IReadOnlyList<FileEntry>> GetSubtreeFilesAsync(long rootId, string relPath, int limit, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(relPath);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
+        var path = _paths.NormalizeRelative(relPath);
+        var (from, to) = DescendantRange(path);
+        var sql = path.Length == 0
+            ? $"SELECT {EntryRow.Columns} FROM entries WHERE root_id = @RootId AND is_dir = 0 ORDER BY modified_utc DESC LIMIT @Limit"
+            : $"SELECT {EntryRow.Columns} FROM entries WHERE root_id = @RootId AND is_dir = 0 AND rel_path >= @From AND rel_path < @To ORDER BY modified_utc DESC LIMIT @Limit";
+
+        return ReadAsync<IReadOnlyList<FileEntry>>(connection => connection
+            .Query<EntryRow>(sql, new { RootId = rootId, From = from, To = to, Limit = limit })
+            .Select(static row => row.ToEntry())
+            .ToArray(), cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Task<int> DeleteSubtreeAsync(long rootId, string relPath, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(relPath);

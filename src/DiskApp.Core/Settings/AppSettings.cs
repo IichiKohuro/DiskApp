@@ -62,6 +62,12 @@ public sealed record SortingSettings
     /// <summary>Наибольшее число папок в каждом списке.</summary>
     public const int MaxFolders = 50;
 
+    /// <summary>Наибольшее «время успокоения», секунд.</summary>
+    public const int MaxSettleSeconds = 600;
+
+    /// <summary>Наибольшее число шаблонов игнора.</summary>
+    public const int MaxIgnorePatterns = 50;
+
     /// <summary>Накопители в порядке показа.</summary>
     public IReadOnlyList<SortingFolder> Inboxes { get; set; } = [];
 
@@ -84,10 +90,27 @@ public sealed record SortingSettings
     /// </summary>
     public string? NameTemplate { get; set; }
 
+    /// <summary>
+    /// «Время успокоения» (PLAN.md, этап 17.1): файл в накопителе считается пришедшим, когда не меняется столько секунд —
+    /// загрузка завершена. До этого он не предлагается к разбору.
+    /// </summary>
+    public int SettleSeconds { get; set; } = 5;
+
+    /// <summary>
+    /// Временные и служебные файлы, которых нет в очереди накопителей (glob по имени): недокачанное, файлы блокировки
+    /// Office, служебные файлы Проводника. Скрытые и системные файлы в очередь не попадают и без этого списка.
+    /// </summary>
+    public IReadOnlyList<string> IgnorePatterns { get; set; } = DefaultIgnorePatterns;
+
+    /// <summary>Шаблоны игнора по умолчанию.</summary>
+    public static IReadOnlyList<string> DefaultIgnorePatterns { get; } =
+        ["*.crdownload", "*.part", "*.partial", "*.download", "*.tmp", "~$*", "desktop.ini", "Thumbs.db", ".DS_Store"];
+
     /// <summary>Равенство по содержимому: списки сравниваются поэлементно.</summary>
     public bool Equals(SortingSettings? other)
         => other is not null && Inboxes.SequenceEqual(other.Inboxes) && WorkFolders.SequenceEqual(other.WorkFolders) && NameTemplate == other.NameTemplate
-            && string.Equals(MainInbox, other.MainInbox, StringComparison.Ordinal);
+            && string.Equals(MainInbox, other.MainInbox, StringComparison.Ordinal)
+            && SettleSeconds == other.SettleSeconds && IgnorePatterns.SequenceEqual(other.IgnorePatterns, StringComparer.Ordinal);
 
     /// <inheritdoc />
     public override int GetHashCode()
@@ -100,6 +123,11 @@ public sealed record SortingSettings
 
         hash.Add(NameTemplate);
         hash.Add(MainInbox);
+        hash.Add(SettleSeconds);
+        foreach (var pattern in IgnorePatterns)
+        {
+            hash.Add(pattern, StringComparer.Ordinal);
+        }
 
         return hash.ToHashCode();
     }
@@ -115,6 +143,12 @@ public sealed record SortingFolder
 
     /// <summary>Подпись; <c>null</c> — имя папки.</summary>
     public string? Label { get; set; }
+
+    /// <summary>
+    /// У накопителя: в очередь попадают и файлы из подпапок (этап 17.1); иначе — только лежащие прямо в нём. У рабочей папки
+    /// не используется.
+    /// </summary>
+    public bool IncludeSubfolders { get; set; }
 }
 
 /// <summary>

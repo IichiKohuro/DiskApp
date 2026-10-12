@@ -59,8 +59,31 @@ public sealed partial class InboxFilter : ObservableObject
 /// <summary>Файл или папка из накопителя.</summary>
 /// <param name="Entry">Запись индекса.</param>
 /// <param name="Inbox">Накопитель, где лежит.</param>
-public sealed record SortItem(FileEntry Entry, SortingFolderInfo Inbox)
+/// <param name="State">Состояние в очереди (этап 17.1): новый, отложен или оставлен здесь.</param>
+public sealed record SortItem(FileEntry Entry, SortingFolderInfo Inbox, InboxItemState State = InboxItemState.New)
 {
+    /// <summary>Отложен (этап 17.1): в конце списка, не считается в бейдже.</summary>
+    public bool IsPostponed => State == InboxItemState.Postponed;
+
+    /// <summary>«Оставить здесь»: виден, только если показаны оставленные.</summary>
+    public bool IsKept => State == InboxItemState.Kept;
+
+    /// <summary>Файл не новый: строку можно вернуть в новые.</summary>
+    public bool HasState => State != InboxItemState.New;
+
+    /// <summary>Пометка состояния под именем; у нового — пусто.</summary>
+    public string StateText => State switch
+    {
+        InboxItemState.Postponed => L.T("Sorting.StatePostponed"),
+        InboxItemState.Kept => L.T("Sorting.StateKept"),
+        _ => string.Empty,
+    };
+
+    /// <summary>
+    /// Та же строка при обновлении очереди: тот же путь, состояние и время изменения — тогда выделение в списке сохраняется.
+    /// </summary>
+    public string Key => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{Entry.FullPath}|{(int)State}|{Entry.Modified.UtcTicks}");
+
     /// <summary>Когда изменён — для строки списка.</summary>
     public string ModifiedText => Formatting.RelativeTime(Entry.Modified, DateTimeOffset.Now);
 
@@ -205,6 +228,11 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private readonly IRootsService _roots;
     private readonly IDialogService? _dialogs;
     private readonly IInfoBarService? _notices;
+    private readonly IInboxService _inbox;
+    private readonly IDispatcher? _dispatcher;
+    private CancellationTokenSource? _inboxReload;
+    private CancellationTokenSource? _readyTimer;
+    private Task _inboxLoad = Task.CompletedTask;
     private readonly List<SortItem> _all = [];
     private IReadOnlyList<SortItem> _selection = [];
     private IReadOnlyList<string> _allTags = [];
@@ -219,6 +247,17 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <summary>
     /// Создаёт страницу.
     /// </summary>
+    /// <param name="settings">Накопители и рабочие папки.</param>
+    /// <param name="browse">Листинг папок: дерево назначения.</param>
+    /// <param name="operations">Очередь операций: перенос.</param>
+    /// <param name="search">Поиск папок.</param>
+    /// <param name="library">Теги и авто-теги.</param>
+    /// <param name="roots">Корни: добавить папку вне индекса.</param>
+    /// <param name="dialogs">Диалоги.</param>
+    /// <param name="notices">Уведомления.</param>
+    /// <param name="clock">Часы.</param>
+    /// <param name="inbox">Очередь накопителей (этап 17.1); <c>null</c> — по листингу папок (превью, тесты).</param>
+    /// <param name="dispatcher">UI-поток для событий очереди; <c>null</c> — вызывать сразу.</param>
     public SortingViewModel(
         ISortingSettings settings,
         IBrowseService browse,
@@ -228,7 +267,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         IRootsService roots,
         IDialogService? dialogs = null,
         IInfoBarService? notices = null,
-        Func<DateTimeOffset>? clock = null)
+        Func<DateTimeOffset>? clock = null,
+        IInboxService? inbox = null,
+        IDispatcher? dispatcher = null)
         : base(PageKeys.Inbox, "Sorting.Title", FASymbol.Download)
     {
         _clock = clock ?? (static () => DateTimeOffset.Now);
@@ -241,6 +282,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         _roots = roots ?? throw new ArgumentNullException(nameof(roots));
         _dialogs = dialogs;
         _notices = notices;
+        _inbox = inbox ?? new BrowseInboxService(browse, settings, _clock);
+        _dispatcher = dispatcher;
+        _inbox.Changed += OnInboxChanged;
     }
 
     /// <summary>Накопители с числом файлов и «Все накопители».</summary>
@@ -347,6 +391,39 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <summary>Подсказка видна.</summary>
     public bool HasEmptyHint => EmptyHint.Length > 0;
 
+    /// <summary>Сколько файлов ещё дописываются (этап 17.1): не прошло «время успокоения», к разбору они не предлагаются.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPending), nameof(PendingText))]
+    public partial int PendingCount { get; set; }
+
+    /// <summary>В списке что-то выбрано: «Отложить» и «Оставить здесь» доступны.</summary>
+    public bool HasSelection => _selection.Count > 0;
+
+    /// <summary>Среди выбранного есть отложенные или оставленные — их можно вернуть в новые.</summary>
+    public bool SelectionHasState => _selection.Any(static item => item.HasState);
+
+    /// <summary>Есть дописываемые файлы.</summary>
+    public bool HasPending => PendingCount > 0;
+
+    /// <summary>«Ещё загружается: 1 файл».</summary>
+    public string PendingText => L.F("Sorting.PendingFiles", Formatting.Count(PendingCount, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")));
+
+    /// <summary>Сколько файлов «оставлены здесь».</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasKept), nameof(KeptText))]
+    public partial int KeptCount { get; set; }
+
+    /// <summary>Есть оставленные здесь.</summary>
+    public bool HasKept => KeptCount > 0;
+
+    /// <summary>Показывать «оставленные здесь» в списке.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(KeptText))]
+    public partial bool ShowKept { get; set; }
+
+    /// <summary>Кнопка под списком: «Оставленные здесь: 3» или «Скрыть оставленные».</summary>
+    public string KeptText => ShowKept ? L.T("Sorting.HideKept") : L.F("Sorting.ShowKept", KeptCount);
+
     /// <summary>Куда пойдут файлы: «417 › Переписка».</summary>
     public string DestinationText => SelectedFolder is { } folder ? DescribePath(folder) : L.T("Sorting.ChooseDestination");
 
@@ -409,6 +486,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     {
         _selection = items ?? [];
         SelectedCount = _selection.Count;
+        OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(SelectionHasState));
         UpdateItemsText();
         UpdateNamePreview();
     }
@@ -698,6 +777,55 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
+    /// <summary>Включать в очередь и файлы из подпапок накопителя (этап 17.1) — или перестать.</summary>
+    [RelayCommand]
+    private async Task ToggleSubfoldersAsync(InboxFilter? inbox)
+    {
+        if (inbox?.Folder is { } folder)
+        {
+            var updated = folder with { IncludeSubfolders = !folder.IncludeSubfolders };
+            await SaveAsync(_folders with { Inboxes = [.. _folders.Inboxes.Select(candidate => SamePath(candidate.Path, folder.Path) ? updated : candidate)] }, null);
+        }
+    }
+
+    /// <summary>Отложить выбранные файлы: они уходят в конец списка и не считаются в бейдже.</summary>
+    [RelayCommand]
+    private Task PostponeAsync() => SetSelectedStateAsync(InboxItemState.Postponed);
+
+    /// <summary>«Оставить здесь»: файлы больше не предлагаются к разбору.</summary>
+    [RelayCommand]
+    private Task KeepHereAsync() => SetSelectedStateAsync(InboxItemState.Kept);
+
+    /// <summary>Вернуть отложенные и оставленные файлы в новые.</summary>
+    [RelayCommand]
+    private Task ReturnToNewAsync() => SetSelectedStateAsync(InboxItemState.New);
+
+    /// <summary>Показать или скрыть «оставленные здесь».</summary>
+    [RelayCommand]
+    private void ToggleShowKept() => ShowKept = !ShowKept;
+
+    private async Task SetSelectedStateAsync(InboxItemState state)
+    {
+        var paths = _selection.Where(item => item.State != state).Select(static item => item.Entry.FullPath).ToArray();
+        if (paths.Length == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await _inbox.SetStateAsync(paths, state);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.T("Sorting.Title"), L.F("Sorting.StateFailed", exception.Message), FAInfoBarSeverity.Error);
+            return;
+        }
+
+        PendingLoad = LoadInboxesAsync();
+        await PendingLoad;
+    }
+
     /// <summary>Убирает накопитель из списка; папка и файлы остаются.</summary>
     [RelayCommand]
     private async Task RemoveInboxAsync(InboxFilter? inbox)
@@ -797,6 +925,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private Task Refresh() => PendingLoad = RefreshAsync();
 
     partial void OnSelectedInboxChanged(InboxFilter? value) => ShowItems();
+
+    partial void OnShowKeptChanged(bool value) => ShowItems(keepSelection: true);
 
     partial void OnNameTemplateChanged(string value) => UpdateNamePreview();
 
@@ -931,43 +1061,150 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
-    private async Task LoadInboxesAsync()
+    /// <summary>
+    /// Перечитывает очередь накопителей (этап 17.1): пришедшие файлы — новые, затем отложенные; «оставленные здесь» — по
+    /// кнопке; ещё дописываемые — только числом. Если состав накопителей тот же, чипы и выделение в списке не сбрасываются:
+    /// очередь обновляется и сама, когда что-то скачалось.
+    /// </summary>
+    private Task LoadInboxesAsync()
     {
-        var selected = SelectedInbox?.Folder?.Path;
-        var all = new InboxFilter(null, L.T("Sorting.AllInboxes"));
-        var filters = new List<InboxFilter> { all };
-        var items = new List<SortItem>();
-        foreach (var folder in _folders.Inboxes)
+        // Чтения идут по одному: бейдж при запуске, вход на страницу, событие хаба и таймер могут совпасть, а чипы и список
+        // перестраиваются целиком.
+        var done = new TaskCompletionSource();
+        var previous = Interlocked.Exchange(ref _inboxLoad, done.Task);
+        return RunAsync();
+
+        async Task RunAsync()
         {
-            var filter = new InboxFilter(folder, folder.Title);
-            filter.IsMain = _folders.Main == folder;
-            filters.Add(filter);
             try
             {
-                var listing = await _browse.ListAsync(folder.Path, BrowseSort.Modified, descending: true);
-                items.AddRange(listing.Items.Select(entry => new SortItem(entry, folder)));
+                await previous;
+                await LoadInboxesCoreAsync();
             }
-            catch (Exception exception) when (exception is not OperationCanceledException)
+            finally
             {
-                filter.Problem = exception.Message;
+                done.SetResult();
             }
+        }
+    }
+
+    private async Task LoadInboxesCoreAsync()
+    {
+        InboxSnapshotInfo queue;
+        try
+        {
+            queue = await _inbox.GetAsync();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            queue = new InboxSnapshotInfo([.. _folders.Inboxes.Select(folder => new InboxFolderState(folder.Path, exception.Message))], [], null);
         }
 
         // Обновления могут пересечься — бейдж при запуске и вход на страницу: список собирается целиком и подменяется
         // за раз, иначе файлы удвоятся.
-        items.Sort(static (left, right) => right.Entry.Modified.CompareTo(left.Entry.Modified));
-        _all.Clear();
-        _all.AddRange(items);
-        HasNoInboxes = _folders.Inboxes.Count == 0;
-        Inboxes.Clear();
-        foreach (var filter in filters)
+        var items = new List<SortItem>();
+        var pending = 0;
+        foreach (var item in queue.Items)
         {
-            Inboxes.Add(filter);
+            if (_folders.Inboxes.FirstOrDefault(folder => SamePath(folder.Path, item.Inbox)) is not { } folder)
+            {
+                continue;
+            }
+
+            if (item.IsReady)
+            {
+                items.Add(new SortItem(item.Entry, folder, item.State));
+            }
+            else
+            {
+                pending++;
+            }
+        }
+
+        _all.Clear();
+        _all.AddRange(items.OrderBy(static item => item.State));
+        PendingCount = pending;
+        HasNoInboxes = _folders.Inboxes.Count == 0;
+        ScheduleReadyRefresh(queue.NextReadyUtc);
+
+        var problems = queue.Folders.GroupBy(static folder => folder.Path, StringComparer.OrdinalIgnoreCase).ToDictionary(static group => group.Key, static group => group.First().Problem, StringComparer.OrdinalIgnoreCase);
+        if (Inboxes.Count == _folders.Inboxes.Count + 1 && Inboxes.Skip(1).Select(static filter => filter.Folder).SequenceEqual(_folders.Inboxes))
+        {
+            foreach (var filter in Inboxes.Skip(1))
+            {
+                filter.Problem = problems.GetValueOrDefault(filter.Folder!.Path);
+                filter.IsMain = _folders.Main == filter.Folder;
+            }
+
+            UpdateCounts();
+            ShowItems(keepSelection: true);
+            return;
+        }
+
+        var selected = SelectedInbox?.Folder?.Path;
+        var all = new InboxFilter(null, L.T("Sorting.AllInboxes"));
+        Inboxes.Clear();
+        Inboxes.Add(all);
+        foreach (var folder in _folders.Inboxes)
+        {
+            Inboxes.Add(new InboxFilter(folder, folder.Title) { IsMain = _folders.Main == folder, Problem = problems.GetValueOrDefault(folder.Path) });
         }
 
         UpdateCounts();
         SelectedInbox = Inboxes.FirstOrDefault(filter => filter.Folder is not null && selected is not null && SamePath(filter.Folder.Path, selected)) ?? all;
         ShowItems();
+    }
+
+    // В накопителях что-то изменилось мимо страницы — скачалось, переименовано: очередь перечитывается через короткую паузу,
+    // чтобы пачка событий дала одно обновление.
+    private void OnInboxChanged(object? sender, EventArgs e)
+    {
+        if (_dispatcher is null)
+        {
+            ScheduleInboxReload(TimeSpan.FromMilliseconds(400));
+        }
+        else
+        {
+            _dispatcher.Post(() => ScheduleInboxReload(TimeSpan.FromMilliseconds(400)));
+        }
+    }
+
+    // Дописываемый файл придёт, когда истечёт «время успокоения»: тогда очередь перечитывается.
+    private void ScheduleReadyRefresh(DateTimeOffset? nextReadyUtc)
+    {
+        Interlocked.Exchange(ref _readyTimer, null)?.Cancel();
+        if (nextReadyUtc is not { } next)
+        {
+            return;
+        }
+
+        var delay = next - _clock();
+        delay = delay < TimeSpan.FromMilliseconds(200) ? TimeSpan.FromMilliseconds(200) : delay > TimeSpan.FromMinutes(10) ? TimeSpan.FromMinutes(10) : delay;
+        var cts = new CancellationTokenSource();
+        _readyTimer = cts;
+        _ = ReloadAfterAsync(delay, cts.Token);
+    }
+
+    private void ScheduleInboxReload(TimeSpan delay)
+    {
+        var cts = new CancellationTokenSource();
+        Interlocked.Exchange(ref _inboxReload, cts)?.Cancel();
+        _ = ReloadAfterAsync(delay, cts.Token);
+    }
+
+    private async Task ReloadAfterAsync(TimeSpan delay, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(delay, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        PendingLoad = LoadInboxesAsync();
+        await PendingLoad;
     }
 
     private async Task LoadTagsAsync()
@@ -992,16 +1229,55 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private IReadOnlyList<TagInfo> OwnAutoTags(string path)
         => _autoTags.FirstOrDefault(folder => SamePath(folder.Path, path))?.Tags ?? [];
 
-    private void ShowItems()
+    /// <summary>
+    /// Показывает файлы выбранного накопителя. <paramref name="keepSelection"/> — обновление на месте: те же файлы остаются
+    /// теми же строками, поэтому выделение в списке не пропадает, когда в «Загрузки» что-то пришло.
+    /// </summary>
+    private void ShowItems(bool keepSelection = false)
     {
-        Items.Clear();
         var folder = SelectedInbox?.Folder;
-        foreach (var item in _all.Where(item => folder is null || SamePath(item.Inbox.Path, folder.Path)))
+        var wanted = _all.Where(item => (folder is null || SamePath(item.Inbox.Path, folder.Path)) && (ShowKept || !item.IsKept)).ToList();
+        if (!keepSelection)
         {
-            Items.Add(item);
+            Items.Clear();
+            foreach (var item in wanted)
+            {
+                Items.Add(item);
+            }
+
+            SetSelection([]);
+        }
+        else
+        {
+            var existing = Items.GroupBy(static item => item.Key, StringComparer.OrdinalIgnoreCase).ToDictionary(static group => group.Key, static group => group.First(), StringComparer.OrdinalIgnoreCase);
+            for (var i = 0; i < wanted.Count; i++)
+            {
+                if (existing.TryGetValue(wanted[i].Key, out var same))
+                {
+                    wanted[i] = same;
+                }
+            }
+
+            var keep = wanted.ToHashSet();
+            for (var i = Items.Count - 1; i >= 0; i--)
+            {
+                if (!keep.Contains(Items[i]))
+                {
+                    Items.RemoveAt(i);
+                }
+            }
+
+            for (var i = 0; i < wanted.Count; i++)
+            {
+                if (i >= Items.Count || !ReferenceEquals(Items[i], wanted[i]))
+                {
+                    Items.Insert(i, wanted[i]);
+                }
+            }
+
+            SetSelection([.. _selection.Where(Items.Contains)]);
         }
 
-        SetSelection([]);
         EmptyHint = HasNoInboxes
             ? L.T("Sorting.NoInboxesHint")
             : Items.Count == 0 ? (SelectedInbox?.Problem is { } problem ? L.F("Sorting.InboxProblem", problem) : L.T("Sorting.InboxEmpty")) : string.Empty;
@@ -1011,10 +1287,11 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     {
         foreach (var filter in Inboxes)
         {
-            filter.Count = filter.Folder is null ? _all.Count : _all.Count(item => SamePath(item.Inbox.Path, filter.Folder.Path));
+            filter.Count = _all.Count(item => item.State == InboxItemState.New && (filter.Folder is null || SamePath(item.Inbox.Path, filter.Folder.Path)));
         }
 
-        BadgeValue = _all.Count;
+        BadgeValue = _all.Count(static item => item.State == InboxItemState.New);
+        KeptCount = _all.Count(static item => item.IsKept);
         UpdateItemsText();
     }
 

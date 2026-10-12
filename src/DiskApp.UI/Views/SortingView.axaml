@@ -24,6 +24,10 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
         </Style>
+        <!-- Отложенные и оставленные здесь (этап 17.1) — бледнее новых -->
+        <Style Selector="Grid.dimmed">
+            <Setter Property="Opacity" Value="0.6" />
+        </Style>
     </UserControl.Styles>
 
     <Grid Margin="16,12,16,8" RowDefinitions="Auto,*,Auto,Auto" ColumnDefinitions="*,380">
@@ -68,6 +72,11 @@
                                                       Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).MakeMainInboxCommand}"
                                                       CommandParameter="{Binding}"
                                                       IsVisible="{Binding CanMakeMain}" />
+                                            <MenuItem Header="{loc:Str Sorting.IncludeSubfolders}" ToggleType="CheckBox"
+                                                      IsChecked="{Binding Folder.IncludeSubfolders, Mode=OneWay, FallbackValue=False}"
+                                                      Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).ToggleSubfoldersCommand}"
+                                                      CommandParameter="{Binding}"
+                                                      IsVisible="{Binding IsFolder}" />
                                             <MenuItem Header="{loc:Str Sorting.RemoveInbox}"
                                                       Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).RemoveInboxCommand}"
                                                       CommandParameter="{Binding}"
@@ -79,18 +88,34 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </DockPanel>
+                <!-- Очередь (этап 17.1): дописываемые файлы — числом, «оставленные здесь» — по кнопке -->
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="12" Margin="6,6,6,0">
+                    <TextBlock Classes="tertiary" FontSize="12" VerticalAlignment="Center" Text="{Binding PendingText}" IsVisible="{Binding HasPending}" />
+                    <HyperlinkButton Padding="0" FontSize="12" Content="{Binding KeptText}" Command="{Binding ToggleShowKeptCommand}" IsVisible="{Binding HasKept}" />
+                </StackPanel>
                 <Panel>
                     <ListBox x:Name="ItemsList" AutomationProperties.Name="{loc:Str Sorting.Files}" ItemsSource="{Binding Items}" SelectionMode="Multiple">
+                        <ListBox.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuItem Header="{loc:Str Sorting.Postpone}" Command="{Binding PostponeCommand}" IsEnabled="{Binding HasSelection}" />
+                                <MenuItem Header="{loc:Str Sorting.KeepHere}" Command="{Binding KeepHereCommand}" IsEnabled="{Binding HasSelection}" />
+                                <MenuItem Header="{loc:Str Sorting.ReturnToNew}" Command="{Binding ReturnToNewCommand}" IsVisible="{Binding SelectionHasState}" />
+                            </MenuFlyout>
+                        </ListBox.ContextFlyout>
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:SortItem">
-                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,3" Classes.dimmed="{Binding HasState}">
                                     <c:FileIcon Width="30" Height="30" CornerRadius="6" IconSize="22" VerticalAlignment="Center"
                                                 Entry="{Binding Entry}" Symbol="{Binding Symbol}"
                                                 FallbackBackground="{DynamicResource SubtleFillColorSecondaryBrush}"
                                                 Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                                     <StackPanel Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Spacing="1">
                                         <TextBlock Text="{Binding Entry.Name}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Classes="tertiary" FontSize="11" Text="{Binding Inbox.Title}" TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Classes="tertiary" FontSize="11" Text="{Binding Inbox.Title}" TextTrimming="CharacterEllipsis" />
+                                            <!-- Состояние (этап 17.1): отложен или оставлен здесь -->
+                                            <TextBlock Classes="tertiary" FontSize="11" FontStyle="Italic" Text="{Binding StateText}" IsVisible="{Binding HasState}" />
+                                        </StackPanel>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
                                         <TextBlock Classes="secondary" FontSize="12" HorizontalAlignment="Right" Text="{Binding ModifiedText}" />

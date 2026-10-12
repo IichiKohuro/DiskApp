@@ -229,10 +229,12 @@ internal static class DtoMapper
         },
         Sorting = new SortingSettingsDto
         {
-            Inboxes = [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label })],
-            WorkFolders = [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label })],
+            Inboxes = [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label, IncludeSubfolders = folder.IncludeSubfolders })],
+            WorkFolders = [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderDto { Path = folder.Path, Label = folder.Label, IncludeSubfolders = folder.IncludeSubfolders })],
             NameTemplate = settings.Sorting.NameTemplate,
             MainInbox = settings.Sorting.MainInbox,
+            SettleSeconds = settings.Sorting.SettleSeconds,
+            IgnorePatterns = settings.Sorting.IgnorePatterns,
         },
     };
 
@@ -317,6 +319,8 @@ internal static class DtoMapper
             WorkFolders = ToSortingFolders(dto.Sorting.WorkFolders),
             NameTemplate = string.IsNullOrWhiteSpace(dto.Sorting.NameTemplate) ? null : dto.Sorting.NameTemplate.Trim(),
             MainInbox = string.IsNullOrWhiteSpace(dto.Sorting.MainInbox) ? null : dto.Sorting.MainInbox,
+            SettleSeconds = dto.Sorting.SettleSeconds,
+            IgnorePatterns = [.. (dto.Sorting.IgnorePatterns ?? []).Select(static pattern => pattern?.Trim() ?? string.Empty)],
         },
     };
 
@@ -325,6 +329,7 @@ internal static class DtoMapper
         {
             Path = folder.Path.Trim(),
             Label = string.IsNullOrWhiteSpace(folder.Label) ? null : folder.Label.Trim(),
+            IncludeSubfolders = folder.IncludeSubfolders,
         })];
 
     public static FileOperationRequest ToDomain(this OperationRequest request) => new(

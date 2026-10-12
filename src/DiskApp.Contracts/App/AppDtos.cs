@@ -82,6 +82,12 @@ public sealed record SortingSettingsDto
 
     /// <summary>Основная папка-накопитель — путь из <see cref="Inboxes"/>; пусто или папка не из списка — первая в списке.</summary>
     public string? MainInbox { get; set; }
+
+    /// <summary>«Время успокоения»: файл накопителя считается пришедшим, когда не меняется столько секунд (0–600).</summary>
+    public int SettleSeconds { get; set; } = 5;
+
+    /// <summary>Glob-шаблоны имён временных и служебных файлов, которых нет в очереди накопителей (не больше 50).</summary>
+    public IReadOnlyList<string> IgnorePatterns { get; set; } = [];
 }
 
 /// <summary>Папка разбора.</summary>
@@ -92,6 +98,9 @@ public sealed record SortingFolderDto
 
     /// <summary>Подпись; пусто — имя папки.</summary>
     public string? Label { get; set; }
+
+    /// <summary>У накопителя: в очередь попадают и файлы из подпапок.</summary>
+    public bool IncludeSubfolders { get; set; }
 }
 
 /// <summary>Знакомство с приложением.</summary>

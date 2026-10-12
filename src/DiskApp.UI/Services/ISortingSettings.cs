@@ -8,7 +8,8 @@ namespace DiskApp.UI.Services;
 /// <summary>Папка разбора: накопитель или рабочая папка.</summary>
 /// <param name="Path">Полный путь.</param>
 /// <param name="Label">Подпись; <c>null</c> — имя папки.</param>
-public sealed record SortingFolderInfo(string Path, string? Label = null)
+/// <param name="IncludeSubfolders">У накопителя: в очередь попадают и файлы из подпапок (этап 17.1).</param>
+public sealed record SortingFolderInfo(string Path, string? Label = null, bool IncludeSubfolders = false)
 {
     /// <summary>Что показывать: подпись или имя папки.</summary>
     public string Title => string.IsNullOrWhiteSpace(Label) ? PathText.FileName(Path) : Label;
@@ -59,7 +60,7 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
     {
         var settings = await _api.GetSettingsAsync(cancellationToken).ConfigureAwait(false);
         return new SortingFolders(
-            [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label))],
+            [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label, folder.IncludeSubfolders))],
             [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label))],
             settings.Sorting.NameTemplate,
             settings.Sorting.MainInbox);
@@ -83,7 +84,7 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
     }
 
     private static JsonArray ToJson(IReadOnlyList<SortingFolderInfo> folders)
-        => [.. folders.Select(static folder => (JsonNode)new JsonObject { ["path"] = folder.Path, ["label"] = folder.Label })];
+        => [.. folders.Select(static folder => (JsonNode)new JsonObject { ["path"] = folder.Path, ["label"] = folder.Label, ["includeSubfolders"] = folder.IncludeSubfolders })];
 }
 
 /// <summary>

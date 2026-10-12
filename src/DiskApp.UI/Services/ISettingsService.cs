@@ -115,6 +115,7 @@ public sealed class SampleSettingsService : ISettingsService
         Add = new AddSettingsDto { ClipboardNameTemplate = "{date}_{time}_{title}" },
         Popup = new PopupSettingsDto { HideOnDeactivate = true, ShowPath = true, ShowSize = true, ShowDate = true },
         Diagnostics = new DiagnosticsSettingsDto { LogLevel = "Information" },
+        Sorting = new SortingSettingsDto { SettleSeconds = 5, IgnorePatterns = ["*.crdownload", "*.part", "*.partial", "*.download", "*.tmp", "~$*", "desktop.ini", "Thumbs.db", ".DS_Store"] },
     };
 
     /// <inheritdoc />

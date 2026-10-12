@@ -125,6 +125,12 @@ public interface IDiskAppApi
     /// <summary>Окно Drag&amp;Drop: бросить файлы в папку-накопитель — перенос или копия (операция очереди).</summary>
     Task<OperationDto> DropFilesAsync(DropFilesRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Очередь папок-накопителей (этап 17.1).</summary>
+    Task<InboxDto> GetInboxAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Отложить, оставить здесь или вернуть в новые файлы накопителя.</summary>
+    Task SetInboxStateAsync(SetInboxStateRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Операции.</summary>
     Task<IReadOnlyList<OperationDto>> GetOperationsAsync(CancellationToken cancellationToken = default);
 

@@ -96,6 +96,14 @@ public static class ServerServiceCollectionExtensions
             provider.GetRequiredService<ILogger<SortingFolderTracker>>(),
             provider.GetRequiredService<IFolderTagRepository>(),
             () => provider.GetRequiredService<SearchService>().InvalidateCaches()));
+        services.AddSingleton(static provider => new InboxService(
+            provider.GetRequiredService<ISettingsStore<AppSettings>>(),
+            provider.GetRequiredService<IRootRepository>(),
+            provider.GetRequiredService<IFileIndexRepository>(),
+            provider.GetRequiredService<IInboxStateRepository>(),
+            provider.GetRequiredService<IClock>(),
+            provider.GetRequiredService<PathNormalizer>(),
+            new System.IO.Abstractions.FileSystem()));
         services.AddHostedService<SortingFolderTrackerService>();
         services.AddHostedService<ServerStartupService>();
         services.AddHostedService<SearchCacheInvalidator>();
@@ -132,6 +140,7 @@ public static class ServerServiceCollectionExtensions
         services.AddSingleton<IFavoriteRepository>(static provider => new SqliteFavoriteRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<ITagRepository>(static provider => new SqliteTagRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<IFolderTagRepository>(static provider => new SqliteFolderTagRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
+        services.AddSingleton<IInboxStateRepository>(static provider => new SqliteInboxStateRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
         services.AddSingleton<ICollectionRepository>(static provider => new SqliteCollectionRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<IClock>()));
         services.AddSingleton<IQueryHistoryRepository>(static provider => new SqliteQueryHistoryRepository(provider.GetRequiredService<SqliteDatabase>()));
     }

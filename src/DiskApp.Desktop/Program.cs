@@ -171,6 +171,7 @@ internal static class Program
             services.AddSingleton<ILibraryService, ApiLibraryService>();
             services.AddSingleton<ISettingsService, ApiSettingsService>();
             services.AddSingleton<ISortingSettings, ApiSortingSettings>();
+            services.AddSingleton<IInboxService, ApiInboxService>();
             services.AddSingleton<ITagEditor, TagEditor>();
             services.AddSingleton<SettingsTipsService>();
             services.AddSingleton<ITipsService>(static provider => provider.GetRequiredService<SettingsTipsService>());

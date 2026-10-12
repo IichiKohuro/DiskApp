@@ -128,6 +128,15 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             }
         };
 
+        // Сколько файлов ждут разбора (этап 17.1) — в подсказке у значка, как и бейдж «Разбора».
+        _services.GetRequiredService<SortingViewModel>().PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SortingViewModel.BadgeValue))
+            {
+                UpdateTray();
+            }
+        };
+
         _instanceServer = new InstanceServer(_names.Pipe, OnSecondInstanceArguments, _log);
         _instanceServer.Start();
 
@@ -936,6 +945,10 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         try
         {
             await hub.StartAsync().ConfigureAwait(false);
+
+            // Сервер готов: очередь накопителей читается сразу, а не при первом открытии окна — подсказка у значка
+            // знает, сколько файлов ждут разбора, и очередь подписывается на изменения накопителей (этап 17.1).
+            Dispatcher.UIThread.Post(() => _ = _services.GetRequiredService<SortingViewModel>().RefreshAsync());
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -961,6 +974,11 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         if (_services.GetService<OperationsViewModel>() is { HasActive: true } operations)
         {
             tooltip += " · " + operations.Summary;
+        }
+
+        if (_services.GetService<SortingViewModel>() is { BadgeValue: > 0 } sorting)
+        {
+            tooltip += " · " + L.F("DesktopShell.FilesToSort", sorting.BadgeValue);
         }
 
         _tray.ToolTipText = tooltip.Length <= 127 ? tooltip : tooltip[..126] + "…";

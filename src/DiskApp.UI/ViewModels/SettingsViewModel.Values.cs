@@ -288,6 +288,16 @@ public sealed partial class SettingsViewModel
     /// <summary>Накопители есть: можно выбрать основной.</summary>
     public bool HasInboxes => MainInboxOptions.Count > 0;
 
+    /// <summary>«Время успокоения» накопителей, секунд (этап 17.1): файл считается пришедшим, когда не меняется столько.</summary>
+    [ObservableProperty]
+    public partial decimal SettleSeconds { get; set; } = 5;
+
+    private static readonly char[] PatternSeparators = [',', ';', '\n', '\r'];
+
+    /// <summary>Шаблоны временных и служебных файлов, которых нет в очереди накопителей, — через запятую.</summary>
+    [ObservableProperty]
+    public partial string IgnorePatternsText { get; set; } = string.Empty;
+
     /// <summary>Шаблон имени файла из буфера обмена.</summary>
     [ObservableProperty]
     public partial string ClipboardNameTemplate { get; set; } = string.Empty;
@@ -378,6 +388,8 @@ public sealed partial class SettingsViewModel
             ApplyExclusions(settings.Indexing.Exclusions);
 
             ApplyInboxes(settings.Sorting);
+            SettleSeconds = settings.Sorting.SettleSeconds;
+            IgnorePatternsText = string.Join(", ", settings.Sorting.IgnorePatterns);
             ClipboardNameTemplate = settings.Add.ClipboardNameTemplate;
             SelectedLogLevel = LogLevels.FirstOrDefault(option => option.Value == settings.Diagnostics.LogLevel) ?? LogLevels[1];
         }
@@ -497,6 +509,12 @@ public sealed partial class SettingsViewModel
     }
 
     partial void OnSelectedLogLevelChanged(SettingOption<string> value) => Save("diagnostics", "logLevel", value.Value);
+
+    partial void OnSettleSecondsChanged(decimal value) => Save("sorting", "settleSeconds", (int)value);
+
+    // Шаблоны через запятую, точку с запятой или с новой строки; пустые и повторы отбрасываются.
+    partial void OnIgnorePatternsTextChanged(string value)
+        => Save("sorting", "ignorePatterns", new JsonArray([.. value.Split(PatternSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Distinct(StringComparer.OrdinalIgnoreCase).Select(static pattern => (JsonNode)JsonValue.Create(pattern))]));
 
     partial void OnSelectedMainInboxChanged(SettingOption<string>? value)
     {
