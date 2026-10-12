@@ -2929,31 +2929,31 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>A new Notes page: Markdown notes with their own tags, search and pinning. The first line is the title, saving is automatic; Ctrl+N makes a new note.</value>
+    <value>On the Sorting page, right-click a file → Move to recycle bin (or press Delete); Delete all below the list removes every listed file. DiskApp asks first; you can restore them from the Windows recycle bin.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Notes</value>
+    <value>Unwanted files to the recycle bin</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>In Preview, - [ ] check boxes toggle with a click and paths to folders and files open. A deleted note stays in the trash for 30 days, with Undo right away.</value>
+    <value>{date} in a name is 12102026, {time} is 135445, together 12102026135445. New presets: Date last and Date and time last.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Check boxes and links in notes</value>
+    <value>Dates without separators</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>One row at the bottom: destination, Name, Tags and Move. The name template and tags sit behind buttons that show what is set; the work folder number is a separate keycap.</value>
+    <value>The Notes page: Markdown notes with their own tags, search and pinning; check boxes toggle with a click and file paths open. Ctrl+N makes a new note.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Simpler sorting</value>
+    <value>Notes</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Double-click a file on the Sorting page to open it; the row menu has Open and Show in folder.</value>
+    <value>One row at the bottom: destination, Name, Tags and Move; the buttons show what is set. Double-click a file to look at it before sorting.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Look at a file before sorting it</value>
+    <value>Simpler sorting</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Drag the divider between inboxes and work folders, or next to the notes list; the width is remembered. A work folder added to the index is no longer marked “not found” by mistake.</value>
+    <value>Drag the divider between inboxes and work folders, or next to the notes list; the width is remembered. The work folder number is a separate keycap on the chip.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
     <value>Panel width</value>

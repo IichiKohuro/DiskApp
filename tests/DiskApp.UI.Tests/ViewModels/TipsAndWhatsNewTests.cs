@@ -199,7 +199,7 @@ public sealed class TipsAndWhatsNewTests
 
             // Assert
             whatsNew.Title.ShouldBe($"What's new in DiskApp {AppVersion.Current}");
-            whatsNew.Items[0].Title.ShouldBe("Notes");
+            whatsNew.Items[0].Title.ShouldBe("Unwanted files to the recycle bin");
         }
         finally
         {
