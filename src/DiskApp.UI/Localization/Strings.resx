@@ -2929,34 +2929,34 @@
     <value> записей</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>На «Разборе» правый щелчок по файлу → «Удалить в корзину» (или Delete), а «Удалить всё» под списком убирает все файлы списка. Перед удалением DiskApp спрашивает; вернуть можно из корзины Windows.</value>
+    <value>«Разбор» сообщает «→ папка», только когда файл действительно перенесён. Не получилось — файл остаётся в списке, а уведомление объясняет почему и даёт «Повторить».</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Ненужное — в корзину</value>
+    <value>Честный итог переноса</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>{дата} в имени — 12102026, {время} — 135445, вместе — 12102026135445. Новые готовые варианты: «Дата в конце» и «Дата и время в конце».</value>
+    <value>Если файл открыт, DiskApp называет программу: «открыт в программе Microsoft Excel — закройте его там и повторите».</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Дата без знаков</value>
+    <value>Какую программу закрыть</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Страница «Заметки»: записи в Markdown со своими тегами, поиском и закреплением; флажки отмечаются щелчком, пути к файлам открываются. Ctrl+N — новая заметка.</value>
+    <value>На «Разборе» правый щелчок по файлу → «Удалить в корзину» (или Delete), «Удалить всё» под списком — все файлы списка. Перед удалением DiskApp спрашивает.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Заметки</value>
+    <value>Ненужное — в корзину</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Внизу одна строка: куда, «Имя», «Теги» и «Перенести»; на кнопках видно, что задано. Двойной щелчок открывает файл — посмотреть перед разбором.</value>
+    <value>{дата} в имени — 12102026, {время} — 135445, вместе — 12102026135445; варианты «Дата в конце» и «Дата и время в конце».</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>«Разбор» стал проще</value>
+    <value>Дата без знаков</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Разделитель между накопителями и рабочими папками и у списка заметок тянется мышью и запоминается. Номер рабочей папки на чипе — отдельной плашкой.</value>
+    <value>Страница «Заметки» с Markdown и своими тегами; внизу «Разбора» — одна строка «Куда · Имя · Теги · Перенести», двойной щелчок открывает файл, ширина панелей запоминается.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Ширина панелей</value>
+    <value>Заметки и простой «Разбор»</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Понятно</value>
