@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="using:DiskApp.UI.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:v="using:DiskApp.UI.Views"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
+             x:Class="DiskApp.UI.Views.NotesView"
+             x:DataType="vm:NotesViewModel">
+    <!-- Страница «Заметки» (PLAN.md, этап 23): слева список с поиском и фильтром по тегу, справа заметка — правка или
+         просмотр Markdown, свои теги, закрепить, удалить. Редкое (корзина, правка тега) — в меню «Ещё». -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewNoteCommand}" />
+    </UserControl.KeyBindings>
+    <Grid Margin="16,12,16,8" RowDefinitions="Auto,*" ColumnDefinitions="320,*">
+        <DockPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right" VerticalAlignment="Bottom" Classes="accent" Command="{Binding NewNoteCommand}" ToolTip.Tip="Ctrl+N"
+                    AutomationProperties.Name="{loc:Str Notes.New}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:SymbolIcon Symbol="Add" FontSize="16" />
+                    <TextBlock Text="{loc:Str Notes.New}" />
+                </StackPanel>
+            </Button>
+            <StackPanel Spacing="4">
+                <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="{loc:Str Notes.Title}" />
+                <TextBlock Classes="secondary" TextWrapping="Wrap" Text="{loc:Str Notes.Description}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Список -->
+        <Border Grid.Row="1" Classes="card" Padding="8">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" ColumnSpacing="6" Margin="0,0,0,6">
+                    <TextBox AutomationProperties.Name="{loc:Str Notes.Search}" PlaceholderText="{loc:Str Notes.Search}" Text="{Binding SearchText, Mode=TwoWay}" />
+                    <Button Grid.Column="1" Classes="tool" AutomationProperties.Name="{loc:Str Notes.More}" ToolTip.Tip="{loc:Str Notes.More}">
+                        <ic:SymbolIcon Symbol="MoreHorizontal" FontSize="16" />
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuItem Header="{loc:Str Notes.Trash}" Command="{Binding ToggleTrashCommand}" IsVisible="{Binding !ShowTrash}" />
+                                <MenuItem Header="{loc:Str Notes.BackToNotes}" Command="{Binding ToggleTrashCommand}" IsVisible="{Binding ShowTrash}" />
+                                <Separator IsVisible="{Binding HasTagFilter}" />
+                                <MenuItem Header="{loc:Str Notes.EditTag}" Command="{Binding EditTagCommand}" IsVisible="{Binding HasTagFilter}" />
+                                <MenuItem Header="{loc:Str Notes.DeleteTag}" Command="{Binding DeleteTagCommand}" IsVisible="{Binding HasTagFilter}" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </Grid>
+                <ComboBox DockPanel.Dock="Top" HorizontalAlignment="Stretch" Margin="0,0,0,8" AutomationProperties.Name="{loc:Str Notes.TagFilter}"
+                          ItemsSource="{Binding TagFilters}" SelectedItem="{Binding SelectedTagFilter, Mode=TwoWay}" IsVisible="{Binding !ShowTrash}" />
+                <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="2,0,2,8" IsVisible="{Binding ShowTrash}">
+                    <Button Classes="tool" Command="{Binding ToggleTrashCommand}" AutomationProperties.Name="{loc:Str Notes.BackToNotes}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:SymbolIcon Symbol="ArrowLeft" FontSize="14" />
+                            <TextBlock Text="{loc:Str Notes.BackToNotes}" />
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{loc:Str Notes.TrashHint}" />
+                </StackPanel>
+                <Panel>
+                    <ListBox AutomationProperties.Name="{loc:Str Notes.Title}" ItemsSource="{Binding Notes}" SelectedItem="{Binding SelectedNote, Mode=TwoWay}" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:NoteItem">
+                                <StackPanel Spacing="2" Margin="0,4">
+                                    <DockPanel>
+                                        <ic:SymbolIcon DockPanel.Dock="Right" Symbol="Pin" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" IsVisible="{Binding IsPinned}"
+                                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <TextBlock Classes="secondary" FontSize="12" Text="{Binding Snippet}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Classes="tertiary" FontSize="11" VerticalAlignment="Center" Text="{Binding ModifiedText}" />
+                                        <ItemsControl ItemsSource="{Binding TagLabels}" ItemTemplate="{StaticResource TagChipTemplate}" IsVisible="{Binding HasTags}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal" Spacing="4" />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="240"
+                               Text="{Binding EmptyText}" IsVisible="{Binding IsEmpty}" />
+                </Panel>
+            </DockPanel>
+        </Border>
+
+        <!-- Заметка -->
+        <Border Grid.Row="1" Grid.Column="1" Classes="card" Padding="12" Margin="8,0,0,0">
+            <Panel>
+                <DockPanel IsVisible="{Binding HasNote}">
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+                            <Button Classes="tool" Content="{Binding PreviewToggleText}" Command="{Binding TogglePreviewCommand}" IsVisible="{Binding CanEdit}" />
+                            <ToggleButton Classes="tool" IsChecked="{Binding IsPinned, Mode=OneWay}" Command="{Binding TogglePinCommand}" IsVisible="{Binding CanEdit}"
+                                          AutomationProperties.Name="{loc:Str Notes.Pin}" ToolTip.Tip="{loc:Str Notes.Pin}">
+                                <ic:SymbolIcon Symbol="Pin" FontSize="16" />
+                            </ToggleButton>
+                            <Button Classes="tool" Command="{Binding DeleteCommand}" IsVisible="{Binding CanEdit}"
+                                    AutomationProperties.Name="{loc:Str Notes.Delete}" ToolTip.Tip="{loc:Str Notes.Delete}">
+                                <ic:SymbolIcon Symbol="Delete" FontSize="16" />
+                            </Button>
+                            <Button Classes="accent" Content="{loc:Str Notes.Restore}" Command="{Binding RestoreCommand}" IsVisible="{Binding ShowTrash}" />
+                            <Button Content="{loc:Str Notes.DeleteForever}" Command="{Binding DeleteForeverCommand}" IsVisible="{Binding ShowTrash}" />
+                        </StackPanel>
+                        <!-- Теги заметки: чипы и поле с подсказками из тегов заметок -->
+                        <v:AutoTagsEditorView DataContext="{Binding TagsEditor}" IsVisible="{Binding $parent[UserControl].((vm:NotesViewModel)DataContext).CanEdit}" Margin="0,0,12,0" />
+                    </DockPanel>
+                    <Panel>
+                        <TextBox x:Name="Editor" AutomationProperties.Name="{loc:Str Notes.Text}" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
+                                 VerticalContentAlignment="Top" PlaceholderText="{loc:Str Notes.EditorPlaceholder}"
+                                 Text="{Binding Body, Mode=TwoWay}" IsVisible="{Binding IsEditing}" />
+                        <ScrollViewer IsVisible="{Binding !IsEditing}">
+                            <c:MarkdownView x:Name="Preview" Markdown="{Binding Body}" Margin="2,0,8,0" />
+                        </ScrollViewer>
+                    </Panel>
+                </DockPanel>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" IsVisible="{Binding !HasNote}">
+                    <ic:SymbolIcon Symbol="Note" FontSize="36" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="320" Text="{loc:Str Notes.NothingOpen}" />
+                    <Button HorizontalAlignment="Center" Classes="accent" Content="{loc:Str Notes.New}" Command="{Binding NewNoteCommand}" IsVisible="{Binding !ShowTrash}" />
+                </StackPanel>
+            </Panel>
+        </Border>
+    </Grid>
+</UserControl>

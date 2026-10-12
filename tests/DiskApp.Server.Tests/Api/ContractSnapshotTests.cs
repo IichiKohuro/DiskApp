@@ -8,6 +8,7 @@ using DiskApp.Contracts;
 using DiskApp.Contracts.Entries;
 using DiskApp.Contracts.Hub;
 using DiskApp.Contracts.Library;
+using DiskApp.Contracts.Notes;
 using DiskApp.Contracts.Operations;
 using DiskApp.Contracts.Roots;
 using DiskApp.Contracts.Search;
@@ -100,6 +101,12 @@ public sealed class ContractSnapshotTests
                 ["completed"] = JsonSerializer.SerializeToNode(new OperationCompletedDto(Guid.Empty, OperationState.Failed, "Нет места на диске."), DiskAppJsonContext.Default.OperationCompletedDto),
             },
             DiskAppJsonContext.Default.JsonObject);
+
+    [Fact]
+    public void Note_MatchesSnapshot()
+        => Verify(
+            new NoteDto(17, "Мост 417", "# Мост 417\n\n- [ ] Сдать чертежи", true, Stamp.AddDays(-2), Stamp, null, [new TagDto(3, "проект", "#0078D4")]),
+            DiskAppJsonContext.Default.NoteDto);
 
     [Fact]
     public void AutoTags_MatchSnapshot()

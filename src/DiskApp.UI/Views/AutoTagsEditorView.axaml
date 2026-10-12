@@ -36,7 +36,7 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <TextBox x:Name="TagBox" MaxLength="64" AutomationProperties.Name="{loc:Str AutoTags.Title}" PlaceholderText="{loc:Str AutoTags.Watermark}" Text="{Binding Text, Mode=TwoWay}" />
+            <TextBox x:Name="TagBox" MaxLength="64" AutomationProperties.Name="{Binding Watermark}" PlaceholderText="{Binding Watermark}" Text="{Binding Text, Mode=TwoWay}" />
             <Button Grid.Column="1" Content="{loc:Str TagPicker.Add}" Command="{Binding AddCommand}" CommandParameter="{x:Null}" />
         </Grid>
         <ItemsControl ItemsSource="{Binding Suggestions}" IsVisible="{Binding !!Suggestions.Count}">
@@ -53,6 +53,6 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
         <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" MaxWidth="420" HorizontalAlignment="Left" Text="{Binding InheritedText}" IsVisible="{Binding HasInherited}" />
-        <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" MaxWidth="420" HorizontalAlignment="Left" Text="{loc:Str AutoTags.Hint}" />
+        <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" MaxWidth="420" HorizontalAlignment="Left" Text="{Binding Hint}" IsVisible="{Binding HasHint}" />
     </StackPanel>
 </UserControl>

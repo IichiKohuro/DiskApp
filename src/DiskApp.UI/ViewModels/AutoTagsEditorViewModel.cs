@@ -64,6 +64,15 @@ public sealed partial class AutoTagsEditorViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(AddCommand))]
     public partial string Text { get; set; } = string.Empty;
 
+    /// <summary>Подсказка в пустом поле ввода.</summary>
+    public string Watermark { get; init; } = L.T("AutoTags.Watermark");
+
+    /// <summary>Пояснение под полем; пусто — не показывается.</summary>
+    public string Hint { get; init; } = L.T("AutoTags.Hint");
+
+    /// <summary>Пояснение показывается.</summary>
+    public bool HasHint => Hint.Length > 0;
+
     /// <summary>Что папка уже получает от папок выше: «уже от папок выше: ТЗ (417)»; пусто — ничего.</summary>
     public string InheritedText { get; }
 
@@ -120,6 +129,24 @@ public sealed partial class AutoTagsEditorViewModel : ObservableObject
         }
 
         return await library.SetAutoTagsAsync(path, Names);
+    }
+
+    /// <summary>
+    /// Подкрашивает чипы цветами сохранённых тегов: новый тег получает цвет только при сохранении. Набор тегов не меняется.
+    /// </summary>
+    /// <param name="tags">Сохранённые теги с цветами.</param>
+    public void UpdateColors(IEnumerable<TagInfo> tags)
+    {
+        ArgumentNullException.ThrowIfNull(tags);
+
+        var colors = tags.ToDictionary(static tag => tag.Name, static tag => tag.Color, StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < Tags.Count; i++)
+        {
+            if (colors.TryGetValue(Tags[i].Name, out var color) && color != Tags[i].Color)
+            {
+                Tags[i] = Tags[i] with { Color = color };
+            }
+        }
     }
 
     /// <summary>Добавить тег: из подсказки или набранный.</summary>

@@ -27,6 +27,8 @@ internal sealed class IndexTestContext : IAsyncDisposable
         Collections = new SqliteCollectionRepository(database, Clock);
         History = new SqliteQueryHistoryRepository(database);
         FolderTags = new SqliteFolderTagRepository(database, PathNormalizer.Current);
+        Notes = new SqliteNoteRepository(database);
+        NoteTags = new SqliteNoteTagRepository(database);
     }
 
     public TemporaryDirectory Folder { get; }
@@ -52,6 +54,10 @@ internal sealed class IndexTestContext : IAsyncDisposable
     public SqliteQueryHistoryRepository History { get; }
 
     public SqliteFolderTagRepository FolderTags { get; }
+
+    public SqliteNoteRepository Notes { get; }
+
+    public SqliteNoteTagRepository NoteTags { get; }
 
     /// <summary>
     /// Создаёт базу и корень <c>D:\Projects</c> (или <c>/projects</c> вне Windows).

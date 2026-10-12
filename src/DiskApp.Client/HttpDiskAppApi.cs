@@ -10,6 +10,7 @@ using DiskApp.Contracts;
 using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
 using DiskApp.Contracts.Library;
+using DiskApp.Contracts.Notes;
 using DiskApp.Contracts.Operations;
 using DiskApp.Contracts.Roots;
 using DiskApp.Contracts.Search;
@@ -291,6 +292,43 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
 
     /// <inheritdoc />
     public Task DeleteTagAsync(long id, CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Delete, ApiRoutes.V1.Tag(id), cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<NoteDto>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default)
+        => GetAsync(ApiRoutes.V1.Notes + new QueryBuilder().Add("q", string.IsNullOrWhiteSpace(query) ? null : query).Add("tagId", tagId?.ToString(CultureInfo.InvariantCulture)).Add("deleted", deleted ? "true" : null), Json.IReadOnlyListNoteDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<NoteDto> GetNoteAsync(long id, CancellationToken cancellationToken = default) => GetAsync(ApiRoutes.V1.Note(id), Json.NoteDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<NoteDto> CreateNoteAsync(NoteRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Post, ApiRoutes.V1.Notes, request, Json.NoteRequest, Json.NoteDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<NoteDto> UpdateNoteAsync(long id, NoteRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Put, ApiRoutes.V1.Note(id), request, Json.NoteRequest, Json.NoteDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task DeleteNoteAsync(long id, bool permanent = false, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Delete, ApiRoutes.V1.Note(id) + new QueryBuilder().Add("permanent", permanent ? "true" : null), cancellationToken);
+
+    /// <inheritdoc />
+    public Task<NoteDto> RestoreNoteAsync(long id, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Post, ApiRoutes.V1.Note(id) + "/restore", new NoteRequest(), Json.NoteRequest, Json.NoteDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<TagDto>> GetNoteTagsAsync(CancellationToken cancellationToken = default) => GetAsync(ApiRoutes.V1.NoteTags, Json.IReadOnlyListTagDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<TagDto> CreateNoteTagAsync(TagRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Post, ApiRoutes.V1.NoteTags, request, Json.TagRequest, Json.TagDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<TagDto> UpdateNoteTagAsync(long id, TagRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Put, ApiRoutes.V1.NoteTag(id), request, Json.TagRequest, Json.TagDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task DeleteNoteTagAsync(long id, CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Delete, ApiRoutes.V1.NoteTag(id), cancellationToken);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<CollectionDto>> GetCollectionsAsync(CancellationToken cancellationToken = default)

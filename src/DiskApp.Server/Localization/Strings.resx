@@ -306,4 +306,16 @@
   <data name="SortingEndpoints.UnknownState" xml:space="preserve">
     <value>Неизвестное состояние.</value>
   </data>
+  <data name="Notes.NotFound" xml:space="preserve">
+    <value>Заметки {0} нет.</value>
+  </data>
+  <data name="Notes.NotInTrash" xml:space="preserve">
+    <value>Заметки {0} нет в корзине.</value>
+  </data>
+  <data name="Notes.TooLong" xml:space="preserve">
+    <value>Текст заметки — не больше {0} символов.</value>
+  </data>
+  <data name="Notes.TooManyTags" xml:space="preserve">
+    <value>У заметки не больше {0} тегов.</value>
+  </data>
 </root>

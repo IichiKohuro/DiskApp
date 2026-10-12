@@ -152,6 +152,21 @@ public static class ApiRoutes
         /// <summary>Авто-теги папок (этап 19): список и замена.</summary>
         public const string AutoTags = Prefix + "/auto-tags";
 
+        /// <summary>Заметки (этап 23).</summary>
+        public const string Notes = Prefix + "/notes";
+
+        /// <summary>Заметка.</summary>
+        public const string NoteById = Notes + "/{id:long}";
+
+        /// <summary>Вернуть заметку из корзины.</summary>
+        public const string NoteRestore = NoteById + "/restore";
+
+        /// <summary>Теги заметок — свой список, отдельно от тегов файлов.</summary>
+        public const string NoteTags = Prefix + "/note-tags";
+
+        /// <summary>Тег заметок.</summary>
+        public const string NoteTagById = NoteTags + "/{id:long}";
+
         /// <summary>Тег по идентификатору.</summary>
         public const string TagById = Tags + "/{id:long}";
 
@@ -181,6 +196,12 @@ public static class ApiRoutes
 
         /// <summary>Адрес тега.</summary>
         public static string Tag(long id) => Tags + "/" + Id(id);
+
+        /// <summary>Адрес заметки.</summary>
+        public static string Note(long id) => Notes + "/" + Id(id);
+
+        /// <summary>Адрес тега заметок.</summary>
+        public static string NoteTag(long id) => NoteTags + "/" + Id(id);
 
         /// <summary>Адрес коллекции.</summary>
         public static string Collection(long id) => Collections + "/" + Id(id);

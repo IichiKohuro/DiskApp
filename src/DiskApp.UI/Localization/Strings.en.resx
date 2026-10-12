@@ -3270,4 +3270,122 @@
   <data name="Settings.SettleSecondsDescription" xml:space="preserve">
     <value>A file is offered for sorting once it hasn't changed for this long: the download is complete</value>
   </data>
+  <data name="Notes.AllTags" xml:space="preserve">
+    <value>All tags</value>
+  </data>
+  <data name="Notes.BackToNotes" xml:space="preserve">
+    <value>Back to notes</value>
+  </data>
+  <data name="Notes.Delete" xml:space="preserve">
+    <value>Move to trash</value>
+  </data>
+  <data name="Notes.Deleted" xml:space="preserve">
+    <value>Note moved to trash</value>
+  </data>
+  <data name="Notes.DeleteForever" xml:space="preserve">
+    <value>Delete forever</value>
+  </data>
+  <data name="Notes.DeleteForeverMessage" xml:space="preserve">
+    <value>“{0}” will be deleted with no way back.</value>
+  </data>
+  <data name="Notes.DeleteForeverTitle" xml:space="preserve">
+    <value>Delete the note forever?</value>
+  </data>
+  <data name="Notes.DeleteTag" xml:space="preserve">
+    <value>Delete tag</value>
+  </data>
+  <data name="Notes.DeleteTagMessage" xml:space="preserve">
+    <value>Tag “{0}” is removed from all notes; the notes stay.</value>
+  </data>
+  <data name="Notes.DeleteTagTitle" xml:space="preserve">
+    <value>Delete the note tag?</value>
+  </data>
+  <data name="Notes.Description" xml:space="preserve">
+    <value>Notes to self in Markdown, with their own tags. The first line is the title; saving is automatic.</value>
+  </data>
+  <data name="Notes.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Notes.EditorPlaceholder" xml:space="preserve">
+    <value># Title
+
+Markdown text: **bold**, *italic*, lists, - [ ] to-dos, links and file paths.</value>
+  </data>
+  <data name="Notes.EditTag" xml:space="preserve">
+    <value>Rename tag…</value>
+  </data>
+  <data name="Notes.EditTagTitle" xml:space="preserve">
+    <value>Note tag</value>
+  </data>
+  <data name="Notes.Failed" xml:space="preserve">
+    <value>That didn't work: {0}</value>
+  </data>
+  <data name="Notes.More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Notes.New" xml:space="preserve">
+    <value>New note</value>
+  </data>
+  <data name="Notes.NoNotesYet" xml:space="preserve">
+    <value>No notes yet. “New note” or Ctrl+N.</value>
+  </data>
+  <data name="Notes.NotFoundSample" xml:space="preserve">
+    <value>Note {0} not found.</value>
+  </data>
+  <data name="Notes.NothingFound" xml:space="preserve">
+    <value>Nothing found.</value>
+  </data>
+  <data name="Notes.NothingOpen" xml:space="preserve">
+    <value>Pick a note on the left or create a new one.</value>
+  </data>
+  <data name="Notes.Pin" xml:space="preserve">
+    <value>Pin to top</value>
+  </data>
+  <data name="Notes.Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="Notes.Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="Notes.SampleBody" xml:space="preserve">
+    <value># To-do
+
+- [x] Sort Downloads
+- [ ] Call about project **417**
+
+Project folder: D:\Work\417</value>
+  </data>
+  <data name="Notes.SampleTag" xml:space="preserve">
+    <value>to-do</value>
+  </data>
+  <data name="Notes.Search" xml:space="preserve">
+    <value>Search notes</value>
+  </data>
+  <data name="Notes.TagFilter" xml:space="preserve">
+    <value>Tag</value>
+  </data>
+  <data name="Notes.TagWatermark" xml:space="preserve">
+    <value>Note tag</value>
+  </data>
+  <data name="Notes.Text" xml:space="preserve">
+    <value>Note text</value>
+  </data>
+  <data name="Notes.Title" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Notes.Trash" xml:space="preserve">
+    <value>Notes trash</value>
+  </data>
+  <data name="Notes.TrashEmpty" xml:space="preserve">
+    <value>The notes trash is empty.</value>
+  </data>
+  <data name="Notes.TrashHint" xml:space="preserve">
+    <value>Deleted notes stay here for 30 days, then go away by themselves.</value>
+  </data>
+  <data name="Notes.Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Notes.Untitled" xml:space="preserve">
+    <value>Untitled</value>
+  </data>
 </root>

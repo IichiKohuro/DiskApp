@@ -17,6 +17,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="FluentAvaloniaUI" />
     <PackageReference Include="FluentIcons.Avalonia" />
+    <PackageReference Include="Markdig" />
   </ItemGroup>
 
   <ItemGroup>

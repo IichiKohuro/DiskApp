@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
 using DiskApp.Contracts.Library;
+using DiskApp.Contracts.Notes;
 using DiskApp.Contracts.Operations;
 using DiskApp.Contracts.Roots;
 using DiskApp.Contracts.Search;
@@ -130,6 +131,36 @@ public interface IDiskAppApi
 
     /// <summary>Отложить, оставить здесь или вернуть в новые файлы накопителя.</summary>
     Task SetInboxStateAsync(SetInboxStateRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Заметки (этап 23): закреплённые сверху; поиск по тексту, тег заметок, корзина.</summary>
+    Task<IReadOnlyList<NoteDto>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default);
+
+    /// <summary>Заметка.</summary>
+    Task<NoteDto> GetNoteAsync(long id, CancellationToken cancellationToken = default);
+
+    /// <summary>Новая заметка.</summary>
+    Task<NoteDto> CreateNoteAsync(NoteRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Изменить заметку.</summary>
+    Task<NoteDto> UpdateNoteAsync(long id, NoteRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Удалить заметку в корзину; <paramref name="permanent"/> — навсегда, только из корзины.</summary>
+    Task DeleteNoteAsync(long id, bool permanent = false, CancellationToken cancellationToken = default);
+
+    /// <summary>Вернуть заметку из корзины.</summary>
+    Task<NoteDto> RestoreNoteAsync(long id, CancellationToken cancellationToken = default);
+
+    /// <summary>Теги заметок.</summary>
+    Task<IReadOnlyList<TagDto>> GetNoteTagsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Создать тег заметок.</summary>
+    Task<TagDto> CreateNoteTagAsync(TagRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Изменить тег заметок.</summary>
+    Task<TagDto> UpdateNoteTagAsync(long id, TagRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Удалить тег заметок.</summary>
+    Task DeleteNoteTagAsync(long id, CancellationToken cancellationToken = default);
 
     /// <summary>Операции.</summary>
     Task<IReadOnlyList<OperationDto>> GetOperationsAsync(CancellationToken cancellationToken = default);

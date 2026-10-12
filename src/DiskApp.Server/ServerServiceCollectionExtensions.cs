@@ -141,6 +141,8 @@ public static class ServerServiceCollectionExtensions
         services.AddSingleton<ITagRepository>(static provider => new SqliteTagRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<IFolderTagRepository>(static provider => new SqliteFolderTagRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
         services.AddSingleton<IInboxStateRepository>(static provider => new SqliteInboxStateRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
+        services.AddSingleton<INoteRepository>(static provider => new SqliteNoteRepository(provider.GetRequiredService<SqliteDatabase>()));
+        services.AddSingleton<INoteTagRepository>(static provider => new SqliteNoteTagRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<ICollectionRepository>(static provider => new SqliteCollectionRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<IClock>()));
         services.AddSingleton<IQueryHistoryRepository>(static provider => new SqliteQueryHistoryRepository(provider.GetRequiredService<SqliteDatabase>()));
     }

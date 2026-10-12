@@ -306,4 +306,16 @@
   <data name="SortingEndpoints.UnknownState" xml:space="preserve">
     <value>Unknown state.</value>
   </data>
+  <data name="Notes.NotFound" xml:space="preserve">
+    <value>Note {0} not found.</value>
+  </data>
+  <data name="Notes.NotInTrash" xml:space="preserve">
+    <value>Note {0} is not in the trash.</value>
+  </data>
+  <data name="Notes.TooLong" xml:space="preserve">
+    <value>A note is at most {0} characters.</value>
+  </data>
+  <data name="Notes.TooManyTags" xml:space="preserve">
+    <value>A note has at most {0} tags.</value>
+  </data>
 </root>

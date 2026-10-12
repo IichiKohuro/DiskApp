@@ -3270,4 +3270,122 @@
   <data name="Settings.SettleSecondsDescription" xml:space="preserve">
     <value>Файл предлагается к разбору, когда не меняется столько секунд: загрузка завершена</value>
   </data>
+  <data name="Notes.AllTags" xml:space="preserve">
+    <value>Все теги</value>
+  </data>
+  <data name="Notes.BackToNotes" xml:space="preserve">
+    <value>К заметкам</value>
+  </data>
+  <data name="Notes.Delete" xml:space="preserve">
+    <value>Удалить в корзину</value>
+  </data>
+  <data name="Notes.Deleted" xml:space="preserve">
+    <value>Заметка в корзине</value>
+  </data>
+  <data name="Notes.DeleteForever" xml:space="preserve">
+    <value>Удалить навсегда</value>
+  </data>
+  <data name="Notes.DeleteForeverMessage" xml:space="preserve">
+    <value>«{0}» удалится без возможности вернуть.</value>
+  </data>
+  <data name="Notes.DeleteForeverTitle" xml:space="preserve">
+    <value>Удалить заметку навсегда?</value>
+  </data>
+  <data name="Notes.DeleteTag" xml:space="preserve">
+    <value>Удалить тег</value>
+  </data>
+  <data name="Notes.DeleteTagMessage" xml:space="preserve">
+    <value>Тег «{0}» снимется со всех заметок; сами заметки останутся.</value>
+  </data>
+  <data name="Notes.DeleteTagTitle" xml:space="preserve">
+    <value>Удалить тег заметок?</value>
+  </data>
+  <data name="Notes.Description" xml:space="preserve">
+    <value>Записи для себя — в Markdown, со своими тегами. Первая строка — заголовок; сохраняется само.</value>
+  </data>
+  <data name="Notes.Edit" xml:space="preserve">
+    <value>Правка</value>
+  </data>
+  <data name="Notes.EditorPlaceholder" xml:space="preserve">
+    <value># Заголовок
+
+Текст в Markdown: **жирный**, *курсив*, списки, - [ ] дела, ссылки и пути к файлам.</value>
+  </data>
+  <data name="Notes.EditTag" xml:space="preserve">
+    <value>Переименовать тег…</value>
+  </data>
+  <data name="Notes.EditTagTitle" xml:space="preserve">
+    <value>Тег заметок</value>
+  </data>
+  <data name="Notes.Failed" xml:space="preserve">
+    <value>Не получилось: {0}</value>
+  </data>
+  <data name="Notes.More" xml:space="preserve">
+    <value>Ещё</value>
+  </data>
+  <data name="Notes.New" xml:space="preserve">
+    <value>Новая заметка</value>
+  </data>
+  <data name="Notes.NoNotesYet" xml:space="preserve">
+    <value>Заметок пока нет. «Новая заметка» или Ctrl+N.</value>
+  </data>
+  <data name="Notes.NotFoundSample" xml:space="preserve">
+    <value>Заметки {0} нет.</value>
+  </data>
+  <data name="Notes.NothingFound" xml:space="preserve">
+    <value>Ничего не найдено.</value>
+  </data>
+  <data name="Notes.NothingOpen" xml:space="preserve">
+    <value>Выберите заметку слева или создайте новую.</value>
+  </data>
+  <data name="Notes.Pin" xml:space="preserve">
+    <value>Закрепить сверху</value>
+  </data>
+  <data name="Notes.Preview" xml:space="preserve">
+    <value>Просмотр</value>
+  </data>
+  <data name="Notes.Restore" xml:space="preserve">
+    <value>Вернуть</value>
+  </data>
+  <data name="Notes.SampleBody" xml:space="preserve">
+    <value># Список дел
+
+- [x] Разобрать «Загрузки»
+- [ ] Позвонить по проекту **417**
+
+Папка проекта: D:\Work\417</value>
+  </data>
+  <data name="Notes.SampleTag" xml:space="preserve">
+    <value>дела</value>
+  </data>
+  <data name="Notes.Search" xml:space="preserve">
+    <value>Найти в заметках</value>
+  </data>
+  <data name="Notes.TagFilter" xml:space="preserve">
+    <value>Тег</value>
+  </data>
+  <data name="Notes.TagWatermark" xml:space="preserve">
+    <value>Тег заметки</value>
+  </data>
+  <data name="Notes.Text" xml:space="preserve">
+    <value>Текст заметки</value>
+  </data>
+  <data name="Notes.Title" xml:space="preserve">
+    <value>Заметки</value>
+  </data>
+  <data name="Notes.Trash" xml:space="preserve">
+    <value>Корзина заметок</value>
+  </data>
+  <data name="Notes.TrashEmpty" xml:space="preserve">
+    <value>Корзина заметок пуста.</value>
+  </data>
+  <data name="Notes.TrashHint" xml:space="preserve">
+    <value>Удалённые заметки хранятся здесь 30 дней, потом удаляются сами.</value>
+  </data>
+  <data name="Notes.Undo" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="Notes.Untitled" xml:space="preserve">
+    <value>Без названия</value>
+  </data>
 </root>

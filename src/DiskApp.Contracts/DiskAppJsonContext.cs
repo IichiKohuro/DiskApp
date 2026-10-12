@@ -6,6 +6,7 @@ using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
 using DiskApp.Contracts.Hub;
 using DiskApp.Contracts.Library;
+using DiskApp.Contracts.Notes;
 using DiskApp.Contracts.Operations;
 using DiskApp.Contracts.Roots;
 using DiskApp.Contracts.Search;
@@ -48,6 +49,10 @@ namespace DiskApp.Contracts;
 [JsonSerializable(typeof(DropFilesRequest))]
 [JsonSerializable(typeof(InboxDto))]
 [JsonSerializable(typeof(SetInboxStateRequest))]
+[JsonSerializable(typeof(NoteDto))]
+[JsonSerializable(typeof(IReadOnlyList<NoteDto>))]
+[JsonSerializable(typeof(NoteDto[]))]
+[JsonSerializable(typeof(NoteRequest))]
 [JsonSerializable(typeof(OperationDto))]
 [JsonSerializable(typeof(IReadOnlyList<OperationDto>))]
 [JsonSerializable(typeof(OperationProgressDto))]
