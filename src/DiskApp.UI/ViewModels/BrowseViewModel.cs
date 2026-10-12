@@ -226,7 +226,7 @@ public sealed partial class BrowseViewModel : PageViewModel
 
     /// <summary>Текущая папка.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanGoUp), nameof(CanEditAutoTags))]
+    [NotifyPropertyChangedFor(nameof(CanGoUp), nameof(CanEditAutoTags), nameof(AutoTagsMenuText))]
     public partial string? CurrentPath { get; set; }
 
     /// <summary>Текст адресной строки.</summary>
@@ -341,6 +341,7 @@ public sealed partial class BrowseViewModel : PageViewModel
         UpdateStatus();
         OnPropertyChanged(nameof(Selection));
         OnPropertyChanged(nameof(CanEditAutoTags));
+        OnPropertyChanged(nameof(AutoTagsMenuText));
     }
 
     /// <summary>Перейти по адресной строке.</summary>
@@ -519,8 +520,17 @@ public sealed partial class BrowseViewModel : PageViewModel
     public bool CanEditTags => TagEditor is not null;
 
     /// <summary>«Авто-теги папки…» доступны: выбрана одна папка или ничего — тогда для открытой.</summary>
-    public bool CanEditAutoTags => TagEditor is not null
-        && (_selection.Count == 1 ? _selection[0].Entry.Kind == FileKind.Folder : _selection.Count == 0 && CurrentPath is not null);
+    public bool CanEditAutoTags => TagEditor is not null && AutoTagsTarget is not null;
+
+    /// <summary>Пункт меню с именем папки, к которой он относится: выбранной подпапки или открытой — чтобы не гадать.</summary>
+    public string AutoTagsMenuText => AutoTagsTarget is { } folder
+        ? L.F("Browse.AutoTagsOfFolder", PathText.FileName(folder))
+        : L.T("Browse.AutoTagsEllipsis");
+
+    /// <summary>Папка для «Авто-теги папки…» из меню списка: выбранная папка, а без выбора — открытая.</summary>
+    private string? AutoTagsTarget => _selection.Count == 1
+        ? _selection[0].Entry.Kind == FileKind.Folder ? _selection[0].Entry.FullPath : null
+        : _selection.Count == 0 ? CurrentPath : null;
 
     /// <summary>
     /// Закрепить выбранное или открепить (<c>Ctrl+D</c>, PLAN.md, этап 8.7): если среди выбранного есть незакреплённое —
@@ -574,12 +584,19 @@ public sealed partial class BrowseViewModel : PageViewModel
     /// внутри открытой.
     /// </summary>
     [RelayCommand]
-    private async Task EditAutoTagsAsync()
+    private Task EditAutoTagsAsync() => AutoTagsTarget is { } folder ? EditAutoTagsOfAsync(folder) : Task.CompletedTask;
+
+    /// <summary>
+    /// «Авто-теги папки…» из меню дерева: так задаются авто-теги корня — например, рабочей папки, добавленной корнем, —
+    /// которого нет в списке ни одной папки.
+    /// </summary>
+    [RelayCommand]
+    private Task EditFolderAutoTagsAsync(FolderNode? node)
+        => node is { IsPlaceholder: false, Path.Length: > 0 } ? EditAutoTagsOfAsync(node.Path) : Task.CompletedTask;
+
+    private async Task EditAutoTagsOfAsync(string folder)
     {
-        var folder = _selection.Count == 1 && _selection[0].Entry.Kind == FileKind.Folder
-            ? _selection[0].Entry.FullPath
-            : _selection.Count == 0 ? CurrentPath : null;
-        if (folder is null || TagEditor is null)
+        if (TagEditor is null)
         {
             return;
         }

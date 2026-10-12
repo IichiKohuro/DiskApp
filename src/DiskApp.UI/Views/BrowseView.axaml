@@ -98,7 +98,15 @@
                 </TreeView.Styles>
                 <TreeView.ItemTemplate>
                     <TreeDataTemplate x:DataType="vm:FolderNode" ItemsSource="{Binding Children}">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8" Background="Transparent">
+                            <!-- Меню узла дерева: авто-теги корня и любой папки (этап 19) — корень в списке папок не виден -->
+                            <StackPanel.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="{loc:Str Browse.AutoTagsEllipsis}" IsEnabled="{Binding !IsPlaceholder}"
+                                              IsVisible="{Binding $parent[UserControl].((vm:BrowseViewModel)DataContext).CanEditTags}"
+                                              Command="{Binding $parent[UserControl].((vm:BrowseViewModel)DataContext).EditFolderAutoTagsCommand}" CommandParameter="{Binding}" />
+                                </MenuFlyout>
+                            </StackPanel.ContextFlyout>
                             <ic:SymbolIcon Symbol="{Binding Symbol}" FontSize="16" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                             <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                         </StackPanel>
@@ -205,7 +213,7 @@
             <Separator />
             <MenuItem Header="{loc:Str Common.PinOrUnpin}" Command="{Binding TogglePinCommand}" InputGesture="Ctrl+D" />
             <MenuItem Header="{loc:Str Common.TagsEllipsis}" Command="{Binding EditTagsCommand}" InputGesture="Ctrl+T" IsVisible="{Binding CanEditTags}" />
-            <MenuItem Header="{loc:Str Browse.AutoTagsEllipsis}" Command="{Binding EditAutoTagsCommand}" IsVisible="{Binding CanEditAutoTags}" />
+            <MenuItem Header="{Binding AutoTagsMenuText}" Command="{Binding EditAutoTagsCommand}" IsVisible="{Binding CanEditAutoTags}" />
             <MenuItem Header="{loc:Str Common.RenameEllipsis}" Command="{Binding RenameCommand}" />
             <MenuItem Header="{loc:Str Browse.MoveToRecycleBin}" Command="{Binding DeleteCommand}" />
             <Separator />

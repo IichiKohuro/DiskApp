@@ -350,6 +350,29 @@ public sealed class SortingViewModelTests
     }
 
     [Fact]
+    public async Task WorkFolderAutoTags_FromChipMenu_SavedForTheWorkFolderItself()
+    {
+        // Arrange: «Авто-теги…» в меню чипа — для самой рабочей папки, без карточки
+        AutoTags();
+        var page = await CreateLoadedAsync();
+        string? title = null;
+        _dialogs.ShowAutoTagsAsync(Arg.Any<string>(), Arg.Any<AutoTagsEditorViewModel>()).Returns(call =>
+        {
+            title = call.ArgAt<string>(0);
+            call.ArgAt<AutoTagsEditorViewModel>(1).AddCommand.Execute("фото");
+            return true;
+        });
+
+        // Act
+        await page.EditWorkFolderAutoTagsCommand.ExecuteAsync(page.WorkFolders[1]);
+
+        // Assert
+        title.ShouldBe("417");
+        await _library.Received(1).SetAutoTagsAsync(Work417, Arg.Is<IReadOnlyList<string>>(tags => tags.SequenceEqual(PhotoOnly)), Arg.Any<CancellationToken>());
+        await _dialogs.DidNotReceive().ShowWorkFolderCardAsync(Arg.Any<WorkFolderCardViewModel>());
+    }
+
+    [Fact]
     public async Task EditWorkFolder_UnchangedAutoTags_AreNotSaved()
     {
         // Arrange

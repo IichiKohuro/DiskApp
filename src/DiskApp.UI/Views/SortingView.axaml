@@ -136,6 +136,7 @@
                                     <StackPanel.ContextFlyout>
                                         <MenuFlyout>
                                             <MenuItem Header="{loc:Str Sorting.EditWorkFolder}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).EditWorkFolderCommand}" CommandParameter="{Binding}" />
+                                            <MenuItem Header="{loc:Str Sorting.WorkFolderAutoTags}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).EditWorkFolderAutoTagsCommand}" CommandParameter="{Binding}" />
                                             <Separator />
                                             <MenuItem Header="{loc:Str Sorting.Earlier}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).MoveWorkFolderUpCommand}" CommandParameter="{Binding}" />
                                             <MenuItem Header="{loc:Str Sorting.Later}" Command="{Binding $parent[UserControl].((vm:SortingViewModel)DataContext).MoveWorkFolderDownCommand}" CommandParameter="{Binding}" />

@@ -3201,4 +3201,13 @@
   <data name="Tags.InheritedFrom" xml:space="preserve">
     <value>Auto-tag of folder {0}</value>
   </data>
+  <data name="AutoTags.LoadFailed" xml:space="preserve">
+    <value>Couldn't read auto-tags: {0}</value>
+  </data>
+  <data name="Browse.AutoTagsOfFolder" xml:space="preserve">
+    <value>Auto-tags of “{0}”…</value>
+  </data>
+  <data name="Sorting.WorkFolderAutoTags" xml:space="preserve">
+    <value>Auto-tags…</value>
+  </data>
 </root>

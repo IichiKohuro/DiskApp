@@ -3201,4 +3201,13 @@
   <data name="Tags.InheritedFrom" xml:space="preserve">
     <value>Авто-тег папки {0}</value>
   </data>
+  <data name="AutoTags.LoadFailed" xml:space="preserve">
+    <value>Не удалось прочитать авто-теги: {0}</value>
+  </data>
+  <data name="Browse.AutoTagsOfFolder" xml:space="preserve">
+    <value>Авто-теги папки «{0}»…</value>
+  </data>
+  <data name="Sorting.WorkFolderAutoTags" xml:space="preserve">
+    <value>Авто-теги…</value>
+  </data>
 </root>

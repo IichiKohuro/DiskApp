@@ -108,6 +108,27 @@ public sealed class AutoTagsApiTests
     }
 
     [Fact]
+    public async Task SetAutoTags_OnRootItself_TagsEverythingInIt()
+    {
+        // Arrange: рабочая папка вне индекса добавляется корнем — авто-тег задаётся самому корню
+        await using var context = await ServerTestContext.StartAsync();
+        context.Files.CreateFile(Path.Combine("TCI2", "отчёт.docx"), "1");
+        context.Files.CreateFile(Path.Combine("TCI2", "2026", "акт.pdf"), "2");
+        context.Files.CreateFile(Path.Combine("Другое", "чужой.docx"), "3");
+        var root = await context.AddRootAsync("TCI2");
+        await context.AddRootAsync("Другое");
+
+        // Act
+        var saved = await PutAsync(context, root.Path, "TCI2");
+        var found = await SearchAsync(context, "tag:tci2");
+
+        // Assert
+        saved.Path.ShouldBe(root.Path);
+        found.Items.Select(static item => item.Name).ShouldBe(["отчёт.docx", "2026", "акт.pdf"], ignoreOrder: true);
+        found.Items.ShouldAllBe(item => item.InheritedTags!.Single().Folder == root.Path);
+    }
+
+    [Fact]
     public async Task RebuildIndex_KeepsAutoTags()
     {
         // Arrange: пересборка удаляет записи — явные теги теряются, авто-теги папки остаются

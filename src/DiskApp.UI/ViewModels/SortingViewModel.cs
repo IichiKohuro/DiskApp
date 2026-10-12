@@ -741,6 +741,34 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
+    /// <summary>
+    /// «Авто-теги…» в меню чипа рабочей папки (этап 19): тот же редактор, что в карточке, но в один шаг — без подписи и номера.
+    /// </summary>
+    [RelayCommand]
+    private async Task EditWorkFolderAutoTagsAsync(WorkFolderItem? item)
+    {
+        if (item is null || _dialogs is null)
+        {
+            return;
+        }
+
+        AutoTagsEditorViewModel editor;
+        try
+        {
+            editor = await AutoTagsEditorViewModel.LoadAsync(_library, item.Folder.Path);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.T("AutoTags.Title"), L.F("AutoTags.LoadFailed", exception.Message), FAInfoBarSeverity.Error);
+            return;
+        }
+
+        if (await _dialogs.ShowAutoTagsAsync(item.Folder.Title, editor) && editor.IsChanged)
+        {
+            await SaveAutoTagsAsync(() => editor.SaveAsync(_library, item.Folder.Path));
+        }
+    }
+
     /// <summary>Сохраняет авто-теги и перечитывает их; ошибку показывает полосой уведомлений.</summary>
     private async Task SaveAutoTagsAsync(Func<Task> save)
     {

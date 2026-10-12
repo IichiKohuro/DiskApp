@@ -315,6 +315,36 @@ public sealed class AutoTagsUiTests
     }
 
     [Fact]
+    public async Task Browse_MenuNamesTargetFolder_TreeMenuTagsRootItself()
+    {
+        // Arrange: рабочая папка, добавленная корнем, видна только в дереве — авто-теги ей задаются оттуда
+        var tags = Substitute.For<ITagEditor>();
+        tags.EditAutoTagsAsync(Arg.Any<string>()).Returns(false);
+        var browse = new BrowseViewModel(new SampleBrowseService(static () => Now), new SampleRootsService(), new SampleSearchService(static () => Now), new SampleFileActions(), _dialogs, null, static () => Now)
+        {
+            TagEditor = tags,
+        };
+        await browse.Initialization;
+        await browse.NavigateAsync(@"D:\Projects\DiskApp");
+        var folder = browse.Items.First(static hit => hit.Entry.Kind == FileKind.Folder);
+        var root = browse.Tree[0];
+
+        // Act
+        browse.UpdateSelection([folder]);
+        var onFolder = browse.AutoTagsMenuText;
+        browse.UpdateSelection([]);
+        var onOpenFolder = browse.AutoTagsMenuText;
+        await browse.EditFolderAutoTagsCommand.ExecuteAsync(root);
+        await browse.EditFolderAutoTagsCommand.ExecuteAsync(new FolderNode("…", string.Empty, FluentIcons.Common.Symbol.MoreHorizontal, null));
+
+        // Assert
+        onFolder.ShouldBe($"Авто-теги папки «{folder.Entry.Name}»…");
+        onOpenFolder.ShouldBe("Авто-теги папки «DiskApp»…");
+        await tags.Received(1).EditAutoTagsAsync(root.Path);
+        await tags.Received(1).EditAutoTagsAsync(Arg.Any<string>());
+    }
+
+    [Fact]
     public async Task TagsPage_ShowsFoldersWhereTagIsAuto_AndOpensThem()
     {
         // Arrange
