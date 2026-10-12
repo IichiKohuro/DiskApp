@@ -13,8 +13,11 @@ public sealed class FileNameTemplateTests
     [Theory]
     [InlineData(null, "ТЗ 417 v3.docx")]
     [InlineData("", "ТЗ 417 v3.docx")]
-    [InlineData("{дата}_{имя}", "2026-10-11_ТЗ 417 v3.docx")]
-    [InlineData("{date}_{time}_{name}", "2026-10-11_14-30_ТЗ 417 v3.docx")]
+    [InlineData("{дата}_{имя}", "11102026_ТЗ 417 v3.docx")]
+    [InlineData("{date}_{time}_{name}", "11102026_143000_ТЗ 417 v3.docx")]
+    [InlineData("{дата}{время}_{имя}", "11102026143000_ТЗ 417 v3.docx")]
+    [InlineData("{имя}_{дата}", "ТЗ 417 v3_11102026.docx")]
+    [InlineData("{имя}_{дата}{время}", "ТЗ 417 v3_11102026143000.docx")]
     [InlineData("{имя}_{теги}", "ТЗ 417 v3_заказчик_договор.docx")]
     [InlineData("{папка}_{имя}", "417_ТЗ 417 v3.docx")]
     [InlineData("Техзадание", "Техзадание.docx")]
@@ -69,7 +72,7 @@ public sealed class FileNameTemplateTests
         var name = FileNameTemplate.Apply("{дата}_{имя}", Context("Проект.v2", isFolder: true));
 
         // Assert
-        name.ShouldBe("2026-10-11_Проект.v2");
+        name.ShouldBe("11102026_Проект.v2");
     }
 
     [Fact]

@@ -2596,7 +2596,7 @@
     <value>Collector folders</value>
   </data>
   <data name="Sorting.Insert.dateTip" xml:space="preserve">
-    <value>{date}: today's date, 2026-10-11</value>
+    <value>{date}: today's date, 12102026</value>
   </data>
   <data name="Sorting.Insert.folderTip" xml:space="preserve">
     <value>{folder}: the destination folder name</value>
@@ -2611,13 +2611,13 @@
     <value>{tags}: the move's tags joined with “_”</value>
   </data>
   <data name="Sorting.Insert.timeTip" xml:space="preserve">
-    <value>{time}: the current time, 14-30</value>
+    <value>{time}: the current time, 135445; joins the date when right after it</value>
   </data>
   <data name="Sorting.ItemsSelected" xml:space="preserve">
     <value>{0}, {1} selected</value>
   </data>
   <data name="Sorting.KeysHint" xml:space="preserve">
-    <value>1–9 — work folder · double-click — open file · Ctrl+Enter — move</value>
+    <value>1–9 — work folder · double-click — open · Delete — recycle bin · Ctrl+Enter — move</value>
   </data>
   <data name="Sorting.Later" xml:space="preserve">
     <value>Later (higher number)</value>
@@ -3432,5 +3432,26 @@ Project folder: D:\Work\417</value>
   </data>
   <data name="Notes.ListWidth" xml:space="preserve">
     <value>List width</value>
+  </data>
+  <data name="Sorting.DeleteAll" xml:space="preserve">
+    <value>Delete all</value>
+  </data>
+  <data name="Sorting.DeleteAllMessage" xml:space="preserve">
+    <value>Move every file in the list — {0} — to the recycle bin? You can restore them from the Windows recycle bin.</value>
+  </data>
+  <data name="Sorting.DeleteAllTip" xml:space="preserve">
+    <value>Move every file in the list to the Windows recycle bin</value>
+  </data>
+  <data name="Sorting.DeleteFile" xml:space="preserve">
+    <value>Move to recycle bin</value>
+  </data>
+  <data name="Sorting.DeleteMessage" xml:space="preserve">
+    <value>Move {0} to the recycle bin? You can restore it from the Windows recycle bin.</value>
+  </data>
+  <data name="Sorting.NameDateLast" xml:space="preserve">
+    <value>Date last</value>
+  </data>
+  <data name="Sorting.NameDateTimeLast" xml:space="preserve">
+    <value>Date and time last</value>
   </data>
 </root>

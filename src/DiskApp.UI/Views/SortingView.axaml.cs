@@ -50,6 +50,16 @@ public partial class SortingView : UserControl
         NameBox.AddHandler(KeyDownEvent, OnPopupBoxKeyDown, RoutingStrategies.Tunnel);
         ((Flyout)NameButton.Flyout!).Opened += (_, _) => Dispatcher.UIThread.Post(() => NameBox.Focus(), DispatcherPriority.Input);
         ((Flyout)TagsButton.Flyout!).Opened += (_, _) => Dispatcher.UIThread.Post(() => TagBox.Focus(), DispatcherPriority.Input);
+
+        // Готовый вариант только подставляет шаблон: список возвращается к «Готовые варианты», и тот же вариант можно
+        // выбрать снова. Сброс — следующим кадром: внутри смены выбора ComboBox его не примет.
+        PresetsBox.SelectionChanged += (_, _) =>
+        {
+            if (PresetsBox.SelectedItem is not null)
+            {
+                Dispatcher.UIThread.Post(() => PresetsBox.SelectedItem = null, DispatcherPriority.Background);
+            }
+        };
         PanelsSplitter.DragCompleted += (_, _) =>
         {
             if (ViewModel is { } viewModel)
@@ -132,6 +142,11 @@ public partial class SortingView : UserControl
         else if (e.Key == Key.Enter && e.KeyModifiers == KeyModifiers.None && ItemsList.IsKeyboardFocusWithin)
         {
             viewModel.MoveCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Delete && e.KeyModifiers == KeyModifiers.None && ItemsList.IsKeyboardFocusWithin && viewModel.CanDelete)
+        {
+            viewModel.DeleteSelectedCommand.Execute(null);
             e.Handled = true;
         }
     }

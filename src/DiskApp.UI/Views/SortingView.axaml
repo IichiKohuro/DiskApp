@@ -114,11 +114,21 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </DockPanel>
-                <!-- Очередь (этап 17.1): дописываемые файлы — числом, «оставленные здесь» — по кнопке -->
-                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="12" Margin="6,6,6,0">
-                    <TextBlock Classes="tertiary" FontSize="12" VerticalAlignment="Center" Text="{Binding PendingText}" IsVisible="{Binding HasPending}" />
-                    <HyperlinkButton Padding="0" FontSize="12" Content="{Binding KeptText}" Command="{Binding ToggleShowKeptCommand}" IsVisible="{Binding HasKept}" />
-                </StackPanel>
+                <!-- Под списком: очередь (этап 17.1) — дописываемые файлы числом, «оставленные здесь» по кнопке;
+                     справа «Удалить всё» — накопитель разобран, остальное не нужно (замечание 2026-10-12) -->
+                <DockPanel DockPanel.Dock="Bottom" Margin="6,6,0,0">
+                    <Button DockPanel.Dock="Right" Classes="tool" Command="{Binding DeleteAllCommand}" IsVisible="{Binding CanDelete}" IsEnabled="{Binding !!Items.Count}"
+                            AutomationProperties.Name="{loc:Str Sorting.DeleteAll}" ToolTip.Tip="{loc:Str Sorting.DeleteAllTip}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <ic:SymbolIcon Symbol="Delete" FontSize="14" />
+                            <TextBlock Text="{loc:Str Sorting.DeleteAll}" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                        <TextBlock Classes="tertiary" FontSize="12" VerticalAlignment="Center" Text="{Binding PendingText}" IsVisible="{Binding HasPending}" />
+                        <HyperlinkButton Padding="0" FontSize="12" Content="{Binding KeptText}" Command="{Binding ToggleShowKeptCommand}" IsVisible="{Binding HasKept}" />
+                    </StackPanel>
+                </DockPanel>
                 <Panel>
                     <ListBox x:Name="ItemsList" AutomationProperties.Name="{loc:Str Sorting.Files}" ItemsSource="{Binding Items}" SelectionMode="Multiple">
                         <ListBox.ContextFlyout>
@@ -138,6 +148,13 @@
                                 <MenuItem Header="{loc:Str Sorting.Postpone}" Command="{Binding PostponeCommand}" IsEnabled="{Binding HasSelection}" />
                                 <MenuItem Header="{loc:Str Sorting.KeepHere}" Command="{Binding KeepHereCommand}" IsEnabled="{Binding HasSelection}" />
                                 <MenuItem Header="{loc:Str Sorting.ReturnToNew}" Command="{Binding ReturnToNewCommand}" IsVisible="{Binding SelectionHasState}" />
+                                <Separator IsVisible="{Binding CanDelete}" />
+                                <!-- Ненужный файл — в корзину Windows (замечание 2026-10-12) -->
+                                <MenuItem Header="{loc:Str Sorting.DeleteFile}" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding HasSelection}" IsVisible="{Binding CanDelete}" InputGesture="Delete">
+                                    <MenuItem.Icon>
+                                        <ic:SymbolIcon Symbol="Delete" FontSize="16" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
                             </MenuFlyout>
                         </ListBox.ContextFlyout>
                         <ListBox.ItemTemplate>
@@ -286,7 +303,7 @@
                             <Flyout Placement="TopEdgeAlignedRight">
                                 <StackPanel Width="420" Spacing="8">
                                     <DockPanel>
-                                        <ComboBox DockPanel.Dock="Right" MinWidth="160"
+                                        <ComboBox x:Name="PresetsBox" DockPanel.Dock="Right" MinWidth="160"
                                                   AutomationProperties.Name="{loc:Str Sorting.NamePresets}"
                                                   PlaceholderText="{loc:Str Sorting.NamePresets}"
                                                   ItemsSource="{Binding NamePresets}"

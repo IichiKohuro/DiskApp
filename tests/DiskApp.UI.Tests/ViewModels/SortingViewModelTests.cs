@@ -678,10 +678,93 @@ public sealed class SortingViewModelTests
 
         // Assert
         page.SelectedNamePreset.ShouldBeNull("список возвращается к подсказке");
-        preview.ShouldBe("Будет: 2026-10-11_ТЗ 417.docx и ещё 1");
-        _operations.Sorted.ShouldHaveSingleItem().Names.ShouldBe(["2026-10-11_ТЗ 417.docx", "2026-10-11_схема.pdf"]);
+        preview.ShouldBe("Будет: 11102026_ТЗ 417.docx и ещё 1");
+        _operations.Sorted.ShouldHaveSingleItem().Names.ShouldBe(["11102026_ТЗ 417.docx", "11102026_схема.pdf"]);
         page.NameTemplate.ShouldBe("{дата}_{имя}");
         reopened.NameTemplate.ShouldBe("{дата}_{имя}", "шаблон с прежним именем запомнен в настройках");
+    }
+
+    [Fact]
+    public async Task NamePresets_DateAndTimeLast_WrittenWithoutSeparators()
+    {
+        // Arrange: даты и время — 11102026 и 11102026120000, без дефисов (замечание 2026-10-12)
+        var page = await CreateLoadedAsync();
+        page.SetSelection([page.Items[0]]);
+        page.SelectWorkFolderByNumberCommand.Execute(2);
+
+        // Act
+        page.SelectedNamePreset = page.NamePresets.Single(static preset => preset.Title == "Дата в конце");
+        var dateLast = page.NamePreview;
+        page.SelectedNamePreset = page.NamePresets.Single(static preset => preset.Title == "Дата и время в конце");
+        var dateTimeLast = page.NamePreview;
+        page.SelectedNamePreset = page.NamePresets.Single(static preset => preset.Title == "Дата и время в начале");
+        var dateTimeFirst = page.NamePreview;
+
+        // Assert
+        page.NamePresets.Select(static preset => preset.Title).ShouldBe(
+            ["Как есть", "Дата в начале", "Дата и время в начале", "Дата в конце", "Дата и время в конце", "Теги в конце", "Папка в начале"]);
+        dateLast.ShouldBe("Будет: ТЗ 417_11102026.docx");
+        dateTimeLast.ShouldBe("Будет: ТЗ 417_11102026120000.docx");
+        dateTimeFirst.ShouldBe("Будет: 11102026120000_ТЗ 417.docx");
+    }
+
+    [Fact]
+    public async Task InsertToken_TimeRightAfterDate_JoinsIt()
+    {
+        // Arrange
+        var page = await CreateLoadedAsync();
+
+        // Act
+        page.InsertNameTokenCommand.Execute("date");
+        page.InsertNameTokenCommand.Execute("time");
+        page.InsertNameTokenCommand.Execute("name");
+
+        // Assert
+        page.NameTemplate.ShouldBe("{дата}{время}_{имя}");
+    }
+
+    [Fact]
+    public async Task DeleteSelected_Confirmed_MovesToRecycleBinAndReloads()
+    {
+        // Arrange: ненужный файл — в корзину Windows (замечание 2026-10-12)
+        var actions = Substitute.For<IFileActions>();
+        _dialogs.ConfirmAsync("В корзину", "Переместить «setup.exe» в корзину? Вернуть можно из корзины Windows.", "В корзину").Returns(true);
+        var page = new SortingViewModel(_settings, _browse, _operations, _search, _library, _roots, _dialogs, _notices, static () => Now, actions: actions);
+        await page.RefreshAsync();
+        var setup = page.Items.Single(static item => item.Entry.Name == "setup.exe");
+        page.SetSelection([setup]);
+
+        // Act
+        await page.DeleteSelectedCommand.ExecuteAsync(null);
+
+        // Assert
+        page.CanDelete.ShouldBeTrue();
+        await actions.Received(1).MoveToRecycleBinAsync(Arg.Is<IReadOnlyList<FileEntry>>(entries => entries.Single() == setup.Entry), Arg.Any<CancellationToken>());
+        _notices.Received(1).Show("Перемещено в корзину", "«setup.exe»", FAInfoBarSeverity.Success);
+        page.HasSelection.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteAll_AskedFirst_CancelKeepsFiles_ConfirmDeletesEveryListedFile()
+    {
+        // Arrange
+        var actions = Substitute.For<IFileActions>();
+        var page = new SortingViewModel(_settings, _browse, _operations, _search, _library, _roots, _dialogs, _notices, static () => Now, actions: actions);
+        await page.RefreshAsync();
+        page.SelectedInbox = page.Inboxes.Single(static inbox => inbox.Text.StartsWith("Загрузки", StringComparison.Ordinal));
+        await page.PendingLoad;
+        var listed = page.Items.Select(static item => item.Entry).ToList();
+
+        // Act: сначала «Отмена», потом «В корзину»
+        _dialogs.ConfirmAsync("В корзину", "Переместить в корзину все файлы из списка — 2 файла? Вернуть можно из корзины Windows.", "В корзину").Returns(false, true);
+        await page.DeleteAllCommand.ExecuteAsync(null);
+        var afterCancel = actions.ReceivedCalls().Count();
+        await page.DeleteAllCommand.ExecuteAsync(null);
+
+        // Assert
+        afterCancel.ShouldBe(0);
+        await actions.Received(1).MoveToRecycleBinAsync(Arg.Is<IReadOnlyList<FileEntry>>(entries => entries.SequenceEqual(listed)), Arg.Any<CancellationToken>());
+        Create().CanDelete.ShouldBeFalse("без действий над файлами пунктов удаления нет");
     }
 
     [Fact]

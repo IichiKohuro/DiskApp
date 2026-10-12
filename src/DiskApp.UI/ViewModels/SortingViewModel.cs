@@ -495,6 +495,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <summary>Есть «Показать в папке».</summary>
     public bool CanReveal => _actions is not null;
 
+    /// <summary>Есть «Удалить в корзину» и «Удалить всё».</summary>
+    public bool CanDelete => _actions is not null;
+
     /// <summary>Ширина панели рабочих папок: тянется разделителем и запоминается между запусками.</summary>
     [ObservableProperty]
     public partial GridLength DestinationColumnWidth { get; set; }
@@ -571,7 +574,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
 
         var template = NameTemplate.TrimEnd();
-        var separator = template.Length == 0 || template.EndsWith('_') || template.EndsWith('-') ? string.Empty : "_";
+        // Время сразу после даты — слитно: «12102026135445», как просил пользователь.
+        var timeAfterDate = key == "time" && (template.EndsWith("{дата}", StringComparison.OrdinalIgnoreCase) || template.EndsWith("{date}", StringComparison.OrdinalIgnoreCase));
+        var separator = template.Length == 0 || timeAfterDate || template.EndsWith('_') || template.EndsWith('-') ? string.Empty : "_";
         NameTemplate = template + separator + Token(key);
     }
 
@@ -702,6 +707,14 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
+    /// <summary>Ненужные выбранные файлы — в корзину Windows, после подтверждения.</summary>
+    [RelayCommand]
+    private Task DeleteSelectedAsync() => DeleteToRecycleBinAsync([.. _selection], all: false);
+
+    /// <summary>Все файлы списка — в корзину Windows, после подтверждения: накопитель разобран, остальное не нужно.</summary>
+    [RelayCommand]
+    private Task DeleteAllAsync() => DeleteToRecycleBinAsync([.. Items], all: true);
+
     /// <summary>Показывает файл в Проводнике.</summary>
     [RelayCommand]
     private async Task RevealItemAsync(SortItem? item)
@@ -785,7 +798,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     [
         new(L.T("Sorting.NameKeep"), string.Empty),
         new(L.T("Sorting.NameDateFirst"), Token("date") + "_" + Token("name")),
-        new(L.T("Sorting.NameDateTimeFirst"), Token("date") + "_" + Token("time") + "_" + Token("name")),
+        new(L.T("Sorting.NameDateTimeFirst"), Token("date") + Token("time") + "_" + Token("name")),
+        new(L.T("Sorting.NameDateLast"), Token("name") + "_" + Token("date")),
+        new(L.T("Sorting.NameDateTimeLast"), Token("name") + "_" + Token("date") + Token("time")),
         new(L.T("Sorting.NameTagsLast"), Token("name") + "_" + Token("tags")),
         new(L.T("Sorting.NameFolderFirst"), Token("folder") + "_" + Token("name")),
     ];
@@ -820,6 +835,36 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         var first = FileNameTemplate.Apply(NameTemplate.Trim(), new FileNameContext(
             _selection[0].Entry.Name, _selection[0].Entry.Kind == FileKind.Folder, 1, _selection.Count, tags, PathText.FileName(target.Path), _clock()));
         NamePreview = _selection.Count > 1 ? L.F("Sorting.NamePreviewMany", first, _selection.Count - 1) : L.F("Sorting.NamePreview", first);
+    }
+
+    // Только в корзину: удаление из корзины Windows операцией не отменяется, поэтому сначала вопрос.
+    private async Task DeleteToRecycleBinAsync(IReadOnlyList<SortItem> items, bool all)
+    {
+        if (_actions is null || items.Count == 0)
+        {
+            return;
+        }
+
+        var what = items.Count == 1 ? $"«{items[0].Entry.Name}»" : Formatting.Count(items.Count, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"));
+        var question = all ? L.F("Sorting.DeleteAllMessage", what) : L.F("Sorting.DeleteMessage", what);
+        if (_dialogs is not null && !await _dialogs.ConfirmAsync(L.T("Common.ToRecycleBin"), question, L.T("Common.ToRecycleBin")))
+        {
+            return;
+        }
+
+        try
+        {
+            await _actions.MoveToRecycleBinAsync([.. items.Select(static item => item.Entry)]);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.T("Browse.CouldNotMoveToTheRecycle"), exception.Message, FAInfoBarSeverity.Error);
+            return;
+        }
+
+        SetSelection([]);
+        _notices?.Show(L.T("Browse.MovedToTheRecycleBin"), what, FAInfoBarSeverity.Success);
+        await LoadInboxesAsync();
     }
 
     // Шаблон с прежним именем запоминается для следующих переносов; своё имя без {имя} — разовое и сбрасывается.

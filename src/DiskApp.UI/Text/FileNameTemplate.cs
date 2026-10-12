@@ -18,13 +18,20 @@ public sealed record FileNameContext(string OriginalName, bool IsFolder, int Num
 
 /// <summary>
 /// Шаблон имени при переносе (PLAN.md, этап 17): <c>{имя}</c> — прежнее имя без расширения, <c>{дата}</c> и <c>{время}</c> —
-/// момент переноса (<c>2026-10-11</c>, <c>14-30</c>), <c>{теги}</c> — теги через «_», <c>{папка}</c> — папка назначения,
+/// момент переноса без разделителей, как просил пользователь (<c>12102026</c>, <c>135445</c>;
+/// вместе — <c>{дата}{время}</c> = <c>12102026135445</c>), <c>{теги}</c> — теги через «_», <c>{папка}</c> — папка назначения,
 /// <c>{№}</c> — номер в пачке; те же подстановки по-английски: <c>{name}</c>, <c>{date}</c>, <c>{time}</c>, <c>{tags}</c>,
 /// <c>{folder}</c>, <c>{n}</c>. Расширение сохраняется всегда. Шаблон без <c>{имя}</c> и <c>{№}</c> для нескольких файлов
 /// получает номер в конце, чтобы имена не совпали. Недопустимые в Windows символы заменяются на «_».
 /// </summary>
 public static partial class FileNameTemplate
 {
+    /// <summary>Формат <c>{дата}</c>: день, месяц, год без разделителей — 12102026.</summary>
+    public const string DateFormat = "ddMMyyyy";
+
+    /// <summary>Формат <c>{время}</c>: часы, минуты, секунды без разделителей — 135445.</summary>
+    public const string TimeFormat = "HHmmss";
+
     private const int MaxNameLength = 255;
 
     /// <summary>В шаблоне есть прежнее имя: такой шаблон годится для многих файлов и запоминается.</summary>
@@ -47,8 +54,8 @@ public static partial class FileNameTemplate
         var result = TokenPattern().Replace(template.Trim(), match => Key(match) switch
         {
             "name" => stem,
-            "date" => context.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            "time" => context.Now.ToString("HH-mm", CultureInfo.InvariantCulture),
+            "date" => context.Now.ToString(DateFormat, CultureInfo.InvariantCulture),
+            "time" => context.Now.ToString(TimeFormat, CultureInfo.InvariantCulture),
             "tags" => string.Join("_", context.Tags.Select(static tag => tag.Trim()).Where(static tag => tag.Length > 0)),
             "folder" => context.FolderName,
             "n" => context.Number.ToString(CultureInfo.InvariantCulture),

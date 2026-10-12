@@ -2596,7 +2596,7 @@
     <value>Папки-накопители</value>
   </data>
   <data name="Sorting.Insert.dateTip" xml:space="preserve">
-    <value>{дата} — сегодняшняя дата, 2026-10-11</value>
+    <value>{дата} — сегодняшняя дата, 12102026</value>
   </data>
   <data name="Sorting.Insert.folderTip" xml:space="preserve">
     <value>{папка} — имя папки, куда переносится файл</value>
@@ -2611,13 +2611,13 @@
     <value>{теги} — теги переноса через «_»</value>
   </data>
   <data name="Sorting.Insert.timeTip" xml:space="preserve">
-    <value>{время} — текущее время, 14-30</value>
+    <value>{время} — текущее время, 135445; сразу после даты — слитно</value>
   </data>
   <data name="Sorting.ItemsSelected" xml:space="preserve">
     <value>{0}, выбрано {1}</value>
   </data>
   <data name="Sorting.KeysHint" xml:space="preserve">
-    <value>1–9 — рабочая папка · двойной щелчок — открыть файл · Ctrl+Enter — перенести</value>
+    <value>1–9 — рабочая папка · двойной щелчок — открыть · Delete — в корзину · Ctrl+Enter — перенести</value>
   </data>
   <data name="Sorting.Later" xml:space="preserve">
     <value>Позже (большая цифра)</value>
@@ -3432,5 +3432,26 @@
   </data>
   <data name="Notes.ListWidth" xml:space="preserve">
     <value>Ширина списка</value>
+  </data>
+  <data name="Sorting.DeleteAll" xml:space="preserve">
+    <value>Удалить всё</value>
+  </data>
+  <data name="Sorting.DeleteAllMessage" xml:space="preserve">
+    <value>Переместить в корзину все файлы из списка — {0}? Вернуть можно из корзины Windows.</value>
+  </data>
+  <data name="Sorting.DeleteAllTip" xml:space="preserve">
+    <value>Все файлы списка — в корзину Windows</value>
+  </data>
+  <data name="Sorting.DeleteFile" xml:space="preserve">
+    <value>Удалить в корзину</value>
+  </data>
+  <data name="Sorting.DeleteMessage" xml:space="preserve">
+    <value>Переместить {0} в корзину? Вернуть можно из корзины Windows.</value>
+  </data>
+  <data name="Sorting.NameDateLast" xml:space="preserve">
+    <value>Дата в конце</value>
+  </data>
+  <data name="Sorting.NameDateTimeLast" xml:space="preserve">
+    <value>Дата и время в конце</value>
   </data>
 </root>
