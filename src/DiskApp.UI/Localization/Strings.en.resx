@@ -2929,34 +2929,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>A click on the tray icon opens a window you can drop files into: they go to the main collector folder — moved from the same drive, copied from another, and everything can be undone. From the keyboard — Ctrl+Alt+B.</value>
+    <value>A tag set on a folder goes to every file inside, including files that arrive later; tag: finds them. On Sorting, right-click a work folder → “Auto-tags…”; in Browse, “Folder auto-tags…” in the folder or tree menu. Such tags have an outline on their chips.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Click the icon — Drag&amp;Drop window</value>
+    <value>Folder auto-tags</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>The main window opens with a double-click on the icon or Ctrl+Alt+O. Quick search is still Ctrl+Alt+D and in the icon menu.</value>
+    <value>Sorting shows a file once its download has finished, and “Still downloading” while it hasn't. Partial downloads, service and hidden files don't appear.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Double-click — main window</value>
+    <value>Files arrive when downloaded</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>A new Shortcuts settings section: quick search, the main window, the Drag&amp;Drop window and Quick Switch. If a shortcut is taken by another app, DiskApp picks a spare one itself.</value>
+    <value>Right-click a file on Sorting: “Postpone” moves it to the end, “Keep here” stops offering it. The badge and the tray tooltip count only new files.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>All shortcuts in one place</value>
+    <value>Postpone or keep here</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>On the Sorting page, right-click a collector → Make main: files from the Drag&amp;Drop window and the Add dialog go there. In settings it replaced the Inbox folder.</value>
+    <value>Right-click the Downloads chip → “Include subfolders” to list files from messenger folders inside the inbox too.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Main collector folder</value>
+    <value>Inbox subfolders</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Undo and Ctrl+Z after copying send the created copies to the Recycle Bin.</value>
+    <value>A finished download shows up on Sorting by itself, and your selection stays. Waiting time and what to hide — Settings → Inbox → Inbox queue.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Copies can be undone</value>
+    <value>The list updates itself</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>
