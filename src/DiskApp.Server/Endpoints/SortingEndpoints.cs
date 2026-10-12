@@ -36,6 +36,47 @@ internal static class SortingEndpoints
             .WithName("DropFiles")
             .WithSummary("Бросить файлы в папку-накопитель: перенос или копия, источники — в том числе вне корней")
             .ProducesProblem(StatusCodes.Status403Forbidden);
+
+        endpoints.MapGet(ApiRoutes.V1.SortingInbox, GetInboxAsync)
+            .WithTags("Sorting")
+            .WithName("GetInbox")
+            .WithSummary("Очередь папок-накопителей")
+            .WithDescription("Файлы новые сверху; ещё дописываемые — с isReady = false и временем, когда придут; временные, служебные и скрытые не входят. newCount — сколько ждут разбора.");
+
+        endpoints.MapPut(ApiRoutes.V1.SortingInboxState, SetInboxStateAsync)
+            .WithTags("Sorting")
+            .WithName("SetInboxState")
+            .WithSummary("Отложить, оставить здесь или вернуть в новые файлы накопителя");
+    }
+
+    private static async Task<Ok<InboxDto>> GetInboxAsync(InboxService inbox, EntryLookup lookup, CancellationToken cancellationToken)
+    {
+        var snapshot = await inbox.GetAsync(cancellationToken).ConfigureAwait(false);
+        var dtos = await lookup.ToDtosAsync([.. snapshot.Items.Select(static item => item.Entry)], cancellationToken).ConfigureAwait(false);
+        var byId = dtos.ToDictionary(static dto => dto.Id);
+        var items = snapshot.Items
+            .Where(item => byId.ContainsKey(item.Entry.Id))
+            .Select(item => new InboxItemDto(byId[item.Entry.Id], item.Inbox, (InboxState)(int)item.State, snapshot.IsReady(item), item.ReadyUtc))
+            .ToArray();
+        var folders = snapshot.Folders.Select(static folder => new InboxFolderDto(folder.Path, folder.RootId, (Contracts.Operations.InboxProblem)(int)folder.Problem)).ToArray();
+        return TypedResults.Ok(new InboxDto(folders, items, snapshot.NewCount, snapshot.NextReadyUtc, snapshot.IsTruncated));
+    }
+
+    private static async Task<Results<NoContent, ValidationProblem>> SetInboxStateAsync(SetInboxStateRequest request, InboxService inbox, CancellationToken cancellationToken)
+    {
+        if (request.Paths.Count is 0 or > SetInboxStateRequest.MaxPaths)
+        {
+            return ApiProblems.Invalid(nameof(request.Paths), L.F("SortingEndpoints.TooManyPaths", SetInboxStateRequest.MaxPaths));
+        }
+
+        if (!Enum.IsDefined(request.State))
+        {
+            return ApiProblems.Invalid(nameof(request.State), L.T("SortingEndpoints.UnknownState"));
+        }
+
+        return await inbox.SetStateAsync(request.Paths, (InboxItemState)(int)request.State, cancellationToken).ConfigureAwait(false)
+            ? TypedResults.NoContent()
+            : ApiProblems.Invalid(nameof(request.Paths), L.T("SortingEndpoints.PathsOutsideInboxes"));
     }
 
     private static async Task<Results<Accepted<OperationDto>, ValidationProblem, ProblemHttpResult>> MoveAsync(

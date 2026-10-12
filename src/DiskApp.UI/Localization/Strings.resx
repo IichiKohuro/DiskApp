@@ -3210,4 +3210,64 @@
   <data name="Sorting.WorkFolderAutoTags" xml:space="preserve">
     <value>Авто-теги…</value>
   </data>
+  <data name="DesktopShell.FilesToSort" xml:space="preserve">
+    <value>к разбору: {0}</value>
+  </data>
+  <data name="Sorting.HideKept" xml:space="preserve">
+    <value>Скрыть оставленные</value>
+  </data>
+  <data name="Sorting.InboxMissing" xml:space="preserve">
+    <value>папка не найдена</value>
+  </data>
+  <data name="Sorting.InboxOffline" xml:space="preserve">
+    <value>диск недоступен</value>
+  </data>
+  <data name="Sorting.InboxOutsideIndex" xml:space="preserve">
+    <value>папки нет в индексе</value>
+  </data>
+  <data name="Sorting.IncludeSubfolders" xml:space="preserve">
+    <value>Включать подпапки</value>
+  </data>
+  <data name="Sorting.KeepHere" xml:space="preserve">
+    <value>Оставить здесь</value>
+  </data>
+  <data name="Sorting.PendingFiles" xml:space="preserve">
+    <value>Ещё загружается: {0}</value>
+  </data>
+  <data name="Sorting.Postpone" xml:space="preserve">
+    <value>Отложить</value>
+  </data>
+  <data name="Sorting.ReturnToNew" xml:space="preserve">
+    <value>Вернуть в новые</value>
+  </data>
+  <data name="Sorting.ShowKept" xml:space="preserve">
+    <value>Оставленные здесь: {0}</value>
+  </data>
+  <data name="Sorting.StateFailed" xml:space="preserve">
+    <value>Не удалось изменить: {0}</value>
+  </data>
+  <data name="Sorting.StateKept" xml:space="preserve">
+    <value>оставлен здесь</value>
+  </data>
+  <data name="Sorting.StatePostponed" xml:space="preserve">
+    <value>отложен</value>
+  </data>
+  <data name="Settings.IgnorePatterns" xml:space="preserve">
+    <value>Не показывать</value>
+  </data>
+  <data name="Settings.IgnorePatternsDescription" xml:space="preserve">
+    <value>Шаблоны имён через запятую: недокачанное, служебные файлы. Скрытые файлы не показываются всегда</value>
+  </data>
+  <data name="Settings.InboxQueue" xml:space="preserve">
+    <value>Очередь накопителей</value>
+  </data>
+  <data name="Settings.InboxQueueDescription" xml:space="preserve">
+    <value>Когда файл считается пришедшим и какие файлы разбирать не нужно</value>
+  </data>
+  <data name="Settings.SettleSeconds" xml:space="preserve">
+    <value>Ждать после загрузки, секунд</value>
+  </data>
+  <data name="Settings.SettleSecondsDescription" xml:space="preserve">
+    <value>Файл предлагается к разбору, когда не меняется столько секунд: загрузка завершена</value>
+  </data>
 </root>

@@ -234,6 +234,21 @@ internal static partial class SettingsEndpoints
             errors["sorting.nameTemplate"] = [L.F("SettingsEndpoints.TemplateLongerThan", 200)];
         }
 
+        // Очередь накопителей (этап 17.1): «время успокоения» и шаблоны игнора.
+        if (settings.Sorting.SettleSeconds is < 0 or > SortingSettings.MaxSettleSeconds)
+        {
+            errors["sorting.settleSeconds"] = [L.F("SettingsEndpoints.SettleSecondsRange", SortingSettings.MaxSettleSeconds)];
+        }
+
+        if (settings.Sorting.IgnorePatterns.Count > SortingSettings.MaxIgnorePatterns)
+        {
+            errors["sorting.ignorePatterns"] = [L.F("SettingsEndpoints.NoMoreThanPatterns", SortingSettings.MaxIgnorePatterns)];
+        }
+        else if (settings.Sorting.IgnorePatterns.Any(static pattern => string.IsNullOrWhiteSpace(pattern) || pattern.Length > 100))
+        {
+            errors["sorting.ignorePatterns"] = [L.T("SettingsEndpoints.IgnorePatternLength")];
+        }
+
         // Основная папка не обязана быть в списке: убранная из него просто перестаёт действовать (берётся первая).
         if (settings.Sorting.MainInbox is { Length: > 0 } main && !Path.IsPathFullyQualified(main))
         {

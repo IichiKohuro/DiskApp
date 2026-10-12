@@ -3210,4 +3210,64 @@
   <data name="Sorting.WorkFolderAutoTags" xml:space="preserve">
     <value>Auto-tags…</value>
   </data>
+  <data name="DesktopShell.FilesToSort" xml:space="preserve">
+    <value>to sort: {0}</value>
+  </data>
+  <data name="Sorting.HideKept" xml:space="preserve">
+    <value>Hide kept files</value>
+  </data>
+  <data name="Sorting.InboxMissing" xml:space="preserve">
+    <value>folder not found</value>
+  </data>
+  <data name="Sorting.InboxOffline" xml:space="preserve">
+    <value>the drive is unavailable</value>
+  </data>
+  <data name="Sorting.InboxOutsideIndex" xml:space="preserve">
+    <value>the folder is not indexed</value>
+  </data>
+  <data name="Sorting.IncludeSubfolders" xml:space="preserve">
+    <value>Include subfolders</value>
+  </data>
+  <data name="Sorting.KeepHere" xml:space="preserve">
+    <value>Keep here</value>
+  </data>
+  <data name="Sorting.PendingFiles" xml:space="preserve">
+    <value>Still downloading: {0}</value>
+  </data>
+  <data name="Sorting.Postpone" xml:space="preserve">
+    <value>Postpone</value>
+  </data>
+  <data name="Sorting.ReturnToNew" xml:space="preserve">
+    <value>Back to new</value>
+  </data>
+  <data name="Sorting.ShowKept" xml:space="preserve">
+    <value>Kept here: {0}</value>
+  </data>
+  <data name="Sorting.StateFailed" xml:space="preserve">
+    <value>Couldn't change it: {0}</value>
+  </data>
+  <data name="Sorting.StateKept" xml:space="preserve">
+    <value>kept here</value>
+  </data>
+  <data name="Sorting.StatePostponed" xml:space="preserve">
+    <value>postponed</value>
+  </data>
+  <data name="Settings.IgnorePatterns" xml:space="preserve">
+    <value>Don't show</value>
+  </data>
+  <data name="Settings.IgnorePatternsDescription" xml:space="preserve">
+    <value>Name patterns, comma-separated: partial downloads, service files. Hidden files are never shown</value>
+  </data>
+  <data name="Settings.InboxQueue" xml:space="preserve">
+    <value>Inbox queue</value>
+  </data>
+  <data name="Settings.InboxQueueDescription" xml:space="preserve">
+    <value>When a file counts as arrived and which files need no sorting</value>
+  </data>
+  <data name="Settings.SettleSeconds" xml:space="preserve">
+    <value>Wait after download, seconds</value>
+  </data>
+  <data name="Settings.SettleSecondsDescription" xml:space="preserve">
+    <value>A file is offered for sorting once it hasn't changed for this long: the download is complete</value>
+  </data>
 </root>

@@ -25,6 +25,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<ILibraryService, SampleLibraryService>();
         services.AddSingleton<ISettingsService, SampleSettingsService>();
         services.AddSingleton<ISortingSettings, SampleSortingSettings>();
+        services.AddSingleton<IInboxService>(static provider => new BrowseInboxService(provider.GetRequiredService<IBrowseService>(), provider.GetRequiredService<ISortingSettings>()));
         services.AddSingleton<IThemeService, AppThemeService>();
         services.AddSingleton<HotkeyStatus>();
         services.AddSingleton<IDispatcher, AvaloniaDispatcher>();
@@ -46,7 +47,9 @@ public static class UiServiceCollectionExtensions
             provider.GetRequiredService<ILibraryService>(),
             provider.GetRequiredService<IRootsService>(),
             provider.GetService<IDialogService>(),
-            provider.GetService<IInfoBarService>()));
+            provider.GetService<IInfoBarService>(),
+            inbox: provider.GetService<IInboxService>(),
+            dispatcher: provider.GetService<IDispatcher>()));
         services.AddSingleton<TagsViewModel>();
         services.AddSingleton<OperationsViewModel>();
         services.AddSingleton<IOperationsCoordinator>(static provider => provider.GetRequiredService<OperationsViewModel>());

@@ -288,4 +288,22 @@
   <data name="LibraryEndpoints.TooManyAutoTags" xml:space="preserve">
     <value>У папки не больше {0} авто-тегов.</value>
   </data>
+  <data name="SettingsEndpoints.IgnorePatternLength" xml:space="preserve">
+    <value>Шаблон — от 1 до 100 символов.</value>
+  </data>
+  <data name="SettingsEndpoints.NoMoreThanPatterns" xml:space="preserve">
+    <value>Не больше {0} шаблонов.</value>
+  </data>
+  <data name="SettingsEndpoints.SettleSecondsRange" xml:space="preserve">
+    <value>От 0 до {0} секунд.</value>
+  </data>
+  <data name="SortingEndpoints.PathsOutsideInboxes" xml:space="preserve">
+    <value>Пути должны лежать внутри папок-накопителей.</value>
+  </data>
+  <data name="SortingEndpoints.TooManyPaths" xml:space="preserve">
+    <value>Не больше {0} путей за раз.</value>
+  </data>
+  <data name="SortingEndpoints.UnknownState" xml:space="preserve">
+    <value>Неизвестное состояние.</value>
+  </data>
 </root>

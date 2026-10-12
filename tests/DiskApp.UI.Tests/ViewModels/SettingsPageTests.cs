@@ -280,6 +280,28 @@ public sealed class SettingsPageTests
     }
 
     [Fact]
+    public async Task InboxQueue_SettleSecondsAndIgnorePatterns_AreSaved()
+    {
+        // Arrange
+        var service = new SampleSettingsService();
+        var page = Create(service);
+        await page.Initialization;
+        var shownPatterns = page.IgnorePatternsText;
+
+        // Act: шаблоны через запятую, точку с запятой и с новой строки — пустые и повторы отбрасываются
+        page.SettleSeconds = 30;
+        await page.PendingSave;
+        page.IgnorePatternsText = "*.crdownload, *.log;\n*.LOG, , desktop.ini";
+        await page.PendingSave;
+
+        // Assert
+        shownPatterns.ShouldStartWith("*.crdownload, *.part");
+        var sorting = (await service.GetAsync(TestContext.Current.CancellationToken)).Sorting;
+        sorting.SettleSeconds.ShouldBe(30);
+        sorting.IgnorePatterns.ShouldBe(["*.crdownload", "*.log", "desktop.ini"]);
+    }
+
+    [Fact]
     public async Task MainInbox_NoInboxes_OffersSortingPage()
     {
         // Arrange

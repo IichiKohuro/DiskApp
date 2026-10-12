@@ -50,6 +50,12 @@ public interface IFileIndexRepository
     Task<IReadOnlyList<FileEntry>> GetChildrenOfPathAsync(long rootId, string relPath, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Файлы (без папок) поддерева на любой глубине, новые сверху, не больше <paramref name="limit"/>; пустой путь — весь
+    /// корень. Для накопителя с подпапками (PLAN.md, этап 17.1).
+    /// </summary>
+    Task<IReadOnlyList<FileEntry>> GetSubtreeFilesAsync(long rootId, string relPath, int limit, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Удаляет запись и всё её поддерево; возвращает число удалённых.
     /// </summary>
     Task<int> DeleteSubtreeAsync(long rootId, string relPath, CancellationToken cancellationToken = default);

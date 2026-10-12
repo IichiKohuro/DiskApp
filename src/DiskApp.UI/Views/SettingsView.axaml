@@ -455,11 +455,29 @@
                             <WrapPanel ItemSpacing="8" LineSpacing="8">
                                 <ComboBox AutomationProperties.Name="{loc:Str Settings.MainInbox}" ItemsSource="{Binding MainInboxOptions}" SelectedItem="{Binding SelectedMainInbox, Mode=TwoWay}"
                                           MinWidth="220" IsVisible="{Binding HasInboxes}" />
-                                <Button Content="{loc:Str Settings.OpenSorting}" Command="{Binding OpenSortingCommand}" />
+                                <!-- С накопителями кнопка не нужна: она есть у «Рабочих папок» и занимала место заголовка -->
+                                <Button Content="{loc:Str Settings.OpenSorting}" Command="{Binding OpenSortingCommand}" IsVisible="{Binding !HasInboxes}" />
                             </WrapPanel>
                         </ui:FASettingsExpander.Footer>
                         <ui:FASettingsExpanderItem AutomationProperties.Name="{loc:Str Settings.NoInboxesYet}" IsVisible="{Binding !HasInboxes}">
                             <TextBlock TextWrapping="Wrap" Text="{loc:Str Settings.NoInboxesYet}" />
+                        </ui:FASettingsExpanderItem>
+                    </ui:FASettingsExpander>
+                    <!-- Очередь накопителей (этап 17.1): редкие настройки — свёрнуты -->
+                    <ui:FASettingsExpander Header="{loc:Str Settings.InboxQueue}" Description="{loc:Str Settings.InboxQueueDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Clock" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.SettleSeconds}" Description="{loc:Str Settings.SettleSecondsDescription}">
+                            <ui:FASettingsExpanderItem.Footer>
+                                <NumericUpDown AutomationProperties.Name="{loc:Str Settings.SettleSeconds}" Value="{Binding SettleSeconds, Mode=TwoWay}" Minimum="0" Maximum="600" Increment="1" FormatString="0" MinWidth="150" />
+                            </ui:FASettingsExpanderItem.Footer>
+                        </ui:FASettingsExpanderItem>
+                        <ui:FASettingsExpanderItem>
+                            <!-- Шаблоны — длинная строка: поле во всю ширину под подписью, а не справа -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{loc:Str Settings.IgnorePatterns}" />
+                                <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{loc:Str Settings.IgnorePatternsDescription}" />
+                                <TextBox AutomationProperties.Name="{loc:Str Settings.IgnorePatterns}" Text="{Binding IgnorePatternsText, Mode=TwoWay}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
                         </ui:FASettingsExpanderItem>
                     </ui:FASettingsExpander>
                     <ui:FASettingsExpander Header="{loc:Str Settings.FileNameFromTheClipboard}" Description="{loc:Str Settings.CtrlShiftVSavesTextOr}">
