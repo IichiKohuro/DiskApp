@@ -3466,4 +3466,37 @@ Project folder: D:\Work\417</value>
   <data name="Sorting.Retry" xml:space="preserve">
     <value>Retry</value>
   </data>
+  <data name="Notes.Format.Bold" xml:space="preserve">
+    <value>Bold (Ctrl+B)</value>
+  </data>
+  <data name="Notes.Format.BulletList" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="Notes.Format.Code" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Notes.Format.Divider" xml:space="preserve">
+    <value>Divider</value>
+  </data>
+  <data name="Notes.Format.Heading" xml:space="preserve">
+    <value>Heading: # → ## → ### → text</value>
+  </data>
+  <data name="Notes.Format.Italic" xml:space="preserve">
+    <value>Italic (Ctrl+I)</value>
+  </data>
+  <data name="Notes.Format.Link" xml:space="preserve">
+    <value>Link or file path (Ctrl+K)</value>
+  </data>
+  <data name="Notes.Format.NumberedList" xml:space="preserve">
+    <value>Numbered list</value>
+  </data>
+  <data name="Notes.Format.Quote" xml:space="preserve">
+    <value>Quote</value>
+  </data>
+  <data name="Notes.Format.Strikethrough" xml:space="preserve">
+    <value>Strikethrough</value>
+  </data>
+  <data name="Notes.Format.TaskList" xml:space="preserve">
+    <value>To-do list with check boxes</value>
+  </data>
 </root>

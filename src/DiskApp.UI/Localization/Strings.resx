@@ -3466,4 +3466,37 @@
   <data name="Sorting.Retry" xml:space="preserve">
     <value>Повторить</value>
   </data>
+  <data name="Notes.Format.Bold" xml:space="preserve">
+    <value>Жирный (Ctrl+B)</value>
+  </data>
+  <data name="Notes.Format.BulletList" xml:space="preserve">
+    <value>Список</value>
+  </data>
+  <data name="Notes.Format.Code" xml:space="preserve">
+    <value>Код</value>
+  </data>
+  <data name="Notes.Format.Divider" xml:space="preserve">
+    <value>Разделитель</value>
+  </data>
+  <data name="Notes.Format.Heading" xml:space="preserve">
+    <value>Заголовок: # → ## → ### → текст</value>
+  </data>
+  <data name="Notes.Format.Italic" xml:space="preserve">
+    <value>Курсив (Ctrl+I)</value>
+  </data>
+  <data name="Notes.Format.Link" xml:space="preserve">
+    <value>Ссылка или путь к файлу (Ctrl+K)</value>
+  </data>
+  <data name="Notes.Format.NumberedList" xml:space="preserve">
+    <value>Нумерованный список</value>
+  </data>
+  <data name="Notes.Format.Quote" xml:space="preserve">
+    <value>Цитата</value>
+  </data>
+  <data name="Notes.Format.Strikethrough" xml:space="preserve">
+    <value>Зачёркнутый</value>
+  </data>
+  <data name="Notes.Format.TaskList" xml:space="preserve">
+    <value>Список дел с флажками</value>
+  </data>
 </root>

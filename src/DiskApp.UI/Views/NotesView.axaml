@@ -123,6 +123,58 @@
                         <!-- Теги заметки: чипы и поле с подсказками из тегов заметок -->
                         <v:AutoTagsEditorView DataContext="{Binding TagsEditor}" IsVisible="{Binding $parent[UserControl].((vm:NotesViewModel)DataContext).CanEdit}" Margin="0,0,12,0" />
                     </DockPanel>
+                    <!-- Панель форматирования (просьба пользователя «чтобы было просто и удобно»): работает с выделением в поле;
+                         кнопки не забирают фокус, поэтому выделение не теряется. -->
+                    <StackPanel x:Name="FormatBar" DockPanel.Dock="Top" Orientation="Horizontal" Spacing="2" Margin="0,0,0,6" IsVisible="{Binding IsEditing}">
+                        <StackPanel.Styles>
+                            <Style Selector="Button.format">
+                                <Setter Property="Focusable" Value="False" />
+                                <Setter Property="Padding" Value="6" />
+                                <Setter Property="MinWidth" Value="32" />
+                                <Setter Property="MinHeight" Value="32" />
+                            </Style>
+                            <Style Selector="Border.format-separator">
+                                <Setter Property="Width" Value="1" />
+                                <Setter Property="Margin" Value="4,6" />
+                                <Setter Property="Background" Value="{DynamicResource DividerStrokeColorDefaultBrush}" />
+                            </Style>
+                        </StackPanel.Styles>
+                        <Button Classes="tool format" Tag="Heading" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.Heading}" ToolTip.Tip="{loc:Str Notes.Format.Heading}">
+                            <ic:SymbolIcon Symbol="TextHeader1" FontSize="18" />
+                        </Button>
+                        <Button Classes="tool format" Tag="Bold" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.Bold}" ToolTip.Tip="{loc:Str Notes.Format.Bold}">
+                            <ic:SymbolIcon Symbol="TextBold" FontSize="18" />
+                        </Button>
+                        <Button Classes="tool format" Tag="Italic" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.Italic}" ToolTip.Tip="{loc:Str Notes.Format.Italic}">
+                            <ic:SymbolIcon Symbol="TextItalic" FontSize="18" />
+                        </Button>
+                        <Button Classes="tool format" Tag="Strikethrough" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.Strikethrough}" ToolTip.Tip="{loc:Str Notes.Format.Strikethrough}">
+                            <ic:SymbolIcon Symbol="TextStrikethrough" FontSize="18" />
+                        </Button>
+                        <Border Classes="format-separator" />
+                        <Button Classes="tool format" Tag="BulletList" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.BulletList}" ToolTip.Tip="{loc:Str Notes.Format.BulletList}">
+                            <ic:SymbolIcon Symbol="TextBulletList" FontSize="18" />
+                        </Button>
+                        <Button Classes="tool format" Tag="NumberedList" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.NumberedList}" ToolTip.Tip="{loc:Str Notes.Format.NumberedList}">
+                            <ic:SymbolIcon Symbol="TextNumberList" FontSize="18" />
+                        </Button>
+                        <Button Classes="tool format" Tag="TaskList" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.TaskList}" ToolTip.Tip="{loc:Str Notes.Format.TaskList}">
+                            <ic:SymbolIcon Symbol="TextBulletListCheckmark" FontSize="18" />
+                        </Button>
+                        <Border Classes="format-separator" />
+                        <Button Classes="tool format" Tag="Quote" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.Quote}" ToolTip.Tip="{loc:Str Notes.Format.Quote}">
+                            <ic:SymbolIcon Symbol="TextQuote" FontSize="18" />
+                        </Button>
+                        <Button Classes="tool format" Tag="Code" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.Code}" ToolTip.Tip="{loc:Str Notes.Format.Code}">
+                            <ic:SymbolIcon Symbol="Code" FontSize="18" />
+                        </Button>
+                        <Button Classes="tool format" Tag="Link" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.Link}" ToolTip.Tip="{loc:Str Notes.Format.Link}">
+                            <ic:SymbolIcon Symbol="Link" FontSize="18" />
+                        </Button>
+                        <Button Classes="tool format" Tag="Divider" Click="OnFormatClick" AutomationProperties.Name="{loc:Str Notes.Format.Divider}" ToolTip.Tip="{loc:Str Notes.Format.Divider}">
+                            <ic:SymbolIcon Symbol="LineHorizontal1" FontSize="18" />
+                        </Button>
+                    </StackPanel>
                     <Panel>
                         <TextBox x:Name="Editor" AutomationProperties.Name="{loc:Str Notes.Text}" AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
                                  VerticalContentAlignment="Top" PlaceholderText="{loc:Str Notes.EditorPlaceholder}"
