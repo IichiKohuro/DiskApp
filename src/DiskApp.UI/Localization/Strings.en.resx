@@ -2929,34 +2929,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>Sorting says “→ folder” only once the file has really moved. If it didn't, the file stays in the list and the notice explains why and offers Retry.</value>
+    <value>Buttons above the note text: heading, bold, italic, strikethrough, lists, check boxes, quote, code, link, divider. They work on the selection and a second press removes the markup; Ctrl+B, Ctrl+I, Ctrl+K.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>An honest move result</value>
+    <value>Formatting bar in notes</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>If a file is open, DiskApp names the program: “open in Microsoft Excel — close it there and try again”.</value>
+    <value>Enter in a list item starts the next one (- , 2. , - [ ] ); on an empty item it ends the list. The Heading button turns “#Text” into “# Text”.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Which program to close</value>
+    <value>Lists continue by themselves</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>On the Sorting page, right-click a file → Move to recycle bin (or press Delete); Delete all below the list removes every listed file. DiskApp asks first.</value>
+    <value>Sorting says “→ folder” only once the file has really moved; if not, the file stays in the list with the reason and Retry. If a file is open, DiskApp names the program to close.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Unwanted files to the recycle bin</value>
+    <value>An honest move result</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>{date} in a name is 12102026, {time} is 135445, together 12102026135445; presets Date last and Date and time last.</value>
+    <value>On the Sorting page, right-click a file → Move to recycle bin (or press Delete); Delete all below the list removes every listed file. DiskApp asks first.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Dates without separators</value>
+    <value>Unwanted files to the recycle bin</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>A Notes page with Markdown and its own tags; sorting ends in one row — destination, Name, Tags, Move — double-click opens a file and panel width is remembered.</value>
+    <value>{date} in a name is 12102026, {time} is 135445, together 12102026135445; presets Date last and Date and time last.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Notes and simpler sorting</value>
+    <value>Dates without separators</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>
