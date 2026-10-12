@@ -1,4 +1,5 @@
 using DiskApp.Client;
+using DiskApp.Contracts.App;
 using DiskApp.Contracts.Operations;
 using DiskApp.UI.Localization;
 using DiskApp.UI.Models;
@@ -18,12 +19,49 @@ public enum InboxItemState
     Kept,
 }
 
+/// <summary>Что подсказывают шаблоны рабочих папок (этап 17.5).</summary>
+public enum SortingHint
+{
+    /// <summary>Ни один шаблон не подошёл.</summary>
+    None,
+
+    /// <summary>Подошла одна папка — она предлагается первой.</summary>
+    Suggest,
+
+    /// <summary>Подошла одна папка с «переносить самим» — файл уйдёт туда сам.</summary>
+    Auto,
+
+    /// <summary>Подошли разные папки — выбирает пользователь.</summary>
+    Choice,
+}
+
+/// <summary>Подошедший шаблон рабочей папки.</summary>
+/// <param name="WorkFolder">Путь рабочей папки.</param>
+/// <param name="Destination">Куда класть: папка или подпапка из шаблона.</param>
+/// <param name="Pattern">Маска шаблона.</param>
+/// <param name="Auto">Шаблон «переносить самим».</param>
+public sealed record SortingMatchInfo(string WorkFolder, string Destination, string Pattern, bool Auto);
+
 /// <summary>Файл или папка в накопителе.</summary>
 /// <param name="Entry">Запись.</param>
 /// <param name="Inbox">Путь накопителя из настроек.</param>
 /// <param name="State">Состояние.</param>
 /// <param name="IsReady">Пришёл: не меняется дольше «времени успокоения».</param>
-public sealed record InboxEntry(FileEntry Entry, string Inbox, InboxItemState State, bool IsReady);
+/// <param name="Hint">Что подсказывают шаблоны рабочих папок (этап 17.5).</param>
+public sealed record InboxEntry(FileEntry Entry, string Inbox, InboxItemState State, bool IsReady, SortingHint Hint = SortingHint.None)
+{
+    /// <summary>Подошедшие шаблоны.</summary>
+    public IReadOnlyList<SortingMatchInfo> Matches { get; init; } = [];
+}
+
+/// <summary>Файл накопителя в сухом прогоне шаблонов (этап 17.5).</summary>
+/// <param name="Path">Полный путь.</param>
+/// <param name="Name">Имя.</param>
+/// <param name="Hint">Что подсказывают шаблоны.</param>
+/// <param name="WillMove">Авторазбор перенесёт файл сам.</param>
+/// <param name="Matches">Подошедшие шаблоны.</param>
+/// <param name="NewName">Имя после переноса; <c>null</c> — прежнее.</param>
+public sealed record SortingPreviewInfo(string Path, string Name, SortingHint Hint, bool WillMove, IReadOnlyList<SortingMatchInfo> Matches, string? NewName);
 
 /// <summary>Накопитель в очереди.</summary>
 /// <param name="Path">Путь из настроек.</param>
@@ -50,6 +88,11 @@ public interface IInboxService
 
     /// <summary>Отложить, оставить здесь или вернуть в новые.</summary>
     Task SetStateAsync(IReadOnlyList<string> paths, InboxItemState state, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Сухой прогон шаблонов (этап 17.5): что куда ушло бы из накопителей сейчас при этих рабочих папках; ничего не переносит.
+    /// </summary>
+    Task<IReadOnlyList<SortingPreviewInfo>> PreviewRulesAsync(IReadOnlyList<SortingFolderInfo> workFolders, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -87,7 +130,7 @@ public sealed class ApiInboxService : IInboxService
         {
             var root = roots.GetValueOrDefault(item.Entry.RootId);
             var entry = ApiSearchService.ToEntry(item.Entry, root?.Label ?? string.Empty, root?.Status == Contracts.Roots.RootStatus.Offline);
-            return new InboxEntry(entry, item.Inbox, (InboxItemState)(int)item.State, item.IsReady);
+            return new InboxEntry(entry, item.Inbox, (InboxItemState)(int)item.State, item.IsReady, (SortingHint)(int)item.Decision) { Matches = [.. (item.Matches ?? []).Select(ToInfo)] };
         }).ToArray();
         var folders = queue.Folders.Select(static folder => new InboxFolderState(folder.Path, Describe(folder.Problem))).ToArray();
         return new InboxSnapshotInfo(folders, items, queue.NextReadyUtc);
@@ -96,6 +139,16 @@ public sealed class ApiInboxService : IInboxService
     /// <inheritdoc />
     public Task SetStateAsync(IReadOnlyList<string> paths, InboxItemState state, CancellationToken cancellationToken = default)
         => _api.SetInboxStateAsync(new SetInboxStateRequest { Paths = paths, State = (InboxState)(int)state }, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<SortingPreviewInfo>> PreviewRulesAsync(IReadOnlyList<SortingFolderInfo> workFolders, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(workFolders);
+        var preview = await _api.PreviewSortingRulesAsync(new SortingPreviewRequest { WorkFolders = [.. workFolders.Select(ApiSortingSettings.ToDto)] }, cancellationToken).ConfigureAwait(false);
+        return [.. preview.Items.Select(static item => new SortingPreviewInfo(item.Path, item.Name, (SortingHint)(int)item.Decision, item.WillMove, [.. item.Matches.Select(ToInfo)], item.NewName))];
+    }
+
+    private static SortingMatchInfo ToInfo(SortingMatchDto match) => new(match.WorkFolder, match.Destination, match.Pattern, match.Mode == SortingRuleMode.Auto);
 
     private static string? Describe(InboxProblem problem) => problem switch
     {
@@ -216,6 +269,10 @@ public sealed class BrowseInboxService(IBrowseService browse, ISortingSettings s
 
         return Task.CompletedTask;
     }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<SortingPreviewInfo>> PreviewRulesAsync(IReadOnlyList<SortingFolderInfo> workFolders, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<SortingPreviewInfo>>([]);
 
     private static bool IsIgnored(string name)
         => name.StartsWith("~$", StringComparison.Ordinal) || IgnoredSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))

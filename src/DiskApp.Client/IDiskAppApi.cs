@@ -132,6 +132,9 @@ public interface IDiskAppApi
     /// <summary>Отложить, оставить здесь или вернуть в новые файлы накопителя.</summary>
     Task SetInboxStateAsync(SetInboxStateRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Сухой прогон шаблонов рабочих папок (этап 17.5): что куда ушло бы из накопителей сейчас; ничего не переносит.</summary>
+    Task<SortingPreviewDto> PreviewSortingRulesAsync(SortingPreviewRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Заметки (этап 23): закреплённые сверху; поиск по тексту, тег заметок, корзина.</summary>
     Task<IReadOnlyList<NoteDto>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default);
 

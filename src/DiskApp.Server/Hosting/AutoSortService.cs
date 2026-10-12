@@ -116,6 +116,19 @@ internal sealed partial class AutoSortService : IHostedService, IDisposable
         return string.Equals(name, item.Entry.Name, StringComparison.Ordinal) ? null : name;
     }
 
+    /// <summary>
+    /// Файл вернулся после автопереноса (отменой или вручную) — сам он больше не уйдёт, даже если состояние «вручную» ещё не
+    /// записано: очередь читается сразу после возврата, а проход авторазбора — после паузы.
+    /// </summary>
+    public bool IsReturned(InboxItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        lock (_gate)
+        {
+            return _moved.TryGetValue(item.FullPath, out var moved) && moved.IsSame(item.Entry);
+        }
+    }
+
     /// <inheritdoc />
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -306,10 +319,10 @@ internal sealed partial class AutoSortService : IHostedService, IDisposable
                     continue;
                 }
 
+                // Запись о переносе остаётся: по ней очередь узнаёт вернувшийся файл, пока «вручную» ещё пишется в базу.
                 if (_moved.TryGetValue(item.FullPath, out var moved) && moved.IsSame(item.Entry))
                 {
                     returned.Add(item.FullPath);
-                    _moved.Remove(item.FullPath);
                     continue;
                 }
 

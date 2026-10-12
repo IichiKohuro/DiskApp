@@ -134,6 +134,7 @@ public sealed class ApiOperationsService : IOperationsService
             Message = dto.Message,
             CanUndo = dto.CanUndo,
             PendingConflict = dto.PendingConflict is { } conflict ? ToInfo(conflict) : null,
+            IsAutoSort = dto.Origin == OperationOrigin.AutoSort,
         };
     }
 

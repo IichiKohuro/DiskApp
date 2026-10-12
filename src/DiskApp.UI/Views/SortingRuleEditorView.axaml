@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="80"
+             x:Class="DiskApp.UI.Views.SortingRuleEditorView"
+             x:DataType="vm:SortingRuleEditorViewModel">
+    <!-- Шаблон имени рабочей папки (PLAN.md, этап 17.5): флажок «действует», маска, режим; редкие условия — за кнопкой -->
+    <StackPanel Spacing="2">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="6">
+            <CheckBox MinWidth="0" Padding="0" VerticalAlignment="Center" IsVisible="{Binding CanRemove}" IsChecked="{Binding Enabled, Mode=TwoWay}"
+                      AutomationProperties.Name="{loc:Str Sorting.RuleEnabled}" ToolTip.Tip="{loc:Str Sorting.RuleEnabled}" />
+            <TextBox Grid.Column="1" AutomationProperties.Name="{loc:Str Sorting.RulePattern}" PlaceholderText="{loc:Str Sorting.RulePatternPlaceholder}"
+                     Text="{Binding Pattern, Mode=TwoWay}" ToolTip.Tip="{loc:Str Sorting.RulePatternTip}" />
+            <ComboBox Grid.Column="2" MinWidth="170" AutomationProperties.Name="{loc:Str Sorting.RuleMode}"
+                      ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode, Mode=TwoWay}" />
+            <Button Grid.Column="3" Classes="tool" AutomationProperties.Name="{loc:Str Sorting.RuleConditions}" ToolTip.Tip="{loc:Str Sorting.RuleConditions}">
+                <ic:SymbolIcon Symbol="Filter" FontSize="16" />
+                <Button.Flyout>
+                    <Flyout Placement="BottomEdgeAlignedRight">
+                        <StackPanel Width="300" Spacing="10">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{loc:Str Sorting.RuleInbox}" />
+                                <ComboBox HorizontalAlignment="Stretch" AutomationProperties.Name="{loc:Str Sorting.RuleInbox}"
+                                          ItemsSource="{Binding InboxOptions}" SelectedItem="{Binding SelectedInbox, Mode=TwoWay}" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{loc:Str Sorting.RuleExtensions}" />
+                                <TextBox AutomationProperties.Name="{loc:Str Sorting.RuleExtensions}" PlaceholderText="pdf, docx" Text="{Binding ExtensionsText, Mode=TwoWay}" />
+                            </StackPanel>
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="{loc:Str Sorting.RuleSubfolder}" />
+                                <TextBox AutomationProperties.Name="{loc:Str Sorting.RuleSubfolder}" PlaceholderText="{loc:Str Sorting.RuleSubfolderPlaceholder}" Text="{Binding Subfolder, Mode=TwoWay}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+            <Button Grid.Column="4" Classes="tool" IsVisible="{Binding CanRemove}" Command="{Binding RemoveCommand}"
+                    AutomationProperties.Name="{loc:Str Sorting.RuleRemove}" ToolTip.Tip="{loc:Str Sorting.RuleRemove}">
+                <ic:SymbolIcon Symbol="Dismiss" FontSize="14" />
+            </Button>
+        </Grid>
+        <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" Text="{Binding ConditionsText}" IsVisible="{Binding HasConditions}" Margin="28,0,0,0" />
+        <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="{Binding Problem}" IsVisible="{Binding HasProblem}" Margin="28,0,0,0" />
+    </StackPanel>
+</UserControl>

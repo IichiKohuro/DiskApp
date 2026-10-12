@@ -9,8 +9,9 @@
              mc:Ignorable="d" d:DesignWidth="440" d:DesignHeight="300"
              x:Class="DiskApp.UI.Views.WorkFolderCardView"
              x:DataType="vm:WorkFolderCardViewModel">
-    <!-- Карточка рабочей папки (PLAN.md, этап 17.2): подпись, номер-клавиша, авто-теги (этап 19) и папка; кнопки — у диалога -->
-    <StackPanel Spacing="14" MinWidth="420" MaxWidth="460">
+    <!-- Карточка рабочей папки (PLAN.md, этап 17.2): подпись, номер-клавиша, авто-теги (этап 19), шаблоны имён (этап 17.5)
+         и папка; кнопки — у диалога -->
+    <StackPanel Spacing="14" MinWidth="460" MaxWidth="540">
         <StackPanel Spacing="4">
             <TextBlock Text="{loc:Str Sorting.CardLabel}" />
             <TextBox AutomationProperties.Name="{loc:Str Sorting.CardLabel}" Text="{Binding Label, Mode=TwoWay}" PlaceholderText="{Binding FolderName}" />
@@ -24,6 +25,27 @@
             <TextBlock Text="{loc:Str AutoTags.Title}" />
             <v:AutoTagsEditorView DataContext="{Binding AutoTags}" />
         </StackPanel>
+        <!-- Шаблоны имён: файлы из накопителей с такими именами уходят сюда сами или предлагаются первыми -->
+        <StackPanel Spacing="6">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Classes="tool" Command="{Binding AddRuleCommand}" AutomationProperties.Name="{loc:Str Sorting.RuleAdd}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <ic:SymbolIcon Symbol="Add" FontSize="14" />
+                        <TextBlock Text="{loc:Str Sorting.RuleAdd}" />
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="{loc:Str Sorting.Rules}" VerticalAlignment="Center" />
+            </DockPanel>
+            <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" Text="{loc:Str Sorting.RulesHint}" IsVisible="{Binding HasNoRules}" />
+            <ItemsControl ItemsSource="{Binding Rules}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SortingRuleEditorViewModel">
+                        <v:SortingRuleEditorView Margin="0,0,0,6" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{Binding PreviewText}" IsVisible="{Binding HasPreview}" />
+        </StackPanel>
         <StackPanel Spacing="4">
             <TextBlock Text="{loc:Str Sorting.CardFolder}" />
             <DockPanel>
@@ -32,7 +54,7 @@
             </DockPanel>
             <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding IsMissing}">
                 <ic:SymbolIcon Symbol="Warning" FontSize="14" Foreground="{DynamicResource SystemFillColorCautionBrush}" VerticalAlignment="Top" />
-                <TextBlock TextWrapping="Wrap" MaxWidth="380" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="{loc:Str Sorting.CardMissing}" />
+                <TextBlock TextWrapping="Wrap" MaxWidth="460" Foreground="{DynamicResource SystemFillColorCautionBrush}" Text="{loc:Str Sorting.CardMissing}" />
             </StackPanel>
         </StackPanel>
     </StackPanel>

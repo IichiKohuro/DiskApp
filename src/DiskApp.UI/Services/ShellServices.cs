@@ -85,6 +85,12 @@ public interface IDialogService
     Task<bool> ShowAutoTagsAsync(string title, DiskApp.UI.ViewModels.AutoTagsEditorViewModel editor);
 
     /// <summary>
+    /// «Всегда класть такие файлы сюда?» (PLAN.md, этап 17.5): маска, режим и сухой прогон.
+    /// </summary>
+    /// <returns><c>true</c> — нажата «Сохранить шаблон».</returns>
+    Task<bool> ShowSortingRuleAsync(DiskApp.UI.ViewModels.SortingRuleDialogViewModel dialog);
+
+    /// <summary>
     /// Редактор тега: имя и цвет из палитры (PLAN.md, этап 8.7).
     /// </summary>
     /// <returns>Имя и цвет или <c>null</c>, если отменено.</returns>

@@ -83,10 +83,26 @@ public sealed record SortItem(FileEntry Entry, SortingFolderInfo Inbox, InboxIte
         _ => string.Empty,
     };
 
+    /// <summary>Что подсказывают шаблоны рабочих папок (этап 17.5).</summary>
+    public SortingHint Hint { get; init; }
+
+    /// <summary>Подошедшие шаблоны.</summary>
+    public IReadOnlyList<SortingMatchInfo> Matches { get; init; } = [];
+
+    /// <summary>Подсказка под именем: «→ 417 · шаблон 417_*», «уйдёт в 417 сам», «подходит к 417 и TCI2 — выберите».</summary>
+    public string HintText { get; init; } = string.Empty;
+
+    /// <summary>Подсказка видна.</summary>
+    public bool HasHint => HintText.Length > 0;
+
+    /// <summary>Куда предлагают шаблоны, если место одно; <c>null</c> — шаблоны молчат или спорят.</summary>
+    public SortingMatchInfo? SuggestedMatch => Hint is SortingHint.Suggest or SortingHint.Auto && Matches.Count > 0 ? Matches[0] : null;
+
     /// <summary>
-    /// Та же строка при обновлении очереди: тот же путь, состояние и время изменения — тогда выделение в списке сохраняется.
+    /// Та же строка при обновлении очереди: тот же путь, состояние, время изменения и подсказка — тогда выделение в списке
+    /// сохраняется.
     /// </summary>
-    public string Key => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{Entry.FullPath}|{(int)State}|{Entry.Modified.UtcTicks}");
+    public string Key => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{Entry.FullPath}|{(int)State}|{Entry.Modified.UtcTicks}|{(int)Hint}|{SuggestedMatch?.Destination}");
 
     /// <summary>Когда изменён — для строки списка.</summary>
     public string ModifiedText => Formatting.RelativeTime(Entry.Modified, DateTimeOffset.Now);
@@ -266,6 +282,11 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private readonly Func<DateTimeOffset> _clock;
     private CancellationTokenSource? _folderSearch;
     private bool _nameTemplateLoaded;
+    private bool _suggesting;
+    private bool _destinationSuggested;
+    private readonly HashSet<Guid> _announced = [];
+    private readonly List<OperationInfo> _autoSorted = [];
+    private CancellationTokenSource? _autoNotice;
 
     /// <summary>
     /// Создаёт страницу.
@@ -323,7 +344,14 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         _inbox = inbox ?? new BrowseInboxService(browse, settings, _clock);
         _dispatcher = dispatcher;
         _inbox.Changed += OnInboxChanged;
+        _operations.Updated += OnOperationUpdated;
     }
+
+    /// <summary>Пауза, за которую переносы авторазбора собираются в одно уведомление.</summary>
+    public TimeSpan AutoSortNoticeDelay { get; init; } = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>Завершается, когда показано уведомление об авторазборе (для тестов).</summary>
+    public Task PendingAutoSortNotice { get; private set; } = Task.CompletedTask;
 
     /// <summary>Накопители с числом файлов и «Все накопители».</summary>
     public ObservableCollection<InboxFilter> Inboxes { get; } = [];
@@ -379,8 +407,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
     /// <summary>Папка назначения в дереве.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DestinationText), nameof(DestinationAutoTagsText), nameof(HasDestinationAutoTags), nameof(HasDestination))]
-    [NotifyCanExecuteChangedFor(nameof(MoveCommand), nameof(StartNewFolderCommand))]
+    [NotifyPropertyChangedFor(nameof(DestinationText), nameof(DestinationAutoTagsText), nameof(HasDestinationAutoTags), nameof(HasDestination), nameof(AlwaysHereText))]
+    [NotifyCanExecuteChangedFor(nameof(MoveCommand), nameof(StartNewFolderCommand), nameof(AlwaysHereCommand))]
     public partial SortFolderNode? SelectedFolder { get; set; }
 
     /// <summary>Поиск любой папки по имени.</summary>
@@ -464,6 +492,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
     /// <summary>Папка назначения выбрана.</summary>
     public bool HasDestination => SelectedFolder is not null;
+
+    /// <summary>Пункт меню строки (этап 17.5): «Всегда класть такие в «417 › Акты»…».</summary>
+    public string AlwaysHereText => SelectedFolder is { IsNew: false } folder ? L.F("Sorting.AlwaysHereTo", DescribePath(folder)) : L.T("Sorting.AlwaysHere");
 
     /// <summary>Куда пойдут файлы: «417 › Переписка».</summary>
     public string DestinationText => SelectedFolder is { } folder ? DescribePath(folder) : L.T("Sorting.ChooseDestination");
@@ -551,8 +582,112 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         SelectedCount = _selection.Count;
         OnPropertyChanged(nameof(HasSelection));
         OnPropertyChanged(nameof(SelectionHasState));
+        AlwaysHereCommand.NotifyCanExecuteChanged();
         UpdateItemsText();
         UpdateNamePreview();
+        SuggestDestination();
+    }
+
+    /// <summary>
+    /// Шаблоны предлагают для выбранного одно место (этап 17.5): оно и становится назначением — если пользователь сам ничего
+    /// не выбирал или выбранное тоже было подсказкой.
+    /// </summary>
+    private void SuggestDestination()
+    {
+        if (_selection.Count == 0 || (SelectedFolder is not null && !_destinationSuggested))
+        {
+            return;
+        }
+
+        var matches = _selection.Select(static item => item.SuggestedMatch).ToArray();
+        if (matches[0] is not { } match || matches.Any(other => other is null || !SamePath(other.Destination, match.Destination)))
+        {
+            return;
+        }
+
+        if (SelectedFolder is { } current && SamePath(current.Path, match.Destination))
+        {
+            return;
+        }
+
+        PendingSuggestion = SelectDestinationAsync(match.WorkFolder, match.Destination);
+    }
+
+    /// <summary>Завершается, когда назначение по подсказке выбрано (для тестов).</summary>
+    public Task PendingSuggestion { get; private set; } = Task.CompletedTask;
+
+    // Рабочая папка и, если шаблон кладёт в подпапку, путь до неё по дереву.
+    private async Task SelectDestinationAsync(string workFolder, string destination)
+    {
+        _suggesting = true;
+        try
+        {
+            var item = WorkFolders.FirstOrDefault(candidate => SamePath(candidate.Folder.Path, workFolder));
+            if (item is not null && item != SelectedWorkFolder)
+            {
+                SelectedWorkFolder = item;
+            }
+            else if (Tree.FirstOrDefault() is not { } root || !SamePath(root.Path, workFolder))
+            {
+                ShowTree(item?.Folder ?? new SortingFolderInfo(workFolder));
+            }
+            else
+            {
+                SelectedFolder = root;
+            }
+
+            var node = Tree.FirstOrDefault();
+            var relative = node is null ? string.Empty : destination[Math.Min(destination.Length, node.Path.TrimEnd('\\', '/').Length)..].Trim('\\', '/');
+            foreach (var part in relative.Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries))
+            {
+                await node!.EnsureLoadedAsync();
+                node.IsExpanded = true;
+                if (node.Children.FirstOrDefault(child => !child.IsPlaceholder && string.Equals(child.Name, part, StringComparison.OrdinalIgnoreCase)) is not { } child)
+                {
+                    break;
+                }
+
+                node = child;
+            }
+
+            if (node is not null)
+            {
+                SelectedFolder = node;
+            }
+        }
+        finally
+        {
+            _suggesting = false;
+        }
+    }
+
+    // Подсказка шаблонов строкой под именем файла.
+    private string DescribeHint(SortingHint hint, IReadOnlyList<SortingMatchInfo> matches)
+    {
+        if (matches.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        return hint switch
+        {
+            SortingHint.Auto => L.F("Sorting.HintAuto", DescribeDestination(matches[0].Destination)),
+            SortingHint.Suggest => L.F("Sorting.HintSuggest", DescribeDestination(matches[0].Destination), matches[0].Pattern),
+            SortingHint.Choice => L.F("Sorting.HintChoice", string.Join(", ", matches.Select(match => DescribeDestination(match.Destination)).Distinct(StringComparer.OrdinalIgnoreCase))),
+            _ => string.Empty,
+        };
+    }
+
+    // «417 › Акты»: подпись рабочей папки и путь внутри неё.
+    private string DescribeDestination(string path)
+    {
+        if (OwnerOf(path) is not { } owner)
+        {
+            return PathText.FileName(path);
+        }
+
+        var relative = path[Math.Min(path.Length, owner.Path.TrimEnd('\\', '/').Length)..].Trim('\\', '/');
+        return relative.Length == 0 ? owner.Title : owner.Title + " › " + string.Join(" › ", relative.Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries));
     }
 
     /// <summary>Подставляет готовый шаблон имени.</summary>
@@ -732,6 +867,133 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             _notices?.Show(L.F("Sorting.OpenFailed", target.Entry.Name), exception.Message, FAInfoBarSeverity.Error);
+        }
+    }
+
+    /// <summary>
+    /// «Всегда класть такие файлы сюда?» (этап 17.5): шаблон из решения — маска по именам выбранных файлов, сухой прогон, и
+    /// шаблон добавляется рабочей папке назначения (в подпапку — с подпапкой). Назначение вне рабочих папок становится рабочей
+    /// папкой.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(CanAlwaysHere))]
+    private async Task AlwaysHereAsync()
+    {
+        if (_dialogs is null || _selection.Count == 0 || SelectedFolder is not { IsNew: false } target)
+        {
+            return;
+        }
+
+        var owner = OwnerOf(target.Path);
+        var subfolder = owner is null || SamePath(owner.Path, target.Path) ? null : target.Path[owner.Path.TrimEnd('\\', '/').Length..].Trim('\\', '/');
+        var mask = SortingMask.Suggest([.. _selection.Select(static item => item.Entry.Name)]);
+        var editor = new SortingRuleEditorViewModel(new SortingRuleInfo(mask, Subfolder: subfolder), _folders.Inboxes);
+        var dialog = new SortingRuleDialogViewModel(DescribePath(target), editor, (rule, cancellationToken) => PreviewRuleAsync(owner, target.Path, rule, cancellationToken));
+        if (!await _dialogs.ShowSortingRuleAsync(dialog) || editor.ToRule() is not { } saved)
+        {
+            return;
+        }
+
+        var folders = WithRule(owner, target.Path, saved);
+        await SaveAsync(_folders with { WorkFolders = folders }, owner is null ? target.Path : null);
+        _notices?.Show(L.T("Sorting.Title"), L.F(saved.Auto ? "Sorting.RuleSavedAuto" : "Sorting.RuleSavedSuggest", saved.Pattern, DescribePath(target)), FAInfoBarSeverity.Success);
+    }
+
+    private bool CanAlwaysHere() => _dialogs is not null && _selection.Count > 0 && SelectedFolder is { IsNew: false };
+
+    // Рабочая папка, внутри которой лежит путь (ближайшая), или сама папка.
+    private SortingFolderInfo? OwnerOf(string path) => _folders.WorkFolders
+        .Where(folder => SamePath(folder.Path, path) || path.StartsWith(folder.Path.TrimEnd('\\', '/') + "\\", StringComparison.OrdinalIgnoreCase))
+        .MaxBy(static folder => folder.Path.Length);
+
+    // Рабочие папки с новым шаблоном: у своей папки — в конец её шаблонов, иначе — новая рабочая папка.
+    private List<SortingFolderInfo> WithRule(SortingFolderInfo? owner, string target, SortingRuleInfo rule)
+        => owner is null
+            ? [.. _folders.WorkFolders, new SortingFolderInfo(target) { Rules = [rule with { Subfolder = null }] }]
+            : [.. _folders.WorkFolders.Select(folder => SamePath(folder.Path, owner.Path) ? folder with { Rules = [.. folder.Rules, rule] } : folder)];
+
+    // Сухой прогон шаблона из диалога: сколько файлов подходит к нему сейчас.
+    private async Task<string> PreviewRuleAsync(SortingFolderInfo? owner, string target, SortingRuleInfo rule, CancellationToken cancellationToken)
+    {
+        var items = await _inbox.PreviewRulesAsync(WithRule(owner, target, owner is null ? rule with { Subfolder = null } : rule), cancellationToken);
+        return SortingPreviewText.Describe(items, match => SamePath(match.Destination, target) && string.Equals(match.Pattern, rule.Pattern, StringComparison.Ordinal));
+    }
+
+    // Сухой прогон шаблонов карточки: что подходит к этой папке, если сохранить карточку как есть.
+    private async Task<string> PreviewCardAsync(string originalPath, SortingFolderInfo edited, CancellationToken cancellationToken)
+    {
+        var folders = _folders.WorkFolders.Select(folder => SamePath(folder.Path, originalPath) ? edited : folder).ToList();
+        var items = await _inbox.PreviewRulesAsync(folders, cancellationToken);
+        return SortingPreviewText.Describe(items, match => SamePath(match.WorkFolder, edited.Path));
+    }
+
+    // Переносы авторазбора (этап 17.5) собираются за короткую паузу и сообщаются одним уведомлением с «Отменить».
+    private void OnOperationUpdated(object? sender, OperationInfo info)
+    {
+        if (!info.IsAutoSort || info.State != FileOperationState.Completed)
+        {
+            return;
+        }
+
+        if (_dispatcher is null)
+        {
+            CollectAutoSorted(info);
+        }
+        else
+        {
+            _dispatcher.Post(() => CollectAutoSorted(info));
+        }
+    }
+
+    private void CollectAutoSorted(OperationInfo info)
+    {
+        if (!_announced.Add(info.Id))
+        {
+            return;
+        }
+
+        _autoSorted.Add(info);
+        var cts = new CancellationTokenSource();
+        Interlocked.Exchange(ref _autoNotice, cts)?.Cancel();
+        PendingAutoSortNotice = AnnounceAutoSortedAsync(cts.Token);
+    }
+
+    private async Task AnnounceAutoSortedAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(AutoSortNoticeDelay, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        var operations = _autoSorted.ToArray();
+        _autoSorted.Clear();
+        var files = operations.Sum(static operation => operation.Sources.Count);
+        var what = files == 1 ? $"«{PathText.FileName(operations[0].Sources[0])}»" : Formatting.Count(files, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"));
+        var destinations = operations.Select(static operation => operation.Destination ?? string.Empty).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var message = destinations.Length == 1
+            ? L.F("Sorting.AutoSortedTo", what, DescribeDestination(destinations[0]))
+            : L.F("Sorting.AutoSortedMany", what, destinations.Length);
+        _notices?.Show(L.T("Sorting.AutoSortTitle"), message, FAInfoBarSeverity.Success, L.T("Sorting.Undo"), () => _ = UndoAllAsync([.. operations.Select(static operation => operation.Id)]));
+    }
+
+    private async Task UndoAllAsync(IReadOnlyList<Guid> operations)
+    {
+        try
+        {
+            foreach (var id in operations)
+            {
+                await _operations.UndoAsync(id);
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            await LoadInboxesAsync();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            _notices?.Show(L.T("Sorting.Undo"), exception.Message, FAInfoBarSeverity.Error);
         }
     }
 
@@ -1186,7 +1448,12 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
-    partial void OnSelectedFolderChanged(SortFolderNode? value) => UpdateNamePreview();
+    partial void OnSelectedFolderChanged(SortFolderNode? value)
+    {
+        // Назначение, выбранное пользователем, подсказки шаблонов не меняют; выбранное подсказкой — меняют.
+        _destinationSuggested = _suggesting && value is not null;
+        UpdateNamePreview();
+    }
 
     partial void OnSelectedWorkFolderChanged(WorkFolderItem? value)
     {
@@ -1360,7 +1627,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
             if (item.IsReady)
             {
-                items.Add(new SortItem(item.Entry, folder, item.State));
+                items.Add(new SortItem(item.Entry, folder, item.State) { Hint = item.Hint, Matches = item.Matches, HintText = DescribeHint(item.Hint, item.Matches) });
             }
             else
             {
@@ -1626,7 +1893,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             _ = exception;
         }
 
-        var card = new WorkFolderCardViewModel(item.Folder, index, list.Count, item.IsMissing, _dialogs, autoTags);
+        var originalPath = item.Folder.Path;
+        var card = new WorkFolderCardViewModel(item.Folder, index, list.Count, item.IsMissing, _dialogs, autoTags, _folders.Inboxes,
+            (edited, cancellationToken) => PreviewCardAsync(originalPath, edited, cancellationToken));
         switch (await _dialogs.ShowWorkFolderCardAsync(card))
         {
             case WorkFolderCardResult.Removed:

@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             xmlns:v="using:DiskApp.UI.Views"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="200"
+             x:Class="DiskApp.UI.Views.SortingRuleDialogView"
+             x:DataType="vm:SortingRuleDialogViewModel">
+    <!-- «Всегда класть такие файлы сюда?» (PLAN.md, этап 17.5): маска по выбранным файлам, режим и сколько подходит сейчас -->
+    <StackPanel Spacing="10" Width="480">
+        <TextBlock TextWrapping="Wrap" Text="{Binding Question}" />
+        <v:SortingRuleEditorView DataContext="{Binding Rule}" />
+        <TextBlock Classes="tertiary" FontSize="12" TextWrapping="Wrap" Text="{loc:Str Sorting.RulePatternTip}" />
+        <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="{Binding PreviewText}" IsVisible="{Binding HasPreview}" />
+    </StackPanel>
+</UserControl>

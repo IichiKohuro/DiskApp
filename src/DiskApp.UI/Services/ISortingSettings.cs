@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 
 using DiskApp.Client;
+using DiskApp.Contracts.App;
 using DiskApp.UI.Text;
 
 namespace DiskApp.UI.Services;
@@ -11,11 +12,46 @@ namespace DiskApp.UI.Services;
 /// <param name="IncludeSubfolders">У накопителя: в очередь попадают и файлы из подпапок (этап 17.1).</param>
 public sealed record SortingFolderInfo(string Path, string? Label = null, bool IncludeSubfolders = false)
 {
+    /// <summary>У рабочей папки: шаблоны имён для авторазбора (этап 17.5).</summary>
+    public IReadOnlyList<SortingRuleInfo> Rules { get; init; } = [];
+
     /// <summary>Что показывать: подпись или имя папки.</summary>
     public string Title => string.IsNullOrWhiteSpace(Label) ? PathText.FileName(Path) : Label;
 
+    /// <summary>Равенство по содержимому: шаблоны сравниваются поэлементно.</summary>
+    public bool Equals(SortingFolderInfo? other)
+        => other is not null && string.Equals(Path, other.Path, StringComparison.Ordinal) && string.Equals(Label, other.Label, StringComparison.Ordinal)
+            && IncludeSubfolders == other.IncludeSubfolders && Rules.SequenceEqual(other.Rules);
+
+    /// <inheritdoc />
+    public override int GetHashCode() => HashCode.Combine(Path, Label, IncludeSubfolders, Rules.Count);
+
     /// <inheritdoc />
     public override string ToString() => Title;
+}
+
+/// <summary>
+/// Шаблон имени рабочей папки (PLAN.md, этап 17.5): маска имени (<c>417_*</c>; без <c>*</c> и <c>?</c> — где угодно в
+/// имени) и необязательные условия.
+/// </summary>
+/// <param name="Pattern">Маска имени файла.</param>
+/// <param name="Auto">Переносить самим; иначе — только предлагать папку первой.</param>
+/// <param name="Enabled">Шаблон действует.</param>
+/// <param name="Inbox">Только для файлов из этого накопителя; <c>null</c> — из любого.</param>
+/// <param name="Subfolder">Подпапка рабочей папки, куда класть; <c>null</c> — в саму папку.</param>
+public sealed record SortingRuleInfo(string Pattern, bool Auto = true, bool Enabled = true, string? Inbox = null, string? Subfolder = null)
+{
+    /// <summary>Только для этих расширений, без точки; пусто — для любых.</summary>
+    public IReadOnlyList<string> Extensions { get; init; } = [];
+
+    /// <summary>Равенство по содержимому: расширения сравниваются поэлементно.</summary>
+    public bool Equals(SortingRuleInfo? other)
+        => other is not null && string.Equals(Pattern, other.Pattern, StringComparison.Ordinal) && Auto == other.Auto && Enabled == other.Enabled
+            && string.Equals(Inbox, other.Inbox, StringComparison.Ordinal) && string.Equals(Subfolder, other.Subfolder, StringComparison.Ordinal)
+            && Extensions.SequenceEqual(other.Extensions, StringComparer.Ordinal);
+
+    /// <inheritdoc />
+    public override int GetHashCode() => HashCode.Combine(Pattern, Auto, Enabled, Inbox, Subfolder, Extensions.Count);
 }
 
 /// <summary>Накопители и рабочие папки в порядке показа.</summary>
@@ -61,7 +97,7 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
         var settings = await _api.GetSettingsAsync(cancellationToken).ConfigureAwait(false);
         return new SortingFolders(
             [.. settings.Sorting.Inboxes.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label, folder.IncludeSubfolders))],
-            [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label))],
+            [.. settings.Sorting.WorkFolders.Select(static folder => new SortingFolderInfo(folder.Path, folder.Label) { Rules = [.. folder.Rules.Select(ToInfo)] })],
             settings.Sorting.NameTemplate,
             settings.Sorting.MainInbox);
     }
@@ -75,7 +111,7 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
             ["sorting"] = new JsonObject
             {
                 ["inboxes"] = ToJson(folders.Inboxes),
-                ["workFolders"] = ToJson(folders.WorkFolders),
+                ["workFolders"] = ToJson(folders.WorkFolders, withRules: true),
                 ["nameTemplate"] = folders.NameTemplate,
                 ["mainInbox"] = folders.MainInbox,
             },
@@ -83,8 +119,53 @@ public sealed class ApiSortingSettings(IDiskAppApi api) : ISortingSettings
         return _api.PatchSettingsAsync(patch, cancellationToken);
     }
 
-    private static JsonArray ToJson(IReadOnlyList<SortingFolderInfo> folders)
-        => [.. folders.Select(static folder => (JsonNode)new JsonObject { ["path"] = folder.Path, ["label"] = folder.Label, ["includeSubfolders"] = folder.IncludeSubfolders })];
+    /// <summary>Шаблон из DTO настроек.</summary>
+    public static SortingRuleInfo ToInfo(SortingRuleDto rule)
+    {
+        ArgumentNullException.ThrowIfNull(rule);
+        return new SortingRuleInfo(rule.Pattern, rule.Mode == SortingRuleMode.Auto, rule.Enabled, rule.Inbox, rule.Subfolder) { Extensions = rule.Extensions ?? [] };
+    }
+
+    /// <summary>Рабочая папка с шаблонами в DTO — для сухого прогона несохранённой карточки.</summary>
+    public static SortingFolderDto ToDto(SortingFolderInfo folder)
+    {
+        ArgumentNullException.ThrowIfNull(folder);
+        return new SortingFolderDto
+        {
+            Path = folder.Path,
+            Label = folder.Label,
+            Rules = [.. folder.Rules.Select(static rule => new SortingRuleDto
+            {
+                Pattern = rule.Pattern,
+                Mode = rule.Auto ? SortingRuleMode.Auto : SortingRuleMode.Suggest,
+                Enabled = rule.Enabled,
+                Inbox = rule.Inbox,
+                Extensions = rule.Extensions,
+                Subfolder = rule.Subfolder,
+            })],
+        };
+    }
+
+    // Шаблоны пишутся только у рабочих папок: список заменяется целиком, и без них сохранение стёрло бы их.
+    private static JsonArray ToJson(IReadOnlyList<SortingFolderInfo> folders, bool withRules = false)
+        => [.. folders.Select(folder =>
+        {
+            var json = new JsonObject { ["path"] = folder.Path, ["label"] = folder.Label, ["includeSubfolders"] = folder.IncludeSubfolders };
+            if (withRules)
+            {
+                json["rules"] = new JsonArray([.. folder.Rules.Select(static rule => (JsonNode)new JsonObject
+                {
+                    ["pattern"] = rule.Pattern,
+                    ["mode"] = rule.Auto ? "Auto" : "Suggest",
+                    ["enabled"] = rule.Enabled,
+                    ["inbox"] = rule.Inbox,
+                    ["extensions"] = new JsonArray([.. rule.Extensions.Select(static extension => (JsonNode)JsonValue.Create(extension))]),
+                    ["subfolder"] = rule.Subfolder,
+                })]);
+            }
+
+            return (JsonNode)json;
+        })];
 }
 
 /// <summary>

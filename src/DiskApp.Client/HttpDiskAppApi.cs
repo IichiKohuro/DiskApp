@@ -200,6 +200,10 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
     }
 
     /// <inheritdoc />
+    public Task<SortingPreviewDto> PreviewSortingRulesAsync(SortingPreviewRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Post, ApiRoutes.V1.SortingRulesPreview, request, Json.SortingPreviewRequest, Json.SortingPreviewDto, cancellationToken);
+
+    /// <inheritdoc />
     public Task<IReadOnlyList<OperationDto>> GetOperationsAsync(CancellationToken cancellationToken = default)
         => GetAsync(ApiRoutes.V1.Operations, Json.IReadOnlyListOperationDto, cancellationToken);
 

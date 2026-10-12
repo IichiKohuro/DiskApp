@@ -3499,4 +3499,124 @@
   <data name="Notes.Format.TaskList" xml:space="preserve">
     <value>Список дел с флажками</value>
   </data>
+  <data name="Sorting.RuleAuto" xml:space="preserve">
+    <value>Переносить сам</value>
+  </data>
+  <data name="Sorting.RuleSuggest" xml:space="preserve">
+    <value>Предлагать первой</value>
+  </data>
+  <data name="Sorting.RuleAnyInbox" xml:space="preserve">
+    <value>Из любого накопителя</value>
+  </data>
+  <data name="Sorting.RulePatternProblem" xml:space="preserve">
+    <value>Маска — часть имени файла до 100 символов, без «\» и «/».</value>
+  </data>
+  <data name="Sorting.RuleSubfolderProblem" xml:space="preserve">
+    <value>Подпапка — путь внутри рабочей папки: «Переписка» или «2026\Акты».</value>
+  </data>
+  <data name="Sorting.RuleOnlyFrom" xml:space="preserve">
+    <value>только из «{0}»</value>
+  </data>
+  <data name="Sorting.RuleInto" xml:space="preserve">
+    <value>в «{0}»</value>
+  </data>
+  <data name="Sorting.PreviewNone" xml:space="preserve">
+    <value>Сейчас в накопителях таких файлов нет.</value>
+  </data>
+  <data name="Sorting.PreviewMore" xml:space="preserve">
+    <value> и другие</value>
+  </data>
+  <data name="Sorting.PreviewMatching" xml:space="preserve">
+    <value>Сейчас подходят: {0} — {1}.</value>
+  </data>
+  <data name="Sorting.PreviewMoving" xml:space="preserve">
+    <value>Сами перенесутся: {0}.</value>
+  </data>
+  <data name="Sorting.PreviewChoice" xml:space="preserve">
+    <value>Подходят и к другой папке: {0} — их разберёте вы.</value>
+  </data>
+  <data name="Sorting.AlwaysHereQuestion" xml:space="preserve">
+    <value>Всегда класть такие файлы в «{0}»?</value>
+  </data>
+  <data name="Sorting.AlwaysHereTitle" xml:space="preserve">
+    <value>Всегда класть сюда</value>
+  </data>
+  <data name="Sorting.AlwaysHereSave" xml:space="preserve">
+    <value>Сохранить шаблон</value>
+  </data>
+  <data name="Sorting.AlwaysHere" xml:space="preserve">
+    <value>Всегда класть такие сюда…</value>
+  </data>
+  <data name="Sorting.AlwaysHereTo" xml:space="preserve">
+    <value>Всегда класть такие в «{0}»…</value>
+  </data>
+  <data name="Sorting.Rules" xml:space="preserve">
+    <value>Шаблоны имён</value>
+  </data>
+  <data name="Sorting.RuleAdd" xml:space="preserve">
+    <value>Шаблон</value>
+  </data>
+  <data name="Sorting.RulesHint" xml:space="preserve">
+    <value>Файлы из накопителей с подходящими именами сами уходят сюда или предлагаются первыми. 417_* — имена, начинающиеся с «417_»; маска без * ищется в любом месте имени.</value>
+  </data>
+  <data name="Sorting.RuleEnabled" xml:space="preserve">
+    <value>Шаблон действует</value>
+  </data>
+  <data name="Sorting.RulePattern" xml:space="preserve">
+    <value>Маска имени</value>
+  </data>
+  <data name="Sorting.RulePatternPlaceholder" xml:space="preserve">
+    <value>417_*</value>
+  </data>
+  <data name="Sorting.RulePatternTip" xml:space="preserve">
+    <value>* — любые символы, ? — один символ. Маска без * ищется в любом месте имени: «417» — то же, что «*417*».</value>
+  </data>
+  <data name="Sorting.RuleMode" xml:space="preserve">
+    <value>Что делать с подходящими файлами</value>
+  </data>
+  <data name="Sorting.RuleConditions" xml:space="preserve">
+    <value>Условия: накопитель, расширения, подпапка</value>
+  </data>
+  <data name="Sorting.RuleInbox" xml:space="preserve">
+    <value>Только из накопителя</value>
+  </data>
+  <data name="Sorting.RuleExtensions" xml:space="preserve">
+    <value>Только расширения</value>
+  </data>
+  <data name="Sorting.RuleSubfolder" xml:space="preserve">
+    <value>Класть в подпапку</value>
+  </data>
+  <data name="Sorting.RuleSubfolderPlaceholder" xml:space="preserve">
+    <value>Переписка или 2026\Акты</value>
+  </data>
+  <data name="Sorting.RuleRemove" xml:space="preserve">
+    <value>Убрать шаблон</value>
+  </data>
+  <data name="Sorting.HintAuto" xml:space="preserve">
+    <value>→ {0} — уйдёт сам</value>
+  </data>
+  <data name="Sorting.HintSuggest" xml:space="preserve">
+    <value>→ {0} · шаблон {1}</value>
+  </data>
+  <data name="Sorting.HintChoice" xml:space="preserve">
+    <value>Подходит к {0} — выберите</value>
+  </data>
+  <data name="Sorting.RuleSavedAuto" xml:space="preserve">
+    <value>Шаблон «{0}»: такие файлы сами уйдут в «{1}».</value>
+  </data>
+  <data name="Sorting.RuleSavedSuggest" xml:space="preserve">
+    <value>Шаблон «{0}»: для таких файлов «{1}» будет предлагаться первой.</value>
+  </data>
+  <data name="Sorting.AutoSortTitle" xml:space="preserve">
+    <value>Авторазбор</value>
+  </data>
+  <data name="Sorting.AutoSortedTo" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="Sorting.AutoSortedMany" xml:space="preserve">
+    <value>{0} — по папкам: {1}</value>
+  </data>
+  <data name="OperationItem.AutoSorting" xml:space="preserve">
+    <value>Авторазбор: {0}{1}</value>
+  </data>
 </root>

@@ -186,6 +186,16 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
             SecondaryButtonText = L.T("Sorting.CardRemove"),
             CloseButtonText = L.T("Common.CancelButton"),
             DefaultButton = FAContentDialogButton.Primary,
+            IsPrimaryButtonEnabled = card.CanSave,
+        };
+
+        // Шаблон с ошибкой (маска с «\», подпапка «..») не сохраняется: сервер его всё равно отклонит.
+        card.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DiskApp.UI.ViewModels.WorkFolderCardViewModel.CanSave))
+            {
+                box.IsPrimaryButtonEnabled = card.CanSave;
+            }
         };
         return await box.ShowAsync(mainWindow()) switch
         {
@@ -193,6 +203,30 @@ internal sealed class DesktopDialogService(Func<Window> mainWindow) : IDialogSer
             FAContentDialogResult.Secondary => DiskApp.UI.ViewModels.WorkFolderCardResult.Removed,
             _ => DiskApp.UI.ViewModels.WorkFolderCardResult.Cancelled,
         };
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ShowSortingRuleAsync(DiskApp.UI.ViewModels.SortingRuleDialogViewModel dialog)
+    {
+        ArgumentNullException.ThrowIfNull(dialog);
+
+        var box = new FAContentDialog
+        {
+            Title = L.T("Sorting.AlwaysHereTitle"),
+            Content = new DiskApp.UI.Views.SortingRuleDialogView { DataContext = dialog },
+            PrimaryButtonText = L.T("Sorting.AlwaysHereSave"),
+            CloseButtonText = L.T("Common.CancelButton"),
+            DefaultButton = FAContentDialogButton.Primary,
+            IsPrimaryButtonEnabled = dialog.CanSave,
+        };
+        dialog.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DiskApp.UI.ViewModels.SortingRuleDialogViewModel.CanSave))
+            {
+                box.IsPrimaryButtonEnabled = dialog.CanSave;
+            }
+        };
+        return await box.ShowAsync(mainWindow()) == FAContentDialogResult.Primary;
     }
 
     /// <inheritdoc />

@@ -58,7 +58,7 @@ internal static class SortingEndpoints
             .WithDescription("workFolders — шаблоны, которые проверить (например, несохранённая карточка); без них — шаблоны из настроек. Ничего не переносит.");
     }
 
-    private static async Task<Ok<InboxDto>> GetInboxAsync(InboxService inbox, EntryLookup lookup, ISettingsStore<AppSettings> settings, PathNormalizer paths, CancellationToken cancellationToken)
+    private static async Task<Ok<InboxDto>> GetInboxAsync(InboxService inbox, EntryLookup lookup, ISettingsStore<AppSettings> settings, PathNormalizer paths, AutoSortService autoSort, CancellationToken cancellationToken)
     {
         var snapshot = await inbox.GetAsync(cancellationToken).ConfigureAwait(false);
         var dtos = await lookup.ToDtosAsync([.. snapshot.Items.Select(static item => item.Entry)], cancellationToken).ConfigureAwait(false);
@@ -71,7 +71,7 @@ internal static class SortingEndpoints
                 var verdict = rules.Match(item);
                 return new InboxItemDto(byId[item.Entry.Id], item.Inbox, ToDto(item.State), snapshot.IsReady(item), item.ReadyUtc)
                 {
-                    Decision = ToDto(verdict, item),
+                    Decision = ToDto(verdict, item, autoSort),
                     Matches = [.. verdict.Matches.Select(ToDto)],
                 };
             })
@@ -90,6 +90,7 @@ internal static class SortingEndpoints
         ISettingsStore<AppSettings> settings,
         PathNormalizer paths,
         IClock clock,
+        AutoSortService autoSort,
         CancellationToken cancellationToken)
     {
         IReadOnlyList<SortingFolder> workFolders = settings.Current.Sorting.WorkFolders;
@@ -116,8 +117,8 @@ internal static class SortingEndpoints
                 pair.Item.FullPath,
                 pair.Item.Entry.Name,
                 pair.Item.Inbox,
-                ToDto(pair.Verdict, pair.Item),
-                SortingRuleSet.WillAutoSort(snapshot, pair.Item, pair.Verdict),
+                ToDto(pair.Verdict, pair.Item, autoSort),
+                SortingRuleSet.WillAutoSort(snapshot, pair.Item, pair.Verdict) && !autoSort.IsReturned(pair.Item),
                 [.. pair.Verdict.Matches.Select(ToDto)],
                 pair.Verdict.Decision is CoreDecision.Auto or CoreDecision.Suggest
                     ? AutoSortService.NewName(template, pair.Item, 1, 1, pair.Verdict.Matches[0].Destination, now)
@@ -130,8 +131,8 @@ internal static class SortingEndpoints
     private static InboxState ToDto(InboxItemState state) => state == InboxItemState.Manual ? InboxState.New : (InboxState)(int)state;
 
     // «Перенесётся сам» — только у нового файла: отложенный, оставленный и вернувшийся авторазбор не трогает.
-    private static Contracts.Operations.SortingDecision ToDto(SortingVerdict verdict, InboxItem item)
-        => verdict.Decision == CoreDecision.Auto && item.State != InboxItemState.New
+    private static Contracts.Operations.SortingDecision ToDto(SortingVerdict verdict, InboxItem item, AutoSortService autoSort)
+        => verdict.Decision == CoreDecision.Auto && (item.State != InboxItemState.New || autoSort.IsReturned(item))
             ? Contracts.Operations.SortingDecision.Suggest
             : (Contracts.Operations.SortingDecision)(int)verdict.Decision;
 

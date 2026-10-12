@@ -118,6 +118,7 @@ public sealed class AutoSortApiTests
         using var undo = await context.Client.PostAsync(new Uri($"{ApiRoutes.V1.Operations}/{operation.Id}/undo", UriKind.Relative), null, TestContext.Current.CancellationToken);
         await WaitForFileAsync(report);
         await WaitForAsync(context, static queue => queue.Items.Any(static item => item.Entry.Name == "417_ТЗ.pdf"));
+        var back = await context.GetAsync(ApiRoutes.V1.SortingInbox, DiskAppJsonContext.Default.InboxDto);
         var next = Aged(context.Files.CreateFile(Path.Combine("Загрузки", "417_акт.pdf"), "а"));
         await WaitForFileAsync(Path.Combine(work, "417_акт.pdf"));
         await WaitForAsync(context, static queue => !queue.Items.Any(static item => item.Entry.Name == "417_акт.pdf"));
@@ -130,6 +131,7 @@ public sealed class AutoSortApiTests
         var returned = queue.Items.Single(static item => item.Entry.Name == "417_ТЗ.pdf");
         returned.State.ShouldBe(InboxState.New);
         returned.Decision.ShouldBe(SortingDecision.Suggest);
+        back.Items.Single(static item => item.Entry.Name == "417_ТЗ.pdf").Decision.ShouldBe(SortingDecision.Suggest, "вернувшийся сразу перестаёт быть «уйдёт сам»");
         queue.NewCount.ShouldBe(1);
     }
 

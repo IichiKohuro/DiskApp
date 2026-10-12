@@ -3499,4 +3499,124 @@ Project folder: D:\Work\417</value>
   <data name="Notes.Format.TaskList" xml:space="preserve">
     <value>To-do list with check boxes</value>
   </data>
+  <data name="Sorting.RuleAuto" xml:space="preserve">
+    <value>Move automatically</value>
+  </data>
+  <data name="Sorting.RuleSuggest" xml:space="preserve">
+    <value>Suggest first</value>
+  </data>
+  <data name="Sorting.RuleAnyInbox" xml:space="preserve">
+    <value>From any inbox folder</value>
+  </data>
+  <data name="Sorting.RulePatternProblem" xml:space="preserve">
+    <value>A mask is a part of a file name up to 100 characters, without «\» and «/».</value>
+  </data>
+  <data name="Sorting.RuleSubfolderProblem" xml:space="preserve">
+    <value>A subfolder is a path inside the work folder: «Correspondence» or «2026\Acts».</value>
+  </data>
+  <data name="Sorting.RuleOnlyFrom" xml:space="preserve">
+    <value>only from «{0}»</value>
+  </data>
+  <data name="Sorting.RuleInto" xml:space="preserve">
+    <value>into «{0}»</value>
+  </data>
+  <data name="Sorting.PreviewNone" xml:space="preserve">
+    <value>No such files in the inbox folders right now.</value>
+  </data>
+  <data name="Sorting.PreviewMore" xml:space="preserve">
+    <value> and more</value>
+  </data>
+  <data name="Sorting.PreviewMatching" xml:space="preserve">
+    <value>Matching now: {0} — {1}.</value>
+  </data>
+  <data name="Sorting.PreviewMoving" xml:space="preserve">
+    <value>Will move automatically: {0}.</value>
+  </data>
+  <data name="Sorting.PreviewChoice" xml:space="preserve">
+    <value>Also match another folder: {0} — you sort them.</value>
+  </data>
+  <data name="Sorting.AlwaysHereQuestion" xml:space="preserve">
+    <value>Always put files like these into «{0}»?</value>
+  </data>
+  <data name="Sorting.AlwaysHereTitle" xml:space="preserve">
+    <value>Always put here</value>
+  </data>
+  <data name="Sorting.AlwaysHereSave" xml:space="preserve">
+    <value>Save template</value>
+  </data>
+  <data name="Sorting.AlwaysHere" xml:space="preserve">
+    <value>Always put files like these here…</value>
+  </data>
+  <data name="Sorting.AlwaysHereTo" xml:space="preserve">
+    <value>Always put files like these into «{0}»…</value>
+  </data>
+  <data name="Sorting.Rules" xml:space="preserve">
+    <value>Name templates</value>
+  </data>
+  <data name="Sorting.RuleAdd" xml:space="preserve">
+    <value>Template</value>
+  </data>
+  <data name="Sorting.RulesHint" xml:space="preserve">
+    <value>Inbox files with matching names move here automatically or are suggested first. 417_* — names starting with «417_»; a mask without * is looked for anywhere in the name.</value>
+  </data>
+  <data name="Sorting.RuleEnabled" xml:space="preserve">
+    <value>Template is on</value>
+  </data>
+  <data name="Sorting.RulePattern" xml:space="preserve">
+    <value>Name mask</value>
+  </data>
+  <data name="Sorting.RulePatternPlaceholder" xml:space="preserve">
+    <value>417_*</value>
+  </data>
+  <data name="Sorting.RulePatternTip" xml:space="preserve">
+    <value>* — any characters, ? — one character. A mask without * is looked for anywhere in the name: «417» is the same as «*417*».</value>
+  </data>
+  <data name="Sorting.RuleMode" xml:space="preserve">
+    <value>What to do with matching files</value>
+  </data>
+  <data name="Sorting.RuleConditions" xml:space="preserve">
+    <value>Conditions: inbox folder, extensions, subfolder</value>
+  </data>
+  <data name="Sorting.RuleInbox" xml:space="preserve">
+    <value>Only from inbox folder</value>
+  </data>
+  <data name="Sorting.RuleExtensions" xml:space="preserve">
+    <value>Only extensions</value>
+  </data>
+  <data name="Sorting.RuleSubfolder" xml:space="preserve">
+    <value>Put into subfolder</value>
+  </data>
+  <data name="Sorting.RuleSubfolderPlaceholder" xml:space="preserve">
+    <value>Correspondence or 2026\Acts</value>
+  </data>
+  <data name="Sorting.RuleRemove" xml:space="preserve">
+    <value>Remove template</value>
+  </data>
+  <data name="Sorting.HintAuto" xml:space="preserve">
+    <value>→ {0} — will move automatically</value>
+  </data>
+  <data name="Sorting.HintSuggest" xml:space="preserve">
+    <value>→ {0} · template {1}</value>
+  </data>
+  <data name="Sorting.HintChoice" xml:space="preserve">
+    <value>Matches {0} — choose</value>
+  </data>
+  <data name="Sorting.RuleSavedAuto" xml:space="preserve">
+    <value>Template «{0}»: files like these will move into «{1}» automatically.</value>
+  </data>
+  <data name="Sorting.RuleSavedSuggest" xml:space="preserve">
+    <value>Template «{0}»: «{1}» will be suggested first for files like these.</value>
+  </data>
+  <data name="Sorting.AutoSortTitle" xml:space="preserve">
+    <value>Auto-sorting</value>
+  </data>
+  <data name="Sorting.AutoSortedTo" xml:space="preserve">
+    <value>{0} → {1}</value>
+  </data>
+  <data name="Sorting.AutoSortedMany" xml:space="preserve">
+    <value>{0} — into {1} folders</value>
+  </data>
+  <data name="OperationItem.AutoSorting" xml:space="preserve">
+    <value>Auto-sorting: {0}{1}</value>
+  </data>
 </root>

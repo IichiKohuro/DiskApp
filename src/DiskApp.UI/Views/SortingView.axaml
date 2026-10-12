@@ -145,6 +145,13 @@
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <Separator />
+                                <!-- Шаблон из решения (этап 17.5): такие файлы сами уходят в выбранное назначение -->
+                                <MenuItem Header="{Binding AlwaysHereText}" Command="{Binding AlwaysHereCommand}">
+                                    <MenuItem.Icon>
+                                        <ic:SymbolIcon Symbol="Sparkle" FontSize="16" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
                                 <MenuItem Header="{loc:Str Sorting.Postpone}" Command="{Binding PostponeCommand}" IsEnabled="{Binding HasSelection}" />
                                 <MenuItem Header="{loc:Str Sorting.KeepHere}" Command="{Binding KeepHereCommand}" IsEnabled="{Binding HasSelection}" />
                                 <MenuItem Header="{loc:Str Sorting.ReturnToNew}" Command="{Binding ReturnToNewCommand}" IsVisible="{Binding SelectionHasState}" />
@@ -171,6 +178,9 @@
                                             <!-- Состояние (этап 17.1): отложен или оставлен здесь -->
                                             <TextBlock Classes="tertiary" FontSize="11" FontStyle="Italic" Text="{Binding StateText}" IsVisible="{Binding HasState}" />
                                         </StackPanel>
+                                        <!-- Подсказка шаблонов рабочих папок (этап 17.5): куда и почему -->
+                                        <TextBlock FontSize="11" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"
+                                                   Text="{Binding HintText}" IsVisible="{Binding HasHint}" ToolTip.Tip="{Binding HintText}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="1">
                                         <TextBlock Classes="secondary" FontSize="12" HorizontalAlignment="Right" Text="{Binding ModifiedText}" />

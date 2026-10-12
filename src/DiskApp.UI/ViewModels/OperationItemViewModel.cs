@@ -127,6 +127,7 @@ public sealed partial class OperationItemViewModel : ObservableObject
         return info.Kind switch
         {
             FileOperationKind.Copy => L.F("OperationItem.Copying", what, where),
+            FileOperationKind.Move when info.IsAutoSort => L.F("OperationItem.AutoSorting", what, where),
             FileOperationKind.Move => L.F("OperationItem.Moving", what, where),
             FileOperationKind.Rename => L.F("OperationItem.Renaming", what),
             FileOperationKind.Delete => L.F("OperationItem.ToRecycleBin", what),
