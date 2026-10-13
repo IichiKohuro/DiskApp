@@ -2929,34 +2929,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>Buttons above the note text: heading, bold, italic, strikethrough, lists, check boxes, quote, code, link, divider. They work on the selection and a second press removes the markup; Ctrl+B, Ctrl+I, Ctrl+K.</value>
+    <value>Right-click a work folder chip → Edit… → Name templates: a mask (417_*; without a star it is looked for anywhere in the name), Move automatically or Suggest first, conditions — inbox folder, extensions, subfolder. Below you see how many files match right now.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Formatting bar in notes</value>
+    <value>Name templates of work folders</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>Enter in a list item starts the next one (- , 2. , - [ ] ); on an empty item it ends the list. The Heading button turns “#Text” into “# Text”.</value>
+    <value>A downloaded file matching a Move automatically template goes into its work folder by itself once the download is over; on top — Auto-sorting with Undo. An undone file stays in the inbox folder and no longer moves by itself.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Lists continue by themselves</value>
+    <value>Auto-sorting</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Sorting says “→ folder” only once the file has really moved; if not, the file stays in the list with the reason and Retry. If a file is open, DiskApp names the program to close.</value>
+    <value>A file row shows where templates put it: “→ 417 · template 417_*”; clicking the file picks that folder. Matches two folders — “choose”, and the file waits for you.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>An honest move result</value>
+    <value>Hints on the Sorting page</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>On the Sorting page, right-click a file → Move to recycle bin (or press Delete); Delete all below the list removes every listed file. DiskApp asks first.</value>
+    <value>Pick a file and a folder, right-click → Always put files like these into “417”…: a template from one decision, a mask from the name and how many files match right now.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Unwanted files to the recycle bin</value>
+    <value>Always put files like these here</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>{date} in a name is 12102026, {time} is 135445, together 12102026135445; presets Date last and Date and time last.</value>
+    <value>Above the note text — heading, bold, italic, lists, check boxes, quote, code, link; Ctrl+B, Ctrl+I, Ctrl+K. Enter in a list item starts the next one.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Dates without separators</value>
+    <value>Formatting bar in notes</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>

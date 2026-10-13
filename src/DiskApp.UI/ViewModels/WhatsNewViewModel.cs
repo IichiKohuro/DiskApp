@@ -20,7 +20,7 @@ public sealed class WhatsNewViewModel
 {
     private static readonly Symbol[] Symbols =
     [
-        Symbol.TextBold, Symbol.TextBulletList, Symbol.CheckmarkCircle, Symbol.Delete, Symbol.Calendar, Symbol.Sparkle, Symbol.Star,
+        Symbol.Filter, Symbol.Flash, Symbol.Lightbulb, Symbol.Pin, Symbol.TextBold, Symbol.Sparkle, Symbol.Star,
     ];
 
     /// <summary>Создаёт список для текущей версии.</summary>
