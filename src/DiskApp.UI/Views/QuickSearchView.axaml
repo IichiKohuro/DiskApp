@@ -98,188 +98,214 @@
             </ItemsControl>
         </DockPanel>
 
-        <Panel Grid.Row="3" Margin="0,8,0,0">
-            <ListBox x:Name="ResultsList" AutomationProperties.Name="{loc:Str A11y.SearchResults}"
-                     Classes="results"
-                     ItemsSource="{Binding Rows}"
-                     SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
-                     ItemTemplate="{StaticResource ResultRowTemplate}"
-                     SelectionMode="Single"
-                     IsVisible="{Binding ShowResults}">
-                <ListBox.ContextFlyout>
-                    <!-- Подписи клавиш — текстом из QuickSearchKeyMap: стандартная подпись Avalonia называет Enter «Return». -->
-                    <MenuFlyout>
-                        <MenuItem Command="{Binding OpenCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str Common.Open}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.OpenText}" />
+        <DockPanel Grid.Row="3" Margin="0,8,0,0">
+            <!-- «Было» (этап 20.5): файлы, найденные по прежнему имени, — куда делись и как вернуть. Кнопки не берут фокус у поля. -->
+            <Border DockPanel.Dock="Bottom" Classes="card" Margin="0,8,0,0" Padding="10,8" IsVisible="{Binding HasFormer}">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="{loc:Str Former.Title}" />
+                    <ItemsControl ItemsSource="{Binding Former}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:FormerFileViewModel">
+                                <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,2">
+                                    <ic:SymbolIcon Symbol="{Binding Symbol}" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding PathText}">
+                                        <Run FontWeight="SemiBold" Text="{Binding Name}" />
+                                        <Run Text="  " />
+                                        <Run Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Text}" />
+                                    </TextBlock>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="8,0,0,0">
+                                        <Button Focusable="False" Padding="8,2" Content="{loc:Str Former.Find}" Command="{Binding GoToCommand}" IsVisible="{Binding CanGoTo}" />
+                                        <Button Focusable="False" Padding="8,2" Content="{Binding RevertText}" Command="{Binding RevertCommand}" IsVisible="{Binding CanRevert}" />
+                                    </StackPanel>
                                 </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="Open" /></MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Command="{Binding RevealCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str QuickSearch.ShowInFolder}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RevealText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="FolderOpen" /></MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Command="{Binding OpenWithCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str QuickSearch.OpenWith}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.OpenWithText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="WindowNew" /></MenuItem.Icon>
-                        </MenuItem>
-                        <Separator />
-                        <MenuItem Command="{Binding CopyFilesCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str Common.Copy}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.CopyFilesText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="Copy" /></MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Command="{Binding CopyPathCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str Common.CopyPath}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.CopyPathText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="DocumentCopy" /></MenuItem.Icon>
-                        </MenuItem>
-                        <Separator />
-                        <MenuItem Command="{Binding TogglePinCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{Binding PinMenuText}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.TogglePinText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="Pin" /></MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Command="{Binding EditTagsCommand}" IsVisible="{Binding CanEditTags}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str Common.TagsEllipsis}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.EditTagsText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="Tag" /></MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Command="{Binding BeginRenameCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str Common.Rename}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RenameText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="Rename" /></MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Command="{Binding BeginDeleteCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str Common.ToRecycleBin}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.DeleteText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="Delete" /></MenuItem.Icon>
-                        </MenuItem>
-                        <Separator />
-                        <MenuItem Command="{Binding RunAsAdminCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str QuickSearch.RunAsAdministrator}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RunAsAdminText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="Shield" /></MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Command="{Binding PropertiesCommand}">
-                            <MenuItem.Header>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{loc:Str Common.Properties}" />
-                                    <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.PropertiesText}" />
-                                </Grid>
-                            </MenuItem.Header>
-                            <MenuItem.Icon><ic:SymbolIcon Symbol="Info" /></MenuItem.Icon>
-                        </MenuItem>
-                    </MenuFlyout>
-                </ListBox.ContextFlyout>
-            </ListBox>
-            <StackPanel IsVisible="{Binding ShowEmptyState}"
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+            <Panel>
+                <ListBox x:Name="ResultsList" AutomationProperties.Name="{loc:Str A11y.SearchResults}"
+                         Classes="results"
+                         ItemsSource="{Binding Rows}"
+                         SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                         ItemTemplate="{StaticResource ResultRowTemplate}"
+                         SelectionMode="Single"
+                         IsVisible="{Binding ShowResults}">
+                    <ListBox.ContextFlyout>
+                        <!-- Подписи клавиш — текстом из QuickSearchKeyMap: стандартная подпись Avalonia называет Enter «Return». -->
+                        <MenuFlyout>
+                            <MenuItem Command="{Binding OpenCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str Common.Open}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.OpenText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Open" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Command="{Binding RevealCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str QuickSearch.ShowInFolder}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RevealText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="FolderOpen" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Command="{Binding OpenWithCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str QuickSearch.OpenWith}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.OpenWithText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="WindowNew" /></MenuItem.Icon>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem Command="{Binding CopyFilesCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str Common.Copy}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.CopyFilesText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Copy" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Command="{Binding CopyPathCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str Common.CopyPath}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.CopyPathText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="DocumentCopy" /></MenuItem.Icon>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem Command="{Binding TogglePinCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{Binding PinMenuText}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.TogglePinText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Pin" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Command="{Binding EditTagsCommand}" IsVisible="{Binding CanEditTags}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str Common.TagsEllipsis}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.EditTagsText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Tag" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Command="{Binding BeginRenameCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str Common.Rename}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RenameText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Rename" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Command="{Binding BeginDeleteCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str Common.ToRecycleBin}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.DeleteText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Delete" /></MenuItem.Icon>
+                            </MenuItem>
+                            <Separator />
+                            <MenuItem Command="{Binding RunAsAdminCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str QuickSearch.RunAsAdministrator}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.RunAsAdminText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Shield" /></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Command="{Binding PropertiesCommand}">
+                                <MenuItem.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Text="{loc:Str Common.Properties}" />
+                                        <TextBlock Grid.Column="1" Classes="gesture" Text="{x:Static input:QuickSearchKeyMap.PropertiesText}" />
+                                    </Grid>
+                                </MenuItem.Header>
+                                <MenuItem.Icon><ic:SymbolIcon Symbol="Info" /></MenuItem.Icon>
+                            </MenuItem>
+                        </MenuFlyout>
+                    </ListBox.ContextFlyout>
+                </ListBox>
+                <StackPanel IsVisible="{Binding ShowEmptyState}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="8">
+                    <ic:SymbolIcon Symbol="DocumentSearch"
+                                   FontSize="40"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    <TextBlock Classes="secondary" Text="{loc:Str QuickSearch.NothingFound}" HorizontalAlignment="Center" />
+                    <TextBlock Classes="tertiary" FontSize="12" Text="{loc:Str QuickSearch.TypeToSeeFiltersAndKeys}" HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Файлы тащат в окно: куда их бросить -->
+                <Border VerticalAlignment="Bottom"
                         HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="8">
-                <ic:SymbolIcon Symbol="DocumentSearch"
-                               FontSize="40"
-                               HorizontalAlignment="Center"
-                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                <TextBlock Classes="secondary" Text="{loc:Str QuickSearch.NothingFound}" HorizontalAlignment="Center" />
-                <TextBlock Classes="tertiary" FontSize="12" Text="{loc:Str QuickSearch.TypeToSeeFiltersAndKeys}" HorizontalAlignment="Center" />
-            </StackPanel>
+                        Margin="0,0,0,12"
+                        Padding="14,8"
+                        CornerRadius="8"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        IsHitTestVisible="False"
+                        IsVisible="{Binding ShowDropHint}">
+                    <TextBlock Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
+                               Text="{loc:Str QuickSearch.DropFilesOnAFolderIn}" />
+                </Border>
 
-            <!-- Файлы тащат в окно: куда их бросить -->
-            <Border VerticalAlignment="Bottom"
-                    HorizontalAlignment="Center"
-                    Margin="0,0,0,12"
-                    Padding="14,8"
-                    CornerRadius="8"
-                    Background="{DynamicResource AccentFillColorDefaultBrush}"
-                    IsHitTestVisible="False"
-                    IsVisible="{Binding ShowDropHint}">
-                <TextBlock Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
-                           Text="{loc:Str QuickSearch.DropFilesOnAFolderIn}" />
-            </Border>
+                <!-- Подсказка синтаксиса по запросу «?» -->
+                <ScrollViewer IsVisible="{Binding ShowHelp}">
+                    <ItemsControl ItemsSource="{x:Static input:SearchHelp.Items}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="m:HelpItem">
+                                <Panel>
+                                    <TextBlock Classes="section" Margin="6,10,0,4" Text="{Binding Description}" IsVisible="{Binding IsHeader}" />
+                                    <Grid ColumnDefinitions="220,*" Margin="6,3" IsVisible="{Binding !IsHeader}">
+                                        <TextBlock Classes="code" Text="{Binding Example}" />
+                                        <TextBlock Grid.Column="1" Classes="secondary" TextWrapping="Wrap" Text="{Binding Description}" />
+                                    </Grid>
+                                </Panel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
 
-            <!-- Подсказка синтаксиса по запросу «?» -->
-            <ScrollViewer IsVisible="{Binding ShowHelp}">
-                <ItemsControl ItemsSource="{x:Static input:SearchHelp.Items}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="m:HelpItem">
-                            <Panel>
-                                <TextBlock Classes="section" Margin="6,10,0,4" Text="{Binding Description}" IsVisible="{Binding IsHeader}" />
-                                <Grid ColumnDefinitions="220,*" Margin="6,3" IsVisible="{Binding !IsHeader}">
-                                    <TextBlock Classes="code" Text="{Binding Example}" />
-                                    <TextBlock Grid.Column="1" Classes="secondary" TextWrapping="Wrap" Text="{Binding Description}" />
-                                </Grid>
-                            </Panel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-
-            <!-- Обучающая подсказка о фильтрах (этап 9.3): один раз после мастера, поверх списка. Встроена в окно, а не
-                 всплывает: всплывающее окно забрало бы фокус, и окно поиска спряталось бы. -->
-            <Border VerticalAlignment="Top"
-                    Margin="16,4,16,0"
-                    Padding="16,12"
-                    CornerRadius="8"
-                    BorderThickness="1"
-                    BorderBrush="{DynamicResource SurfaceStrokeColorFlyoutBrush}"
-                    Background="{DynamicResource SolidBackgroundFillColorQuarternaryBrush}"
-                    BoxShadow="0 8 16 0 #40000000"
-                    IsVisible="{Binding IsFiltersTipOpen}">
-                <DockPanel>
-                    <Button DockPanel.Dock="Bottom" HorizontalAlignment="Right" Margin="0,10,0,0" Focusable="False"
-                            Content="{loc:Str Tips.GotIt}" Command="{Binding DismissFiltersTipCommand}" />
-                    <StackPanel Spacing="4">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <ic:SymbolIcon Symbol="Lightbulb" FontSize="18" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
-                            <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Tips.Filters.Title}" />
+                <!-- Обучающая подсказка о фильтрах (этап 9.3): один раз после мастера, поверх списка. Встроена в окно, а не
+                     всплывает: всплывающее окно забрало бы фокус, и окно поиска спряталось бы. -->
+                <Border VerticalAlignment="Top"
+                        Margin="16,4,16,0"
+                        Padding="16,12"
+                        CornerRadius="8"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource SurfaceStrokeColorFlyoutBrush}"
+                        Background="{DynamicResource SolidBackgroundFillColorQuarternaryBrush}"
+                        BoxShadow="0 8 16 0 #40000000"
+                        IsVisible="{Binding IsFiltersTipOpen}">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Bottom" HorizontalAlignment="Right" Margin="0,10,0,0" Focusable="False"
+                                Content="{loc:Str Tips.GotIt}" Command="{Binding DismissFiltersTipCommand}" />
+                        <StackPanel Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ic:SymbolIcon Symbol="Lightbulb" FontSize="18" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                <TextBlock Theme="{StaticResource BodyStrongTextBlockStyle}" Text="{loc:Str Tips.Filters.Title}" />
+                            </StackPanel>
+                            <TextBlock TextWrapping="Wrap" Text="{loc:Str Tips.Filters.Text}" />
                         </StackPanel>
-                        <TextBlock TextWrapping="Wrap" Text="{loc:Str Tips.Filters.Text}" />
-                    </StackPanel>
-                </DockPanel>
-            </Border>
-        </Panel>
+                    </DockPanel>
+                </Border>
+            </Panel>
+        </DockPanel>
 
         <!-- Панель действия: новое имя (F2) или подтверждение корзины (Del). Enter — да, Esc — отмена. -->
         <Border Grid.Row="4"

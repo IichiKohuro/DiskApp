@@ -58,6 +58,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     {
         _tagEditor = tagEditor;
         _tips = tips ?? new NoTips();
+        _fileHistory = history;
         FileHistory = history is null ? null : new FileHistoryPanelViewModel(history, notices, dispatcher);
     }
 
@@ -399,6 +400,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         }
 
         ReplaceResults(grouped, string.Empty);
+        ClearFormer();
         var total = Formatting.Count(status.TotalEntries, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")) + L.T("QuickSearch.InTheIndex");
         StatusText = status.IsIndexing ? $"{status.DescribeIndexing()} · {total}" : L.F("QuickSearch.StartTypingAName", total);
         ShowEmptyState = false;
@@ -410,6 +412,7 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         HasError = false;
         ShowHelp = false;
         ReplaceResults([(string.Empty, result.Entries)], Query.Trim());
+        RefreshFormer(Query.Trim(), result.Entries);
 
         if (result.TotalCount == 0)
         {

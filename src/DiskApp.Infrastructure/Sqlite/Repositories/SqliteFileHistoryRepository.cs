@@ -14,6 +14,8 @@ namespace DiskApp.Infrastructure.Sqlite.Repositories;
 /// </summary>
 public sealed class SqliteFileHistoryRepository(SqliteDatabase database, PathNormalizer paths) : SqliteRepository(database), IFileHistoryRepository
 {
+    private const int MaxTextWords = 8;
+
     private const string Columns = "id AS Id, time_utc AS Time, kind AS Kind, source AS Source, path AS Path, old_path AS OldPath, is_dir AS IsDirectory, size AS Size, operation_id AS OperationId, details AS Details";
 
     /// <inheritdoc />
@@ -77,10 +79,17 @@ public sealed class SqliteFileHistoryRepository(SqliteDatabase database, PathNor
             clauses.Add("(path_key = @Folder OR (path_key >= @From AND path_key < @To) OR (old_path_key >= @From AND old_path_key < @To))");
         }
 
-        if (query.Text is { Length: > 0 } text && SearchText.Fold(text.Trim()) is { Length: > 0 } folded)
+        // Каждое слово — в имени или прежнем имени, в любом порядке: «акт 417» находит «417 акт сверки.pdf».
+        var words = (query.Text ?? string.Empty).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Select(static word => SearchText.Fold(word))
+            .Where(static word => word.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .Take(MaxTextWords)
+            .ToArray();
+        for (var i = 0; i < words.Length; i++)
         {
-            parameters.Add("Text", folded);
-            clauses.Add("instr(names_folded, @Text) > 0");
+            parameters.Add("Text" + i.ToString(CultureInfo.InvariantCulture), words[i]);
+            clauses.Add("instr(names_folded, @Text" + i.ToString(CultureInfo.InvariantCulture) + ") > 0");
         }
 
         if (query.Kinds.Count > 0)

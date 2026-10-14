@@ -205,6 +205,48 @@ public sealed class FileHistoryViewModelTests
         title.ShouldBe("Разбор: «акт.pdf» в «Акты»");
     }
 
+    [Fact]
+    public async Task Search_FormerName_ShowsWhereItWent_SkipsFoundAndFilters()
+    {
+        // Arrange: «акт.pdf» переименовали в «сверка.pdf» и перенесли; «старый акт.docx» в корзине; «акт 2.pdf» нашёлся сам
+        var history = new SampleFileHistoryService(
+        [
+            Event(Now.AddDays(-2), FileEventKind.Renamed, FileEventSource.Explorer, @"C:\Загрузки\сверка.pdf", @"C:\Загрузки\акт.pdf"),
+            Event(Now.AddDays(-1), FileEventKind.Moved, FileEventSource.Sorting, @"D:\417\Акты\сверка.pdf", @"C:\Загрузки\сверка.pdf"),
+            Event(Now.AddHours(-3), FileEventKind.Recycled, FileEventSource.Explorer, @"D:\417\старый акт.docx"),
+            Event(Now.AddHours(-2), FileEventKind.Renamed, FileEventSource.Explorer, @"D:\417\акт 2.pdf", @"D:\417\акт.pdf"),
+        ]);
+        var search = Substitute.For<ISearchService>();
+        search.SearchAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new SearchResult([Entry(@"D:\417\акт 2.pdf")], 1, TimeSpan.FromMilliseconds(3)));
+        var viewModel = new QuickSearchViewModel(search, new SampleFileActions(), history: history) { DebounceDelay = TimeSpan.Zero };
+        await viewModel.PendingRefresh;
+
+        // Act
+        viewModel.Query = "акт ext:pdf -черновик";
+        await viewModel.PendingRefresh;
+        await viewModel.PendingFormer;
+        var former = viewModel.Former.Select(static item => (item.Name, item.Event.Kind, item.CanGoTo, item.CanRevert)).ToList();
+        var renamedText = viewModel.Former.Single(static item => item.Event.Kind == FileEventKind.Renamed).Text;
+        viewModel.Former.Single(static item => item.Event.Kind == FileEventKind.Renamed).GoToCommand.Execute(null);
+        var goTo = viewModel.Query;
+        viewModel.Query = "ак";
+        await viewModel.PendingRefresh;
+
+        // Assert: фильтры и исключения — не слова; «акт.pdf» → «акт 2.pdf» не повторяется — нынешнее имя тоже подходит
+        history.Requests[0].Text.ShouldBe("акт");
+        former.ShouldBe(
+        [
+            ("старый акт.docx", FileEventKind.Recycled, false, true),
+            ("акт.pdf", FileEventKind.Renamed, true, true),
+        ]);
+        renamedText.ShouldStartWith("переименован в «сверка.pdf» · ");
+        goTo.ShouldBe("\"сверка.pdf\"");
+        viewModel.HasFormer.ShouldBeFalse();
+        QuickSearchViewModel.FormerWords("\"акт сверки\" in:417 -tag:x отчёт").ShouldBe(["акт", "сверки", "отчёт"]);
+    }
+
+    private static FileEntry Entry(string path) => new() { FullPath = path, Kind = FileKind.Document, Root = "D:", Size = 10, Modified = Now };
+
     private static FileHistoryEvent Event(DateTimeOffset time, FileEventKind kind, FileEventSource source, string path, string? oldPath = null, string? details = null)
         => new(0, time, kind, source, path, oldPath, false, 10, details, kind is FileEventKind.Moved or FileEventKind.Renamed or FileEventKind.Recycled);
 

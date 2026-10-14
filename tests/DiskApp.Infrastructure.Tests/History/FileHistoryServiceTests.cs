@@ -296,6 +296,7 @@ public sealed class FileHistoryServiceTests : IAsyncLifetime
         // Act
         var inA = await _history.QueryAsync(new FileHistoryQuery { Folder = Path("a") }, ct);
         var byOldName = await _history.QueryAsync(new FileHistoryQuery { Text = "СТАРОЕ" }, ct);
+        var byWords = await _history.QueryAsync(new FileHistoryQuery { Text = "имя  старое", Kinds = [FileEventKind.Moved] }, ct);
         var renames = await _history.QueryAsync(new FileHistoryQuery { Kinds = [FileEventKind.Renamed] }, ct);
         var firstPage = await _history.QueryAsync(new FileHistoryQuery { Folder = Path("c"), Limit = 2 }, ct);
         var secondPage = await _history.QueryAsync(new FileHistoryQuery { Folder = Path("c"), Limit = 2, BeforeId = firstPage[^1].Id }, ct);
@@ -303,6 +304,7 @@ public sealed class FileHistoryServiceTests : IAsyncLifetime
         // Assert: в папке «a» — перенос оттуда; по прежнему имени — оба события
         inA.ShouldHaveSingleItem().Kind.ShouldBe(FileEventKind.Moved);
         byOldName.Count.ShouldBe(2);
+        byWords.ShouldHaveSingleItem().Name.ShouldBe("старое имя.pdf");
         renames.ShouldHaveSingleItem().Name.ShouldBe("новое.pdf");
         firstPage.Count.ShouldBe(2);
         secondPage.ShouldHaveSingleItem();

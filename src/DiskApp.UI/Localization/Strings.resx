@@ -1041,6 +1041,24 @@
   <data name="Format.Percent" xml:space="preserve">
     <value>{0} %</value>
   </data>
+  <data name="Former.Deleted" xml:space="preserve">
+    <value>удалён · {0}</value>
+  </data>
+  <data name="Former.Find" xml:space="preserve">
+    <value>Найти</value>
+  </data>
+  <data name="Former.InRecycleBin" xml:space="preserve">
+    <value>в корзине · {0}</value>
+  </data>
+  <data name="Former.MovedTo" xml:space="preserve">
+    <value>перенесён в «{0}» · {1}</value>
+  </data>
+  <data name="Former.RenamedTo" xml:space="preserve">
+    <value>переименован в «{0}» · {1}</value>
+  </data>
+  <data name="Former.Title" xml:space="preserve">
+    <value>Было — найдено по прежнему имени</value>
+  </data>
   <data name="GlobalHotkey.CouldNotRegisterTheHotkey" xml:space="preserve">
     <value>Не удалось зарегистрировать горячую клавишу: {0}.</value>
   </data>

@@ -1041,6 +1041,24 @@
   <data name="Format.Percent" xml:space="preserve">
     <value>{0}%</value>
   </data>
+  <data name="Former.Deleted" xml:space="preserve">
+    <value>deleted · {0}</value>
+  </data>
+  <data name="Former.Find" xml:space="preserve">
+    <value>Find</value>
+  </data>
+  <data name="Former.InRecycleBin" xml:space="preserve">
+    <value>in the Recycle Bin · {0}</value>
+  </data>
+  <data name="Former.MovedTo" xml:space="preserve">
+    <value>moved to “{0}” · {1}</value>
+  </data>
+  <data name="Former.RenamedTo" xml:space="preserve">
+    <value>renamed to “{0}” · {1}</value>
+  </data>
+  <data name="Former.Title" xml:space="preserve">
+    <value>Was — found by a former name</value>
+  </data>
   <data name="GlobalHotkey.CouldNotRegisterTheHotkey" xml:space="preserve">
     <value>Could not register the hotkey: {0}.</value>
   </data>
