@@ -2935,34 +2935,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>Right-click a work folder chip → Edit… → Name templates: a mask (417_*; without a star it is looked for anywhere in the name), Move automatically or Suggest first, conditions — inbox folder, extensions, subfolder. Below you see how many files match right now.</value>
+    <value>A folder added as a root inside another root (TCI2 inside 10S-417) is no longer indexed twice: a file belongs to the deepest root. Duplicates leave search by themselves on the first start.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Name templates of work folders</value>
+    <value>A root inside a root, no duplicates</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>A downloaded file matching a Move automatically template goes into its work folder by itself once the download is over; on top — Auto-sorting with Undo. An undone file stays in the inbox folder and no longer moves by itself.</value>
+    <value>root:10S-417 and in:10S-417 also find the files of TCI2: they physically lie inside. In the Browse tree a nested root is shown as a separate root.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Auto-sorting</value>
+    <value>A root scope includes nested roots</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>A file row shows where templates put it: “→ 417 · template 417_*”; clicking the file picks that folder. Matches two folders — “choose”, and the file waits for you.</value>
+    <value>Add a root inside another one or remove it, and the entries move between roots together with open history, favorites and tags. Settings explain which root now owns the files.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Hints on the Sorting page</value>
+    <value>Roots change, history stays</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Pick a file and a folder, right-click → Always put files like these into “417”…: a template from one decision, a mask from the name and how many files match right now.</value>
+    <value>Right-click a work folder chip → Edit… → Name templates: a mask (417_*), Move automatically or Suggest first, conditions. Below you see how many files match right now.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Always put files like these here</value>
+    <value>Name templates of work folders</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Above the note text — heading, bold, italic, lists, check boxes, quote, code, link; Ctrl+B, Ctrl+I, Ctrl+K. Enter in a list item starts the next one.</value>
+    <value>A downloaded file matching a Move automatically template goes into its work folder by itself once the download is over; on top — Auto-sorting with Undo.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Formatting bar in notes</value>
+    <value>Auto-sorting</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>
