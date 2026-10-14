@@ -27,6 +27,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<ISortingSettings, SampleSortingSettings>();
         services.AddSingleton<IInboxService>(static provider => new BrowseInboxService(provider.GetRequiredService<IBrowseService>(), provider.GetRequiredService<ISortingSettings>()));
         services.AddSingleton<INotesService, SampleNotesService>();
+        services.AddSingleton<IFileHistoryService>(static _ => SampleFileHistoryService.WithSamples(DateTimeOffset.Now));
         services.AddSingleton<ILayoutStore, MemoryLayoutStore>();
         services.AddSingleton<IThemeService, AppThemeService>();
         services.AddSingleton<HotkeyStatus>();

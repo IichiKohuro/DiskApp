@@ -512,6 +512,15 @@ public sealed partial class QuickSearchViewModel
         OnPropertyChanged(nameof(SelectedRow));
         OnPropertyChanged(nameof(PinMenuText));
         OnPropertyChanged(nameof(SelectedDetails));
+        UpdateHistoryPath();
+    }
+
+    private void UpdateHistoryPath()
+    {
+        if (FileHistory is { } history)
+        {
+            history.Path = SelectedResult?.Entry.FullPath;
+        }
     }
 
     private void OnQueryEdited()

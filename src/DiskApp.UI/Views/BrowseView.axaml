@@ -190,6 +190,7 @@
                         <Button HorizontalAlignment="Stretch" Content="{loc:Str Common.ShowInExplorer}" Command="{Binding RevealCommand}" />
                         <Button HorizontalAlignment="Stretch" Content="{loc:Str Common.CopyPath}" Command="{Binding CopyPathCommand}" />
                         <Button HorizontalAlignment="Stretch" Content="{loc:Str Common.Properties}" Command="{Binding PropertiesCommand}" />
+                        <views:FileHistoryPanel Margin="0,6,0,0" DataContext="{Binding FileHistory}" IsVisible="{Binding $parent[UserControl].((vm:BrowseViewModel)DataContext).FileHistory, Converter={x:Static ObjectConverters.IsNotNull}}" />
                     </StackPanel>
                 </ScrollViewer>
             </Panel>

@@ -144,10 +144,13 @@ public sealed partial class BrowseViewModel : PageViewModel
         IDialogService dialogs,
         IInfoBarService notices,
         IOperationsCoordinator operations,
-        ITagEditor? tagEditor = null)
+        ITagEditor? tagEditor = null,
+        IFileHistoryService? history = null,
+        IDispatcher? dispatcher = null)
         : this(browse, roots, search, actions, dialogs, notices, operations, static () => DateTimeOffset.Now)
     {
         TagEditor = tagEditor;
+        FileHistory = history is null ? null : new FileHistoryPanelViewModel(history, notices, dispatcher);
     }
 
     /// <summary>
@@ -269,6 +272,9 @@ public sealed partial class BrowseViewModel : PageViewModel
     /// <summary>Сведения о выбранной записи (одной).</summary>
     [ObservableProperty]
     public partial FileDetails? SelectedDetails { get; set; }
+
+    /// <summary>«История» выбранного файла (этап 20.4); <c>null</c> — истории нет (превью, тесты).</summary>
+    public FileHistoryPanelViewModel? FileHistory { get; set; }
 
     /// <summary>Есть ли ошибка.</summary>
     public bool HasError => ErrorText.Length > 0;
@@ -610,6 +616,14 @@ public sealed partial class BrowseViewModel : PageViewModel
     }
 
     partial void OnSelectedSortChanged(SortOption value) => ReloadForSort();
+
+    partial void OnSelectedDetailsChanged(FileDetails? value)
+    {
+        if (FileHistory is { } history)
+        {
+            history.Path = value?.Entry.FullPath;
+        }
+    }
 
     partial void OnDescendingChanged(bool value) => ReloadForSort();
 

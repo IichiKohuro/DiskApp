@@ -909,6 +909,135 @@
   <data name="FileDetails.Size" xml:space="preserve">
     <value>Размер</value>
   </data>
+  <data name="FileHistory.CannotRevert" xml:space="preserve">
+    <value>Это событие нельзя вернуть.</value>
+  </data>
+  <data name="FileHistory.ClearFilters" xml:space="preserve">
+    <value>Сбросить отбор</value>
+  </data>
+  <data name="FileHistory.CouldNotLoad" xml:space="preserve">
+    <value>Не удалось загрузить историю: </value>
+  </data>
+  <data name="FileHistory.CouldNotRevert" xml:space="preserve">
+    <value>Не удалось вернуть</value>
+  </data>
+  <data name="FileHistory.CreatedIn" xml:space="preserve">
+    <value>Появился в «{0}»</value>
+  </data>
+  <data name="FileHistory.DeletedFrom" xml:space="preserve">
+    <value>Удалён из «{0}»</value>
+  </data>
+  <data name="FileHistory.Empty" xml:space="preserve">
+    <value>Пока ничего не записано. Здесь появятся переносы, переименования и удаления — сделанные в DiskApp и в Проводнике.</value>
+  </data>
+  <data name="FileHistory.Filter.AllFolders" xml:space="preserve">
+    <value>Все папки</value>
+  </data>
+  <data name="FileHistory.Filter.AllKinds" xml:space="preserve">
+    <value>Все события</value>
+  </data>
+  <data name="FileHistory.Filter.AllSources" xml:space="preserve">
+    <value>Все источники</value>
+  </data>
+  <data name="FileHistory.Filter.Created" xml:space="preserve">
+    <value>Появившиеся</value>
+  </data>
+  <data name="FileHistory.Filter.Deleted" xml:space="preserve">
+    <value>Удалённые и восстановленные</value>
+  </data>
+  <data name="FileHistory.Filter.Folder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="FileHistory.Filter.Kind" xml:space="preserve">
+    <value>Что случилось</value>
+  </data>
+  <data name="FileHistory.Filter.Moves" xml:space="preserve">
+    <value>Переносы и переименования</value>
+  </data>
+  <data name="FileHistory.Filter.Sorting" xml:space="preserve">
+    <value>Разбор и авторазбор</value>
+  </data>
+  <data name="FileHistory.Filter.Source" xml:space="preserve">
+    <value>Кто сделал</value>
+  </data>
+  <data name="FileHistory.Filter.Tags" xml:space="preserve">
+    <value>Теги</value>
+  </data>
+  <data name="FileHistory.Indexed" xml:space="preserve">
+    <value>Проиндексирован целиком: {0} · {1}</value>
+  </data>
+  <data name="FileHistory.Moved" xml:space="preserve">
+    <value>Перенесён: «{0}» → «{1}»</value>
+  </data>
+  <data name="FileHistory.MovedRenamed" xml:space="preserve">
+    <value>Перенесён: «{0}» → «{1}», было «{2}»</value>
+  </data>
+  <data name="FileHistory.NothingForFile" xml:space="preserve">
+    <value>С этим файлом пока ничего не происходило.</value>
+  </data>
+  <data name="FileHistory.NothingFound" xml:space="preserve">
+    <value>По такому отбору ничего нет.</value>
+  </data>
+  <data name="FileHistory.Page" xml:space="preserve">
+    <value>История</value>
+  </data>
+  <data name="FileHistory.PageDescription" xml:space="preserve">
+    <value>Что и когда происходило с файлами — в DiskApp и в Проводнике. Переносы и переименования можно вернуть, удалённое в корзину — восстановить.</value>
+  </data>
+  <data name="FileHistory.PutBack" xml:space="preserve">
+    <value>Вернуть на место</value>
+  </data>
+  <data name="FileHistory.PutBackDone" xml:space="preserve">
+    <value>Возвращается на место</value>
+  </data>
+  <data name="FileHistory.RecycledFrom" xml:space="preserve">
+    <value>Удалён в корзину из «{0}»</value>
+  </data>
+  <data name="FileHistory.Refresh" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="FileHistory.RenamedFrom" xml:space="preserve">
+    <value>Переименован, было «{0}»</value>
+  </data>
+  <data name="FileHistory.Restore" xml:space="preserve">
+    <value>Восстановить</value>
+  </data>
+  <data name="FileHistory.Restored" xml:space="preserve">
+    <value>Восстановлено из корзины</value>
+  </data>
+  <data name="FileHistory.RestoredTo" xml:space="preserve">
+    <value>Восстановлен из корзины в «{0}»</value>
+  </data>
+  <data name="FileHistory.SearchByName" xml:space="preserve">
+    <value>Имя или прежнее имя</value>
+  </data>
+  <data name="FileHistory.ShowMore" xml:space="preserve">
+    <value>Показать ещё</value>
+  </data>
+  <data name="FileHistory.Source.AutoSort" xml:space="preserve">
+    <value>Авторазбор</value>
+  </data>
+  <data name="FileHistory.Source.DiskApp" xml:space="preserve">
+    <value>DiskApp</value>
+  </data>
+  <data name="FileHistory.Source.Explorer" xml:space="preserve">
+    <value>Проводник</value>
+  </data>
+  <data name="FileHistory.Source.Reconcile" xml:space="preserve">
+    <value>Сверка</value>
+  </data>
+  <data name="FileHistory.Source.Sorting" xml:space="preserve">
+    <value>Разбор</value>
+  </data>
+  <data name="FileHistory.Tags" xml:space="preserve">
+    <value>Теги: {0}</value>
+  </data>
+  <data name="FileHistory.Today" xml:space="preserve">
+    <value>Сегодня</value>
+  </data>
+  <data name="FileHistory.Yesterday" xml:space="preserve">
+    <value>Вчера</value>
+  </data>
   <data name="Format.Percent" xml:space="preserve">
     <value>{0} %</value>
   </data>
@@ -1313,6 +1442,9 @@
   </data>
   <data name="OperationItem.S2" xml:space="preserve">
     <value>{0} с</value>
+  </data>
+  <data name="OperationItem.Sorting" xml:space="preserve">
+    <value>Разбор: {0}{1}</value>
   </data>
   <data name="OperationItem.To" xml:space="preserve">
     <value> в «{0}»</value>
@@ -2078,6 +2210,18 @@
   </data>
   <data name="Settings.ExperimentalInTheSaveOrOpen" xml:space="preserve">
     <value>Экспериментально. {0} в окне «Сохранить» или «Открыть» любой программы — </value>
+  </data>
+  <data name="Settings.FileHistory" xml:space="preserve">
+    <value>История файлов</value>
+  </data>
+  <data name="Settings.FileHistoryDays" xml:space="preserve">
+    <value>Дней хранить</value>
+  </data>
+  <data name="Settings.FileHistoryDescription" xml:space="preserve">
+    <value>Сколько хранить: не дольше стольких дней и не больше стольких мегабайт — что наступит раньше</value>
+  </data>
+  <data name="Settings.FileHistoryMegabytes" xml:space="preserve">
+    <value>Не больше, МБ</value>
   </data>
   <data name="Settings.FileNameFromTheClipboard" xml:space="preserve">
     <value>Имя файла из буфера обмена</value>

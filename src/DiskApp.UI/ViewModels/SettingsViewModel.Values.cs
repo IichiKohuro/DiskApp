@@ -254,6 +254,14 @@ public sealed partial class SettingsViewModel
     [ObservableProperty]
     public partial decimal HistoryLimit { get; set; }
 
+    /// <summary>История файлов: сколько дней хранить (этап 20.3).</summary>
+    [ObservableProperty]
+    public partial decimal FileHistoryRetentionDays { get; set; } = 90;
+
+    /// <summary>История файлов: предел размера, МБ (этап 20.3).</summary>
+    [ObservableProperty]
+    public partial decimal FileHistoryMaxSizeMegabytes { get; set; } = 50;
+
     /// <summary>Запускаться свёрнутым в трей.</summary>
     [ObservableProperty]
     public partial bool StartMinimized { get; set; }
@@ -375,6 +383,8 @@ public sealed partial class SettingsViewModel
             SelectedRankingPreset = RankingPresets.FirstOrDefault(option => option.Value == settings.Search.RankingPreset) ?? RankingPresets[0];
             CandidateLimit = settings.Search.CandidateLimit;
             HistoryLimit = settings.Search.HistoryLimit;
+            FileHistoryRetentionDays = settings.History.RetentionDays;
+            FileHistoryMaxSizeMegabytes = settings.History.MaxSizeMegabytes;
 
             StartMinimized = settings.Tray.StartMinimized;
             CloseToTray = settings.Tray.CloseToTray;
@@ -485,6 +495,10 @@ public sealed partial class SettingsViewModel
     partial void OnCandidateLimitChanged(decimal value) => Save("search", "candidateLimit", (int)value);
 
     partial void OnHistoryLimitChanged(decimal value) => Save("search", "historyLimit", (int)value);
+
+    partial void OnFileHistoryRetentionDaysChanged(decimal value) => Save("history", "retentionDays", (int)value);
+
+    partial void OnFileHistoryMaxSizeMegabytesChanged(decimal value) => Save("history", "maxSizeMegabytes", (int)value);
 
     partial void OnStartMinimizedChanged(bool value) => Save("tray", "startMinimized", value);
 

@@ -13,11 +13,12 @@ using FluentAvalonia.UI.Controls;
 namespace DiskApp.UI.ViewModels;
 
 /// <summary>
-/// Страница «Операции» и координатор файловых операций интерфейса (PLAN.md, этап 8.4): очередь с ходом, отмена,
-/// возврат результата (`Ctrl+Z` — последняя операция), диалог конфликта имён, уведомление «Отменить» после
-/// операций, начатых в интерфейсе, сводка для полосы главного окна и подсказки трея.
+/// Страница «История» (бывшие «Операции», PLAN.md, этапы 8.4 и 20.4) и координатор файловых операций интерфейса:
+/// сверху — очередь с ходом, отмена, возврат результата (`Ctrl+Z` — последняя операция), диалог конфликта имён,
+/// уведомление «Отменить» после операций, начатых в интерфейсе, сводка для полосы главного окна и подсказки трея; ниже —
+/// лента истории файлов (<see cref="History"/>).
 /// </summary>
-public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoordinator
+public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoordinator, IPageLifecycle
 {
     private readonly IOperationsService _operations;
     private readonly IDialogService? _dialogs;
@@ -28,10 +29,17 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
     private Guid? _lastUndoable;
 
     /// <summary>
-    /// Создаёт страницу; без диалогов конфликты отменяют операцию, без уведомлений итог виден только в списке (тесты, превью).
+    /// Создаёт страницу; без диалогов конфликты отменяют операцию, без уведомлений итог виден только в списке, без истории
+    /// файлов — только операции (тесты, превью).
     /// </summary>
-    public OperationsViewModel(IOperationsService operations, IDispatcher dispatcher, IDialogService? dialogs = null, IInfoBarService? notices = null)
-        : base(PageKeys.Operations, "Operations.Operations", FASymbol.Sync)
+    public OperationsViewModel(
+        IOperationsService operations,
+        IDispatcher dispatcher,
+        IDialogService? dialogs = null,
+        IInfoBarService? notices = null,
+        IFileHistoryService? history = null,
+        IRootsService? roots = null)
+        : base(PageKeys.Operations, "FileHistory.Page", FASymbol.Clock)
     {
         ArgumentNullException.ThrowIfNull(operations);
         ArgumentNullException.ThrowIfNull(dispatcher);
@@ -40,6 +48,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         _dialogs = dialogs;
         _notices = notices;
         _dispatcher = dispatcher;
+        History = history is null ? null : new FileHistoryFeedViewModel(history, dispatcher, roots, notices);
         _operations.Updated += (_, info) => _dispatcher.Post(() => Upsert(info));
         _operations.ConflictRaised += (_, conflict) => _dispatcher.Post(() => _ = ResolveAsync(conflict));
         Initialization = LoadAsync();
@@ -50,6 +59,12 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
 
     /// <summary>Первая загрузка списка.</summary>
     public Task Initialization { get; }
+
+    /// <summary>Лента истории файлов; <c>null</c> — страница показывает только операции.</summary>
+    public FileHistoryFeedViewModel? History { get; }
+
+    /// <summary>Есть лента истории.</summary>
+    public bool HasHistory => History is not null;
 
     /// <summary>Операции, новые сверху.</summary>
     public ObservableCollection<OperationItemViewModel> Items { get; } = [];
@@ -102,6 +117,18 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         await UndoAsync(item);
         return true;
     }
+
+    /// <inheritdoc />
+    public void OnNavigatedTo()
+    {
+        if (History is { } history)
+        {
+            _ = history.ActivateAsync();
+        }
+    }
+
+    /// <inheritdoc />
+    public void OnNavigatedFrom() => History?.Deactivate();
 
     /// <summary>Отменить операцию.</summary>
     [RelayCommand]

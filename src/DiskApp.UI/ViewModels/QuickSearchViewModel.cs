@@ -50,11 +50,15 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
     /// <param name="actions">Действия над файлами.</param>
     /// <param name="tagEditor">Диалог тегов; без него пункт «Теги…» скрыт.</param>
     /// <param name="tips">Обучающие подсказки; без них подсказка о фильтрах не показывается.</param>
-    public QuickSearchViewModel(ISearchService search, IFileActions actions, ITagEditor? tagEditor = null, ITipsService? tips = null)
+    /// <param name="history">История файлов; без неё в карточке нет «Истории».</param>
+    /// <param name="notices">Уведомления главного окна об итоге «Вернуть на место».</param>
+    /// <param name="dispatcher">Поток интерфейса: «История» перечитывается по новым записям.</param>
+    public QuickSearchViewModel(ISearchService search, IFileActions actions, ITagEditor? tagEditor = null, ITipsService? tips = null, IFileHistoryService? history = null, IInfoBarService? notices = null, IDispatcher? dispatcher = null)
         : this(search, actions, static () => DateTimeOffset.Now)
     {
         _tagEditor = tagEditor;
         _tips = tips ?? new NoTips();
+        FileHistory = history is null ? null : new FileHistoryPanelViewModel(history, notices, dispatcher);
     }
 
     /// <summary>
@@ -135,6 +139,9 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
 
     /// <summary>Выбранная строка или <c>null</c>.</summary>
     public SearchHit? SelectedResult => SelectedIndex >= 0 && SelectedIndex < Results.Count ? Results[SelectedIndex] : null;
+
+    /// <summary>«История» выбранного файла в панели сведений (этап 20.4); <c>null</c> — истории нет (окно поиска, тесты).</summary>
+    public FileHistoryPanelViewModel? FileHistory { get; set; }
 
     /// <summary>Сведения о выбранном файле для панели справа от результатов.</summary>
     public FileDetails? SelectedDetails
@@ -357,6 +364,8 @@ public sealed partial class QuickSearchViewModel : PageViewModel, IDisposable
         pending?.Cancel();
         pending?.Dispose();
     }
+
+    partial void OnSelectedIndexChanged(int value) => UpdateHistoryPath();
 
     partial void OnQueryChanged(string value)
     {

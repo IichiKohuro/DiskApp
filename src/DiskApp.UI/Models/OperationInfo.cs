@@ -119,6 +119,9 @@ public sealed record OperationInfo
     /// <summary>Операцию поставил авторазбор по шаблонам рабочих папок (этап 17.5), а не пользователь.</summary>
     public bool IsAutoSort { get; init; }
 
+    /// <summary>Перенос со страницы «Разбор» (этап 20.4: отметка «разбор» в очереди и истории).</summary>
+    public bool IsSorting { get; init; }
+
     /// <summary>Операция ещё идёт.</summary>
     public bool IsActive => State is FileOperationState.Queued or FileOperationState.Running or FileOperationState.WaitingDecision;
 

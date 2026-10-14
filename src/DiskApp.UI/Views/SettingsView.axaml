@@ -510,6 +510,15 @@
                             <Button Content="{loc:Str Settings.Rebuild2}" Command="{Binding RebuildIndexCommand}" IsEnabled="{Binding IsMaintenanceSupported}" />
                         </ui:FASettingsExpander.Footer>
                     </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.FileHistory}" Description="{loc:Str Settings.FileHistoryDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Clock" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <WrapPanel ItemSpacing="8" LineSpacing="8">
+                                <NumericUpDown AutomationProperties.Name="{loc:Str Settings.FileHistoryDays}" Value="{Binding FileHistoryRetentionDays, Mode=TwoWay}" Minimum="1" Maximum="3650" Increment="30" FormatString="0" MinWidth="150" ToolTip.Tip="{loc:Str Settings.FileHistoryDays}" />
+                                <NumericUpDown AutomationProperties.Name="{loc:Str Settings.FileHistoryMegabytes}" Value="{Binding FileHistoryMaxSizeMegabytes, Mode=TwoWay}" Minimum="1" Maximum="1024" Increment="10" FormatString="0" MinWidth="150" ToolTip.Tip="{loc:Str Settings.FileHistoryMegabytes}" />
+                            </WrapPanel>
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
                     <ui:FASettingsExpander Header="{loc:Str Settings.IconAndThumbnailCache}" Description="{Binding CacheSizeText}">
                         <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Pictures" /></ui:FASettingsExpander.IconSource>
                         <ui:FASettingsExpander.Footer>

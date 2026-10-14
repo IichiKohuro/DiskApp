@@ -57,6 +57,7 @@
                             <TextBlock Text="{loc:Str Common.Properties}" />
                         </StackPanel>
                     </Button>
+                    <views:FileHistoryPanel Margin="0,6,0,0" DataContext="{Binding FileHistory}" IsVisible="{Binding $parent[UserControl].((vm:QuickSearchViewModel)DataContext).FileHistory, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

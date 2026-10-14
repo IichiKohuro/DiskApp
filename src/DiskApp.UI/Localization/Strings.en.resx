@@ -909,6 +909,135 @@
   <data name="FileDetails.Size" xml:space="preserve">
     <value>Size</value>
   </data>
+  <data name="FileHistory.CannotRevert" xml:space="preserve">
+    <value>This event cannot be undone.</value>
+  </data>
+  <data name="FileHistory.ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="FileHistory.CouldNotLoad" xml:space="preserve">
+    <value>Could not load the history: </value>
+  </data>
+  <data name="FileHistory.CouldNotRevert" xml:space="preserve">
+    <value>Could not put back</value>
+  </data>
+  <data name="FileHistory.CreatedIn" xml:space="preserve">
+    <value>Appeared in “{0}”</value>
+  </data>
+  <data name="FileHistory.DeletedFrom" xml:space="preserve">
+    <value>Deleted from “{0}”</value>
+  </data>
+  <data name="FileHistory.Empty" xml:space="preserve">
+    <value>Nothing recorded yet. Moves, renames and deletions made in DiskApp and in File Explorer will appear here.</value>
+  </data>
+  <data name="FileHistory.Filter.AllFolders" xml:space="preserve">
+    <value>All folders</value>
+  </data>
+  <data name="FileHistory.Filter.AllKinds" xml:space="preserve">
+    <value>All events</value>
+  </data>
+  <data name="FileHistory.Filter.AllSources" xml:space="preserve">
+    <value>Anyone</value>
+  </data>
+  <data name="FileHistory.Filter.Created" xml:space="preserve">
+    <value>New files</value>
+  </data>
+  <data name="FileHistory.Filter.Deleted" xml:space="preserve">
+    <value>Deleted and restored</value>
+  </data>
+  <data name="FileHistory.Filter.Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="FileHistory.Filter.Kind" xml:space="preserve">
+    <value>What happened</value>
+  </data>
+  <data name="FileHistory.Filter.Moves" xml:space="preserve">
+    <value>Moves and renames</value>
+  </data>
+  <data name="FileHistory.Filter.Sorting" xml:space="preserve">
+    <value>Sorting and auto-sorting</value>
+  </data>
+  <data name="FileHistory.Filter.Source" xml:space="preserve">
+    <value>Who did it</value>
+  </data>
+  <data name="FileHistory.Filter.Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="FileHistory.Indexed" xml:space="preserve">
+    <value>Indexed in full: {0} · {1}</value>
+  </data>
+  <data name="FileHistory.Moved" xml:space="preserve">
+    <value>Moved: “{0}” → “{1}”</value>
+  </data>
+  <data name="FileHistory.MovedRenamed" xml:space="preserve">
+    <value>Moved: “{0}” → “{1}”, was “{2}”</value>
+  </data>
+  <data name="FileHistory.NothingForFile" xml:space="preserve">
+    <value>Nothing has happened to this file yet.</value>
+  </data>
+  <data name="FileHistory.NothingFound" xml:space="preserve">
+    <value>Nothing matches these filters.</value>
+  </data>
+  <data name="FileHistory.Page" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="FileHistory.PageDescription" xml:space="preserve">
+    <value>What happened to your files and when — in DiskApp and in File Explorer. Moves and renames can be put back, recycled files restored.</value>
+  </data>
+  <data name="FileHistory.PutBack" xml:space="preserve">
+    <value>Put back</value>
+  </data>
+  <data name="FileHistory.PutBackDone" xml:space="preserve">
+    <value>Putting back</value>
+  </data>
+  <data name="FileHistory.RecycledFrom" xml:space="preserve">
+    <value>Moved to the Recycle Bin from “{0}”</value>
+  </data>
+  <data name="FileHistory.Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="FileHistory.RenamedFrom" xml:space="preserve">
+    <value>Renamed, was “{0}”</value>
+  </data>
+  <data name="FileHistory.Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="FileHistory.Restored" xml:space="preserve">
+    <value>Restored from the Recycle Bin</value>
+  </data>
+  <data name="FileHistory.RestoredTo" xml:space="preserve">
+    <value>Restored from the Recycle Bin to “{0}”</value>
+  </data>
+  <data name="FileHistory.SearchByName" xml:space="preserve">
+    <value>Name or former name</value>
+  </data>
+  <data name="FileHistory.ShowMore" xml:space="preserve">
+    <value>Show more</value>
+  </data>
+  <data name="FileHistory.Source.AutoSort" xml:space="preserve">
+    <value>Auto-sorting</value>
+  </data>
+  <data name="FileHistory.Source.DiskApp" xml:space="preserve">
+    <value>DiskApp</value>
+  </data>
+  <data name="FileHistory.Source.Explorer" xml:space="preserve">
+    <value>File Explorer</value>
+  </data>
+  <data name="FileHistory.Source.Reconcile" xml:space="preserve">
+    <value>Check-up</value>
+  </data>
+  <data name="FileHistory.Source.Sorting" xml:space="preserve">
+    <value>Sorting</value>
+  </data>
+  <data name="FileHistory.Tags" xml:space="preserve">
+    <value>Tags: {0}</value>
+  </data>
+  <data name="FileHistory.Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="FileHistory.Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
   <data name="Format.Percent" xml:space="preserve">
     <value>{0}%</value>
   </data>
@@ -1313,6 +1442,9 @@
   </data>
   <data name="OperationItem.S2" xml:space="preserve">
     <value>{0} s</value>
+  </data>
+  <data name="OperationItem.Sorting" xml:space="preserve">
+    <value>Sorting: {0}{1}</value>
   </data>
   <data name="OperationItem.To" xml:space="preserve">
     <value> to “{0}”</value>
@@ -2078,6 +2210,18 @@
   </data>
   <data name="Settings.ExperimentalInTheSaveOrOpen" xml:space="preserve">
     <value>Experimental. {0} in the Save or Open dialog of any program — </value>
+  </data>
+  <data name="Settings.FileHistory" xml:space="preserve">
+    <value>File history</value>
+  </data>
+  <data name="Settings.FileHistoryDays" xml:space="preserve">
+    <value>Days to keep</value>
+  </data>
+  <data name="Settings.FileHistoryDescription" xml:space="preserve">
+    <value>How long to keep it: no longer than this many days and no more than this many megabytes, whichever comes first</value>
+  </data>
+  <data name="Settings.FileHistoryMegabytes" xml:space="preserve">
+    <value>At most, MB</value>
   </data>
   <data name="Settings.FileNameFromTheClipboard" xml:space="preserve">
     <value>File name from the clipboard</value>

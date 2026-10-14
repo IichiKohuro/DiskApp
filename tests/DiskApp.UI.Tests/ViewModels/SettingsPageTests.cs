@@ -174,6 +174,28 @@ public sealed class SettingsPageTests
     }
 
     [Fact]
+    public async Task FileHistory_RetentionAndSize_ShownAndSaved()
+    {
+        // Arrange
+        var service = new SampleSettingsService();
+        var page = Create(service);
+        await page.Initialization;
+        var shown = (page.FileHistoryRetentionDays, page.FileHistoryMaxSizeMegabytes);
+
+        // Act
+        page.FileHistoryRetentionDays = 30;
+        await page.PendingSave;
+        var days = service.LastPatch!.ToJsonString();
+        page.FileHistoryMaxSizeMegabytes = 100;
+        await page.PendingSave;
+
+        // Assert
+        shown.ShouldBe((90m, 50m));
+        days.ShouldBe("""{"history":{"retentionDays":30}}""");
+        (await service.GetAsync(TestContext.Current.CancellationToken)).History.ShouldBe(new HistorySettingsDto { RetentionDays = 30, MaxSizeMegabytes = 100 });
+    }
+
+    [Fact]
     public async Task Exclusions_AddValidateRemoveAndReset()
     {
         // Arrange
