@@ -42,6 +42,26 @@ public enum SortingHint
 /// <param name="Auto">Шаблон «переносить самим».</param>
 public sealed record SortingMatchInfo(string WorkFolder, string Destination, string Pattern, bool Auto);
 
+/// <summary>Почему подсказана папка по истории решений (этап 17.4).</summary>
+public enum SortingSuggestionKind
+{
+    /// <summary>Туда уже отправляли файлы с этим словом в имени.</summary>
+    Word,
+
+    /// <summary>Туда уже отправляли файлы с этим расширением.</summary>
+    Extension,
+
+    /// <summary>Туда недавно переносили из этого накопителя.</summary>
+    Recent,
+}
+
+/// <summary>Подсказка рабочей папки по истории решений (этап 17.4), если шаблоны молчат.</summary>
+/// <param name="Destination">Куда: папка или подпапка.</param>
+/// <param name="Kind">Почему.</param>
+/// <param name="Count">Сколько файлов с этим признаком уже отправлено туда; для «недавно» — сколько переносов из накопителя.</param>
+/// <param name="Feature">Слово, расширение без точки или, для «недавно», путь накопителя.</param>
+public sealed record SortingSuggestionInfo(string Destination, SortingSuggestionKind Kind, int Count, string Feature);
+
 /// <summary>Файл или папка в накопителе.</summary>
 /// <param name="Entry">Запись.</param>
 /// <param name="Inbox">Путь накопителя из настроек.</param>
@@ -52,6 +72,9 @@ public sealed record InboxEntry(FileEntry Entry, string Inbox, InboxItemState St
 {
     /// <summary>Подошедшие шаблоны.</summary>
     public IReadOnlyList<SortingMatchInfo> Matches { get; init; } = [];
+
+    /// <summary>Подсказка по истории решений (этап 17.4); <c>null</c> — нет.</summary>
+    public SortingSuggestionInfo? Suggestion { get; init; }
 }
 
 /// <summary>Файл накопителя в сухом прогоне шаблонов (этап 17.5).</summary>
@@ -130,7 +153,11 @@ public sealed class ApiInboxService : IInboxService
         {
             var root = roots.GetValueOrDefault(item.Entry.RootId);
             var entry = ApiSearchService.ToEntry(item.Entry, root?.Label ?? string.Empty, root?.Status == Contracts.Roots.RootStatus.Offline);
-            return new InboxEntry(entry, item.Inbox, (InboxItemState)(int)item.State, item.IsReady, (SortingHint)(int)item.Decision) { Matches = [.. (item.Matches ?? []).Select(ToInfo)] };
+            return new InboxEntry(entry, item.Inbox, (InboxItemState)(int)item.State, item.IsReady, (SortingHint)(int)item.Decision)
+            {
+                Matches = [.. (item.Matches ?? []).Select(ToInfo)],
+                Suggestion = item.Suggestion is { } suggestion ? new SortingSuggestionInfo(suggestion.Destination, (SortingSuggestionKind)(int)suggestion.Reason, suggestion.Count, suggestion.Feature) : null,
+            };
         }).ToArray();
         var folders = queue.Folders.Select(static folder => new InboxFolderState(folder.Path, Describe(folder.Problem))).ToArray();
         return new InboxSnapshotInfo(folders, items, queue.NextReadyUtc);

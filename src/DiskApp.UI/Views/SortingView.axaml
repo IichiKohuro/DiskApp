@@ -178,7 +178,7 @@
                                             <!-- Состояние (этап 17.1): отложен или оставлен здесь -->
                                             <TextBlock Classes="tertiary" FontSize="11" FontStyle="Italic" Text="{Binding StateText}" IsVisible="{Binding HasState}" />
                                         </StackPanel>
-                                        <!-- Подсказка шаблонов рабочих папок (этап 17.5): куда и почему -->
+                                        <!-- Подсказка шаблонов рабочих папок (этап 17.5) или истории решений (этап 17.4): куда и почему -->
                                         <TextBlock FontSize="11" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"
                                                    Text="{Binding HintText}" IsVisible="{Binding HasHint}" ToolTip.Tip="{Binding HintText}" />
                                     </StackPanel>
@@ -299,6 +299,9 @@
                     <TextBlock FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding DestinationText}" ToolTip.Tip="{Binding DestinationText}" IsVisible="{Binding HasDestination}" />
                     <TextBlock Classes="secondary" TextTrimming="CharacterEllipsis" Text="{Binding DestinationText}" IsVisible="{Binding !HasDestination}" />
                     <TextBlock Classes="tertiary" FontSize="12" TextTrimming="CharacterEllipsis" Text="{Binding DestinationAutoTagsText}" IsVisible="{Binding HasDestinationAutoTags}" />
+                    <!-- Почему назначение выбрала подсказка (этапы 17.4–17.5): шаблон, история решений или недавний перенос -->
+                    <TextBlock FontSize="12" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"
+                               Text="{Binding DestinationReasonText}" ToolTip.Tip="{Binding DestinationReasonText}" IsVisible="{Binding HasDestinationReason}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">

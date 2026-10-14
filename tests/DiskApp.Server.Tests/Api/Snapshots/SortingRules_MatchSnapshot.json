@@ -64,6 +64,47 @@
       }
     ]
   },
+  "suggestedItem": {
+    "entry": {
+      "id": 42,
+      "rootId": 1,
+      "parentId": 7,
+      "name": "Отчёт за 2026.pdf",
+      "fullPath": "D:\\Документы\\Отчёты\\Отчёт за 2026.pdf",
+      "relPath": "Отчёты\\Отчёт за 2026.pdf",
+      "extension": "pdf",
+      "isDirectory": false,
+      "size": 1234567,
+      "createdUtc": "2026-10-01T09:30:00+00:00",
+      "modifiedUtc": "2026-10-10T09:30:00+00:00",
+      "kind": "Pdf",
+      "iconKey": "ext:pdf",
+      "isHidden": false,
+      "isCloudPlaceholder": false,
+      "isFavorite": true,
+      "openCount": 3,
+      "lastOpenedUtc": "2026-10-11T09:30:00+00:00",
+      "tags": [
+        {
+          "id": 5,
+          "name": "работа",
+          "color": "#3366FF"
+        }
+      ]
+    },
+    "inbox": "D:\\Загрузки",
+    "state": "New",
+    "isReady": true,
+    "readyUtc": "2026-10-11T09:30:00+00:00",
+    "decision": "None",
+    "matches": [],
+    "suggestion": {
+      "destination": "D:\\Работа\\417\\Акты",
+      "reason": "Word",
+      "count": 5,
+      "feature": "акт"
+    }
+  },
   "preview": {
     "items": [
       {

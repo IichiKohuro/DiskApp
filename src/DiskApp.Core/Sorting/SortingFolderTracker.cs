@@ -14,7 +14,8 @@ namespace DiskApp.Core.Sorting;
 /// Пути накопителей и рабочих папок следуют за папкой (PLAN.md, этап 17.2): переименование, которое увидел наблюдатель
 /// (в том числе сделанное в Проводнике), и перенос или переименование через DiskApp меняют путь в настройках — вместе с
 /// вложенными папками и основной папкой-накопителем. Папка, перенесённая в Проводнике в другое место, наблюдателю видна
-/// как удаление и появление; её интерфейс показывает «не найдена», и путь меняется в карточке рабочей папки.
+/// как удаление и появление; её интерфейс показывает «не найдена», и путь меняется в карточке рабочей папки. За папкой
+/// следуют и пути авто-тегов (этап 19) и истории решений разбора (этап 17.4).
 /// </summary>
 public sealed class SortingFolderTracker : IDisposable
 {
@@ -28,6 +29,7 @@ public sealed class SortingFolderTracker : IDisposable
     private readonly ISettingsStore<AppSettings> _settings;
     private readonly IFolderTagRepository? _folderTags;
     private readonly Action? _folderTagsMoved;
+    private readonly SortingHistory? _history;
     private readonly PathNormalizer _paths;
     private readonly ILogger _logger;
     private readonly IDisposable _renames;
@@ -45,6 +47,7 @@ public sealed class SortingFolderTracker : IDisposable
     /// <param name="logger">Журнал.</param>
     /// <param name="folderTags">Авто-теги папок (этап 19); <c>null</c> — пути авто-тегов не отслеживаются.</param>
     /// <param name="folderTagsMoved">Вызывается, когда пути авто-тегов поменялись: сбросить кэш поиска.</param>
+    /// <param name="history">История решений разбора (этап 17.4); <c>null</c> — её пути не отслеживаются.</param>
     public SortingFolderTracker(
         IIndexEventBus events,
         FileOperationService operations,
@@ -52,7 +55,8 @@ public sealed class SortingFolderTracker : IDisposable
         PathNormalizer paths,
         ILogger<SortingFolderTracker>? logger = null,
         IFolderTagRepository? folderTags = null,
-        Action? folderTagsMoved = null)
+        Action? folderTagsMoved = null,
+        SortingHistory? history = null)
     {
         ArgumentNullException.ThrowIfNull(events);
         _operations = operations ?? throw new ArgumentNullException(nameof(operations));
@@ -61,6 +65,7 @@ public sealed class SortingFolderTracker : IDisposable
         _logger = logger ?? NullLogger<SortingFolderTracker>.Instance;
         _folderTags = folderTags;
         _folderTagsMoved = folderTagsMoved;
+        _history = history;
         _renames = events.Subscribe<EntryRenamedEvent>(OnRenamed);
         _completed = events.Subscribe<OperationCompletedEvent>(OnOperationCompleted);
     }
@@ -193,6 +198,12 @@ public sealed class SortingFolderTracker : IDisposable
                     await _folderTags.MovePathsAsync(changes).ConfigureAwait(false);
                     _folderTagsMoved?.Invoke();
                 }
+            }
+
+            // Подсказки (этап 17.4) помнят папки назначения и накопители по пути.
+            if (_history is not null)
+            {
+                await _history.MovePathsAsync(moves).ConfigureAwait(false);
             }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or System.Data.Common.DbException)

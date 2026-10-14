@@ -3607,6 +3607,24 @@
   <data name="Sorting.HintChoice" xml:space="preserve">
     <value>Подходит к {0} — выберите</value>
   </data>
+  <data name="Sorting.HintHistory" xml:space="preserve">
+    <value>→ {0} · {1}</value>
+  </data>
+  <data name="Sorting.ReasonTemplate" xml:space="preserve">
+    <value>шаблон {0}</value>
+  </data>
+  <data name="Sorting.ReasonWord" xml:space="preserve">
+    <value>раньше туда: {0} со словом «{1}»</value>
+  </data>
+  <data name="Sorting.ReasonExtension" xml:space="preserve">
+    <value>раньше туда: {0} .{1}</value>
+  </data>
+  <data name="Sorting.ReasonRecent" xml:space="preserve">
+    <value>недавно переносили из «{0}»</value>
+  </data>
+  <data name="Sorting.SuggestedBecause" xml:space="preserve">
+    <value>Подсказка: {0}</value>
+  </data>
   <data name="Sorting.RuleSavedAuto" xml:space="preserve">
     <value>Шаблон «{0}»: такие файлы сами уйдут в «{1}».</value>
   </data>

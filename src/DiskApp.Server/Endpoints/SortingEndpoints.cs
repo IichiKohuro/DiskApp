@@ -58,22 +58,31 @@ internal static class SortingEndpoints
             .WithDescription("workFolders — шаблоны, которые проверить (например, несохранённая карточка); без них — шаблоны из настроек. Ничего не переносит.");
     }
 
-    private static async Task<Ok<InboxDto>> GetInboxAsync(InboxService inbox, EntryLookup lookup, ISettingsStore<AppSettings> settings, PathNormalizer paths, AutoSortService autoSort, CancellationToken cancellationToken)
+    private static async Task<Ok<InboxDto>> GetInboxAsync(
+        InboxService inbox,
+        EntryLookup lookup,
+        ISettingsStore<AppSettings> settings,
+        PathNormalizer paths,
+        AutoSortService autoSort,
+        SortingHistory history,
+        CancellationToken cancellationToken)
     {
         var snapshot = await inbox.GetAsync(cancellationToken).ConfigureAwait(false);
         var dtos = await lookup.ToDtosAsync([.. snapshot.Items.Select(static item => item.Entry)], cancellationToken).ConfigureAwait(false);
         var byId = dtos.ToDictionary(static dto => dto.Id);
         var rules = new SortingRuleSet(settings.Current.Sorting.WorkFolders, paths);
-        var items = snapshot.Items
-            .Where(item => byId.ContainsKey(item.Entry.Id))
-            .Select(item =>
+        var verdicts = snapshot.Items.Where(item => byId.ContainsKey(item.Entry.Id)).Select(item => (Item: item, Verdict: rules.Match(item))).ToArray();
+
+        // Шаблоны сильнее истории (этап 17.4): история подсказывает только там, где шаблоны молчат.
+        var unmatched = verdicts.Where(static pair => pair.Verdict.Decision == CoreDecision.None).Select(static pair => pair.Item).ToArray();
+        var suggestions = await history.SuggestAsync(unmatched, cancellationToken).ConfigureAwait(false);
+        var suggestionByItem = unmatched.Zip(suggestions).Where(static pair => pair.Second is not null).ToDictionary<(InboxItem First, SortingSuggestion? Second), InboxItem, SortingSuggestion>(static pair => pair.First, static pair => pair.Second!, ReferenceEqualityComparer.Instance);
+        var items = verdicts
+            .Select(pair => new InboxItemDto(byId[pair.Item.Entry.Id], pair.Item.Inbox, ToDto(pair.Item.State), snapshot.IsReady(pair.Item), pair.Item.ReadyUtc)
             {
-                var verdict = rules.Match(item);
-                return new InboxItemDto(byId[item.Entry.Id], item.Inbox, ToDto(item.State), snapshot.IsReady(item), item.ReadyUtc)
-                {
-                    Decision = ToDto(verdict, item, autoSort),
-                    Matches = [.. verdict.Matches.Select(ToDto)],
-                };
+                Decision = ToDto(pair.Verdict, pair.Item, autoSort),
+                Matches = [.. pair.Verdict.Matches.Select(ToDto)],
+                Suggestion = suggestionByItem.TryGetValue(pair.Item, out var suggestion) ? ToDto(suggestion) : null,
             })
             .ToArray();
         var folders = snapshot.Folders.Select(static folder => new InboxFolderDto(folder.Path, folder.RootId, (Contracts.Operations.InboxProblem)(int)folder.Problem)).ToArray();
@@ -139,7 +148,15 @@ internal static class SortingEndpoints
     private static SortingMatchDto ToDto(SortingMatch match)
         => new(match.Folder.Path, match.Destination, match.Rule.Pattern, (Contracts.App.SortingRuleMode)(int)match.Rule.Mode);
 
-    private static async Task<Results<NoContent, ValidationProblem>> SetInboxStateAsync(SetInboxStateRequest request, InboxService inbox, CancellationToken cancellationToken)
+    private static SortingSuggestionDto ToDto(SortingSuggestion suggestion)
+        => new(suggestion.Destination, suggestion.Reason switch
+        {
+            Core.Sorting.SortingSuggestionReason.Word => Contracts.Operations.SortingSuggestionReason.Word,
+            Core.Sorting.SortingSuggestionReason.Extension => Contracts.Operations.SortingSuggestionReason.Extension,
+            _ => Contracts.Operations.SortingSuggestionReason.Recent,
+        }, suggestion.Count, suggestion.Feature);
+
+    private static async Task<Results<NoContent, ValidationProblem>> SetInboxStateAsync(SetInboxStateRequest request, InboxService inbox, SortingHistory history, CancellationToken cancellationToken)
     {
         if (request.Paths.Count is 0 or > SetInboxStateRequest.MaxPaths)
         {
@@ -151,9 +168,18 @@ internal static class SortingEndpoints
             return ApiProblems.Invalid(nameof(request.State), L.T("SortingEndpoints.UnknownState"));
         }
 
-        return await inbox.SetStateAsync(request.Paths, (InboxItemState)(int)request.State, cancellationToken).ConfigureAwait(false)
-            ? TypedResults.NoContent()
-            : ApiProblems.Invalid(nameof(request.Paths), L.T("SortingEndpoints.PathsOutsideInboxes"));
+        if (!await inbox.SetStateAsync(request.Paths, (InboxItemState)(int)request.State, cancellationToken).ConfigureAwait(false))
+        {
+            return ApiProblems.Invalid(nameof(request.Paths), L.T("SortingEndpoints.PathsOutsideInboxes"));
+        }
+
+        // «Оставить здесь» — тоже решение (этап 17.4): похожие файлы не предлагать переносить настойчиво.
+        if (request.State == InboxState.Kept)
+        {
+            await history.RecordKeptAsync(request.Paths, cancellationToken).ConfigureAwait(false);
+        }
+
+        return TypedResults.NoContent();
     }
 
     private static async Task<Results<Accepted<OperationDto>, ValidationProblem, ProblemHttpResult>> MoveAsync(

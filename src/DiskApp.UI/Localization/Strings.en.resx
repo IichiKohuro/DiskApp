@@ -3607,6 +3607,24 @@ Project folder: D:\Work\417</value>
   <data name="Sorting.HintChoice" xml:space="preserve">
     <value>Matches {0} — choose</value>
   </data>
+  <data name="Sorting.HintHistory" xml:space="preserve">
+    <value>→ {0} · {1}</value>
+  </data>
+  <data name="Sorting.ReasonTemplate" xml:space="preserve">
+    <value>template {0}</value>
+  </data>
+  <data name="Sorting.ReasonWord" xml:space="preserve">
+    <value>earlier: {0} with «{1}»</value>
+  </data>
+  <data name="Sorting.ReasonExtension" xml:space="preserve">
+    <value>earlier: {0} with .{1}</value>
+  </data>
+  <data name="Sorting.ReasonRecent" xml:space="preserve">
+    <value>recently moved from «{0}»</value>
+  </data>
+  <data name="Sorting.SuggestedBecause" xml:space="preserve">
+    <value>Suggested: {0}</value>
+  </data>
   <data name="Sorting.RuleSavedAuto" xml:space="preserve">
     <value>Template «{0}»: files like these will move into «{1}» automatically.</value>
   </data>

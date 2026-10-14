@@ -89,20 +89,26 @@ public sealed record SortItem(FileEntry Entry, SortingFolderInfo Inbox, InboxIte
     /// <summary>Подошедшие шаблоны.</summary>
     public IReadOnlyList<SortingMatchInfo> Matches { get; init; } = [];
 
-    /// <summary>Подсказка под именем: «→ 417 · шаблон 417_*», «уйдёт в 417 сам», «подходит к 417 и TCI2 — выберите».</summary>
+    /// <summary>Подсказка по истории решений (этап 17.4), если шаблоны молчат.</summary>
+    public SortingSuggestionInfo? Suggestion { get; init; }
+
+    /// <summary>
+    /// Подсказка под именем: «→ 417 · шаблон 417_*», «уйдёт в 417 сам», «подходит к 417 и TCI2 — выберите», «→ 417 › Акты ·
+    /// раньше туда: 5 файлов со словом «акт»».
+    /// </summary>
     public string HintText { get; init; } = string.Empty;
 
     /// <summary>Подсказка видна.</summary>
     public bool HasHint => HintText.Length > 0;
 
-    /// <summary>Куда предлагают шаблоны, если место одно; <c>null</c> — шаблоны молчат или спорят.</summary>
-    public SortingMatchInfo? SuggestedMatch => Hint is SortingHint.Suggest or SortingHint.Auto && Matches.Count > 0 ? Matches[0] : null;
+    /// <summary>Куда предлагают шаблоны или история решений и почему; <c>null</c> — подсказки нет или шаблоны спорят.</summary>
+    public SuggestedDestination? Suggested { get; init; }
 
     /// <summary>
     /// Та же строка при обновлении очереди: тот же путь, состояние, время изменения и подсказка — тогда выделение в списке
     /// сохраняется.
     /// </summary>
-    public string Key => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{Entry.FullPath}|{(int)State}|{Entry.Modified.UtcTicks}|{(int)Hint}|{SuggestedMatch?.Destination}");
+    public string Key => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{Entry.FullPath}|{(int)State}|{Entry.Modified.UtcTicks}|{(int)Hint}|{Suggested?.Destination}|{HintText}");
 
     /// <summary>Когда изменён — для строки списка.</summary>
     public string ModifiedText => Formatting.RelativeTime(Entry.Modified, DateTimeOffset.Now);
@@ -116,6 +122,12 @@ public sealed record SortItem(FileEntry Entry, SortingFolderInfo Inbox, InboxIte
     /// <inheritdoc />
     public override string ToString() => Entry.Name;
 }
+
+/// <summary>Предложенное назначение (этапы 17.4–17.5).</summary>
+/// <param name="WorkFolder">Рабочая папка, к которой оно относится, или само назначение, если оно вне рабочих папок.</param>
+/// <param name="Destination">Папка или подпапка.</param>
+/// <param name="Reason">Почему — для строки под «Куда»: «шаблон 417_*», «недавно переносили из «Загрузки»».</param>
+public sealed record SuggestedDestination(string WorkFolder, string Destination, string Reason);
 
 /// <summary>Готовый шаблон имени при переносе.</summary>
 /// <param name="Title">Подпись в списке.</param>
@@ -283,6 +295,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private CancellationTokenSource? _folderSearch;
     private bool _nameTemplateLoaded;
     private bool _suggesting;
+    private string _suggestionReason = string.Empty;
     private bool _destinationSuggested;
     private readonly HashSet<Guid> _announced = [];
     private readonly List<OperationInfo> _autoSorted = [];
@@ -507,6 +520,17 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <summary>Папка назначения даёт авто-теги.</summary>
     public bool HasDestinationAutoTags => DestinationAutoTagsText.Length > 0;
 
+    /// <summary>
+    /// Почему выбрано назначение, если его выбрала подсказка (этапы 17.4–17.5): «Подсказка: раньше туда: 5 файлов со словом
+    /// «акт»»; выбранное пользователем не объясняется.
+    /// </summary>
+    public string DestinationReasonText => _destinationSuggested && SelectedFolder is not null && _suggestionReason.Length > 0
+        ? L.F("Sorting.SuggestedBecause", _suggestionReason)
+        : string.Empty;
+
+    /// <summary>Назначение выбрала подсказка.</summary>
+    public bool HasDestinationReason => DestinationReasonText.Length > 0;
+
     /// <summary>Подпись кнопки переноса.</summary>
     public string MoveText => SelectedCount > 0
         ? L.F("Sorting.MoveItems", Formatting.Count(SelectedCount, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many")))
@@ -589,8 +613,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     }
 
     /// <summary>
-    /// Шаблоны предлагают для выбранного одно место (этап 17.5): оно и становится назначением — если пользователь сам ничего
-    /// не выбирал или выбранное тоже было подсказкой.
+    /// Шаблоны (этап 17.5) или история решений (этап 17.4) предлагают для выбранного одно место: оно и становится назначением —
+    /// если пользователь сам ничего не выбирал или выбранное тоже было подсказкой.
     /// </summary>
     private void SuggestDestination()
     {
@@ -599,18 +623,19 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             return;
         }
 
-        var matches = _selection.Select(static item => item.SuggestedMatch).ToArray();
-        if (matches[0] is not { } match || matches.Any(other => other is null || !SamePath(other.Destination, match.Destination)))
+        var targets = _selection.Select(static item => item.Suggested).ToArray();
+        if (targets[0] is not { } target || targets.Any(other => other is null || !SamePath(other.Destination, target.Destination)))
         {
             return;
         }
 
-        if (SelectedFolder is { } current && SamePath(current.Path, match.Destination))
+        if (SelectedFolder is { } current && SamePath(current.Path, target.Destination))
         {
             return;
         }
 
-        PendingSuggestion = SelectDestinationAsync(match.WorkFolder, match.Destination);
+        _suggestionReason = target.Reason;
+        PendingSuggestion = SelectDestinationAsync(target.WorkFolder, target.Destination);
     }
 
     /// <summary>Завершается, когда назначение по подсказке выбрано (для тестов).</summary>
@@ -661,9 +686,15 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         }
     }
 
-    // Подсказка шаблонов строкой под именем файла.
-    private string DescribeHint(SortingHint hint, IReadOnlyList<SortingMatchInfo> matches)
+    // Подсказка шаблонов или истории решений строкой под именем файла. «Недавно» строкой не показывается: такая подсказка
+    // была бы почти у каждого файла и только шумела бы; она выбирает назначение и объясняется под «Куда».
+    private string DescribeHint(SortingHint hint, IReadOnlyList<SortingMatchInfo> matches, SortingSuggestionInfo? suggestion, SortingFolderInfo inbox)
     {
+        if (hint == SortingHint.None && suggestion is { Kind: not SortingSuggestionKind.Recent })
+        {
+            return L.F("Sorting.HintHistory", DescribeDestination(suggestion.Destination), DescribeReason(suggestion, inbox));
+        }
+
         if (matches.Count == 0)
         {
             return string.Empty;
@@ -675,6 +706,32 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
             SortingHint.Suggest => L.F("Sorting.HintSuggest", DescribeDestination(matches[0].Destination), matches[0].Pattern),
             SortingHint.Choice => L.F("Sorting.HintChoice", string.Join(", ", matches.Select(match => DescribeDestination(match.Destination)).Distinct(StringComparer.OrdinalIgnoreCase))),
             _ => string.Empty,
+        };
+    }
+
+    // Куда предлагают шаблоны или история и почему.
+    private SuggestedDestination? Suggest(InboxEntry item, SortingFolderInfo inbox)
+    {
+        if (item.Hint is SortingHint.Suggest or SortingHint.Auto && item.Matches.Count > 0)
+        {
+            var match = item.Matches[0];
+            return new SuggestedDestination(match.WorkFolder, match.Destination, L.F("Sorting.ReasonTemplate", match.Pattern));
+        }
+
+        return item.Hint == SortingHint.None && item.Suggestion is { } suggestion
+            ? new SuggestedDestination(OwnerOf(suggestion.Destination)?.Path ?? suggestion.Destination, suggestion.Destination, DescribeReason(suggestion, inbox))
+            : null;
+    }
+
+    // «раньше туда: 5 файлов со словом «акт»», «раньше туда: 12 файлов .pdf», «недавно переносили из «Загрузки»».
+    private static string DescribeReason(SortingSuggestionInfo suggestion, SortingFolderInfo inbox)
+    {
+        var files = Formatting.Count(suggestion.Count, L.T("Common.File.One"), L.T("Common.File.Few"), L.T("Common.File.Many"));
+        return suggestion.Kind switch
+        {
+            SortingSuggestionKind.Word => L.F("Sorting.ReasonWord", files, suggestion.Feature),
+            SortingSuggestionKind.Extension => L.F("Sorting.ReasonExtension", files, suggestion.Feature),
+            _ => L.F("Sorting.ReasonRecent", inbox.Title),
         };
     }
 
@@ -1452,6 +1509,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     {
         // Назначение, выбранное пользователем, подсказки шаблонов не меняют; выбранное подсказкой — меняют.
         _destinationSuggested = _suggesting && value is not null;
+        OnPropertyChanged(nameof(DestinationReasonText));
+        OnPropertyChanged(nameof(HasDestinationReason));
         UpdateNamePreview();
     }
 
@@ -1627,7 +1686,14 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
 
             if (item.IsReady)
             {
-                items.Add(new SortItem(item.Entry, folder, item.State) { Hint = item.Hint, Matches = item.Matches, HintText = DescribeHint(item.Hint, item.Matches) });
+                items.Add(new SortItem(item.Entry, folder, item.State)
+                {
+                    Hint = item.Hint,
+                    Matches = item.Matches,
+                    Suggestion = item.Suggestion,
+                    HintText = DescribeHint(item.Hint, item.Matches, item.Suggestion, folder),
+                    Suggested = Suggest(item, folder),
+                });
             }
             else
             {

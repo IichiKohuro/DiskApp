@@ -60,12 +60,22 @@ public sealed class SortingService : IDisposable
     private readonly PathNormalizer _paths;
     private readonly ILogger _logger;
     private readonly IDisposable _subscription;
+    private readonly SortingHistory? _history;
     private readonly ConcurrentDictionary<Guid, PendingTags> _pending = new();
     private readonly ConcurrentDictionary<Guid, Task> _tagging = new();
 
     /// <summary>
     /// Создаёт сервис разбора.
     /// </summary>
+    /// <param name="operations">Очередь операций.</param>
+    /// <param name="fileSystem">Файловая система.</param>
+    /// <param name="events">События индекса и операций.</param>
+    /// <param name="roots">Корни.</param>
+    /// <param name="entries">Записи индекса.</param>
+    /// <param name="tags">Теги.</param>
+    /// <param name="paths">Правила путей.</param>
+    /// <param name="logger">Журнал.</param>
+    /// <param name="history">История решений для подсказок (этап 17.4); <c>null</c> — переносы не запоминаются.</param>
     public SortingService(
         FileOperationService operations,
         IFileSystem fileSystem,
@@ -74,7 +84,8 @@ public sealed class SortingService : IDisposable
         IFileIndexRepository entries,
         ITagRepository tags,
         PathNormalizer paths,
-        ILogger<SortingService>? logger = null)
+        ILogger<SortingService>? logger = null,
+        SortingHistory? history = null)
     {
         _operations = operations ?? throw new ArgumentNullException(nameof(operations));
         _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
@@ -84,6 +95,7 @@ public sealed class SortingService : IDisposable
         _tags = tags ?? throw new ArgumentNullException(nameof(tags));
         _paths = paths ?? throw new ArgumentNullException(nameof(paths));
         _logger = logger ?? NullLogger<SortingService>.Instance;
+        _history = history;
         _subscription = events.Subscribe<OperationCompletedEvent>(OnOperationCompleted);
     }
 
@@ -91,11 +103,17 @@ public sealed class SortingService : IDisposable
     public TimeSpan IndexWaitTimeout { get; init; } = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// Ставит перенос в очередь; теги назначаются после его завершения (<see cref="WhenTaggedAsync"/>).
+    /// Ставит перенос в очередь; теги назначаются после его завершения (<see cref="WhenTaggedAsync"/>). Перенос, который
+    /// сделал пользователь, после завершения запоминается в истории решений для подсказок (этап 17.4).
     /// </summary>
-    public async Task<Result<FileOperationInfo>> MoveAsync(SortRequest request, CancellationToken cancellationToken = default)
+    public Task<Result<FileOperationInfo>> MoveAsync(SortRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        return MoveCoreAsync(request, learn: request.Origin == OperationOrigin.User, cancellationToken);
+    }
+
+    private async Task<Result<FileOperationInfo>> MoveCoreAsync(SortRequest request, bool learn, CancellationToken cancellationToken)
+    {
 
         if (Validate(request) is { } error)
         {
@@ -122,9 +140,10 @@ public sealed class SortingService : IDisposable
 
         var names = request.Names?.Select(static name => string.IsNullOrWhiteSpace(name) ? null : name.Trim()).ToArray();
         var result = _operations.Enqueue(new FileOperationRequest(FileOperationKind.Move, request.Sources, destination, Conflicts: ConflictPolicy.KeepBoth, TargetNames: names, Origin: request.Origin));
-        if (result.TryGetValue(out var info) && (tags.Length > 0 || previous.Count > 0))
+        learn &= _history is not null;
+        if (result.TryGetValue(out var info) && (tags.Length > 0 || previous.Count > 0 || learn))
         {
-            _pending[info.Id] = new PendingTags(tags, previous);
+            _pending[info.Id] = new PendingTags(tags, previous, learn);
 
             // Операция могла завершиться раньше, чем запомнились теги.
             if (_operations.Get(info.Id) is { IsActive: false })
@@ -136,7 +155,6 @@ public sealed class SortingService : IDisposable
         return result;
     }
 
-    /// <summary>Ждёт, пока элементам операции назначены теги (для тестов и интерфейса).</summary>
     /// <summary>
     /// Бросок файлов в папку-накопитель (PLAN.md, этап 18.2, ADR-0011): перенос или копия одной операцией очереди с
     /// правилом «оставить оба». Перенос идёт как обычный разбор, поэтому прежние теги файлов из корней сохраняются; копия —
@@ -147,9 +165,10 @@ public sealed class SortingService : IDisposable
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        // Бросок в накопитель — не решение разбора: в историю подсказок он не попадает.
         if (!request.Copy)
         {
-            return MoveAsync(new SortRequest(request.Sources, request.Destination, NewFolder: null, Tags: []), cancellationToken);
+            return MoveCoreAsync(new SortRequest(request.Sources, request.Destination, NewFolder: null, Tags: []), learn: false, cancellationToken);
         }
 
         if (Validate(new SortRequest(request.Sources, request.Destination, NewFolder: null, Tags: [])) is { } error)
@@ -160,6 +179,7 @@ public sealed class SortingService : IDisposable
         return Task.FromResult(_operations.Enqueue(new FileOperationRequest(FileOperationKind.Copy, request.Sources, request.Destination, Conflicts: ConflictPolicy.KeepBoth)));
     }
 
+    /// <summary>Ждёт, пока элементам операции назначены теги и перенос записан в историю решений (для тестов и интерфейса).</summary>
     public Task WhenTaggedAsync(Guid operationId) => _tagging.TryGetValue(operationId, out var task) ? task : Task.CompletedTask;
 
     /// <inheritdoc />
@@ -264,6 +284,19 @@ public sealed class SortingService : IDisposable
                 return;
             }
 
+            if (pending.Learn && info.Moved.Count > 0)
+            {
+                try
+                {
+                    await _history!.RecordMovesAsync(info.Moved).ConfigureAwait(false);
+                }
+                catch (Exception exception) when (exception is not OperationCanceledException)
+                {
+                    // Без записи в историю подсказки просто не учтут этот перенос; теги назначаются всё равно.
+                    SortingLog.LearningFailed(_logger, exception, operationId);
+                }
+            }
+
             var roots = await _roots.GetAllAsync().ConfigureAwait(false);
             foreach (var moved in info.Moved)
             {
@@ -313,7 +346,7 @@ public sealed class SortingService : IDisposable
         }
     }
 
-    private sealed record PendingTags(IReadOnlyList<string> Tags, IReadOnlyDictionary<string, IReadOnlyList<string>> Previous);
+    private sealed record PendingTags(IReadOnlyList<string> Tags, IReadOnlyDictionary<string, IReadOnlyList<string>> Previous, bool Learn);
 }
 
 /// <summary>
@@ -326,4 +359,7 @@ internal static partial class SortingLog
 
     [LoggerMessage(EventId = 7002, Level = LogLevel.Warning, Message = "Теги после переноса {OperationId} не назначены")]
     public static partial void TaggingFailed(ILogger logger, Exception exception, Guid operationId);
+
+    [LoggerMessage(EventId = 7003, Level = LogLevel.Warning, Message = "Перенос {OperationId} не записан в историю подсказок")]
+    public static partial void LearningFailed(ILogger logger, Exception exception, Guid operationId);
 }

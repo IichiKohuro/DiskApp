@@ -104,7 +104,35 @@ public sealed record InboxItemDto(EntryDto Entry, string Inbox, InboxState State
 
     /// <summary>Подошедшие шаблоны: куда класть и почему.</summary>
     public IReadOnlyList<SortingMatchDto> Matches { get; set; } = [];
+
+    /// <summary>
+    /// Подсказка по истории решений (этап 17.4), если шаблоны молчат; <c>null</c> — подсказать нечего.
+    /// </summary>
+    public SortingSuggestionDto? Suggestion { get; set; }
 }
+
+/// <summary>Почему подсказана папка (этап 17.4).</summary>
+public enum SortingSuggestionReason
+{
+    /// <summary>Туда уже отправляли файлы с этим словом в имени.</summary>
+    Word,
+
+    /// <summary>Туда уже отправляли файлы с этим расширением.</summary>
+    Extension,
+
+    /// <summary>Туда недавно переносили из этого накопителя.</summary>
+    Recent,
+}
+
+/// <summary>
+/// Подсказка рабочей папки по истории решений разбора (этап 17.4): переносы пользователя по словам имени и расширению,
+/// затем недавние переносы из того же накопителя; «оставить здесь» гасит подсказку.
+/// </summary>
+/// <param name="Destination">Куда: папка или подпапка.</param>
+/// <param name="Reason">Почему.</param>
+/// <param name="Count">Сколько файлов с этим признаком уже отправлено туда; для «недавно» — сколько переносов из накопителя.</param>
+/// <param name="Feature">Слово, расширение без точки или, для «недавно», путь накопителя.</param>
+public sealed record SortingSuggestionDto(string Destination, SortingSuggestionReason Reason, int Count, string Feature);
 
 /// <summary>Чем кончился подбор рабочей папки по шаблонам (этап 17.5).</summary>
 public enum SortingDecision

@@ -159,6 +159,12 @@ public sealed class ContractSnapshotTests
                         Matches = [new SortingMatchDto(@"D:\Работа\417", @"D:\Работа\417", "417_*", SortingRuleMode.Auto)],
                     },
                     DiskAppJsonContext.Default.InboxItemDto),
+                ["suggestedItem"] = JsonSerializer.SerializeToNode(
+                    new InboxItemDto(Entry with { Score = null, Match = null, NameHighlights = null, PathHighlights = null }, @"D:\Загрузки", InboxState.New, true, Stamp)
+                    {
+                        Suggestion = new SortingSuggestionDto(@"D:\Работа\417\Акты", SortingSuggestionReason.Word, 5, "акт"),
+                    },
+                    DiskAppJsonContext.Default.InboxItemDto),
                 ["preview"] = JsonSerializer.SerializeToNode(
                     new SortingPreviewDto([new SortingPreviewItemDto(@"D:\Загрузки\акт 417.pdf", "акт 417.pdf", @"D:\Загрузки", SortingDecision.Choice, false,
                         [new SortingMatchDto(@"D:\Работа\417", @"D:\Работа\417", "417", SortingRuleMode.Auto), new SortingMatchDto(@"D:\Работа\417", @"D:\Работа\417\Акты", "акт*", SortingRuleMode.Suggest)], null)]),

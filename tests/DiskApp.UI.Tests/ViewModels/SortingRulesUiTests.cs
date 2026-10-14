@@ -92,6 +92,52 @@ public sealed class SortingRulesUiTests
     }
 
     [Fact]
+    public async Task HistoryHints_WordShownInRow_RecentOnlyChoosesDestination()
+    {
+        // Arrange: подсказки по истории решений (этап 17.4) рядом с подсказкой шаблона
+        Queue(
+            Item("акт 12.pdf", 1) with { Suggestion = new SortingSuggestionInfo(Work417 + @"\Акты", SortingSuggestionKind.Word, 5, "акт") },
+            Item("сканы.zip", 2) with { Suggestion = new SortingSuggestionInfo(Tci2, SortingSuggestionKind.Extension, 3, "zip") },
+            Item("фото.jpg", 3) with { Suggestion = new SortingSuggestionInfo(Tci2, SortingSuggestionKind.Recent, 2, Downloads) },
+            Item("417_ТЗ.pdf", 4, SortingHint.Suggest, Match(Work417, Work417, "417_*")));
+
+        // Act
+        var page = await LoadAsync();
+
+        // Assert: «недавно» строкой не показывается — она была бы почти у каждого файла
+        page.Items.Select(static item => item.HintText).ShouldBe(["→ 417 › Акты · раньше туда: 5 файлов со словом «акт»", "→ Тест · раньше туда: 3 файла .zip", string.Empty, "→ 417 · шаблон 417_*"]);
+        page.Items.Select(static item => item.Suggested?.Destination).ShouldBe([Work417 + @"\Акты", Tci2, Tci2, Work417]);
+    }
+
+    [Fact]
+    public async Task Selection_HistoryOrTemplateSuggestion_ExplainsDestination_UserChoiceDoesNot()
+    {
+        // Arrange
+        Queue(
+            Item("фото.jpg", 1) with { Suggestion = new SortingSuggestionInfo(Tci2, SortingSuggestionKind.Recent, 2, Downloads) },
+            Item("417_ТЗ.pdf", 2, SortingHint.Suggest, Match(Work417, Work417, "417_*")),
+            Item("заметки.txt", 3));
+        var page = await LoadAsync();
+
+        // Act
+        page.SetSelection([page.Items[0]]);
+        await page.PendingSuggestion;
+        var recent = (page.SelectedFolder?.Path, page.DestinationReasonText);
+        page.SetSelection([page.Items[1]]);
+        await page.PendingSuggestion;
+        var template = (page.SelectedFolder?.Path, page.DestinationReasonText);
+        page.SelectedWorkFolder = page.WorkFolders.Single(static item => item.Folder.Path == Tci2);
+        page.SetSelection([page.Items[2]]);
+        await page.PendingSuggestion;
+
+        // Assert
+        recent.ShouldBe((Tci2, "Подсказка: недавно переносили из «Загрузки»"));
+        template.ShouldBe((Work417, "Подсказка: шаблон 417_*"));
+        page.SelectedFolder!.Path.ShouldBe(Tci2);
+        page.HasDestinationReason.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Selection_AfterUserChoseDestination_SuggestionDoesNotOverride()
     {
         // Arrange
