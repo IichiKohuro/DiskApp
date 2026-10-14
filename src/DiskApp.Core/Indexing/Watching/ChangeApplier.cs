@@ -11,6 +11,8 @@ namespace DiskApp.Core.Indexing.Watching;
 /// есть — запись создаётся или обновляется, нет — удаляется с поддеревом. Запись появляется, только если её родитель
 /// уже в индексе: так файлы внутри скрытых и исключённых папок не просачиваются через события. Новая папка требует
 /// сверки своего поддерева: её могли перенести в корень вместе с содержимым, о котором наблюдатель не сообщает.
+/// Структурные изменения — переименования, исчезновения и появления верхнего уровня — уходят в историю файлов
+/// (<see cref="IndexJournalEvent"/>, этап 20).
 /// </summary>
 public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository entries, IIndexEventBus events, EntryFactory factory)
 {
@@ -31,15 +33,21 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
 
         var folders = new FolderChangeSet(factory.Paths);
         var result = new ApplyResult();
+        var journal = new List<JournalChange>();
         foreach (var (oldRelPath, newRelPath) in changes.Renames)
         {
             state.RecordTouched(oldRelPath);
             state.RecordTouched(newRelPath);
-            await ApplyRenameAsync(root, oldRelPath, newRelPath, matcher, folders, result, cancellationToken).ConfigureAwait(false);
+            await ApplyRenameAsync(root, oldRelPath, newRelPath, matcher, folders, result, journal, cancellationToken).ConfigureAwait(false);
         }
 
-        await ApplyPathsAsync(root, changes.Paths, matcher, state, folders, result, cancellationToken).ConfigureAwait(false);
+        await ApplyPathsAsync(root, changes.Paths, matcher, state, folders, result, journal, cancellationToken).ConfigureAwait(false);
         folders.PublishTo(events, root.Id);
+        if (journal.Count > 0)
+        {
+            events.Publish(new IndexJournalEvent(root.Id, JournalSource.Watcher, journal));
+        }
+
         return result;
     }
 
@@ -50,6 +58,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
         ExclusionMatcher matcher,
         FolderChangeSet folders,
         ApplyResult result,
+        List<JournalChange> journal,
         CancellationToken cancellationToken)
     {
         var oldExcluded = matcher.IsPathExcluded(oldRelPath);
@@ -62,7 +71,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
 
         if (newExcluded)
         {
-            result.Removed += await RemoveAsync(root, oldRelPath, folders, cancellationToken).ConfigureAwait(false);
+            result.Removed += await RemoveAsync(root, oldRelPath, folders, journal, cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -75,7 +84,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
         if (newParent.Length > 0 && await entries.GetByPathAsync(root.Id, newParent, cancellationToken).ConfigureAwait(false) is null)
         {
             // Новый родитель не индексируется (скрытая или исключённая папка): для индекса это удаление.
-            result.Removed += await RemoveAsync(root, oldRelPath, folders, cancellationToken).ConfigureAwait(false);
+            result.Removed += await RemoveAsync(root, oldRelPath, folders, journal, cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -88,7 +97,10 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
         result.Renamed += await entries.RenameSubtreeAsync(root.Id, oldRelPath, newRelPath, cancellationToken).ConfigureAwait(false);
         folders.Add(factory.Parent(oldRelPath));
         folders.Add(newParent);
-        events.Publish(new EntryRenamedEvent(root.Id, factory.Paths.Combine(root.Path, oldRelPath), factory.Paths.Combine(root.Path, newRelPath), renamed.IsDirectory));
+        var oldPath = factory.Paths.Combine(root.Path, oldRelPath);
+        var newPath = factory.Paths.Combine(root.Path, newRelPath);
+        events.Publish(new EntryRenamedEvent(root.Id, oldPath, newPath, renamed.IsDirectory));
+        journal.Add(new JournalChange(JournalChangeKind.Renamed, newPath, oldPath, renamed.IsDirectory, renamed.Size, renamed.CreatedUtc, renamed.ModifiedUtc));
     }
 
     private async Task ApplyPathsAsync(
@@ -98,6 +110,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
         RootIndexState state,
         FolderChangeSet folders,
         ApplyResult result,
+        List<JournalChange> journal,
         CancellationToken cancellationToken)
     {
         // Родители раньше детей: новая папка должна оказаться в индексе до своих файлов.
@@ -114,7 +127,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
 
             if (matcher.IsPathExcluded(relPath))
             {
-                result.Removed += await RemoveAsync(root, relPath, folders, cancellationToken).ConfigureAwait(false);
+                result.Removed += await RemoveAsync(root, relPath, folders, journal, cancellationToken).ConfigureAwait(false);
                 continue;
             }
 
@@ -127,7 +140,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
 
             if (stat.IsMissing)
             {
-                result.Removed += await RemoveAsync(root, relPath, folders, cancellationToken).ConfigureAwait(false);
+                result.Removed += await RemoveAsync(root, relPath, folders, journal, cancellationToken).ConfigureAwait(false);
                 parentKnown[relPath] = false;
                 continue;
             }
@@ -136,7 +149,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
             var depth = factory.Depth(relPath);
             if (matcher.IsExcluded(item.Name, relPath, item.IsDirectory, item.Attributes, item.Size, depth))
             {
-                result.Removed += await RemoveAsync(root, relPath, folders, cancellationToken).ConfigureAwait(false);
+                result.Removed += await RemoveAsync(root, relPath, folders, journal, cancellationToken).ConfigureAwait(false);
                 parentKnown[relPath] = false;
                 continue;
             }
@@ -151,7 +164,7 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
             var existing = await entries.GetByPathAsync(root.Id, relPath, cancellationToken).ConfigureAwait(false);
             if (existing is not null && existing.IsDirectory != item.IsDirectory)
             {
-                result.Removed += await RemoveAsync(root, relPath, folders, cancellationToken).ConfigureAwait(false);
+                result.Removed += await RemoveAsync(root, relPath, folders, journal, cancellationToken).ConfigureAwait(false);
                 existing = null;
             }
 
@@ -161,8 +174,16 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
                 continue;
             }
 
-            upserts.Add(factory.Create(root.Id, relPath, item));
+            var created = factory.Create(root.Id, relPath, item);
+            upserts.Add(created);
             folders.Add(parent);
+
+            // В историю — только верхний появившийся элемент: содержимое новой папки — часть её появления.
+            if (existing is null && !IsUnderAny(relPath, newDirectories))
+            {
+                journal.Add(new JournalChange(JournalChangeKind.Added, factory.FullPath(root, relPath), null, created.IsDirectory, created.Size, created.CreatedUtc, created.ModifiedUtc));
+            }
+
             if (item.IsDirectory)
             {
                 upsertedDirectories.Add(relPath);
@@ -201,12 +222,17 @@ public sealed class ChangeApplier(IFileSystemLister lister, IFileIndexRepository
         return indexed;
     }
 
-    private async Task<int> RemoveAsync(Root root, string relPath, FolderChangeSet folders, CancellationToken cancellationToken)
+    private async Task<int> RemoveAsync(Root root, string relPath, FolderChangeSet folders, List<JournalChange> journal, CancellationToken cancellationToken)
     {
+        var entry = await entries.GetByPathAsync(root.Id, relPath, cancellationToken).ConfigureAwait(false);
         var removed = await entries.DeleteSubtreeAsync(root.Id, relPath, cancellationToken).ConfigureAwait(false);
         if (removed > 0)
         {
             folders.Add(factory.Parent(relPath));
+            if (entry is not null)
+            {
+                journal.Add(new JournalChange(JournalChangeKind.Removed, factory.FullPath(root, relPath), null, entry.IsDirectory, entry.Size, entry.CreatedUtc, entry.ModifiedUtc));
+            }
         }
 
         return removed;

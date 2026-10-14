@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 
 using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
+using DiskApp.Contracts.History;
 using DiskApp.Contracts.Library;
 using DiskApp.Contracts.Notes;
 using DiskApp.Contracts.Operations;
@@ -134,6 +135,15 @@ public interface IDiskAppApi
 
     /// <summary>Сухой прогон шаблонов рабочих папок (этап 17.5): что куда ушло бы из накопителей сейчас; ничего не переносит.</summary>
     Task<SortingPreviewDto> PreviewSortingRulesAsync(SortingPreviewRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Лента истории файлов (этап 20), новые сверху; <c>before</c> — номер события для следующей страницы.</summary>
+    Task<FileHistoryPageDto> GetFileHistoryAsync(FileHistoryFilter filter, CancellationToken cancellationToken = default);
+
+    /// <summary>История одного файла или папки по пути, через переносы и переименования.</summary>
+    Task<IReadOnlyList<FileEventDto>> GetFileHistoryOfPathAsync(string path, CancellationToken cancellationToken = default);
+
+    /// <summary>«Вернуть на место» или «Восстановить» по событию истории.</summary>
+    Task<FileHistoryRevertDto> RevertFileEventAsync(long id, CancellationToken cancellationToken = default);
 
     /// <summary>Заметки (этап 23): закреплённые сверху; поиск по тексту, тег заметок, корзина.</summary>
     Task<IReadOnlyList<NoteDto>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default);

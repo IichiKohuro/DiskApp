@@ -117,6 +117,8 @@ public sealed class SettingsApiTests
     [InlineData("""{"add":{"inboxPath":"relative\\path"}}""", "add.inboxPath")]
     [InlineData("""{"hotkeys":{"mainWindow":" "}}""", "hotkeys.mainWindow")]
     [InlineData("""{"hotkeys":{"dropWindow":""}}""", "hotkeys.dropWindow")]
+    [InlineData("""{"history":{"retentionDays":0}}""", "history.retentionDays")]
+    [InlineData("""{"history":{"maxSizeMegabytes":100000}}""", "history.maxSizeMegabytes")]
     public async Task Patch_InvalidInput_Returns400AndKeepsSettings(string json, string field)
     {
         // Arrange

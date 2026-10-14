@@ -235,6 +235,16 @@ internal static partial class SettingsEndpoints
         }
 
         // Очередь накопителей (этап 17.1): «время успокоения» и шаблоны игнора.
+        if (settings.History.RetentionDays is < 1 or > HistorySettings.MaxRetentionDays)
+        {
+            errors["history.retentionDays"] = [L.F("SettingsEndpoints.HistoryRetentionRange", HistorySettings.MaxRetentionDays)];
+        }
+
+        if (settings.History.MaxSizeMegabytes is < 1 or > HistorySettings.MaxSizeLimitMegabytes)
+        {
+            errors["history.maxSizeMegabytes"] = [L.F("SettingsEndpoints.HistorySizeRange", HistorySettings.MaxSizeLimitMegabytes)];
+        }
+
         if (settings.Sorting.SettleSeconds is < 0 or > SortingSettings.MaxSettleSeconds)
         {
             errors["sorting.settleSeconds"] = [L.F("SettingsEndpoints.SettleSecondsRange", SortingSettings.MaxSettleSeconds)];

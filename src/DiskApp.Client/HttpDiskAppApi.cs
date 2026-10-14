@@ -9,6 +9,7 @@ using System.Text.Json.Serialization.Metadata;
 using DiskApp.Contracts;
 using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
+using DiskApp.Contracts.History;
 using DiskApp.Contracts.Library;
 using DiskApp.Contracts.Notes;
 using DiskApp.Contracts.Operations;
@@ -202,6 +203,45 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
     /// <inheritdoc />
     public Task<SortingPreviewDto> PreviewSortingRulesAsync(SortingPreviewRequest request, CancellationToken cancellationToken = default)
         => SendAsync(HttpMethod.Post, ApiRoutes.V1.SortingRulesPreview, request, Json.SortingPreviewRequest, Json.SortingPreviewDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<FileHistoryPageDto> GetFileHistoryAsync(FileHistoryFilter filter, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+        var query = new List<string>();
+        void Add(string name, string? value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                query.Add(name + "=" + Uri.EscapeDataString(value));
+            }
+        }
+
+        Add("folder", filter.Folder);
+        Add("q", filter.Text);
+        Add("kinds", filter.Kinds.Count == 0 ? null : string.Join(',', filter.Kinds));
+        Add("sources", filter.Sources.Count == 0 ? null : string.Join(',', filter.Sources));
+        Add("from", filter.FromUtc?.ToString("O", CultureInfo.InvariantCulture));
+        Add("to", filter.ToUtc?.ToString("O", CultureInfo.InvariantCulture));
+        Add("before", filter.Before?.ToString(CultureInfo.InvariantCulture));
+        Add("limit", filter.Limit.ToString(CultureInfo.InvariantCulture));
+        return GetAsync(ApiRoutes.V1.FileHistory + (query.Count == 0 ? string.Empty : "?" + string.Join('&', query)), Json.FileHistoryPageDto, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<FileEventDto>> GetFileHistoryOfPathAsync(string path, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        return GetAsync(ApiRoutes.V1.FileHistoryOfPath + "?path=" + Uri.EscapeDataString(path), Json.IReadOnlyListFileEventDto, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<FileHistoryRevertDto> RevertFileEventAsync(long id, CancellationToken cancellationToken = default)
+    {
+        using var response = await _http.PostAsync(Relative(ApiRoutes.V1.FileHistoryRevertOf(id)), content: null, cancellationToken).ConfigureAwait(false);
+        await EnsureSuccessAsync(response, cancellationToken).ConfigureAwait(false);
+        return (await response.Content.ReadFromJsonAsync(Json.FileHistoryRevertDto, cancellationToken).ConfigureAwait(false))!;
+    }
 
     /// <inheritdoc />
     public Task<IReadOnlyList<OperationDto>> GetOperationsAsync(CancellationToken cancellationToken = default)

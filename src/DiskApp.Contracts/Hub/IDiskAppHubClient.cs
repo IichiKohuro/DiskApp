@@ -38,6 +38,9 @@ public interface IDiskAppHubClient
     /// <summary>Настройки изменены.</summary>
     Task OnSettingsChanged(SettingsDto settings);
 
+    /// <summary>В историю файлов записаны новые события (этап 20): открытая лента перечитывается.</summary>
+    Task OnFileHistoryChanged(History.FileHistoryChangedDto changed);
+
     /// <summary>Текущее состояние индексации и активные операции: первое сообщение после каждого подключения.</summary>
     Task OnStatus(HubStatusDto status);
 }

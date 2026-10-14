@@ -314,7 +314,8 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
             if (RootNesting.OwnerOf(normalized, roots, paths) is { } root && paths.TryGetRelativePath(root.Path, normalized, out var relPath))
             {
-                Enqueue(new IndexTask(root.Id, IndexTaskKind.Reconcile, relPath, L.T("Indexer.FileOperation")));
+                // Что сделала операция, история файлов знает от неё самой (этап 20).
+                Enqueue(new IndexTask(root.Id, IndexTaskKind.Reconcile, relPath, L.T("Indexer.FileOperation"), Journal: false));
             }
         }
     }
@@ -581,7 +582,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
         switch (request.Kind)
         {
             case RootRequestKind.Reconcile:
-                Enqueue(new IndexTask(request.RootId, IndexTaskKind.Reconcile, request.RelPath, request.Reason));
+                Enqueue(new IndexTask(request.RootId, IndexTaskKind.Reconcile, request.RelPath, request.Reason, request.Journal));
                 break;
             case RootRequestKind.CheckAvailability:
                 _ = Task.Run(() => CheckAvailabilityInBackgroundAsync(request.RootId, request.Reason));
@@ -756,6 +757,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             {
                 Root = session.Root,
                 RelPath = task.RelPath,
+                Journal = task.Journal,
                 Matcher = session.Matcher,
                 DegreeOfParallelism = session.Parallelism,
                 FollowReparsePoints = _options.FollowReparsePoints,
@@ -775,6 +777,12 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             }
             else
             {
+                // Полное сканирование — первое, пересборка или восстановление индекса — в истории файлов одной сводкой.
+                if (task.Kind == IndexTaskKind.FullScan && outcome.Status == ScanOutcomeStatus.Completed)
+                {
+                    _events.Publish(new IndexJournalEvent(session.Root.Id, JournalSource.Scan, []) { RootPath = session.Root.Path, Summary = task.Reason, Count = outcome.Found });
+                }
+
                 if (task.RelPath.Length == 0)
                 {
                     var now = _clock.UtcNow;

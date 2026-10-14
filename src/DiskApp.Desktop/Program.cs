@@ -205,6 +205,7 @@ internal static class Program
                 services.AddSingleton<DiskApp.Core.Abstractions.IPlatformShell, DiskApp.Infrastructure.Platform.Windows.WindowsPlatformShell>();
                 services.AddSingleton<DiskApp.Core.Abstractions.IIconProvider, DiskApp.Infrastructure.Platform.Windows.WindowsIconProvider>();
                 services.AddSingleton<DiskApp.Core.Abstractions.IFileLockInspector, DiskApp.Infrastructure.Platform.Windows.WindowsFileLockInspector>();
+                services.AddSingleton<DiskApp.Core.Abstractions.IRecycleBin, DiskApp.Infrastructure.Platform.Windows.WindowsRecycleBin>();
                 services.AddSingleton<DesktopResumeSource>();
                 services.AddSingleton<DiskApp.Core.Abstractions.ISystemResumeSource>(static provider => OperatingSystem.IsWindows()
                     ? provider.GetRequiredService<DesktopResumeSource>()

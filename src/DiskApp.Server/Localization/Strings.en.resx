@@ -333,4 +333,22 @@
   <data name="SettingsEndpoints.RuleSubfolderInvalid" xml:space="preserve">
     <value>A subfolder is a path inside the work folder: «Correspondence» or «2026\Acts».</value>
   </data>
+  <data name="SettingsEndpoints.HistoryRetentionRange" xml:space="preserve">
+    <value>From 1 to {0} days.</value>
+  </data>
+  <data name="SettingsEndpoints.HistorySizeRange" xml:space="preserve">
+    <value>From 1 to {0} MB.</value>
+  </data>
+  <data name="HistoryEndpoints.UnknownKind" xml:space="preserve">
+    <value>Unknown event kind: {0}.</value>
+  </data>
+  <data name="HistoryEndpoints.UnknownSource" xml:space="preserve">
+    <value>Unknown source: {0}.</value>
+  </data>
+  <data name="HistoryEndpoints.EventNotFound" xml:space="preserve">
+    <value>There is no such event in the history.</value>
+  </data>
+  <data name="HistoryEndpoints.CannotRevert" xml:space="preserve">
+    <value>Cannot undo</value>
+  </data>
 </root>

@@ -51,6 +51,28 @@ public sealed record AppSettings
 
     /// <summary>Разбор: накопители, куда сыплются файлы, и рабочие папки, куда их раскладывают.</summary>
     public SortingSettings Sorting { get; set; } = new();
+
+    /// <summary>История файлов: сколько хранить.</summary>
+    public HistorySettings History { get; set; } = new();
+}
+
+/// <summary>
+/// История файлов (PLAN.md, этап 20.3, вопрос 19): события хранятся, пока не старше срока и пока история не больше предела
+/// — что наступит раньше.
+/// </summary>
+public sealed record HistorySettings
+{
+    /// <summary>Наибольший срок хранения, дней.</summary>
+    public const int MaxRetentionDays = 3_650;
+
+    /// <summary>Наибольший предел размера, МБ.</summary>
+    public const int MaxSizeLimitMegabytes = 1_024;
+
+    /// <summary>Сколько дней хранить события.</summary>
+    public int RetentionDays { get; set; } = 90;
+
+    /// <summary>Сколько места может занимать история, МБ.</summary>
+    public int MaxSizeMegabytes { get; set; } = 50;
 }
 
 /// <summary>

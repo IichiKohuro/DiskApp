@@ -16,6 +16,9 @@ public sealed record ScanRequest
     /// <summary>Поддерево относительно корня; пустая строка — весь корень.</summary>
     public string RelPath { get; init; } = string.Empty;
 
+    /// <summary>Сверка пишет найденные структурные изменения в историю файлов (этап 20).</summary>
+    public bool Journal { get; init; } = true;
+
     /// <summary>Правила исключений.</summary>
     public required ExclusionMatcher Matcher { get; init; }
 

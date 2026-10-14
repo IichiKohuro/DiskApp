@@ -1,4 +1,5 @@
 using DiskApp.Core.Domain;
+using DiskApp.Core.Events;
 using DiskApp.Core.Indexing;
 
 namespace DiskApp.Infrastructure.Tests.Indexing;
@@ -9,6 +10,40 @@ namespace DiskApp.Infrastructure.Tests.Indexing;
 /// </summary>
 public sealed class ReconcileRunnerTests
 {
+    [Fact]
+    public async Task RunAsync_MovedWhileOffline_JournalsRemovedAndAddedTopLevel_UnlessServiceReconcile()
+    {
+        // Arrange: история файлов (этап 20) — пока DiskApp не работал, файл перенесли, а папку с файлами принесли
+        await using var context = await IndexingTestContext.CreateAsync();
+        context.Files.CreateFile(Path.Combine("a", "report.pdf"), "report");
+        context.Files.CreateDirectory("b");
+        await context.FullScanAsync();
+        File.Move(context.Files.Resolve(Path.Combine("a", "report.pdf")), context.Files.Resolve(Path.Combine("b", "report.pdf")));
+        context.Files.CreateFile(Path.Combine("c", "one.txt"), "1");
+        context.Files.CreateFile(Path.Combine("c", "two.txt"), "2");
+        var journal = new List<IndexJournalEvent>();
+        using var subscription = context.Events.Subscribe<IndexJournalEvent>(journal.Add);
+
+        // Act
+        await context.ReconcileAsync();
+        var first = journal.ToArray();
+        journal.Clear();
+        File.Move(context.Files.Resolve(Path.Combine("b", "report.pdf")), context.Files.Resolve(Path.Combine("a", "report.pdf")));
+        await context.Reconcile.RunAsync(context.Request() with { Journal = false }, PauseToken.None, TestContext.Current.CancellationToken);
+
+        // Assert: содержимое новой папки — часть её появления; служебная сверка в историю не пишет
+        var changes = first.ShouldHaveSingleItem().Changes;
+        first[0].Source.ShouldBe(JournalSource.Reconcile);
+        changes.Select(static change => (change.Kind, change.Path)).ShouldBe(
+        [
+            (JournalChangeKind.Removed, context.Files.Resolve(Path.Combine("a", "report.pdf"))),
+            (JournalChangeKind.Added, context.Files.Resolve(Path.Combine("b", "report.pdf"))),
+            (JournalChangeKind.Added, context.Files.Resolve("c")),
+        ], ignoreOrder: true);
+        journal.ShouldBeEmpty();
+        context.AssertIndexMatchesDisk();
+    }
+
     [Fact]
     public async Task RunAsync_NothingChanged_WritesNothing()
     {

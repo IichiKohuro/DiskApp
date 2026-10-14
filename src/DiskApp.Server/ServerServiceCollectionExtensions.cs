@@ -3,6 +3,7 @@ using DiskApp.Core.Abstractions;
 using DiskApp.Core.Domain;
 using DiskApp.Core.Events;
 using DiskApp.Core.FileSystem;
+using DiskApp.Core.History;
 using DiskApp.Core.Indexing;
 using DiskApp.Core.Indexing.Watching;
 using DiskApp.Core.Operations;
@@ -125,7 +126,20 @@ public static class ServerServiceCollectionExtensions
             provider.GetRequiredService<PathNormalizer>(),
             new System.IO.Abstractions.FileSystem(),
             provider.GetRequiredService<ILogger<AutoSortService>>()));
+        services.AddSingleton(static provider => new FileHistoryService(
+            provider.GetRequiredService<IFileHistoryRepository>(),
+            provider.GetRequiredService<IIndexEventBus>(),
+            provider.GetRequiredService<FileOperationService>(),
+            provider.GetRequiredService<ISettingsStore<AppSettings>>(),
+            provider.GetRequiredService<IClock>(),
+            provider.GetRequiredService<PathNormalizer>(),
+            new System.IO.Abstractions.FileSystem(),
+            provider.GetService<IRecycleBin>(),
+            provider.GetRequiredService<ILogger<FileHistoryService>>()));
         services.AddHostedService<SortingFolderTrackerService>();
+
+        // История файлов подписывается раньше, чем стартует индексатор, и дописывает накопленное после его остановки.
+        services.AddHostedService<FileHistoryHostedService>();
         services.AddHostedService<ServerStartupService>();
         services.AddHostedService<SearchCacheInvalidator>();
         services.AddHostedService(static provider => provider.GetRequiredService<AutoSortService>());
@@ -164,6 +178,7 @@ public static class ServerServiceCollectionExtensions
         services.AddSingleton<IFolderTagRepository>(static provider => new SqliteFolderTagRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
         services.AddSingleton<IInboxStateRepository>(static provider => new SqliteInboxStateRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
         services.AddSingleton<ISortingStatsRepository>(static provider => new SqliteSortingStatsRepository(provider.GetRequiredService<SqliteDatabase>()));
+        services.AddSingleton<IFileHistoryRepository>(static provider => new SqliteFileHistoryRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
         services.AddSingleton<INoteRepository>(static provider => new SqliteNoteRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<INoteTagRepository>(static provider => new SqliteNoteTagRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<ICollectionRepository>(static provider => new SqliteCollectionRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<IClock>()));

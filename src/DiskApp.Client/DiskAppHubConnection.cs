@@ -1,6 +1,7 @@
 using DiskApp.Contracts;
 using DiskApp.Contracts.App;
 using DiskApp.Contracts.Entries;
+using DiskApp.Contracts.History;
 using DiskApp.Contracts.Hub;
 using DiskApp.Contracts.Operations;
 using DiskApp.Contracts.Roots;
@@ -46,6 +47,7 @@ public sealed partial class DiskAppHubConnection : IAsyncDisposable
     private readonly EventChannel<OperationCompletedDto> _operationCompleted;
     private readonly EventChannel<ConflictDto> _operationNeedsDecision;
     private readonly EventChannel<SettingsDto> _settingsChanged;
+    private readonly EventChannel<FileHistoryChangedDto> _fileHistoryChanged;
     private readonly EventChannel<HubStatusDto> _status;
     private HubConnection? _connection;
     private Task? _connecting;
@@ -67,6 +69,7 @@ public sealed partial class DiskAppHubConnection : IAsyncDisposable
         _operationCompleted = new(capacity, OnHandlerFailed);
         _operationNeedsDecision = new(capacity, OnHandlerFailed);
         _settingsChanged = new(capacity, OnHandlerFailed);
+        _fileHistoryChanged = new(capacity, OnHandlerFailed);
         _status = new(capacity, OnHandlerFailed);
     }
 
@@ -93,6 +96,9 @@ public sealed partial class DiskAppHubConnection : IAsyncDisposable
 
     /// <summary>Настройки изменены.</summary>
     public event Action<SettingsDto> SettingsChanged { add => _settingsChanged.Add(value); remove => _settingsChanged.Remove(value); }
+
+    /// <summary>В историю файлов записаны новые события (этап 20).</summary>
+    public event Action<FileHistoryChangedDto> FileHistoryChanged { add => _fileHistoryChanged.Add(value); remove => _fileHistoryChanged.Remove(value); }
 
     /// <summary>Текущее состояние индексации и операций: после каждого подключения и переподключения.</summary>
     public event Action<HubStatusDto> StatusReceived { add => _status.Add(value); remove => _status.Remove(value); }
@@ -196,6 +202,7 @@ public sealed partial class DiskAppHubConnection : IAsyncDisposable
         connection.On<OperationCompletedDto>(nameof(IDiskAppHubClient.OnOperationCompleted), _operationCompleted.Raise);
         connection.On<ConflictDto>(nameof(IDiskAppHubClient.OnOperationNeedsDecision), _operationNeedsDecision.Raise);
         connection.On<SettingsDto>(nameof(IDiskAppHubClient.OnSettingsChanged), _settingsChanged.Raise);
+        connection.On<FileHistoryChangedDto>(nameof(IDiskAppHubClient.OnFileHistoryChanged), _fileHistoryChanged.Raise);
         connection.On<HubStatusDto>(nameof(IDiskAppHubClient.OnStatus), _status.Raise);
         connection.Reconnecting += _ => OnStateChangedAsync(HubConnectionState.Reconnecting);
         connection.Reconnected += OnReconnectedAsync;

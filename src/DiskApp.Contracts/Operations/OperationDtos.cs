@@ -123,6 +123,9 @@ public enum OperationOrigin
 
     /// <summary>Авторазбор по шаблонам рабочих папок.</summary>
     AutoSort,
+
+    /// <summary>Перенос со страницы «Разбор».</summary>
+    Sorting,
 }
 
 /// <summary>

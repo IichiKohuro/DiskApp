@@ -166,3 +166,65 @@ public enum OperationOutcome
 /// <param name="NewPath">Полный путь после.</param>
 /// <param name="IsDirectory">Переименована папка.</param>
 public sealed record EntryRenamedEvent(long RootId, string OldPath, string NewPath, bool IsDirectory) : IIndexEvent;
+
+/// <summary>Откуда изменение в журнале индекса (история файлов, PLAN.md, этап 20).</summary>
+public enum JournalSource
+{
+    /// <summary>Наблюдатель: Проводник и другие программы, пока DiskApp работает.</summary>
+    Watcher,
+
+    /// <summary>Сверка с диском: изменения, сделанные, пока DiskApp не работал или наблюдатель пропустил.</summary>
+    Reconcile,
+
+    /// <summary>Полное сканирование корня: только сводка.</summary>
+    Scan,
+}
+
+/// <summary>Вид структурного изменения в журнале индекса.</summary>
+public enum JournalChangeKind
+{
+    /// <summary>Появилась запись.</summary>
+    Added,
+
+    /// <summary>Запись исчезла (вместе с поддеревом).</summary>
+    Removed,
+
+    /// <summary>Переименована или перенесена внутри корня.</summary>
+    Renamed,
+}
+
+/// <summary>
+/// Структурное изменение записи для истории файлов: полные пути и сведения, по которым «исчез здесь + появился там»
+/// сопоставляются в перенос.
+/// </summary>
+/// <param name="Kind">Что произошло.</param>
+/// <param name="Path">Полный путь после изменения (у исчезнувшей — прежний).</param>
+/// <param name="OldPath">Прежний полный путь у переименования.</param>
+/// <param name="IsDirectory">Это папка.</param>
+/// <param name="Size">Размер файла.</param>
+/// <param name="CreatedUtc">Создан.</param>
+/// <param name="ModifiedUtc">Изменён.</param>
+public sealed record JournalChange(JournalChangeKind Kind, string Path, string? OldPath, bool IsDirectory, long Size, DateTimeOffset CreatedUtc, DateTimeOffset ModifiedUtc);
+
+/// <summary>
+/// Структурные изменения корня для истории файлов (PLAN.md, этап 20): наблюдатель и сверка — запись на самый верхний
+/// изменённый элемент (содержимое появившейся или исчезнувшей папки не перечисляется); полное сканирование — сводкой.
+/// </summary>
+/// <param name="RootId">Корень.</param>
+/// <param name="Source">Кто увидел изменения.</param>
+/// <param name="Changes">Изменения по порядку.</param>
+public sealed record IndexJournalEvent(long RootId, JournalSource Source, IReadOnlyList<JournalChange> Changes) : IIndexEvent
+{
+    /// <summary>Полный путь корня: для сводки полного сканирования.</summary>
+    public string? RootPath { get; init; }
+
+    /// <summary>Сводка полного сканирования: причина.</summary>
+    public string? Summary { get; init; }
+
+    /// <summary>Сводка полного сканирования: сколько записей в корне.</summary>
+    public long Count { get; init; }
+}
+
+/// <summary>В историю файлов записаны новые события (этап 20): клиенты обновляют ленту.</summary>
+/// <param name="Count">Сколько событий записано.</param>
+public sealed record FileHistoryChangedEvent(int Count) : IIndexEvent;

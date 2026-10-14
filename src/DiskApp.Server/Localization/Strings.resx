@@ -333,4 +333,22 @@
   <data name="SettingsEndpoints.RuleSubfolderInvalid" xml:space="preserve">
     <value>Подпапка — путь внутри рабочей папки: «Переписка» или «2026\Акты».</value>
   </data>
+  <data name="SettingsEndpoints.HistoryRetentionRange" xml:space="preserve">
+    <value>От 1 до {0} дней.</value>
+  </data>
+  <data name="SettingsEndpoints.HistorySizeRange" xml:space="preserve">
+    <value>От 1 до {0} МБ.</value>
+  </data>
+  <data name="HistoryEndpoints.UnknownKind" xml:space="preserve">
+    <value>Неизвестный вид события: {0}.</value>
+  </data>
+  <data name="HistoryEndpoints.UnknownSource" xml:space="preserve">
+    <value>Неизвестный источник: {0}.</value>
+  </data>
+  <data name="HistoryEndpoints.EventNotFound" xml:space="preserve">
+    <value>Такого события в истории нет.</value>
+  </data>
+  <data name="HistoryEndpoints.CannotRevert" xml:space="preserve">
+    <value>Вернуть нельзя</value>
+  </data>
 </root>

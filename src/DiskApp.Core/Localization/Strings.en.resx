@@ -267,4 +267,25 @@
   <data name="FileOperation.InUseBy" xml:space="preserve">
     <value>“{0}” is open in {1} — close it there and try again.</value>
   </data>
+  <data name="History.RootRemoved" xml:space="preserve">
+    <value>Root removed from the index</value>
+  </data>
+  <data name="History.EventNotFound" xml:space="preserve">
+    <value>There is no such event in the history.</value>
+  </data>
+  <data name="History.NotThereAnymore" xml:space="preserve">
+    <value>Nothing is where the event left it: {0}. The file has been moved or deleted since.</value>
+  </data>
+  <data name="History.PlaceTaken" xml:space="preserve">
+    <value>The previous place is taken: {0}.</value>
+  </data>
+  <data name="History.FolderGone" xml:space="preserve">
+    <value>The previous folder no longer exists: {0}.</value>
+  </data>
+  <data name="History.NotInRecycleBin" xml:space="preserve">
+    <value>The file is no longer in the Recycle Bin.</value>
+  </data>
+  <data name="History.CannotRevertKind" xml:space="preserve">
+    <value>This event cannot be undone: renames, moves and deletions to the Recycle Bin can.</value>
+  </data>
 </root>

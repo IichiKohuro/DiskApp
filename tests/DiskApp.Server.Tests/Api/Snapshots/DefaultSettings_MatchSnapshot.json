@@ -122,5 +122,9 @@
       "Thumbs.db",
       ".DS_Store"
     ]
+  },
+  "history": {
+    "retentionDays": 90,
+    "maxSizeMegabytes": 50
   }
 }

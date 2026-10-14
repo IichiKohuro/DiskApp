@@ -203,7 +203,8 @@ public sealed class RootChangeProcessor : IAsyncDisposable
             AppliedBatches++;
             foreach (var directory in result.NewDirectories)
             {
-                _onRequest(new RootRequest(_root.Id, RootRequestKind.Reconcile, directory, L.T("RootChangeProcessor.NewFolderReconcilingItsContents")));
+                // Появление самой папки уже в истории файлов; её содержимое — часть того же события.
+                _onRequest(new RootRequest(_root.Id, RootRequestKind.Reconcile, directory, L.T("RootChangeProcessor.NewFolderReconcilingItsContents"), Journal: false));
             }
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -220,7 +221,8 @@ public sealed class RootChangeProcessor : IAsyncDisposable
 /// <param name="Kind">Что нужно.</param>
 /// <param name="RelPath">Поддерево для сверки; пустая строка — весь корень.</param>
 /// <param name="Reason">Причина для журнала.</param>
-public sealed record RootRequest(long RootId, RootRequestKind Kind, string RelPath, string Reason);
+/// <param name="Journal">Сверка пишет изменения в историю файлов (этап 20).</param>
+public sealed record RootRequest(long RootId, RootRequestKind Kind, string RelPath, string Reason, bool Journal = true);
 
 /// <summary>
 /// Вид запроса к оркестратору.

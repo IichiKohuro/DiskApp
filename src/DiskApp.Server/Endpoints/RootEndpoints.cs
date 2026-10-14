@@ -1,6 +1,7 @@
 ﻿using DiskApp.Contracts;
 using DiskApp.Contracts.Roots;
 using DiskApp.Core.Domain;
+using DiskApp.Core.History;
 using DiskApp.Core.Indexing;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
@@ -224,6 +225,7 @@ internal static class RootEndpoints
         IndexerService indexer,
         SearchService search,
         PathNormalizer paths,
+        FileHistoryService history,
         CancellationToken cancellationToken)
     {
         var root = await repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -253,6 +255,11 @@ internal static class RootEndpoints
         if (outer is not null)
         {
             await indexer.RefreshRootsAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            // Записи корня ушли разом — в истории файлов одной сводкой (этап 20), а не событием на каждый файл.
+            await history.RecordRootRemovedAsync(root.Path, 0, cancellationToken).ConfigureAwait(false);
         }
 
         return TypedResults.NoContent();

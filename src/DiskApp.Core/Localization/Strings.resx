@@ -267,4 +267,25 @@
   <data name="FileOperation.InUseBy" xml:space="preserve">
     <value>«{0}» открыт в программе {1} — закройте его там и повторите.</value>
   </data>
+  <data name="History.RootRemoved" xml:space="preserve">
+    <value>Корень убран из индекса</value>
+  </data>
+  <data name="History.EventNotFound" xml:space="preserve">
+    <value>Такого события в истории нет.</value>
+  </data>
+  <data name="History.NotThereAnymore" xml:space="preserve">
+    <value>На месте после события ничего нет: {0}. Файл уже перенесли или удалили.</value>
+  </data>
+  <data name="History.PlaceTaken" xml:space="preserve">
+    <value>Прежнее место занято: {0}.</value>
+  </data>
+  <data name="History.FolderGone" xml:space="preserve">
+    <value>Прежней папки больше нет: {0}.</value>
+  </data>
+  <data name="History.NotInRecycleBin" xml:space="preserve">
+    <value>В корзине этого файла больше нет.</value>
+  </data>
+  <data name="History.CannotRevertKind" xml:space="preserve">
+    <value>Это событие вернуть нельзя: возвращаются переименование, перенос и удаление в корзину.</value>
+  </data>
 </root>

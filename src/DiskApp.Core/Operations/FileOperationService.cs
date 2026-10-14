@@ -393,6 +393,9 @@ public sealed partial class FileOperationService : IAsyncDisposable
             // Пока операция идёт, список переносов пополняется на её потоке; читается только после завершения.
             Moved = run.CompletedUtc is null ? [] : [.. run.Moves.Select(static move => new MovedItem(move.From, move.To))],
             Origin = run.Request.Origin,
+            Deleted = run.CompletedUtc is null ? [] : [.. run.Deleted],
+            Created = run.CompletedUtc is null ? [] : run.Created is { } created ? [created] : [.. run.Copies],
+            IsUndo = run.IsUndo,
         };
     }
 
@@ -956,7 +959,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
 
         if (!run.Request.Permanent)
         {
-            await RecycleAsync(run.Request.Sources, token).ConfigureAwait(false);
+            await RecycleAsync(run, run.Request.Sources, token).ConfigureAwait(false);
             AddProgress(run, items: run.Request.Sources.Count, bytes: 0, path: null);
             return;
         }
@@ -967,7 +970,9 @@ public sealed partial class FileOperationService : IAsyncDisposable
             try
             {
                 SetCurrent(run, source);
+                var deleted = DescribeDeleted(source, permanent: true);
                 DeletePermanently(source);
+                run.Deleted.Add(deleted);
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
@@ -1054,7 +1059,7 @@ public sealed partial class FileOperationService : IAsyncDisposable
                     return target;
                 }
 
-                await RecycleAsync([target], token).ConfigureAwait(false);
+                await RecycleAsync(run, [target], token).ConfigureAwait(false);
                 return target;
             default:
                 await run.Cancellation.CancelAsync().ConfigureAwait(false);
@@ -1134,17 +1139,35 @@ public sealed partial class FileOperationService : IAsyncDisposable
         }
     }
 
-    private async Task RecycleAsync(IReadOnlyList<string> paths, CancellationToken token)
+    private async Task RecycleAsync(OperationRun run, IReadOnlyList<string> paths, CancellationToken token)
     {
         if (_shell is null)
         {
             throw new IOException(L.T("FileOperation.TheRecycleBinIsNotAvailable"));
         }
 
+        // Что и какого размера уходит в корзину — для истории файлов (этап 20): после удаления этого уже не узнать.
+        var described = paths.Select(path => DescribeDeleted(path, permanent: false)).ToArray();
         var result = await _shell.MoveToRecycleBinAsync(paths, token).ConfigureAwait(false);
         if (result.IsFailure)
         {
             throw new IOException(result.Error!.Message);
+        }
+
+        run.Deleted.AddRange(described);
+    }
+
+    private DeletedItem DescribeDeleted(string path, bool permanent)
+    {
+        try
+        {
+            return _fs.Directory.Exists(path)
+                ? new DeletedItem(path, IsDirectory: true, 0, permanent)
+                : new DeletedItem(path, IsDirectory: false, _fs.FileInfo.New(path).Length, permanent);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return new DeletedItem(path, IsDirectory: false, 0, permanent);
         }
     }
 
@@ -1353,6 +1376,9 @@ public sealed partial class FileOperationService : IAsyncDisposable
         public ConflictResolution? ApplyToAll { get; set; }
 
         public List<(string From, string To)> Moves { get; } = [];
+
+        /// <summary>Удалённое — для истории файлов (этап 20).</summary>
+        public List<DeletedItem> Deleted { get; } = [];
 
         /// <summary>Созданное копированием целиком — для отмены (этап 18.2).</summary>
         public List<string> Copies { get; } = [];

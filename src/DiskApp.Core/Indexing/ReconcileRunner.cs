@@ -12,7 +12,9 @@ namespace DiskApp.Core.Indexing;
 /// Сверка индекса с диском по разнице (PLAN.md, этап 2.4): обходит папки, сравнивает содержимое каждой с её детьми
 /// в индексе и пишет только отличия — новые и изменённые записи, удаление исчезнувших, переименование при смене
 /// регистра. В отличие от полного сканирования, не трогает неизменённые строки, поэтому почти не пишет в WAL.
-/// Ловит и изменения файлов (размер, время), и изменения папок, сделанные, пока приложение не работало.
+/// Ловит и изменения файлов (размер, время), и изменения папок, сделанные, пока приложение не работало. Структурные
+/// отличия — появления и исчезновения верхнего уровня, смена регистра имени — уходят в историю файлов
+/// (<see cref="IndexJournalEvent"/>, этап 20), если сверка не служебная (<see cref="ScanRequest.Journal"/>).
 /// </summary>
 public sealed class ReconcileRunner(
     IFileSystemLister lister,
@@ -43,6 +45,7 @@ public sealed class ReconcileRunner(
         if (startOutcome is not null)
         {
             state.Changes.PublishTo(events, rootId);
+            PublishJournal(state);
             state.Progress.Report(IndexPhase.Done, 0, 0, null);
             return startOutcome with { Elapsed = stopwatch.Elapsed };
         }
@@ -68,6 +71,7 @@ public sealed class ReconcileRunner(
 
         await FlushAsync(state, cancellationToken).ConfigureAwait(false);
         state.Changes.PublishTo(events, rootId);
+        PublishJournal(state);
         await WriteLogAsync(state, cancellationToken).ConfigureAwait(false);
         state.Progress.Report(IndexPhase.Done, state.Found, state.Written.Total + state.Removed, null);
 
@@ -125,6 +129,10 @@ public sealed class ReconcileRunner(
         {
             state.Pending.Add(factory.Create(root.Id, startRelPath, item));
             state.Changes.Add(factory.Parent(startRelPath));
+            if (indexed is null)
+            {
+                RecordAdded(state, startRelPath, item);
+            }
         }
 
         return null;
@@ -178,8 +186,9 @@ public sealed class ReconcileRunner(
                 seen.Add(existing.Name);
                 if (existing.IsDirectory != item.IsDirectory)
                 {
-                    await RemoveAsync(state, existing.RelPath, cancellationToken).ConfigureAwait(false);
+                    await RemoveAsync(state, existing.RelPath, cancellationToken, existing).ConfigureAwait(false);
                     Queue(state, relPath, childRelPath, item);
+                    RecordAdded(state, childRelPath, item);
                 }
                 else if (EntryFactory.HasChanged(existing, item))
                 {
@@ -196,10 +205,15 @@ public sealed class ReconcileRunner(
                 await entries.RenameSubtreeAsync(rootId, differentCase.RelPath, childRelPath, cancellationToken).ConfigureAwait(false);
                 state.Changes.Add(relPath);
                 Queue(state, relPath, childRelPath, item);
+                if (request.Journal)
+                {
+                    state.Journal.Add(new JournalChange(JournalChangeKind.Renamed, factory.FullPath(request.Root, childRelPath), factory.FullPath(request.Root, differentCase.RelPath), item.IsDirectory, differentCase.Size, differentCase.CreatedUtc, differentCase.ModifiedUtc));
+                }
             }
             else
             {
                 Queue(state, relPath, childRelPath, item);
+                RecordAdded(state, childRelPath, item);
             }
 
             if (item.IsDirectory && request.Matcher.CanDescend(childDepth) && guard.ShouldDescend(fullPath, item))
@@ -212,7 +226,7 @@ public sealed class ReconcileRunner(
         {
             if (!seen.Contains(entry.Name) && !state.IsQueued(entry.RelPath))
             {
-                await RemoveAsync(state, entry.RelPath, cancellationToken).ConfigureAwait(false);
+                await RemoveAsync(state, entry.RelPath, cancellationToken, entry).ConfigureAwait(false);
             }
         }
     }
@@ -224,15 +238,54 @@ public sealed class ReconcileRunner(
         state.Changes.Add(parentRelPath);
     }
 
-    private async Task RemoveAsync(ReconcileState state, string relPath, CancellationToken cancellationToken)
+    private async Task RemoveAsync(ReconcileState state, string relPath, CancellationToken cancellationToken, FileEntry? entry = null)
     {
         // Перед удалением записываем накопленное: в очереди могут быть записи, которые должны оказаться раньше.
         await FlushAsync(state, cancellationToken).ConfigureAwait(false);
+        if (state.Request.Journal)
+        {
+            entry ??= await entries.GetByPathAsync(state.Request.Root.Id, relPath, cancellationToken).ConfigureAwait(false);
+        }
+
         var removed = await entries.DeleteSubtreeAsync(state.Request.Root.Id, relPath, cancellationToken).ConfigureAwait(false);
         if (removed > 0)
         {
             state.Removed += removed;
             state.Changes.Add(factory.Parent(relPath));
+            if (state.Request.Journal && entry is not null)
+            {
+                state.Journal.Add(new JournalChange(JournalChangeKind.Removed, factory.FullPath(state.Request.Root, relPath), null, entry.IsDirectory, entry.Size, entry.CreatedUtc, entry.ModifiedUtc));
+            }
+        }
+    }
+
+    // В историю — только верхний появившийся элемент: содержимое новой папки — часть её появления.
+    private void RecordAdded(ReconcileState state, string relPath, in FileSystemItem item)
+    {
+        if (!state.Request.Journal)
+        {
+            return;
+        }
+
+        var separator = factory.Paths.Separator;
+        if (state.AddedDirectories.Exists(directory => relPath.StartsWith(directory + separator, factory.Paths.Comparison)))
+        {
+            return;
+        }
+
+        var entry = factory.Create(state.Request.Root.Id, relPath, item);
+        state.Journal.Add(new JournalChange(JournalChangeKind.Added, factory.FullPath(state.Request.Root, relPath), null, entry.IsDirectory, entry.Size, entry.CreatedUtc, entry.ModifiedUtc));
+        if (item.IsDirectory)
+        {
+            state.AddedDirectories.Add(relPath);
+        }
+    }
+
+    private void PublishJournal(ReconcileState state)
+    {
+        if (state.Journal.Count > 0)
+        {
+            events.Publish(new IndexJournalEvent(state.Request.Root.Id, JournalSource.Reconcile, [.. state.Journal]));
         }
     }
 
@@ -284,6 +337,10 @@ public sealed class ReconcileRunner(
         public List<FileEntry> Pending { get; } = [];
 
         public HashSet<string> QueuedPaths { get; } = new(StringComparer.Ordinal);
+
+        public List<JournalChange> Journal { get; } = [];
+
+        public List<string> AddedDirectories { get; } = [];
 
         public List<ScanError> Errors { get; } = [];
 

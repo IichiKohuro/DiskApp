@@ -239,7 +239,28 @@ internal static class DtoMapper
             SettleSeconds = settings.Sorting.SettleSeconds,
             IgnorePatterns = settings.Sorting.IgnorePatterns,
         },
+        History = new HistorySettingsDto { RetentionDays = settings.History.RetentionDays, MaxSizeMegabytes = settings.History.MaxSizeMegabytes },
     };
+
+    /// <summary>Событие истории файлов (этап 20).</summary>
+    public static Contract.History.FileEventDto ToDto(this Core.History.FileEvent item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return new Contract.History.FileEventDto(
+            item.Id,
+            item.TimeUtc,
+            Enum.Parse<Contract.History.FileEventKind>(item.Kind.ToString()),
+            Enum.Parse<Contract.History.FileEventSource>(item.Source.ToString()),
+            item.Path,
+            item.OldPath,
+            item.Name,
+            item.OldName,
+            item.IsDirectory,
+            item.Size,
+            item.OperationId,
+            item.Details,
+            CanRevert: item.Kind is Core.History.FileEventKind.Recycled || (item.Kind is Core.History.FileEventKind.Moved or Core.History.FileEventKind.Renamed && item.OldPath is not null));
+    }
 
     /// <summary>
     /// Настройки из DTO поверх текущих: версия схемы и поля, которых нет в контракте, сохраняются.
@@ -325,6 +346,9 @@ internal static class DtoMapper
             SettleSeconds = dto.Sorting.SettleSeconds,
             IgnorePatterns = [.. (dto.Sorting.IgnorePatterns ?? []).Select(static pattern => pattern?.Trim() ?? string.Empty)],
         },
+        History = dto.History is { } history
+            ? current.History with { RetentionDays = history.RetentionDays, MaxSizeMegabytes = history.MaxSizeMegabytes }
+            : current.History,
     };
 
     /// <summary>Папки разбора из DTO: пути и подписи без пробелов по краям, шаблоны — без пустых условий.</summary>

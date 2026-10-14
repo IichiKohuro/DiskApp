@@ -68,6 +68,9 @@ public enum OperationOrigin
 
     /// <summary>Авторазбор по шаблонам рабочих папок (PLAN.md, этап 17.5).</summary>
     AutoSort,
+
+    /// <summary>Перенос со страницы «Разбор» (этап 17): в истории файлов — «разобран» (этап 20).</summary>
+    Sorting,
 }
 
 /// <summary>Решение по конфликту.</summary>
@@ -183,9 +186,27 @@ public sealed record FileOperationInfo(
     /// </summary>
     public IReadOnlyList<MovedItem> Moved { get; init; } = [];
 
-    /// <summary>Кто поставил операцию: пользователь или авторазбор.</summary>
+    /// <summary>Кто поставил операцию: пользователь, «Разбор» или авторазбор.</summary>
     public OperationOrigin Origin { get; init; }
+
+    /// <summary>Что удалено — в корзину или навсегда, с размером (история файлов, этап 20); заполняется после завершения.</summary>
+    public IReadOnlyList<DeletedItem> Deleted { get; init; } = [];
+
+    /// <summary>Что создано: папка, файл или копии; заполняется после завершения.</summary>
+    public IReadOnlyList<string> Created { get; init; } = [];
+
+    /// <summary>Операция — отмена другой операции.</summary>
+    public bool IsUndo { get; init; }
 }
+
+/// <summary>
+/// Удалённый операцией элемент (история файлов, этап 20).
+/// </summary>
+/// <param name="Path">Путь до удаления.</param>
+/// <param name="IsDirectory">Это папка.</param>
+/// <param name="Size">Размер файла; у папки 0.</param>
+/// <param name="Permanent">Удалён навсегда, мимо корзины.</param>
+public sealed record DeletedItem(string Path, bool IsDirectory, long Size, bool Permanent);
 
 /// <summary>
 /// Перенесённый элемент: прежний и новый путь.

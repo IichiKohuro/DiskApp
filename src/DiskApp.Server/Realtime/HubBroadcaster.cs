@@ -51,6 +51,7 @@ internal sealed partial class HubBroadcaster(
     private List<ConflictDto> _decisions = [];
     private List<OperationCompletedDto> _completed = [];
     private SettingsDto? _settings;
+    private int _historyChanged;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -60,6 +61,7 @@ internal sealed partial class HubBroadcaster(
         using var operationProgressSubscription = events.Subscribe<OperationProgressEvent>(OnOperationProgress);
         using var decisionSubscription = events.Subscribe<OperationNeedsDecisionEvent>(OnDecision);
         using var completedSubscription = events.Subscribe<OperationCompletedEvent>(OnCompleted);
+        using var historySubscription = events.Subscribe<FileHistoryChangedEvent>(OnHistoryChanged);
         using var settingsSubscription = settings.Subscribe(OnSettings);
         using var timer = new PeriodicTimer(options.BatchInterval);
         try
@@ -88,13 +90,16 @@ internal sealed partial class HubBroadcaster(
         List<ConflictDto> decisions;
         List<OperationCompletedDto> completed;
         SettingsDto? changedSettings;
+        int historyChanged;
         lock (_gate)
         {
             if (_statuses.Count == 0 && _progress.Count == 0 && _changes.Count == 0 && _overflowed.Count == 0 && _settings is null
-                && _operationProgress.Count == 0 && _decisions.Count == 0 && _completed.Count == 0)
+                && _operationProgress.Count == 0 && _decisions.Count == 0 && _completed.Count == 0 && _historyChanged == 0)
             {
                 return;
             }
+
+            (historyChanged, _historyChanged) = (_historyChanged, 0);
 
             (statuses, _statuses) = (_statuses, []);
             (progress, _progress) = (_progress, []);
@@ -108,6 +113,11 @@ internal sealed partial class HubBroadcaster(
 
         try
         {
+            if (historyChanged > 0)
+            {
+                await hub.Clients.All.OnFileHistoryChanged(new Contracts.History.FileHistoryChangedDto(historyChanged)).ConfigureAwait(false);
+            }
+
             foreach (var status in statuses)
             {
                 await hub.Clients.All.OnRootStatusChanged(status).ConfigureAwait(false);
@@ -221,6 +231,14 @@ internal sealed partial class HubBroadcaster(
         lock (_gate)
         {
             _completed.Add(completed.ToDto());
+        }
+    }
+
+    private void OnHistoryChanged(FileHistoryChangedEvent changed)
+    {
+        lock (_gate)
+        {
+            _historyChanged += changed.Count;
         }
     }
 

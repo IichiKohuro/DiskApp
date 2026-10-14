@@ -39,6 +39,8 @@ public sealed class ContractsTests
         { typeof(Core.Settings.SortingRuleMode), typeof(Contract.App.SortingRuleMode) },
         { typeof(Core.Sorting.SortingDecision), typeof(Contract.Operations.SortingDecision) },
         { typeof(Core.Operations.OperationOrigin), typeof(Contract.Operations.OperationOrigin) },
+        { typeof(Core.History.FileEventKind), typeof(Contract.History.FileEventKind) },
+        { typeof(Core.History.FileEventSource), typeof(Contract.History.FileEventSource) },
     };
 
     [Fact]

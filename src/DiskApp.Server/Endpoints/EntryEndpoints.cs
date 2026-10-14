@@ -7,6 +7,7 @@ using DiskApp.Contracts.Library;
 using DiskApp.Contracts.Search;
 using DiskApp.Core.Abstractions;
 using DiskApp.Core.Domain;
+using DiskApp.Core.History;
 using DiskApp.Core.Paths;
 using DiskApp.Core.Repositories;
 using DiskApp.Core.Results;
@@ -489,6 +490,7 @@ internal static class EntryEndpoints
         EntryLookup lookup,
         ITagRepository tags,
         IFileIndexRepository entries,
+        FileHistoryService history,
         CancellationToken cancellationToken)
     {
         var entry = await entries.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -497,7 +499,8 @@ internal static class EntryEndpoints
             return ApiProblems.NotFound(L.F("Entries.EntryNotFound", id));
         }
 
-        var known = (await tags.GetAllAsync(cancellationToken).ConfigureAwait(false)).Select(static tag => tag.Id).ToHashSet();
+        var library = await tags.GetAllAsync(cancellationToken).ConfigureAwait(false);
+        var known = library.Select(static tag => tag.Id).ToHashSet();
         var desired = request.TagIds.ToHashSet();
         var unknown = desired.Where(tagId => !known.Contains(tagId)).ToArray();
         if (unknown.Length > 0)
@@ -516,6 +519,16 @@ internal static class EntryEndpoints
             await tags.AssignAsync(id, tagId, cancellationToken).ConfigureAwait(false);
         }
 
-        return TypedResults.Ok((await lookup.GetAsync(id, cancellationToken).ConfigureAwait(false))!);
+        var updated = (await lookup.GetAsync(id, cancellationToken).ConfigureAwait(false))!;
+
+        // История файлов (этап 20): какие свои теги добавлены и сняты.
+        var names = library.ToDictionary(static tag => tag.Id, static tag => tag.Name);
+        await history.RecordTagsChangedAsync(
+            updated.FullPath,
+            entry.IsDirectory,
+            [.. desired.Except(current).Select(tagId => names[tagId])],
+            [.. current.Except(desired).Select(tagId => names.GetValueOrDefault(tagId, tagId.ToString(System.Globalization.CultureInfo.InvariantCulture)))],
+            cancellationToken).ConfigureAwait(false);
+        return TypedResults.Ok(updated);
     }
 }

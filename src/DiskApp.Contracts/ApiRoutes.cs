@@ -134,6 +134,18 @@ public static class ApiRoutes
         /// <summary>Сухой прогон шаблонов рабочих папок (этап 17.5): что куда уйдёт из накопителей сейчас.</summary>
         public const string SortingRulesPreview = Prefix + "/sorting/rules/preview";
 
+        /// <summary>История файлов (этап 20): лента событий с отбором.</summary>
+        public const string FileHistory = Prefix + "/files/history";
+
+        /// <summary>История одного файла или папки по пути, через переносы.</summary>
+        public const string FileHistoryOfPath = FileHistory + "/path";
+
+        /// <summary>«Вернуть на место» или «Восстановить» по событию.</summary>
+        public const string FileHistoryRevert = FileHistory + "/{id:long}/revert";
+
+        /// <summary>Путь «Вернуть на место» для события.</summary>
+        public static string FileHistoryRevertOf(long id) => FileHistory + "/" + id.ToString(System.Globalization.CultureInfo.InvariantCulture) + "/revert";
+
         /// <summary>Избранное: список (записи) и добавление.</summary>
         public const string Favorites = Prefix + "/favorites";
 

@@ -109,10 +109,10 @@ public sealed class SortingService : IDisposable
     public Task<Result<FileOperationInfo>> MoveAsync(SortRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return MoveCoreAsync(request, learn: request.Origin == OperationOrigin.User, cancellationToken);
+        return MoveCoreAsync(request, fromSorting: true, cancellationToken);
     }
 
-    private async Task<Result<FileOperationInfo>> MoveCoreAsync(SortRequest request, bool learn, CancellationToken cancellationToken)
+    private async Task<Result<FileOperationInfo>> MoveCoreAsync(SortRequest request, bool fromSorting, CancellationToken cancellationToken)
     {
 
         if (Validate(request) is { } error)
@@ -139,8 +139,11 @@ public sealed class SortingService : IDisposable
         var previous = await GetTagsAsync(request.Sources, cancellationToken).ConfigureAwait(false);
 
         var names = request.Names?.Select(static name => string.IsNullOrWhiteSpace(name) ? null : name.Trim()).ToArray();
-        var result = _operations.Enqueue(new FileOperationRequest(FileOperationKind.Move, request.Sources, destination, Conflicts: ConflictPolicy.KeepBoth, TargetNames: names, Origin: request.Origin));
-        learn &= _history is not null;
+        // Перенос пользователя со страницы «Разбор» — в истории файлов «разобран» (этап 20) и решение для подсказок (17.4).
+        var userSort = fromSorting && request.Origin == OperationOrigin.User;
+        var origin = userSort ? OperationOrigin.Sorting : request.Origin;
+        var result = _operations.Enqueue(new FileOperationRequest(FileOperationKind.Move, request.Sources, destination, Conflicts: ConflictPolicy.KeepBoth, TargetNames: names, Origin: origin));
+        var learn = userSort && _history is not null;
         if (result.TryGetValue(out var info) && (tags.Length > 0 || previous.Count > 0 || learn))
         {
             _pending[info.Id] = new PendingTags(tags, previous, learn);
@@ -168,7 +171,7 @@ public sealed class SortingService : IDisposable
         // Бросок в накопитель — не решение разбора: в историю подсказок он не попадает.
         if (!request.Copy)
         {
-            return MoveCoreAsync(new SortRequest(request.Sources, request.Destination, NewFolder: null, Tags: []), learn: false, cancellationToken);
+            return MoveCoreAsync(new SortRequest(request.Sources, request.Destination, NewFolder: null, Tags: []), fromSorting: false, cancellationToken);
         }
 
         if (Validate(new SortRequest(request.Sources, request.Destination, NewFolder: null, Tags: [])) is { } error)

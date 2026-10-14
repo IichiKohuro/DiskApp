@@ -191,6 +191,39 @@ public sealed class ChangeApplierTests
         context.Changes.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task ApplyAsync_StructuralChanges_JournalTopLevelOnlyWithEntryDetails()
+    {
+        // Arrange: история файлов (этап 20) — исчезновение, переименование и появление папки с содержимым
+        await using var context = await IndexingTestContext.CreateAsync();
+        context.Files.CreateFile(Path.Combine("docs", "gone.txt"), "gone");
+        context.Files.CreateFile(Path.Combine("docs", "old.txt"), "old");
+        await context.FullScanAsync();
+        File.Delete(context.Files.Resolve(Path.Combine("docs", "gone.txt")));
+        File.Move(context.Files.Resolve(Path.Combine("docs", "old.txt")), context.Files.Resolve(Path.Combine("docs", "new.txt")));
+        context.Files.CreateFile(Path.Combine("arrived", "inner", "file.txt"), "f");
+        var journal = new List<IndexJournalEvent>();
+        using var subscription = context.Events.Subscribe<IndexJournalEvent>(journal.Add);
+
+        // Act
+        await ApplyAsync(context, new CoalescedChanges(
+            [(Path.Combine("docs", "old.txt"), Path.Combine("docs", "new.txt"))],
+            [Path.Combine("docs", "gone.txt"), "arrived", Path.Combine("arrived", "inner"), Path.Combine("arrived", "inner", "file.txt")],
+            false));
+
+        // Assert
+        var changes = journal.ShouldHaveSingleItem().Changes;
+        journal[0].Source.ShouldBe(JournalSource.Watcher);
+        changes.Select(static change => (change.Kind, change.Path, change.OldPath)).ShouldBe(
+        [
+            (JournalChangeKind.Renamed, context.Files.Resolve(Path.Combine("docs", "new.txt")), context.Files.Resolve(Path.Combine("docs", "old.txt"))),
+            (JournalChangeKind.Removed, context.Files.Resolve(Path.Combine("docs", "gone.txt")), null),
+            (JournalChangeKind.Added, context.Files.Resolve("arrived"), null),
+        ], ignoreOrder: true);
+        changes.Single(static change => change.Kind == JournalChangeKind.Removed).Size.ShouldBe(4);
+        changes.Single(static change => change.Kind == JournalChangeKind.Added).IsDirectory.ShouldBeTrue();
+    }
+
     private static CoalescedChanges Paths(params string[] relPaths) => new([], relPaths, false);
 
     private static Task<ApplyResult> ApplyAsync(IndexingTestContext context, CoalescedChanges changes, IEnumerable<ExclusionRule>? rules = null, RootIndexState? state = null)

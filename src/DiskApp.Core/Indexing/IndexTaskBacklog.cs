@@ -9,7 +9,11 @@ namespace DiskApp.Core.Indexing;
 /// <param name="Kind">Сверка или полное сканирование.</param>
 /// <param name="RelPath">Поддерево; пустая строка — весь корень.</param>
 /// <param name="Reason">Зачем: для журнала и диагностики.</param>
-public sealed record IndexTask(long RootId, IndexTaskKind Kind, string RelPath, string Reason)
+/// <param name="Journal">
+/// Писать структурные изменения в историю файлов (этап 20); нет — у сверки новой папки, которую уже записал наблюдатель,
+/// и у сверки после операции DiskApp, которую записала сама операция.
+/// </param>
+public sealed record IndexTask(long RootId, IndexTaskKind Kind, string RelPath, string Reason, bool Journal = true)
 {
     /// <summary>
     /// Приоритет, меньше — важнее (PLAN.md, этап 2.4: изменения от наблюдателя &gt; сверка &gt; полное сканирование):
@@ -100,9 +104,11 @@ public sealed class IndexTaskBacklog(PathNormalizer paths)
     public IReadOnlyList<IndexTask> Snapshot()
         => _pending.OrderBy(static item => item.Task.Priority).ThenBy(static item => item.Sequence).Select(static item => item.Task).ToArray();
 
+    // Сверка без записи в историю файлов не покрывает сверку с записью: изменения не должны пропасть из истории.
     private bool Covers(IndexTask outer, IndexTask inner)
         => outer.RootId == inner.RootId
             && outer.Kind >= inner.Kind
+            && (outer.Journal || !inner.Journal)
             && (outer.RelPath.Length == 0
                 || paths.Comparer.Equals(outer.RelPath, inner.RelPath)
                 || inner.RelPath.StartsWith(outer.RelPath + paths.Separator, paths.Comparison));

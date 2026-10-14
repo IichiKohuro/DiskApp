@@ -66,6 +66,19 @@ public sealed record SettingsDto
 
     /// <summary>Разбор: накопители и рабочие папки.</summary>
     public SortingSettingsDto Sorting { get; set; } = new();
+
+    /// <summary>История файлов: сколько хранить.</summary>
+    public HistorySettingsDto History { get; set; } = new();
+}
+
+/// <summary>История файлов (этап 20.3): события хранятся не дольше срока и не больше предела — что наступит раньше.</summary>
+public sealed record HistorySettingsDto
+{
+    /// <summary>Срок хранения, дней (1–3650).</summary>
+    public int RetentionDays { get; set; } = 90;
+
+    /// <summary>Предел размера, МБ (1–1024).</summary>
+    public int MaxSizeMegabytes { get; set; } = 50;
 }
 
 /// <summary>Разбор входящих: накопители и рабочие папки в порядке показа (не больше 50 в каждом списке).</summary>
