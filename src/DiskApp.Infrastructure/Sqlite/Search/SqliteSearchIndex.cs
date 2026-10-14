@@ -35,6 +35,7 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         """;
 
     private readonly PathNormalizer _paths = paths ?? PathNormalizer.Current;
+    private readonly MemberLoads _memberLoads = new();
 
     /// <summary>
     /// Сколько времени тратить на подсчёт совпадений при дополнительных условиях; не успели — число «не меньше N».
@@ -47,6 +48,18 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     /// индекса времени изменения: при таком числе совпадений он быстро набирает страницу.
     /// </summary>
     private const long SortedSourceLimit = 150_000;
+
+    /// <summary>
+    /// До скольких записей тега его проверяют по множеству идентификаторов в памяти (этап 19.5); у тега больше записи
+    /// плотные, и обход индекса времени изменения с проверкой пути набирает страницу быстрее, чем строится множество.
+    /// </summary>
+    private const long MemberSetLimit = 200_000;
+
+    /// <summary>
+    /// Во сколько раз шаг обхода индекса времени изменения с проверкой по множеству дешевле, чем чтение строки записи тега
+    /// для сортировки (замер <c>search-budget</c>, этап 19.5).
+    /// </summary>
+    private const double WalkToReadCost = 0.25;
 
     /// <inheritdoc />
     public Task<CandidateBatch> FindAsync(SearchPlan plan, CandidateQuery query, CancellationToken cancellationToken = default)
@@ -63,6 +76,9 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
                 return CandidateBatch.Empty;
             }
 
+            // Функция множества тега снимается с соединения в конце запроса: в пул соединение уходит без множества.
+            using var members = conditions.Members;
+
             using var timeout = new CancellationTokenSource(query.Timeout);
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
             var collected = new List<SearchCandidate>(Math.Min(query.Limit, 1024));
@@ -70,10 +86,18 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             try
             {
                 // Только фильтры: если совпадений больше лимита, сортировка всех по времени дорога — вместо неё
-                // обходим индекс времени изменения с конца и останавливаемся на лимите.
+                // обходим индекс времени изменения с конца и останавливаемся на лимите. Число записей одного тега уже
+                // известно; тег с условием по индексу (ext:) сортирует немногие совпадения, и пробный подсчёт не нужен.
                 var newestFirst = plan.Source == CandidateSource.Filters
-                    && CountUpTo(connection, plan, conditions, query.Limit + 1L, linked.Token) > query.Limit;
-                Read(connection, MainSql(plan, conditions, query.Limit, newestFirst), conditions.Parameters, collected, linked.Token);
+                    && (conditions.PlannerChoosesIndex || (conditions.KnownCount ?? CountUpTo(connection, plan, conditions, query.Limit + 1L, linked.Token)) > query.Limit);
+                if (newestFirst && conditions.KnownCount is { } known && conditions.Members is not null)
+                {
+                    conditions.SortSourceByTime = !WalkPays(connection, known, query.Limit);
+                }
+
+                var sql = MainSql(plan, conditions, query.Limit, newestFirst);
+                LoadMembers(connection, conditions, sql, linked.Token);
+                Read(connection, sql, conditions.Parameters, collected, linked.Token);
             }
             catch (Exception exception) when (IsInterruption(exception))
             {
@@ -110,8 +134,16 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
                 return new CandidateCount(0, true);
             }
 
+            using var members = conditions.Members;
+
             try
             {
+                // Только тег: число его записей уже посчитано по индексу путей, точно.
+                if (conditions.KnownCount is { } known)
+                {
+                    return new CandidateCount(known, true);
+                }
+
                 // Без дополнительных условий счёт берётся прямо из FTS или из индекса имени — дёшево и точно
                 // даже для сотен тысяч совпадений; с условиями — не дальше потолка.
                 var onlyTerms = conditions.Clauses.Count == 0 && plan.ExcludedTerms.Count == 0;
@@ -187,8 +219,9 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         return Task.Run<IReadOnlyList<SearchCandidate>>(() =>
         {
             using var connection = database.Connections.Open();
+            // Кандидаты идут из FTS: источник от фильтров не нужен, хотя без термов план выглядит как «только фильтры».
             var looser = plan with { FtsTerms = [], ShortTerms = [] };
-            var conditions = BuildConditions(connection, looser);
+            var conditions = BuildConditions(connection, looser, offerSource: false);
             if (conditions is null)
             {
                 return [];
@@ -297,14 +330,27 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             _ => string.Empty,
         };
 
-        var source = plan.Source != CandidateSource.Filters ? Source(plan)
-            : newestFirst && !(conditions.SortSourceByTime && conditions.ScopeJoinSource is not null) ? "entries AS e INDEXED BY ix_entries_modified"
-            : conditions.ScopeJoinSource ?? Source(plan);
-        return $"SELECT {Columns} FROM {source} {Joins} WHERE {Where(plan, conditions)} {order} LIMIT $limit";
+        var walksTimeIndex = newestFirst && !conditions.PlannerChoosesIndex && !(conditions.SortSourceByTime && conditions.ScopeJoinSource is not null);
+        var (source, fromScope) = plan.Source != CandidateSource.Filters || conditions.PlannerChoosesIndex ? (Source(plan), false)
+            : walksTimeIndex ? ("entries AS e INDEXED BY ix_entries_modified", false)
+            : CountSource(plan, conditions);
+        var where = Where(plan, conditions, fromScope);
+        if (plan.Source == CandidateSource.Filters && newestFirst && !walksTimeIndex)
+        {
+            // Совпадения сортируются: сортировщик держит только время и идентификатор, строки и сведения об открытиях
+            // читаются потом для одной страницы, а не для всех совпадений.
+            return $"SELECT {Columns} FROM (SELECT e.id FROM {source} WHERE {where} {order} LIMIT $limit) AS top CROSS JOIN entries AS e ON e.id = top.id {Joins}";
+        }
+
+        return $"SELECT {Columns} FROM {source} {Joins} WHERE {where} {order} LIMIT $limit";
     }
 
     private static string Source(SearchPlan plan)
         => plan.Source == CandidateSource.FullText ? "entries_fts JOIN entries AS e ON e.id = entries_fts.rowid" : "entries AS e";
+
+    /// <summary>Откуда считать совпадения и читать их без порядка: источник фильтров, если он есть и уместен.</summary>
+    private static (string Source, bool FromScope) CountSource(SearchPlan plan, Conditions conditions)
+        => plan.Source == CandidateSource.Filters && !conditions.PlannerChoosesIndex && conditions.ScopeJoinSource is { } join ? (join, true) : (Source(plan), false);
 
     /// <summary>
     /// Сколько записей подходит под план, но не больше <paramref name="upTo"/>: подзапрос с LIMIT останавливает обход.
@@ -312,8 +358,33 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     private static long CountUpTo(SqliteConnection connection, SearchPlan plan, Conditions conditions, long upTo, CancellationToken cancellationToken)
     {
         conditions.Parameters["$count_limit"] = upTo;
-        var source = plan.Source == CandidateSource.Filters && conditions.ScopeJoinSource is { } join ? join : Source(plan);
-        return Scalar(connection, $"SELECT COUNT(*) FROM (SELECT 1 FROM {source} WHERE {Where(plan, conditions)} LIMIT $count_limit)", conditions.Parameters, cancellationToken);
+        var (source, fromScope) = CountSource(plan, conditions);
+        var sql = $"SELECT COUNT(*) FROM (SELECT 1 FROM {source} WHERE {Where(plan, conditions, fromScope)} LIMIT $count_limit)";
+        LoadMembers(connection, conditions, sql, cancellationToken);
+        return Scalar(connection, sql, conditions.Parameters, cancellationToken);
+    }
+
+    /// <summary>
+    /// Выгоднее ли для «новых сверху» обойти индекс времени изменения с проверкой тега по множеству, чем прочитать и
+    /// отсортировать все <paramref name="members"/> записей тега: обход проходит в среднем limit · всего / members записей
+    /// индекса, но каждая — проверка в памяти без чтения строки; сортировка читает строку каждой записи тега.
+    /// </summary>
+    private static bool WalkPays(SqliteConnection connection, long members, int limit)
+    {
+        var total = Scalar(connection, "SELECT COALESCE(MAX(id), 0) FROM entries", new Dictionary<string, object?>(), CancellationToken.None);
+        return (double)members * members > limit * (double)total * WalkToReadCost;
+    }
+
+    /// <summary>
+    /// Строит множество записей тега перед запросом, который проверяет тег по нему; запросы от источника тега его не
+    /// проверяют и множества не ждут.
+    /// </summary>
+    private static void LoadMembers(SqliteConnection connection, Conditions conditions, string sql, CancellationToken cancellationToken)
+    {
+        if (conditions.Members is { } members && sql.Contains(members.Function, StringComparison.Ordinal))
+        {
+            members.Load(connection, conditions.Parameters, cancellationToken);
+        }
     }
 
     /// <summary>
@@ -329,8 +400,12 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         CancellationToken cancellationToken)
     {
         conditions.Parameters["$count_limit"] = upTo;
-        var source = plan.Source == CandidateSource.Filters && conditions.ScopeJoinSource is { } join ? join : Source(plan);
-        using var command = Command(connection, $"SELECT 1 FROM {source} WHERE {Where(plan, conditions)} LIMIT $count_limit", conditions.Parameters);
+        var (source, fromScope) = CountSource(plan, conditions);
+        var sql = $"SELECT 1 FROM {source} WHERE {Where(plan, conditions, fromScope)} LIMIT $count_limit";
+
+        // Множество записей тега — подготовка, а не подсчёт: в бюджет не входит, его прерывает только отмена.
+        LoadMembers(connection, conditions, sql, cancellationToken);
+        using var command = Command(connection, sql, conditions.Parameters);
         using var timeout = new CancellationTokenSource(budget);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token);
         using var registration = linked.Token.Register(() => Interrupt(connection));
@@ -362,9 +437,17 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         return Convert.ToInt64(command.ExecuteScalar(), CultureInfo.InvariantCulture);
     }
 
-    private static string Where(SearchPlan plan, Conditions conditions)
+    /// <param name="plan">План запроса.</param>
+    /// <param name="conditions">Условия фильтров.</param>
+    /// <param name="fromScope">Запрос читает источник фильтров: его условие источник уже выполнил, повторная проверка лишняя.</param>
+    private static string Where(SearchPlan plan, Conditions conditions, bool fromScope = false)
     {
         var clauses = new List<string>(conditions.Clauses);
+        if (fromScope && conditions.SourceClauseIndex is { } covered)
+        {
+            clauses.RemoveAt(covered);
+        }
+
         switch (plan.Source)
         {
             case CandidateSource.FullText:
@@ -502,7 +585,10 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     /// <summary>
     /// Условия фильтров плана; <c>null</c>, если план заведомо ничего не находит (например, папки <c>in:</c> не нашлись).
     /// </summary>
-    private Conditions? BuildConditions(SqliteConnection connection, SearchPlan plan)
+    /// <param name="connection">Соединение запроса: на нём регистрируются функции и временные таблицы.</param>
+    /// <param name="plan">План.</param>
+    /// <param name="offerSource">Можно ли тегу стать источником кандидатов, если план только из фильтров.</param>
+    private Conditions? BuildConditions(SqliteConnection connection, SearchPlan plan, bool offerSource = true)
     {
         var conditions = new Conditions();
         if (plan.RegexPattern is { } pattern)
@@ -525,6 +611,11 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             if (clause is null)
             {
                 return null;
+            }
+
+            if (conditions.ScopeJoinSource is not null)
+            {
+                conditions.SourceClauseIndex = conditions.Clauses.Count;
             }
 
             conditions.Clauses.Add(clause);
@@ -554,10 +645,18 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         }
 
         // Тег у записи — свой или авто-тег папки выше (этап 19): «tag:x» — любой из двух, «-tag:x» — ни одного.
+        offerSource &= plan.Source == CandidateSource.Filters;
         for (var i = 0; i < plan.IncludeTags.Count; i++)
         {
             conditions.Parameters[$"$it{i}"] = plan.IncludeTags[i];
-            conditions.Clauses.Add(TagClause(connection, plan.IncludeTags[i], $"$it{i}", $"diskapp_autotag_it{i}", i == 0 ? conditions : null));
+            var offered = offerSource && i == 0 && conditions.ScopeJoinSource is null;
+            var clause = TagClause(connection, plan.IncludeTags[i], $"$it{i}", $"diskapp_autotag_it{i}", offered ? conditions : null);
+            if (offered && conditions.ScopeJoinSource is not null)
+            {
+                conditions.SourceClauseIndex = conditions.Clauses.Count;
+            }
+
+            conditions.Clauses.Add(clause);
         }
 
         for (var i = 0; i < plan.ExcludeTags.Count; i++)
@@ -571,15 +670,33 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             conditions.Clauses.Add(favorite ? "EXISTS (SELECT 1 FROM favorites AS f2 WHERE f2.entry_id = e.id)" : "NOT EXISTS (SELECT 1 FROM favorites AS f2 WHERE f2.entry_id = e.id)");
         }
 
-        // Тег — единственное условие: совпадения плотные, обход индекса времени изменения быстро набирает страницу. Есть
-        // ещё условия (ext:, размер…) — совпадения редки, и дешевле отсортировать немногих кандидатов тега.
-        if (conditions.TagSourceEstimateSql is { } estimate && conditions.Clauses.Count > 1)
+        if (conditions.SourceCount is { } members)
         {
-            conditions.SortSourceByTime = Scalar(connection, estimate, conditions.Parameters, CancellationToken.None) <= SortedSourceLimit;
+            if (conditions.Clauses.Count == 1 && plan.ExcludedTerms.Count == 0)
+            {
+                // Только тег: число известно точно. Читать ли «новые сверху» обходом индекса времени или сортировкой
+                // записей тега, решает выборка — от лимита страницы зависит, что дешевле.
+                conditions.KnownCount = members;
+            }
+            else if (conditions.Members is not null && HasIndexedFilter(plan))
+            {
+                // Тег и условие с индексом (ext:, type:, размер, дата изменения): тег проверяется по множеству без чтения
+                // строки, и планировщик SQLite обходит индекс этого условия — сотни записей вместо всех записей тега.
+                conditions.PlannerChoosesIndex = true;
+            }
+            else
+            {
+                // Остальные условия без индекса: совпадения редки, и дешевле отсортировать немногих кандидатов тега, чем
+                // обходить индекс времени изменения.
+                conditions.SortSourceByTime = members <= SortedSourceLimit;
+            }
         }
 
         return conditions;
     }
+
+    private static bool HasIndexedFilter(SearchPlan plan)
+        => plan.IncludeExtensions.Count + plan.IncludeKinds.Count + plan.IncludeSizes.Count + plan.IncludeModified.Count > 0;
 
     private static (object? From, object? To)[] Dates(IReadOnlyList<DateRange> ranges)
         => ranges.Select(static range => ((object?)SqliteTime.Encode(range.FromUtc), (object?)SqliteTime.Encode(range.ToUtc))).ToArray();
@@ -752,7 +869,8 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     /// <summary>
     /// Условие «у записи есть тег»: свой тег (<c>entry_tags</c>) или авто-тег папки выше (<c>folder_tags</c>, этап 19). Папки с
     /// авто-тегом переводятся в корень и относительный путь; проверка строки — сама папка или диапазон её потомков бинарным
-    /// поиском в памяти, как у фильтра <c>in:</c>. Папка вне добавленных корней не действует, пока корень не вернётся.
+    /// поиском в памяти, как у фильтра <c>in:</c>. Корни внутри папки с авто-тегом входят в её область целиком: их файлы
+    /// физически лежат в ней (ADR-0015). Папка вне добавленных корней не действует, пока корень не вернётся.
     /// </summary>
     /// <param name="connection">Соединение запроса: на нём регистрируется функция проверки.</param>
     /// <param name="foldedTag">Имя тега в нижнем регистре.</param>
@@ -781,8 +899,7 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
 
         if (folders.Count == 0)
         {
-            OfferSource(sourceFor, $"({ownSource}) AS c CROSS JOIN entries AS e ON e.id = c.id", $"SELECT COUNT(*) FROM ({ownSource})");
-            return own;
+            return OfferMembers(connection, sourceFor, function, own, ownSource, ownSource, [ownSource], foldedTag);
         }
 
         var roots = LoadRoots(connection);
@@ -801,6 +918,14 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
                 continue;
             }
 
+            foreach (var nested in roots)
+            {
+                if (_paths.IsNestedIn(nested.Path, folder))
+                {
+                    wholeRoots.Add(nested.Id);
+                }
+            }
+
             if (relative.Length == 0)
             {
                 wholeRoots.Add(root.Id);
@@ -814,37 +939,83 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
 
         if (exact.Count == 0 && wholeRoots.Count == 0)
         {
-            OfferSource(sourceFor, $"({ownSource}) AS c CROSS JOIN entries AS e ON e.id = c.id", $"SELECT COUNT(*) FROM ({ownSource})");
-            return own;
+            return OfferMembers(connection, sourceFor, function, own, ownSource, ownSource, [ownSource], foldedTag);
         }
 
+        // Папки внутри целых корней ими уже покрыты: части источника не должны пересекаться.
+        ranges.RemoveAll(range => wholeRoots.Contains(range.RootId));
+        exact.RemoveWhere(folder => wholeRoots.Contains(folder.RootId));
         var disjoint = Disjoint(ranges);
         var set = new ScopeSet(disjoint);
         connection.CreateFunction(
             function,
             (long rootId, string relPath) => wholeRoots.Contains(rootId) || exact.Contains((rootId, relPath)) || set.Contains(rootId, relPath),
             isDeterministic: true);
-
-        // Запрос только из фильтров берёт кандидатов не обходом всех записей, а объединением: свои теги, сами папки и
-        // диапазоны их потомков по индексу путей. Части не пересекаются (свои теги внутри папок и папки внутри диапазонов
-        // отброшены), поэтому UNION ALL — поток без устранения повторов, LIMIT останавливает его рано. С авто-тегом целого
-        // корня обход и так почти полный — источник не нужен.
-        if (sourceFor is { ScopeJoinSource: null } && wholeRoots.Count == 0)
+        var clause = $"({own} OR {function}(e.root_id, e.rel_path))";
+        if (sourceFor is not { ScopeJoinSource: null })
         {
-            var rangeTable = $"diskapp_tagr_{function}";
-            var exactTable = $"diskapp_tagx_{function}";
-            FillScopeTable(connection, rangeTable, disjoint);
-            FillScopeTable(connection, exactTable, [.. exact.Where(folder => !set.Contains(folder.RootId, folder.RelPath)).Select(static folder => (folder.RootId, folder.RelPath, folder.RelPath))]);
-            var ownOutside = $"SELECT et.entry_id AS id FROM entry_tags AS et JOIN tags AS t ON t.id = et.tag_id JOIN entries AS o ON o.id = et.entry_id WHERE t.name_folded = {parameter} AND NOT {function}(o.root_id, o.rel_path)";
-            var inRanges = $"SELECT r.id FROM temp.{rangeTable} AS s CROSS JOIN entries AS r ON r.root_id = s.root_id AND r.rel_path >= s.from_ AND r.rel_path < s.to_";
-            var folderRows = $"SELECT x.id FROM temp.{exactTable} AS s CROSS JOIN entries AS x ON x.root_id = s.root_id AND x.rel_path = s.from_";
-            OfferSource(
-                sourceFor,
-                $"({ownOutside} UNION ALL {inRanges} UNION ALL {folderRows}) AS c CROSS JOIN entries AS e ON e.id = c.id",
-                $"SELECT (SELECT COUNT(*) FROM ({ownSource})) + (SELECT COUNT(*) FROM ({inRanges})) + (SELECT COUNT(*) FROM ({folderRows}))");
+            return clause;
         }
 
-        return $"({own} OR {function}(e.root_id, e.rel_path))";
+        // Запрос только из фильтров берёт кандидатов не обходом всех записей, а объединением: свои теги вне папок, целые
+        // корни, сами папки и диапазоны их потомков по индексу путей. Части не пересекаются (свои теги внутри папок, папки
+        // внутри диапазонов и всё внутри целых корней отброшены), поэтому UNION ALL — поток без устранения повторов, LIMIT
+        // останавливает его рано, а сумма счётчиков частей — точное число записей тега.
+        var rangeTable = $"diskapp_tagr_{function}";
+        var exactTable = $"diskapp_tagx_{function}";
+        FillScopeTable(connection, rangeTable, disjoint);
+        FillScopeTable(connection, exactTable, [.. exact.Where(folder => !set.Contains(folder.RootId, folder.RelPath)).Select(static folder => (folder.RootId, folder.RelPath, folder.RelPath))]);
+        List<string> parts =
+        [
+            $"SELECT et.entry_id AS id FROM entry_tags AS et JOIN tags AS t ON t.id = et.tag_id JOIN entries AS o ON o.id = et.entry_id WHERE t.name_folded = {parameter} AND NOT {function}(o.root_id, o.rel_path)",
+            $"SELECT r.id FROM temp.{rangeTable} AS s CROSS JOIN entries AS r ON r.root_id = s.root_id AND r.rel_path >= s.from_ AND r.rel_path < s.to_",
+            $"SELECT x.id FROM temp.{exactTable} AS s CROSS JOIN entries AS x ON x.root_id = s.root_id AND x.rel_path = s.from_",
+        ];
+
+        if (wholeRoots.Count > 0)
+        {
+            var names = wholeRoots.Select((rootId, index) =>
+            {
+                var name = $"${function}_root{index}";
+                sourceFor.Parameters[name] = rootId;
+                return name;
+            });
+            parts.Add($"SELECT w.id FROM entries AS w WHERE w.root_id IN ({string.Join(", ", names)})");
+        }
+
+        // Для множества записей повторы не мешают: свои теги берутся все, без проверки строки.
+        var members = string.Join(" UNION ALL ", [ownSource, .. parts.Skip(1)]);
+        // Состав тега определяют его папки и набор корней: по ним параллельные запросы делят одно множество.
+        var key = string.Join('\u001f', [foldedTag, .. folders, .. roots.Select(static root => $"{root.Id}:{root.Path}")]);
+        return OfferMembers(connection, sourceFor, function, clause, string.Join(" UNION ALL ", parts), members, parts, key);
+    }
+
+    /// <summary>
+    /// Делает записи тега источником кандидатов запроса только из фильтров, если его не задал фильтр <c>in:</c>, и считает их
+    /// точно — по индексам, без чтения строк. Если записей тега не больше <see cref="MemberSetLimit"/>, условие тега
+    /// становится проверкой идентификатора по множеству в памяти: её можно вычислить по любому индексу записей без чтения
+    /// строки, поэтому обход индекса времени изменения или индекса условия <c>ext:</c> почти ничего не стоит.
+    /// </summary>
+    /// <returns>Условие тега для запроса.</returns>
+    private string OfferMembers(SqliteConnection connection, Conditions? conditions, string function, string clause, string source, string membersSql, IReadOnlyList<string> disjointParts, string key)
+    {
+        if (conditions is not { ScopeJoinSource: null })
+        {
+            return clause;
+        }
+
+        var count = Scalar(connection, "SELECT " + string.Join(" + ", disjointParts.Select(static part => $"(SELECT COUNT(*) FROM ({part}))")), conditions.Parameters, CancellationToken.None);
+        conditions.ScopeJoinSource = $"({source}) AS c CROSS JOIN entries AS e ON e.id = c.id";
+        conditions.SourceCount = count;
+        if (count > MemberSetLimit)
+        {
+            return clause;
+        }
+
+        var members = new TagMembers($"{function}_ids", membersSql, count, key, _memberLoads);
+        members.Register(connection);
+        conditions.Members = members;
+        return $"{members.Function}(e.id)";
     }
 
     private static List<(long Id, string Path)> LoadRoots(SqliteConnection connection)
@@ -858,22 +1029,6 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         }
 
         return roots;
-    }
-
-    /// <summary>
-    /// Источник кандидатов от тега, если его не задал фильтр <c>in:</c>. Кандидатов немного — при выдаче «новые сверху» их
-    /// сортируют, а не обходят индекс времени изменения: редкий тег вместе с <c>ext:</c> иначе заставил бы пройти почти
-    /// всю таблицу ради первой страницы.
-    /// </summary>
-    private static void OfferSource(Conditions? conditions, string source, string estimateSql)
-    {
-        if (conditions is not { ScopeJoinSource: null })
-        {
-            return;
-        }
-
-        conditions.ScopeJoinSource = source;
-        conditions.TagSourceEstimateSql = estimateSql;
     }
 
     private static List<(long RootId, string From, string To)> Disjoint(List<(long RootId, string From, string To)> ranges)
@@ -963,6 +1118,212 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
     }
 
     /// <summary>
+    /// Записи тега в памяти (этап 19.5): проверка тега по идентификатору записи, без чтения её строки. Строится перед первым
+    /// запросом, которому нужна, — чтение из источника тега и точный счёт обходятся без неё.
+    /// </summary>
+    /// <param name="function">Имя функции проверки в SQL.</param>
+    /// <param name="sql">Запрос идентификаторов записей тега; повторы допустимы.</param>
+    /// <param name="count">Сколько записей у тега.</param>
+    /// <param name="key">Ключ состава тега: одинаковый у запросов, которым подходит одно и то же множество.</param>
+    /// <param name="loads">Построения множеств, идущие сейчас.</param>
+    internal sealed class TagMembers(string function, string sql, long count, string key, MemberLoads loads) : IDisposable
+    {
+        private MemberSet? _set;
+        private SqliteConnection? _connection;
+
+        /// <summary>Имя функции проверки в SQL.</summary>
+        public string Function { get; } = function;
+
+        /// <summary>
+        /// Регистрирует функцию проверки на соединении. Напрямую через SQLitePCL, без обёртки Microsoft.Data.Sqlite: функция
+        /// вызывается для каждой записи обхода индекса, и обёртка (чтение аргументов, упаковка результата) стоила втрое
+        /// дороже самой проверки.
+        /// </summary>
+        public void Register(SqliteConnection connection)
+        {
+            SQLitePCL.raw.sqlite3_create_function(connection.Handle, Function, 1, SQLitePCL.raw.SQLITE_UTF8 | SQLitePCL.raw.SQLITE_DETERMINISTIC, null, Check);
+            _connection = connection;
+        }
+
+        /// <summary>Снимает функцию проверки с соединения.</summary>
+        public void Dispose()
+        {
+            if (_connection?.Handle is { } handle)
+            {
+                SQLitePCL.raw.sqlite3_create_function(handle, Function, 1, SQLitePCL.raw.SQLITE_UTF8 | SQLitePCL.raw.SQLITE_DETERMINISTIC, null, (SQLitePCL.delegate_function_scalar?)null);
+            }
+
+            _connection = null;
+        }
+
+        /// <summary>
+        /// Строит множество, если оно ещё не построено, или берёт построенное параллельным запросом того же тега (подсчёт и
+        /// выборка идут одновременно); отмена прерывает запрос.
+        /// </summary>
+        public void Load(SqliteConnection connection, IReadOnlyDictionary<string, object?> parameters, CancellationToken cancellationToken)
+            => _set ??= loads.GetOrLoad(key, () => MemberSet.Read(connection, sql, parameters, count, cancellationToken), cancellationToken);
+
+        private void Check(SQLitePCL.sqlite3_context context, object userData, SQLitePCL.sqlite3_value[] args)
+        {
+            if (_set is not { } set)
+            {
+                SQLitePCL.raw.sqlite3_result_error(context, "Множество записей тега не построено.");
+                return;
+            }
+
+            SQLitePCL.raw.sqlite3_result_int(context, set.Contains(SQLitePCL.raw.sqlite3_value_int64(args[0])) ? 1 : 0);
+        }
+    }
+
+    /// <summary>
+    /// Идентификаторы записей тега: битовая карта от наименьшего идентификатора или, если записи немногочисленны и далеко
+    /// разнесены, хеш-множество.
+    /// </summary>
+    internal sealed class MemberSet
+    {
+        /// <summary>Битовая карта не больше этого числа слов даже у тега с немногими далеко разнесёнными записями (128 КБ).</summary>
+        private const long MinBitmapWords = 16_384;
+
+        private readonly ulong[]? _bits;
+        private readonly long _offset;
+        private readonly HashSet<long>? _ids;
+
+        private MemberSet(ulong[]? bits, long offset, HashSet<long>? ids)
+        {
+            _bits = bits;
+            _offset = offset;
+            _ids = ids;
+        }
+
+        /// <summary>Есть ли запись в теге.</summary>
+        public bool Contains(long id)
+        {
+            if (_bits is { } bits)
+            {
+                var index = id - _offset;
+                return (ulong)index < (ulong)bits.Length * 64 && (bits[index >> 6] & (1UL << (int)(index & 63))) != 0;
+            }
+
+            return _ids!.Contains(id);
+        }
+
+        /// <summary>Читает идентификаторы запросом <paramref name="sql"/>.</summary>
+        public static MemberSet Read(SqliteConnection connection, string sql, IReadOnlyDictionary<string, object?> parameters, long count, CancellationToken cancellationToken)
+        {
+            // Идентификаторы приходят одной строкой: чтение ридером по строке вдвое дороже, чем group_concat и разбор.
+            cancellationToken.ThrowIfCancellationRequested();
+            using var command = Command(connection, $"SELECT MIN(id), MAX(id), group_concat(id) FROM ({sql})", parameters);
+            using var registration = cancellationToken.Register(() => Interrupt(connection));
+            cancellationToken.ThrowIfCancellationRequested();
+            using var reader = command.ExecuteReader();
+            if (!reader.Read() || reader.IsDBNull(0))
+            {
+                return new MemberSet([], 0, null);
+            }
+
+            var min = reader.GetInt64(0);
+            var words = ((reader.GetInt64(1) - min) / 64) + 1;
+            var text = reader.GetString(2);
+            if (words > Math.Max(count, MinBitmapWords))
+            {
+                // Немного записей, далеко разнесённых по идентификаторам: карта вышла бы больше множества.
+                var ids = new HashSet<long>((int)Math.Min(count, int.MaxValue));
+                foreach (var id in Parse(text))
+                {
+                    ids.Add(id);
+                }
+
+                return new MemberSet(null, 0, ids);
+            }
+
+            var bits = new ulong[words];
+            foreach (var id in Parse(text))
+            {
+                var index = id - min;
+                bits[index >> 6] |= 1UL << (int)(index & 63);
+            }
+
+            return new MemberSet(bits, min, null);
+        }
+
+        private static IEnumerable<long> Parse(string text)
+        {
+            long current = 0;
+            foreach (var symbol in text)
+            {
+                if (symbol == ',')
+                {
+                    yield return current;
+                    current = 0;
+                }
+                else
+                {
+                    current = (current * 10) + (symbol - '0');
+                }
+            }
+
+            yield return current;
+        }
+    }
+
+    /// <summary>
+    /// Построения множеств записей тега, идущие сейчас: второй запрос того же тега ждёт первого, а не читает базу ещё раз.
+    /// Готовое множество не хранится — следующий запрос после завершения строит его заново по текущему индексу.
+    /// </summary>
+    internal sealed class MemberLoads
+    {
+        private readonly Lock _gate = new();
+        private readonly Dictionary<string, Task<MemberSet>> _running = new(StringComparer.Ordinal);
+
+        /// <summary>Строит множество или ждёт идущее построение с тем же ключом; если оно не удалось — строит само.</summary>
+        public MemberSet GetOrLoad(string key, Func<MemberSet> load, CancellationToken cancellationToken)
+        {
+            TaskCompletionSource<MemberSet>? own = null;
+            Task<MemberSet>? running;
+            lock (_gate)
+            {
+                if (!_running.TryGetValue(key, out running))
+                {
+                    own = new TaskCompletionSource<MemberSet>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    _running[key] = own.Task;
+                }
+            }
+
+            if (own is null)
+            {
+                try
+                {
+                    return running!.WaitAsync(cancellationToken).GetAwaiter().GetResult();
+                }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    // Первый запрос отменили или прервали посередине — строим сами.
+                    return load();
+                }
+            }
+
+            try
+            {
+                var set = load();
+                own.SetResult(set);
+                return set;
+            }
+            catch
+            {
+                own.SetCanceled(CancellationToken.None);
+                throw;
+            }
+            finally
+            {
+                lock (_gate)
+                {
+                    _running.Remove(key);
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Условия и параметры запроса; текст условий содержит только имена параметров.
     /// </summary>
     internal sealed class Conditions
@@ -979,11 +1340,29 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         /// </summary>
         public string? ScopeJoinSource { get; set; }
 
+        /// <summary>
+        /// Какое из <see cref="Clauses"/> источник выполняет сам: при чтении из источника оно не проверяется повторно;
+        /// <c>null</c> — источника нет.
+        /// </summary>
+        public int? SourceClauseIndex { get; set; }
+
         /// <summary>Кандидатов источника немного: выдачу «новые сверху» сортировать, а не обходить индекс времени изменения.</summary>
         public bool SortSourceByTime { get; set; }
 
-        /// <summary>Запрос, оценивающий число кандидатов источника тега; <c>null</c> — источник не от тега.</summary>
-        public string? TagSourceEstimateSql { get; set; }
+        /// <summary>
+        /// Читать не из источника и без подсказки индекса: индекс выбирает планировщик SQLite по остальным условиям, а тег
+        /// проверяется по множеству <see cref="Members"/>.
+        /// </summary>
+        public bool PlannerChoosesIndex { get; set; }
+
+        /// <summary>Сколько записей в источнике тега, точно; <c>null</c> — источник не от тега.</summary>
+        public long? SourceCount { get; set; }
+
+        /// <summary>Сколько записей подходит под все условия, если это известно без запроса (только тег).</summary>
+        public long? KnownCount { get; set; }
+
+        /// <summary>Множество записей тега для проверки по идентификатору; <c>null</c> — тег проверяется по пути.</summary>
+        public TagMembers? Members { get; set; }
 
         /// <inheritdoc />
         public override string ToString()

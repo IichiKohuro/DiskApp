@@ -42,7 +42,7 @@ internal static class SearchBudgetCheck
         string.Empty, "re", "от", "rep", "отч", "202", "repor", "отчет", "invoi",
         "report 2025", "отчет q3", "rep ext:pdf", "report modified:year", "in:2025 report", "in:2025",
         "type:image vacation", "ext:pdf", "size:>100mb", "reprot", "budget -draft ext:xlsx",
-        "tag:тз", "tag:тз report", "tag:проект ext:pdf", "-tag:проект report",
+        "tag:тз", "tag:тз report", "tag:проект ext:pdf", "-tag:проект report", "tag:смета",
     ];
 
     public static async Task<int> RunAsync(int count, string? databasePath)
@@ -93,6 +93,8 @@ internal static class SearchBudgetCheck
                 Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"{(query.Length == 0 ? "(пустой)" : query),-28} {p50,8:F1} {p95,8:F1} {max,8:F1} {total,10:N0}{(p95 < 50 ? string.Empty : "  ← вне бюджета")}"));
             }
 
+            await ProfileTagsAsync(new SqliteSearchIndex(database), await roots.GetAllAsync(), clock);
+
             var typing = await MeasureTypingAsync(service, ["r", "re", "rep", "repo", "repor", "report"]);
             Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"Набор «report» по буквам (с кэшем уточнения): {string.Join(" / ", typing.Select(static ms => ms.ToString("F1", CultureInfo.InvariantCulture)))} мс"));
             Console.WriteLine(allOk ? "Бюджет поиска выполнен: p95 < 50 мс для всех запросов." : "Бюджет поиска НЕ выполнен для части запросов.");
@@ -135,6 +137,41 @@ internal static class SearchBudgetCheck
         return (Percentile(samples, 0.5), Percentile(samples, 0.95), samples[^1], total);
     }
 
+    /// <summary>
+    /// Разбор запросов только из <c>tag:</c> по стадиям (этап 19.5): подсчёт и выборка кандидатов по отдельности, без
+    /// параллельной работы сервиса, с теми же лимитами, что у <see cref="SearchService"/> по умолчанию.
+    /// </summary>
+    private static async Task ProfileTagsAsync(SqliteSearchIndex index, IReadOnlyList<Root> roots, SystemClock clock)
+    {
+        var options = new SearchOptions();
+        Console.WriteLine($"{"Стадии tag:",-28} {"счёт p50",8} {"выборка",8} {"кандид.",10}");
+        foreach (var text in Queries.Where(static query => query.StartsWith("tag:", StringComparison.Ordinal)))
+        {
+            var plan = SearchPlanner.Build(QueryParser.Parse(text), roots, PathNormalizer.Current, clock.UtcNow, TimeZoneInfo.Local);
+            var counts = new List<double>(Runs);
+            var finds = new List<double>(Runs);
+            var found = 0;
+            for (var run = 0; run <= Runs; run++)
+            {
+                var stopwatch = Stopwatch.StartNew();
+                await index.CountAsync(plan, options.CountCap);
+                var counted = stopwatch.Elapsed.TotalMilliseconds;
+                stopwatch.Restart();
+                var batch = await index.FindAsync(plan, new CandidateQuery(options.CandidateLimit, options.QueryTimeout));
+                found = batch.Candidates.Count;
+                if (run > 0)
+                {
+                    counts.Add(counted);
+                    finds.Add(stopwatch.Elapsed.TotalMilliseconds);
+                }
+            }
+
+            counts.Sort();
+            finds.Sort();
+            Console.WriteLine(string.Create(CultureInfo.InvariantCulture, $"{text,-28} {Percentile(counts, 0.5),8:F1} {Percentile(finds, 0.5),8:F1} {found,10:N0}"));
+        }
+    }
+
     private static async Task<List<double>> MeasureTypingAsync(SearchService service, string[] steps)
     {
         service.InvalidateCaches();
@@ -151,7 +188,8 @@ internal static class SearchBudgetCheck
 
     /// <summary>
     /// Авто-теги папок (этап 19), как у пользователя: «проект» у 40 рабочих папок, «тз» у целой области (~5 % записей) и у
-    /// пяти папок в других областях. Повторный запуск задаёт те же наборы.
+    /// пяти папок в других областях, «смета» у трёх папок (~0,6 %: записи тега сортируются, а не ищутся обходом индекса
+    /// времени, этап 19.5). Повторный запуск задаёт те же наборы.
     /// </summary>
     private static async Task SeedAutoTagsAsync(SqliteDatabase database, SqliteRootRepository roots)
     {
@@ -159,6 +197,7 @@ internal static class SearchBudgetCheck
         var folderTags = new SqliteFolderTagRepository(database, PathNormalizer.Current);
         var project = await tags.AddAsync("Проект");
         var spec = await tags.AddAsync("ТЗ");
+        var estimate = await tags.AddAsync("Смета");
         var root = (await roots.GetAllAsync())[0];
         var separator = PathNormalizer.Current.Separator;
         await folderTags.SetAsync($"{root.Path}{separator}area03", [spec.Id]);
@@ -169,6 +208,11 @@ internal static class SearchBudgetCheck
                 var path = $"{root.Path}{separator}area{area:00}{separator}{Words[(area * 25 + topic) % Words.Length]}{topic:00}";
                 await folderTags.SetAsync(path, area is >= 10 and < 15 && topic == 0 ? [project.Id, spec.Id] : [project.Id]);
             }
+        }
+
+        for (var area = 15; area < 18; area++)
+        {
+            await folderTags.SetAsync($"{root.Path}{separator}area{area:00}{separator}{Words[((area * 25) + 2) % Words.Length]}02", [estimate.Id]);
         }
     }
 
