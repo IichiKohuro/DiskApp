@@ -120,6 +120,31 @@ public sealed class SearchPlannerTests
     }
 
     [Fact]
+    public void Build_NestedRoots_OuterScopeIncludesInnerRootsAndPathGoesToDeepest()
+    {
+        // Arrange: TCI2 — корень внутри 10S-417, который сам внутри Projects (ADR-0015).
+        var order = new Root { Id = 3, Path = @"D:\Projects\10S-417", Label = "10S-417" };
+        var tci2 = new Root { Id = 4, Path = @"D:\Projects\10S-417\TCI2", Label = "TCI2" };
+        Root[] roots = [Projects, Photos, order, tci2];
+
+        // Act
+        var byRoot = Plan("root:10S-417", roots);
+        var excludedRoot = Plan("-root:Проекты", roots);
+        var byFolderName = Plan("in:10S-417", roots);
+        var byPath = Plan(@"in:D:\Projects\10S-417\TCI2\yml", roots);
+        var byOuterPath = Plan(@"in:D:\Projects\10S-417", roots);
+        var inner = Plan("root:TCI2", roots);
+
+        // Assert
+        byRoot.IncludeRoots.ShouldBe([3L, 4L], "файлы TCI2 физически внутри 10S-417");
+        excludedRoot.ExcludeRoots.ShouldBe([1L, 3L, 4L]);
+        byFolderName.IncludeFolders.ShouldBe([new FolderScope(3, string.Empty, null), new FolderScope(4, string.Empty, null), new FolderScope(null, null, "10s-417")]);
+        byPath.IncludeFolders.ShouldBe([new FolderScope(4, "yml", null)], "путь принадлежит самому глубокому корню");
+        byOuterPath.IncludeFolders.ShouldBe([new FolderScope(3, string.Empty, null), new FolderScope(4, string.Empty, null)]);
+        inner.IncludeRoots.ShouldBe([4L]);
+    }
+
+    [Fact]
     public void ConditionsSignature_SameConditionsDifferentTerms_Equal()
     {
         // Act & Assert
@@ -135,6 +160,6 @@ public sealed class SearchPlannerTests
         Plan("size:abc").Warnings.ShouldHaveSingleItem();
     }
 
-    private static SearchPlan Plan(string text)
-        => SearchPlanner.Build(QueryParser.Parse(text), [Projects, Photos], PathNormalizer.Windows, Now, TimeZoneInfo.Utc);
+    private static SearchPlan Plan(string text, IReadOnlyList<Root>? roots = null)
+        => SearchPlanner.Build(QueryParser.Parse(text), roots ?? [Projects, Photos], PathNormalizer.Windows, Now, TimeZoneInfo.Utc);
 }

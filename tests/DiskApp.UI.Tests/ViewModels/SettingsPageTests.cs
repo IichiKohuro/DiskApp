@@ -4,6 +4,8 @@ using DiskApp.Contracts.App;
 using DiskApp.UI.Services;
 using DiskApp.UI.ViewModels;
 
+using FluentAvalonia.UI.Controls;
+
 namespace DiskApp.UI.Tests.ViewModels;
 
 /// <summary>
@@ -359,6 +361,22 @@ public sealed class SettingsPageTests
         // Assert
         saved.Appearance.AccentColor.ShouldBe("#107C10");
         saved.Search.PageSize.ShouldBe(50);
+    }
+
+    [Fact]
+    public async Task AddRoot_NestedInOrOverExistingRoots_ExplainsOwnership()
+    {
+        // Arrange: макетные корни D:\Projects, C:\Users\Иван\Documents и C:\Users\Иван\Downloads.
+        var page = Create(new SampleSettingsService());
+        await page.Initialization;
+
+        // Act: папка внутри корня Projects, затем папка поверх Documents и Downloads (ADR-0015).
+        await page.AddDriveCommand.ExecuteAsync(@"D:\Projects\DiskApp");
+        await page.AddDriveCommand.ExecuteAsync(@"C:\Users\Иван");
+
+        // Assert
+        _notices.Received().Show("Корень добавлен", Arg.Is<string>(message => message.Contains("внутри корня «Projects»")), Arg.Any<FAInfoBarSeverity>());
+        _notices.Received().Show("Корень добавлен", Arg.Is<string>(message => message.Contains("отдельными корнями: Documents, Downloads")), Arg.Any<FAInfoBarSeverity>());
     }
 
     private SettingsViewModel Create(ISettingsService settings)

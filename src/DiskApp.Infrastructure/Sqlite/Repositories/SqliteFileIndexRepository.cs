@@ -220,6 +220,106 @@ public sealed class SqliteFileIndexRepository : SqliteRepository, IFileIndexRepo
     }
 
     /// <inheritdoc />
+    public Task<int> MoveSubtreeAsync(long fromRootId, string fromRelPath, long toRootId, string toRelPath, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(fromRelPath);
+        ArgumentNullException.ThrowIfNull(toRelPath);
+        if (fromRootId == toRootId)
+        {
+            throw new ArgumentException("Перенос внутри одного корня — это переименование.", nameof(toRootId));
+        }
+
+        var fromPath = _paths.NormalizeRelative(fromRelPath);
+        var toPath = _paths.NormalizeRelative(toRelPath);
+        var (from, to) = fromPath.Length == 0 ? (string.Empty, string.Empty) : DescendantRange(fromPath);
+        var sourceRange = fromPath.Length == 0 ? "1" : "rel_path >= @From AND rel_path < @To";
+        var newPath = "@ToPrefix || substr(rel_path, @FromPrefixLength + 1)";
+        var rangeParameters = new
+        {
+            FromRoot = fromRootId,
+            ToRoot = toRootId,
+            From = from,
+            To = to,
+            ToPrefix = toPath.Length == 0 ? string.Empty : toPath + _paths.Separator,
+            FromPrefixLength = fromPath.Length == 0 ? 0 : fromPath.Length + 1,
+        };
+
+        return WriteAsync(connection =>
+        {
+            using var transaction = connection.BeginTransaction();
+
+            // Запись папки-источника удаляется после переноса детей: каскад по parent_id унёс бы их вместе с ней.
+            var sourceFolderId = fromPath.Length == 0
+                ? null
+                : connection.ExecuteScalar<long?>("SELECT id FROM entries WHERE root_id = @RootId AND rel_path = @Path", new { RootId = fromRootId, Path = fromPath }, transaction);
+
+            // Папка-приёмник: существующая запись или заглушка, которую заполнит ближайшая сверка; у корня записи нет.
+            long? targetFolderId = null;
+            if (toPath.Length > 0)
+            {
+                targetFolderId = connection.ExecuteScalar<long?>("SELECT id FROM entries WHERE root_id = @RootId AND rel_path = @Path", new { RootId = toRootId, Path = toPath }, transaction);
+                if (targetFolderId is null)
+                {
+                    var name = FileNameOf(toPath);
+                    connection.Execute(
+                        """
+                        INSERT INTO entries (root_id, parent_id, name, name_folded, ext, is_dir, size, created_utc, modified_utc, attributes, rel_path, kind, scan_id)
+                        VALUES (@RootId, (SELECT id FROM entries WHERE root_id = @RootId AND rel_path = @Parent), @Name, @NameFolded, '', 1, 0, @Now, @Now, @Attributes, @Path, @Kind, 0)
+                        """,
+                        new
+                        {
+                            RootId = toRootId,
+                            Parent = ParentOf(toPath),
+                            Name = name,
+                            NameFolded = Fold(name),
+                            Now = SqliteTime.Encode(DateTimeOffset.UtcNow),
+                            Attributes = (long)FileAttributes.Directory,
+                            Path = toPath,
+                            Kind = (long)_kinds.Classify(string.Empty, isDirectory: true),
+                        },
+                        transaction);
+                    targetFolderId = connection.ExecuteScalar<long>("SELECT last_insert_rowid()", transaction: transaction);
+                }
+            }
+
+            // Записи приёмника на тех же путях (остатки прежней индексации) заменяются перенесёнными.
+            connection.Execute(
+                $"DELETE FROM entries WHERE root_id = @ToRoot AND rel_path IN (SELECT {newPath} FROM entries WHERE root_id = @FromRoot AND {sourceRange})",
+                rangeParameters,
+                transaction);
+
+            var moved = connection.Execute(
+                $"""
+                UPDATE entries SET
+                    root_id = @ToRoot,
+                    rel_path = {newPath},
+                    parent_id = CASE WHEN parent_id IS @SourceFolderId THEN @TargetFolderId ELSE parent_id END
+                WHERE root_id = @FromRoot AND {sourceRange}
+                """,
+                new
+                {
+                    rangeParameters.FromRoot,
+                    rangeParameters.ToRoot,
+                    rangeParameters.From,
+                    rangeParameters.To,
+                    rangeParameters.ToPrefix,
+                    rangeParameters.FromPrefixLength,
+                    SourceFolderId = sourceFolderId,
+                    TargetFolderId = targetFolderId,
+                },
+                transaction);
+
+            if (sourceFolderId is { } folderId)
+            {
+                connection.Execute("DELETE FROM entries WHERE id = @Id", new { Id = folderId }, transaction);
+            }
+
+            transaction.Commit();
+            return moved;
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public Task<int> SweepAsync(long rootId, long scanId, CancellationToken cancellationToken = default)
         => WriteAsync(connection => DeleteCounted(
             connection,

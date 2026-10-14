@@ -132,6 +132,9 @@
   <data name="Indexer.IndexRestored" xml:space="preserve">
     <value>Индекс восстановлен</value>
   </data>
+  <data name="Indexer.NestedRootChanged" xml:space="preserve">
+    <value>Изменился вложенный корень</value>
+  </data>
   <data name="Indexer.ReconciliationAtStartup" xml:space="preserve">
     <value>Сверка при запуске</value>
   </data>

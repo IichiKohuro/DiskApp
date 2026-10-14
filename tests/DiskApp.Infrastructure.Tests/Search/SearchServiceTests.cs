@@ -1,5 +1,6 @@
 using System.Text;
 
+using DiskApp.Core.Domain;
 using DiskApp.Core.Search;
 
 using static DiskApp.Infrastructure.Tests.Search.SearchTestContext;
@@ -181,6 +182,25 @@ public sealed class SearchServiceTests
         var unknownRoot = await Search(context, "main root:Nowhere");
         unknownRoot.Hits.ShouldBeEmpty();
         unknownRoot.Warnings.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task Search_NestedRoot_ScopeOfOuterFolderOrRootIncludesInnerRoot()
+    {
+        // Arrange: корень TCI2 лежит в папке 10S-417 корня Projects (ADR-0015); его файлы есть только у него.
+        await using var context = await CreateAsync();
+        var inner = await context.Roots.AddAsync(new Root { Path = Path.Combine(context.Projects.Path, "10S-417", "TCI2"), Label = "TCI2" }, TestContext.Current.CancellationToken);
+        await context.AddAsync(context.Projects, "10S-417/readme.txt", "Other/readme.txt");
+        await context.AddAsync(inner, "yml/dnp3_sett.yml", "readme.txt");
+
+        // Act & Assert
+        Names(await Search(context, "dnp3 in:10S-417")).ShouldBe(["dnp3_sett.yml"], "папка по имени: записи вложенного корня тоже внутри неё");
+        (await Search(context, "readme in:10S-417")).Hits.Count.ShouldBe(2);
+        (await Search(context, "readme -in:10S-417")).Hits.ShouldHaveSingleItem().FullPath.ShouldContain("Other");
+        Names(await Search(context, "dnp3 root:Projects")).ShouldBe(["dnp3_sett.yml"], "область внешнего корня включает вложенный");
+        Names(await Search(context, $"dnp3 in:{Path.Combine(context.Projects.Path, "10S-417")}")).ShouldBe(["dnp3_sett.yml"]);
+        (await Search(context, "readme -root:Projects")).Hits.ShouldBeEmpty();
+        Names(await Search(context, "readme root:TCI2")).ShouldBe(["readme.txt"]);
     }
 
     [Fact]

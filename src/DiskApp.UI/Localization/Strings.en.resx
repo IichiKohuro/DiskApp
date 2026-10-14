@@ -2343,6 +2343,12 @@
   <data name="Settings.RootAdded" xml:space="preserve">
     <value>Root added</value>
   </data>
+  <data name="Settings.RootContainsExisting" xml:space="preserve">
+    <value>Separate roots remain inside: {0}.</value>
+  </data>
+  <data name="Settings.RootInsideExisting" xml:space="preserve">
+    <value>The folder lies inside root “{0}”: its files now belong to the new root.</value>
+  </data>
   <data name="Settings.RootNotAdded" xml:space="preserve">
     <value>Root not added: </value>
   </data>

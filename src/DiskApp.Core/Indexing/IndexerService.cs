@@ -106,7 +106,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
         foreach (var root in roots.Where(static root => root.IsEnabled))
         {
-            await AttachAsync(root, initial: true).ConfigureAwait(false);
+            await AttachAsync(root, roots, initial: true).ConfigureAwait(false);
         }
 
         IndexerLog.Started(_logger, roots.Count);
@@ -114,13 +114,15 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
     /// <summary>
     /// Сверяет набор корней с репозиторием: новые и включённые подключаются, удалённые и выключенные отключаются,
-    /// корни с изменёнными параметрами переподключаются со сверкой.
+    /// корни с изменёнными параметрами переподключаются со сверкой. Внешний корень, внутри которого появился или
+    /// исчез другой корень, получает новые правила исключений и сверяет это поддерево (ADR-0015).
     /// </summary>
     public async Task RefreshRootsAsync(CancellationToken cancellationToken = default)
     {
         var roots = (await _roots.GetAllAsync(cancellationToken).ConfigureAwait(false)).ToDictionary(static root => root.Id);
         List<RootSession> toDetach;
         List<Root> toAttach;
+        List<RootSession> toKeep;
         lock (_gate)
         {
             toDetach = _sessions.Values
@@ -130,6 +132,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             toAttach = roots.Values
                 .Where(root => root.IsEnabled && (!_sessions.ContainsKey(root.Id) || detachedIds.Contains(root.Id)))
                 .ToList();
+            toKeep = _sessions.Values.Where(session => !detachedIds.Contains(session.Root.Id)).ToList();
         }
 
         foreach (var session in toDetach)
@@ -139,7 +142,35 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
         foreach (var root in toAttach)
         {
-            await AttachAsync(root, initial: false).ConfigureAwait(false);
+            await AttachAsync(root, roots.Values, initial: false).ConfigureAwait(false);
+        }
+
+        foreach (var session in toKeep)
+        {
+            RefreshNestedRoots(session, roots.Values);
+        }
+    }
+
+    /// <summary>
+    /// Пересобирает правила корня по текущему набору корней; поддеревья, перешедшие к вложенному корню или вернувшиеся
+    /// от него, ставятся на сверку: исключённое удаляется из индекса внешнего корня, вернувшееся — дописывается.
+    /// </summary>
+    private void RefreshNestedRoots(RootSession session, IEnumerable<Root> allRoots)
+    {
+        var matcher = ExclusionMatcher.Create(_options.Exclusions, session.Root, _factory.Paths, allRoots);
+        var comparer = _factory.Paths.Comparer;
+        var changed = session.Matcher.NestedRoots.Except(matcher.NestedRoots, comparer)
+            .Concat(matcher.NestedRoots.Except(session.Matcher.NestedRoots, comparer))
+            .ToArray();
+        if (changed.Length == 0)
+        {
+            return;
+        }
+
+        session.Matcher = matcher;
+        foreach (var relPath in changed)
+        {
+            Enqueue(new IndexTask(session.Root.Id, IndexTaskKind.Reconcile, relPath, L.T("Indexer.NestedRootChanged")));
         }
     }
 
@@ -281,10 +312,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
                 continue;
             }
 
-            var root = roots
-                .Where(candidate => paths.Comparer.Equals(candidate.Path, normalized) || paths.IsNestedIn(normalized, candidate.Path))
-                .MaxBy(static candidate => candidate.Path.Length);
-            if (root is not null && paths.TryGetRelativePath(root.Path, normalized, out var relPath))
+            if (RootNesting.OwnerOf(normalized, roots, paths) is { } root && paths.TryGetRelativePath(root.Path, normalized, out var relPath))
             {
                 Enqueue(new IndexTask(root.Id, IndexTaskKind.Reconcile, relPath, L.T("Indexer.FileOperation")));
             }
@@ -428,10 +456,10 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
         }
     }
 
-    private async Task AttachAsync(Root root, bool initial)
+    private async Task AttachAsync(Root root, IEnumerable<Root> allRoots, bool initial)
     {
         var drive = _drives.Describe(root.Path);
-        var session = new RootSession(root, new RootIndexState(_factory.Paths), ExclusionMatcher.Create(_options.Exclusions, root, _factory.Paths))
+        var session = new RootSession(root, new RootIndexState(_factory.Paths), ExclusionMatcher.Create(_options.Exclusions, root, _factory.Paths, allRoots))
         {
             Pause = CreateRootPause(root.Id),
             Cancellation = CancellationTokenSource.CreateLinkedTokenSource(_stop.Token),
@@ -896,7 +924,8 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
         public RootIndexState State { get; } = state;
 
-        public ExclusionMatcher Matcher { get; } = matcher;
+        /// <summary>Правила исключений; меняются, когда внутри корня появляется или исчезает другой корень.</summary>
+        public ExclusionMatcher Matcher { get; set; } = matcher;
 
         public PauseTokenSource Pause { get; init; } = new();
 

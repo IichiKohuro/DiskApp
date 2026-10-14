@@ -129,6 +129,7 @@ internal static class RootEndpoints
     private static async Task<Results<Created<RootDto>, ValidationProblem, ProblemHttpResult>> CreateAsync(
         CreateRootRequest request,
         IRootRepository repository,
+        IFileIndexRepository entries,
         IndexerService indexer,
         SearchService search,
         PathNormalizer paths,
@@ -164,6 +165,13 @@ internal static class RootEndpoints
                 MaxDepth = request.MaxDepth,
             },
             cancellationToken).ConfigureAwait(false);
+
+        // Корень внутри другого забирает у него своё поддерево с идентификаторами — статистика, избранное и теги
+        // остаются (ADR-0015); внешний корень перестаёт его индексировать после обновления набора корней.
+        if (RootNesting.OwnerOf(root.Path, existing, paths) is { } outer && paths.TryGetRelativePath(outer.Path, root.Path, out var relative) && relative.Length > 0)
+        {
+            await entries.MoveSubtreeAsync(outer.Id, relative, root.Id, string.Empty, cancellationToken).ConfigureAwait(false);
+        }
 
         // Поиск держит корни в кэше: новый корень должен попасть в ответы сразу, а не через несколько секунд.
         search.InvalidateCaches();
@@ -212,8 +220,10 @@ internal static class RootEndpoints
     private static async Task<Results<NoContent, ProblemHttpResult>> DeleteAsync(
         long id,
         IRootRepository repository,
+        IFileIndexRepository entries,
         IndexerService indexer,
         SearchService search,
+        PathNormalizer paths,
         CancellationToken cancellationToken)
     {
         var root = await repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -229,8 +239,22 @@ internal static class RootEndpoints
             await indexer.RefreshRootsAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        // Корень внутри другого возвращает ему своё поддерево с идентификаторами (ADR-0015); внешний корень
+        // после обновления набора корней сверяет вернувшуюся папку.
+        var others = (await repository.GetAllAsync(cancellationToken).ConfigureAwait(false)).Where(other => other.Id != id).ToList();
+        var outer = RootNesting.OwnerOf(root.Path, others, paths);
+        if (outer is not null && paths.TryGetRelativePath(outer.Path, root.Path, out var relative) && relative.Length > 0)
+        {
+            await entries.MoveSubtreeAsync(id, string.Empty, outer.Id, relative, cancellationToken).ConfigureAwait(false);
+        }
+
         await repository.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
         search.InvalidateCaches();
+        if (outer is not null)
+        {
+            await indexer.RefreshRootsAsync(cancellationToken).ConfigureAwait(false);
+        }
+
         return TypedResults.NoContent();
     }
 

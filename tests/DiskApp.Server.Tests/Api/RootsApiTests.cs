@@ -143,6 +143,41 @@ public sealed class RootsApiTests
     }
 
     [Fact]
+    public async Task NestedRoots_FileBelongsToDeepestRootAndKeepsIdWhenRootsChange()
+    {
+        // Arrange: TCI2 добавлен корнем, затем корнем добавляют и 10S-417, который его содержит (ADR-0015).
+        await using var context = await ServerTestContext.StartAsync();
+        context.Files.CreateFile(Path.Combine("10S-417", "TCI2", "yml", "dnp3_sett.yml"), "yml");
+        context.Files.CreateFile(Path.Combine("10S-417", "readme.txt"), "txt");
+        var inner = await context.AddRootAsync(Path.Combine("10S-417", "TCI2"));
+        var innerHit = (await context.GetAsync(ApiRoutes.V1.Search + "?q=dnp3", DiskAppJsonContext.Default.SearchResponse)).Items.ShouldHaveSingleItem();
+
+        // Act: внешний корень поверх внутреннего.
+        var outer = await context.AddRootAsync("10S-417");
+        var afterOuter = await context.GetAsync(ApiRoutes.V1.Search + "?q=dnp3", DiskAppJsonContext.Default.SearchResponse);
+        var inOuter = await context.GetAsync(ApiRoutes.V1.Search + "?q=dnp3%20in:10S-417", DiskAppJsonContext.Default.SearchResponse);
+        var readme = await context.GetAsync(ApiRoutes.V1.Search + "?q=readme", DiskAppJsonContext.Default.SearchResponse);
+
+        // Внутренний корень убрали: файл переходит внешнему с тем же идентификатором.
+        (await context.Client.DeleteAsync(new Uri(ApiRoutes.V1.Root(inner.Id), UriKind.Relative), TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await context.WaitIdleAsync();
+        var afterDelete = await context.GetAsync(ApiRoutes.V1.Search + "?q=dnp3", DiskAppJsonContext.Default.SearchResponse);
+
+        // Внутренний корень добавили снова: файл переходит ему, идентификатор прежний.
+        var innerAgain = await context.AddRootAsync(Path.Combine("10S-417", "TCI2"));
+        var afterReadd = await context.GetAsync(ApiRoutes.V1.Search + "?q=dnp3", DiskAppJsonContext.Default.SearchResponse);
+
+        // Assert
+        afterOuter.Items.ShouldHaveSingleItem().Id.ShouldBe(innerHit.Id, "файл внутреннего корня не дублируется внешним");
+        inOuter.Items.ShouldHaveSingleItem().Id.ShouldBe(innerHit.Id, "область внешнего корня включает вложенный");
+        readme.Items.ShouldHaveSingleItem();
+        afterDelete.Items.ShouldHaveSingleItem().Id.ShouldBe(innerHit.Id);
+        afterReadd.Items.ShouldHaveSingleItem().Id.ShouldBe(innerHit.Id);
+        innerAgain.Id.ShouldNotBe(inner.Id);
+        (await context.GetAsync(ApiRoutes.V1.Roots, DiskAppJsonContext.Default.IReadOnlyListRootDto)).Select(static root => root.Id).ShouldBe([outer.Id, innerAgain.Id]);
+    }
+
+    [Fact]
     public async Task PauseRescanResume_ControlsIndexing()
     {
         // Arrange

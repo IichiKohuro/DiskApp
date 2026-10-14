@@ -199,13 +199,12 @@ public static class SearchPlanner
             var target = negated ? ExcludeFolders : IncludeFolders;
             if (paths.TryNormalize(value, out var absolute))
             {
-                foreach (var root in roots)
+                // Папка принадлежит самому глубокому корню; корни внутри неё — часть её области (ADR-0015).
+                if (RootNesting.OwnerOf(absolute, roots, paths) is { } owner && paths.TryGetRelativePath(owner.Path, absolute, out var relative))
                 {
-                    if (paths.TryGetRelativePath(root.Path, absolute, out var relative))
-                    {
-                        AddDistinct(target, new FolderScope(root.Id, relative, null));
-                        return;
-                    }
+                    AddDistinct(target, new FolderScope(owner.Id, relative, null));
+                    AddNestedRoots(target, absolute, roots, paths);
+                    return;
                 }
 
                 warnings.Add(L.F("FilterBuilder.FolderIsNotInAnyRoot", value));
@@ -223,10 +222,19 @@ public static class SearchPlanner
                 if (SearchText.Fold(root.Label) == name || SearchText.Fold(paths.GetFileName(root.Path)) == name)
                 {
                     AddDistinct(target, new FolderScope(root.Id, string.Empty, null));
+                    AddNestedRoots(target, root.Path, roots, paths);
                 }
             }
 
             AddDistinct(target, new FolderScope(null, null, name));
+        }
+
+        private static void AddNestedRoots(List<FolderScope> target, string normalizedFolder, IReadOnlyList<Root> roots, PathNormalizer paths)
+        {
+            foreach (var nested in RootNesting.NestedIn(normalizedFolder, roots, paths))
+            {
+                AddDistinct(target, new FolderScope(nested.Id, string.Empty, null));
+            }
         }
 
         private void AddRoot(string value, bool negated, IReadOnlyList<Root> roots, PathNormalizer paths, List<string> warnings)
@@ -238,7 +246,6 @@ public static class SearchPlanner
                     || SearchText.Fold(paths.GetFileName(root.Path)) == folded
                     || root.Id.ToString(CultureInfo.InvariantCulture) == folded
                     || (paths.TryNormalize(value, out var normalized) && paths.Comparer.Equals(normalized, root.Path)))
-                .Select(static root => root.Id)
                 .ToList();
 
             if (matched.Count == 0)
@@ -252,9 +259,15 @@ public static class SearchPlanner
                 return;
             }
 
-            foreach (var id in matched)
+            foreach (var root in matched)
             {
-                AddDistinct(target, id);
+                AddDistinct(target, root.Id);
+
+                // Корни внутри найденного физически лежат в нём — они часть его области (ADR-0015).
+                foreach (var nested in RootNesting.NestedIn(root.Path, roots, paths))
+                {
+                    AddDistinct(target, nested.Id);
+                }
             }
         }
     }

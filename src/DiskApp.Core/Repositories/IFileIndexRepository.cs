@@ -66,6 +66,16 @@ public interface IFileIndexRepository
     Task<int> RenameSubtreeAsync(long rootId, string oldRelPath, string newRelPath, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Переносит поддерево в другой корень с сохранением идентификаторов — а с ними статистики, избранного и тегов
+    /// (вложенные корни, ADR-0015). Потомки <paramref name="fromRelPath"/> (пустая строка — весь корень) становятся
+    /// потомками <paramref name="toRelPath"/> (пустая строка — верхний уровень) в корне <paramref name="toRootId"/>.
+    /// Запись самой папки-источника удаляется (у корня своей записи нет); папка-приёмник, если её ещё нет, создаётся
+    /// заглушкой, которую заполнит ближайшая сверка. Записи приёмника на тех же путях заменяются.
+    /// Возвращает число перенесённых записей.
+    /// </summary>
+    Task<int> MoveSubtreeAsync(long fromRootId, string fromRelPath, long toRootId, string toRelPath, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Удаляет записи корня, не помеченные указанным сканированием (завершение mark-and-sweep); возвращает число удалённых.
     /// </summary>
     Task<int> SweepAsync(long rootId, long scanId, CancellationToken cancellationToken = default);

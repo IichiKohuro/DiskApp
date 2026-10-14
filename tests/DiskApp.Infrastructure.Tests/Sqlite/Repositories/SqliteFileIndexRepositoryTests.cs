@@ -204,6 +204,83 @@ public sealed class SqliteFileIndexRepositoryTests
     }
 
     [Fact]
+    public async Task MoveSubtreeAsync_FolderToNewRoot_KeepsIdsReparentsTopLevelAndReplacesStaleRows()
+    {
+        // Arrange: папка TCI2 внешнего корня становится отдельным корнем (ADR-0015); у нового корня уже есть устаревшая запись.
+        await using var context = await CreateAsync();
+        await context.UpsertAsync(1,
+            context.Entry("10S-417", isDirectory: true),
+            context.Entry("10S-417/TCI2", isDirectory: true),
+            context.Entry("10S-417/TCI2/yml", isDirectory: true),
+            context.Entry("10S-417/TCI2/yml/a.yml"),
+            context.Entry("10S-417/TCI2/readme.md"),
+            context.Entry("10S-417/other.txt"));
+        var inner = await context.Roots.AddAsync(new Root { Path = Path.Combine(context.Root.Path, "10S-417", "TCI2"), Label = "TCI2" }, TestContext.Current.CancellationToken);
+        await context.Entries.UpsertAsync([FileEntry.Create(inner.Id, null, "readme.md", false, 1, Now, Now, FileAttributes.Normal)], 1, TestContext.Current.CancellationToken);
+        var readme = await context.GetAsync("10S-417/TCI2/readme.md");
+        var yml = await context.GetAsync("10S-417/TCI2/yml/a.yml");
+        await context.Usage.RecordOpenAsync(readme.Id, Now, TestContext.Current.CancellationToken);
+
+        // Act
+        var moved = await context.Entries.MoveSubtreeAsync(context.Root.Id, P("10S-417/TCI2"), inner.Id, string.Empty, TestContext.Current.CancellationToken);
+
+        // Assert
+        moved.ShouldBe(3, "перенесены потомки, сама папка TCI2 удалена");
+        var movedReadme = (await context.Entries.GetByPathAsync(inner.Id, "readme.md", TestContext.Current.CancellationToken)).ShouldNotBeNull();
+        movedReadme.Id.ShouldBe(readme.Id, "идентификатор сохраняется, устаревшая запись приёмника заменена");
+        movedReadme.ParentId.ShouldBeNull("верхний уровень нового корня");
+        var movedFolder = (await context.Entries.GetByPathAsync(inner.Id, "yml", TestContext.Current.CancellationToken)).ShouldNotBeNull();
+        var movedYml = (await context.Entries.GetByPathAsync(inner.Id, P("yml/a.yml"), TestContext.Current.CancellationToken)).ShouldNotBeNull();
+        movedYml.Id.ShouldBe(yml.Id);
+        movedYml.ParentId.ShouldBe(movedFolder.Id);
+        (await context.Usage.GetAsync(readme.Id, TestContext.Current.CancellationToken)).ShouldNotBeNull().OpenCount.ShouldBe(1);
+        (await context.Entries.GetByPathAsync(context.Root.Id, P("10S-417/TCI2"), TestContext.Current.CancellationToken)).ShouldBeNull("папка-источник удалена");
+        (await context.Entries.GetByPathAsync(context.Root.Id, P("10S-417/TCI2/yml/a.yml"), TestContext.Current.CancellationToken)).ShouldBeNull();
+        (await context.GetAsync("10S-417/other.txt")).ShouldNotBeNull();
+        (await context.Entries.GetStatsAsync(inner.Id, TestContext.Current.CancellationToken)).FileCount.ShouldBe(2);
+        using var reader = context.Database.Connections.Open();
+        reader.Query<long>("SELECT e.root_id FROM entries_fts JOIN entries AS e ON e.id = entries_fts.rowid WHERE entries_fts MATCH '\"readme\"'").ShouldBe([inner.Id]);
+    }
+
+    [Fact]
+    public async Task MoveSubtreeAsync_WholeRootIntoFolder_CreatesPlaceholderFolderForTopLevel()
+    {
+        // Arrange: внутренний корень удаляют, его записи возвращаются внешнему под папкой 10S-417\TCI2, записи которой у внешнего нет.
+        await using var context = await CreateAsync();
+        await context.UpsertAsync(1, context.Entry("10S-417", isDirectory: true), context.Entry("10S-417/other.txt"));
+        var order = await context.GetAsync("10S-417");
+        var inner = await context.Roots.AddAsync(new Root { Path = Path.Combine(context.Root.Path, "10S-417", "TCI2"), Label = "TCI2" }, TestContext.Current.CancellationToken);
+        await context.Entries.UpsertAsync(
+            [
+                FileEntry.Create(inner.Id, null, "yml", true, 0, Now, Now, FileAttributes.Directory),
+                FileEntry.Create(inner.Id, null, P("yml/a.yml"), false, 7, Now, Now, FileAttributes.Normal),
+                FileEntry.Create(inner.Id, null, "readme.md", false, 3, Now, Now, FileAttributes.Normal),
+            ],
+            1,
+            TestContext.Current.CancellationToken);
+        var yml = (await context.Entries.GetByPathAsync(inner.Id, P("yml/a.yml"), TestContext.Current.CancellationToken))!;
+
+        // Act
+        var moved = await context.Entries.MoveSubtreeAsync(inner.Id, string.Empty, context.Root.Id, P("10S-417/TCI2"), TestContext.Current.CancellationToken);
+
+        // Assert
+        moved.ShouldBe(3);
+        var placeholder = await context.GetAsync("10S-417/TCI2");
+        placeholder.IsDirectory.ShouldBeTrue();
+        placeholder.Name.ShouldBe("TCI2");
+        placeholder.ParentId.ShouldBe(order.Id);
+        (await context.GetAsync("10S-417/TCI2/readme.md")).ParentId.ShouldBe(placeholder.Id);
+        var movedFolder = await context.GetAsync("10S-417/TCI2/yml");
+        movedFolder.ParentId.ShouldBe(placeholder.Id);
+        var movedYml = await context.GetAsync("10S-417/TCI2/yml/a.yml");
+        movedYml.Id.ShouldBe(yml.Id);
+        movedYml.ParentId.ShouldBe(movedFolder.Id);
+        movedYml.Depth.ShouldBe(4);
+        (await context.Entries.GetStatsAsync(inner.Id, TestContext.Current.CancellationToken)).FileCount.ShouldBe(0);
+        (await context.Entries.GetChildrenOfPathAsync(context.Root.Id, P("10S-417/TCI2"), TestContext.Current.CancellationToken)).Select(static entry => entry.Name).Order().ShouldBe(["readme.md", "yml"]);
+    }
+
+    [Fact]
     public async Task GetChildrenAsync_FoldersFirstThenSortedAndPaged()
     {
         // Arrange

@@ -659,19 +659,41 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         var separator = _paths.Separator;
         var ranges = new List<(long RootId, string From, string To)>();
         var wholeRoots = new List<long>();
+        List<(long Id, string Path)>? roots = null;
         foreach (var scope in scopes)
         {
             if (scope.FolderName is { } folderName)
             {
-                using var command = Command(
+                var folders = new List<(long RootId, string RelPath)>();
+                using (var command = Command(
                     connection,
                     "SELECT root_id, rel_path FROM entries WHERE name_folded = $name AND is_dir = 1",
-                    new Dictionary<string, object?> { ["$name"] = folderName });
-                using var reader = command.ExecuteReader();
-                while (reader.Read())
+                    new Dictionary<string, object?> { ["$name"] = folderName }))
+                using (var reader = command.ExecuteReader())
                 {
-                    var relPath = reader.GetString(1);
-                    ranges.Add((reader.GetInt64(0), relPath + separator, relPath + (char)(separator + 1)));
+                    while (reader.Read())
+                    {
+                        folders.Add((reader.GetInt64(0), reader.GetString(1)));
+                    }
+                }
+
+                foreach (var (rootId, relPath) in folders)
+                {
+                    ranges.Add((rootId, relPath + separator, relPath + (char)(separator + 1)));
+
+                    // Корни внутри найденной папки — часть её области: их файлы физически лежат в ней (ADR-0015).
+                    roots ??= LoadRoots(connection);
+                    if (roots.FirstOrDefault(root => root.Id == rootId).Path is { } rootPath)
+                    {
+                        var folder = _paths.Combine(rootPath, relPath);
+                        foreach (var nested in roots)
+                        {
+                            if (_paths.IsNestedIn(nested.Path, folder) && !wholeRoots.Contains(nested.Id))
+                            {
+                                wholeRoots.Add(nested.Id);
+                            }
+                        }
+                    }
                 }
             }
             else if (scope.RootId is { } rootId)
@@ -763,16 +785,7 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
             return own;
         }
 
-        var roots = new List<(long Id, string Path)>();
-        using (var command = Command(connection, "SELECT id, path FROM roots", new Dictionary<string, object?>()))
-        using (var reader = command.ExecuteReader())
-        {
-            while (reader.Read())
-            {
-                roots.Add((reader.GetInt64(0), reader.GetString(1)));
-            }
-        }
-
+        var roots = LoadRoots(connection);
         var separator = _paths.Separator;
         var exact = new HashSet<(long RootId, string RelPath)>();
         var wholeRoots = new HashSet<long>();
@@ -832,6 +845,19 @@ public sealed class SqliteSearchIndex(SqliteDatabase database, PathNormalizer? p
         }
 
         return $"({own} OR {function}(e.root_id, e.rel_path))";
+    }
+
+    private static List<(long Id, string Path)> LoadRoots(SqliteConnection connection)
+    {
+        var roots = new List<(long Id, string Path)>();
+        using var command = Command(connection, "SELECT id, path FROM roots", new Dictionary<string, object?>());
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            roots.Add((reader.GetInt64(0), reader.GetString(1)));
+        }
+
+        return roots;
     }
 
     /// <summary>

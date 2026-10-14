@@ -140,7 +140,7 @@ internal static class EntryEndpoints
             return null;
         }
 
-        var root = roots.Where(candidate => paths.IsNestedIn(normalized, candidate.Path)).MaxBy(static candidate => candidate.Path.Length);
+        var root = RootNesting.OwnerOf(normalized, roots, paths);
         if (root is null || !paths.TryGetRelativePath(root.Path, normalized, out var relPath) || relPath.Length == 0)
         {
             return null;

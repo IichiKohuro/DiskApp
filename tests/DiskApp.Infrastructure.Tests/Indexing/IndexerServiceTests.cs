@@ -253,6 +253,50 @@ public sealed class IndexerServiceTests
     }
 
     [Fact]
+    public async Task RefreshRootsAsync_NestedRootAddedAndRemoved_OuterRootHandsOverAndTakesBackSubtree()
+    {
+        // Arrange: внешний корень проиндексировал всё, затем его папка 10S-417\TCI2 становится отдельным корнем (ADR-0015).
+        await using var context = await IndexingTestContext.CreateAsync();
+        context.Files.CreateFile(Path.Combine("10S-417", "TCI2", "yml", "dnp3_sett.yml"), "yml");
+        context.Files.CreateFile(Path.Combine("10S-417", "other.txt"), "x");
+        await using var indexer = CreateIndexer(context);
+        await indexer.StartAsync(TestContext.Current.CancellationToken);
+        await indexer.WhenIdleAsync(TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        var innerPath = Path.Combine("10S-417", "TCI2");
+        var inner = await context.Roots.AddAsync(new Root { Path = context.Files.Resolve(innerPath), Label = "TCI2" }, TestContext.Current.CancellationToken);
+
+        // Act: внутренний корень появился.
+        await indexer.RefreshRootsAsync(TestContext.Current.CancellationToken);
+        await indexer.WhenIdleAsync(TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        var outerFolder = await context.Entries.GetByPathAsync(context.Root.Id, innerPath, TestContext.Current.CancellationToken);
+        var outerFile = await context.Entries.GetByPathAsync(context.Root.Id, Path.Combine(innerPath, "yml", "dnp3_sett.yml"), TestContext.Current.CancellationToken);
+        var innerFile = await context.Entries.GetByPathAsync(inner.Id, Path.Combine("yml", "dnp3_sett.yml"), TestContext.Current.CancellationToken);
+        var sibling = await context.Entries.GetByPathAsync(context.Root.Id, Path.Combine("10S-417", "other.txt"), TestContext.Current.CancellationToken);
+
+        // Новый файл во вложенном корне попадает только к нему: наблюдатель внешнего корня это поддерево пропускает.
+        context.Files.CreateFile(Path.Combine(innerPath, "new.txt"), "new");
+        await WaitUntilAsync(async () => await context.Entries.GetByPathAsync(inner.Id, "new.txt", TestContext.Current.CancellationToken) is not null);
+        await indexer.WhenIdleAsync(TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        var outerNew = await context.Entries.GetByPathAsync(context.Root.Id, Path.Combine(innerPath, "new.txt"), TestContext.Current.CancellationToken);
+
+        // Внутренний корень убрали: поддерево возвращается внешнему.
+        await context.Roots.UpdateAsync(inner with { IsEnabled = false }, TestContext.Current.CancellationToken);
+        await indexer.RefreshRootsAsync(TestContext.Current.CancellationToken);
+        await context.Roots.DeleteAsync(inner.Id, TestContext.Current.CancellationToken);
+        await indexer.RefreshRootsAsync(TestContext.Current.CancellationToken);
+        await indexer.WhenIdleAsync(TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+        // Assert
+        outerFolder.ShouldBeNull("папка внутреннего корня исключена из внешнего");
+        outerFile.ShouldBeNull();
+        innerFile.ShouldNotBeNull();
+        sibling.ShouldNotBeNull("остальное поддерево внешнего корня на месте");
+        outerNew.ShouldBeNull();
+        (await context.Entries.GetByPathAsync(context.Root.Id, Path.Combine(innerPath, "new.txt"), TestContext.Current.CancellationToken)).ShouldNotBeNull("после удаления внутреннего корня внешний досканировал папку");
+        IndexMatchesDisk(context).ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task OnSystemResumed_RootVanishedWhileAsleep_GoesOfflineWithResumeReason()
     {
         // Arrange: наблюдатель молчит, как после сна, когда диск отключили без событий

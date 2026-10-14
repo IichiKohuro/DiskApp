@@ -2343,6 +2343,12 @@
   <data name="Settings.RootAdded" xml:space="preserve">
     <value>Корень добавлен</value>
   </data>
+  <data name="Settings.RootContainsExisting" xml:space="preserve">
+    <value>Внутри остаются отдельными корнями: {0}.</value>
+  </data>
+  <data name="Settings.RootInsideExisting" xml:space="preserve">
+    <value>Папка лежит внутри корня «{0}»: её файлы теперь относятся к новому корню.</value>
+  </data>
   <data name="Settings.RootNotAdded" xml:space="preserve">
     <value>Корень не добавлен: </value>
   </data>

@@ -11,28 +11,33 @@ namespace DiskApp.Core.Indexing;
 /// <remarks>
 /// Скрытые и системные объекты исключаются, если корень их не включает (<see cref="Root.IncludeHidden"/>,
 /// <see cref="Root.IncludeSystem"/>) или в правилах есть явное <see cref="ExclusionKind.Hidden"/> / <see cref="ExclusionKind.System"/>.
-/// Порог размера относится только к файлам. Глубина считается от корня: 1 — верхний уровень.
+/// Порог размера относится только к файлам. Глубина считается от корня: 1 — верхний уровень. Поддерево корня,
+/// вложенного в этот (ADR-0015), исключено целиком: его индексирует сам вложенный корень.
 /// </remarks>
 public sealed class ExclusionMatcher
 {
     private readonly GlobPattern[] _globs;
+    private readonly string[] _nestedRoots;
     private readonly bool _excludeHidden;
     private readonly bool _excludeSystem;
     private readonly long _maxSize;
     private readonly char _separator;
+    private readonly StringComparison _comparison;
 
-    private ExclusionMatcher(GlobPattern[] globs, bool excludeHidden, bool excludeSystem, long maxSize, int maxDepth, char separator)
+    private ExclusionMatcher(GlobPattern[] globs, string[] nestedRoots, bool excludeHidden, bool excludeSystem, long maxSize, int maxDepth, PathNormalizer paths)
     {
         _globs = globs;
+        _nestedRoots = nestedRoots;
         _excludeHidden = excludeHidden;
         _excludeSystem = excludeSystem;
         _maxSize = maxSize;
         MaxDepth = maxDepth;
-        _separator = separator;
+        _separator = paths.Separator;
+        _comparison = paths.Comparison;
     }
 
     /// <summary>Ничего не исключает.</summary>
-    public static ExclusionMatcher None { get; } = new([], false, false, long.MaxValue, int.MaxValue, PathNormalizer.Current.Separator);
+    public static ExclusionMatcher None { get; } = new([], [], false, false, long.MaxValue, int.MaxValue, PathNormalizer.Current);
 
     /// <summary>Наибольшая допустимая глубина записи; <see cref="int.MaxValue"/> — без ограничения.</summary>
     public int MaxDepth { get; }
@@ -40,13 +45,17 @@ public sealed class ExclusionMatcher
     /// <summary>Шаблоны, по которым исключаются записи.</summary>
     public IReadOnlyList<GlobPattern> Globs => _globs;
 
+    /// <summary>Относительные пути корней, вложенных в этот; их поддеревья исключены.</summary>
+    public IReadOnlyList<string> NestedRoots => _nestedRoots;
+
     /// <summary>
     /// Собирает правила для корня.
     /// </summary>
     /// <param name="rules">Правила исключения из настроек.</param>
     /// <param name="root">Корень: скрытые, системные, глубина.</param>
     /// <param name="paths">Правила путей: регистр и разделитель.</param>
-    public static ExclusionMatcher Create(IEnumerable<ExclusionRule> rules, Root root, PathNormalizer paths)
+    /// <param name="allRoots">Все корни индекса: поддеревья вложенных в <paramref name="root"/> исключаются; <c>null</c> — вложенных нет.</param>
+    public static ExclusionMatcher Create(IEnumerable<ExclusionRule> rules, Root root, PathNormalizer paths, IEnumerable<Root>? allRoots = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(root);
@@ -83,7 +92,8 @@ public sealed class ExclusionMatcher
             }
         }
 
-        return new ExclusionMatcher([.. globs], excludeHidden, excludeSystem, maxSize, maxDepth, paths.Separator);
+        var nestedRoots = allRoots is null ? [] : RootNesting.NestedRelPaths(root, allRoots, paths).ToArray();
+        return new ExclusionMatcher([.. globs], nestedRoots, excludeHidden, excludeSystem, maxSize, maxDepth, paths);
     }
 
     /// <summary>
@@ -117,7 +127,7 @@ public sealed class ExclusionMatcher
             return true;
         }
 
-        return MatchesGlob(name, relPath);
+        return MatchesGlob(name, relPath) || IsInNestedRoot(relPath);
     }
 
     /// <summary>
@@ -141,7 +151,7 @@ public sealed class ExclusionMatcher
             if (end > start)
             {
                 depth++;
-                if (depth > MaxDepth || MatchesGlob(relPath[start..end], relPath[..end]))
+                if (depth > MaxDepth || MatchesGlob(relPath[start..end], relPath[..end]) || IsInNestedRoot(relPath[..end]))
                 {
                     return true;
                 }
@@ -157,6 +167,22 @@ public sealed class ExclusionMatcher
     /// Стоит ли заходить внутрь папки на глубине <paramref name="depth"/>: её дети будут на глубине на единицу больше.
     /// </summary>
     public bool CanDescend(int depth) => depth < MaxDepth;
+
+    /// <summary>Путь — вложенный корень или лежит внутри него.</summary>
+    private bool IsInNestedRoot(string relPath)
+    {
+        foreach (var nested in _nestedRoots)
+        {
+            if (relPath.Length >= nested.Length
+                && relPath.StartsWith(nested, _comparison)
+                && (relPath.Length == nested.Length || relPath[nested.Length] == _separator))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private bool MatchesGlob(string name, string relPath)
     {

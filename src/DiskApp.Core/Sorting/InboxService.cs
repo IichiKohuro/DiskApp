@@ -185,7 +185,7 @@ public sealed class InboxService(
             return (new InboxFolderStatus(path, null, InboxProblem.OutsideIndex), null, null, null);
         }
 
-        var root = allRoots.Where(candidate => paths.Comparer.Equals(candidate.Path, folder) || paths.IsNestedIn(folder, candidate.Path)).MaxBy(static candidate => candidate.Path.Length);
+        var root = RootNesting.OwnerOf(folder, allRoots, paths);
         if (root is null || !paths.TryGetRelativePath(root.Path, folder, out var relative))
         {
             return (new InboxFolderStatus(path, null, InboxProblem.OutsideIndex), null, null, null);

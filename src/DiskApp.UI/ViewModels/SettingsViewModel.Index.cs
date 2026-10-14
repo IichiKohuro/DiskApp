@@ -428,12 +428,32 @@ public sealed partial class SettingsViewModel
         {
             var root = await _roots.AddAsync(path);
             await LoadRootsAsync();
-            _notices?.Show(L.T("Settings.RootAdded"), L.F("Settings.IsBeingIndexedSearchFindsFiles", root.Label), FAInfoBarSeverity.Success);
+            _notices?.Show(L.T("Settings.RootAdded"), L.F("Settings.IsBeingIndexedSearchFindsFiles", root.Label) + NestingNote(root), FAInfoBarSeverity.Success);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             SettingsNote = L.T("Settings.RootNotAdded") + exception.Message;
         }
+    }
+
+    /// <summary>
+    /// Пояснение к корню внутри другого корня или поверх других: файл принадлежит самому глубокому корню (ADR-0015),
+    /// поэтому дублей в поиске не будет. Пустая строка — корень ни с кем не пересекается.
+    /// </summary>
+    private string NestingNote(RootInfo root)
+    {
+        var others = RootItems.Select(static item => item.Root).Where(other => other.Id != root.Id).ToList();
+        var outer = others
+            .Where(other => PathText.IsSameOrInside(root.Path, other.Path))
+            .OrderByDescending(static other => other.Path.Length)
+            .FirstOrDefault();
+        if (outer is not null)
+        {
+            return " " + L.F("Settings.RootInsideExisting", outer.Label);
+        }
+
+        var inner = others.Where(other => PathText.IsSameOrInside(other.Path, root.Path)).Select(static other => other.Label).ToList();
+        return inner.Count == 0 ? string.Empty : " " + L.F("Settings.RootContainsExisting", string.Join(", ", inner));
     }
 
     /// <summary>Пересканировать корень.</summary>

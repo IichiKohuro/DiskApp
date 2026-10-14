@@ -28,9 +28,7 @@ internal sealed class RootGuard(IRootRepository roots, PathNormalizer paths)
         return root is not null && !EscapesThroughLink(all, root, normalized) ? (true, normalized, root) : (false, normalized, null);
     }
 
-    private Root? FindRoot(IReadOnlyList<Root> all, string normalized)
-        => all.Where(candidate => paths.Comparer.Equals(candidate.Path, normalized) || paths.IsNestedIn(normalized, candidate.Path))
-            .MaxBy(static candidate => candidate.Path.Length);
+    private Root? FindRoot(IReadOnlyList<Root> all, string normalized) => RootNesting.OwnerOf(normalized, all, paths);
 
     private bool EscapesThroughLink(IReadOnlyList<Root> all, Root root, string normalized, int depth = 0)
     {

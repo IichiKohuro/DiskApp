@@ -136,6 +136,36 @@ public sealed class ExclusionMatcherTests
         ExclusionMatcher.None.IsPathExcluded(@"node_modules\x").ShouldBeFalse();
     }
 
+    [Fact]
+    public void Create_NestedRoots_ExcludesTheirSubtreesOnly()
+    {
+        // Arrange: внутри корня лежат два других корня (ADR-0015).
+        var inner = new Root { Id = 2, Path = @"D:\Projects\10S-417\TCI2", Label = "TCI2" };
+        var other = new Root { Id = 3, Path = @"D:\Projects\Archive", Label = "Archive" };
+        var outside = new Root { Id = 4, Path = @"E:\Photos", Label = "Photos" };
+        var matcher = ExclusionMatcher.Create([], DefaultRoot, PathNormalizer.Windows, [DefaultRoot, inner, other, outside]);
+
+        // Act & Assert
+        matcher.NestedRoots.ShouldBe([@"10S-417\TCI2", "Archive"]);
+        matcher.IsExcluded("TCI2", @"10S-417\TCI2", true, FileAttributes.Directory, 0, 2).ShouldBeTrue();
+        matcher.IsExcluded("tci2", @"10s-417\tci2", true, FileAttributes.Directory, 0, 2).ShouldBeTrue("без учёта регистра, как пути в Windows");
+        matcher.IsExcluded("10S-417", "10S-417", true, FileAttributes.Directory, 0, 1).ShouldBeFalse("родитель вложенного корня индексируется");
+        matcher.IsExcluded("TCI2 docs", @"10S-417\TCI2 docs", true, FileAttributes.Directory, 0, 2).ShouldBeFalse("соседняя папка с тем же началом имени");
+        matcher.IsPathExcluded(@"10S-417\TCI2\yml\a.yml").ShouldBeTrue();
+        matcher.IsPathExcluded(@"10S-417\TCI2").ShouldBeTrue();
+        matcher.IsPathExcluded(@"10S-417\readme.md").ShouldBeFalse();
+        matcher.IsPathExcluded(@"Archive\old.zip").ShouldBeTrue();
+        matcher.IsPathExcluded(@"Archive2\new.zip").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Create_WithoutOtherRoots_HasNoNestedRoots()
+    {
+        // Act & Assert
+        ExclusionMatcher.Create([], DefaultRoot, PathNormalizer.Windows).NestedRoots.ShouldBeEmpty();
+        ExclusionMatcher.Create([], DefaultRoot, PathNormalizer.Windows, [DefaultRoot]).NestedRoots.ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("*.TMP", "report.tmp", true, true)]
     [InlineData("*.TMP", "report.tmp", false, false)]
