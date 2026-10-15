@@ -1320,6 +1320,39 @@
   <data name="Month.Short.9" xml:space="preserve">
     <value>Sep</value>
   </data>
+  <data name="Notifications.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Notifications.IndexError" xml:space="preserve">
+    <value>Indexing error</value>
+  </data>
+  <data name="Notifications.IndexErrorText" xml:space="preserve">
+    <value>“{0}”: indexing failed. Details are in the log.</value>
+  </data>
+  <data name="Notifications.Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Notifications.RootBack" xml:space="preserve">
+    <value>Folder available again</value>
+  </data>
+  <data name="Notifications.RootBackText" xml:space="preserve">
+    <value>“{0}”</value>
+  </data>
+  <data name="Notifications.RootOffline" xml:space="preserve">
+    <value>Folder unavailable</value>
+  </data>
+  <data name="Notifications.RootOfflineText" xml:space="preserve">
+    <value>“{0}”: the drive is disconnected or offline. The index is kept, search still finds the files.</value>
+  </data>
+  <data name="Notifications.RootWithDetail" xml:space="preserve">
+    <value>“{0}”: {1}</value>
+  </data>
+  <data name="Notifications.SomeFolder" xml:space="preserve">
+    <value>An indexed folder</value>
+  </data>
+  <data name="Notifications.WindowTitle" xml:space="preserve">
+    <value>DiskApp notification</value>
+  </data>
   <data name="NullAutoStart.AutostartIsNotSupportedOnThis" xml:space="preserve">
     <value>Autostart is not supported on this platform yet.</value>
   </data>

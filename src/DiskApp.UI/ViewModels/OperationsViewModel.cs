@@ -23,6 +23,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
     private readonly IOperationsService _operations;
     private readonly IDialogService? _dialogs;
     private readonly IInfoBarService? _notices;
+    private readonly INotificationService? _notifications;
     private readonly IDispatcher _dispatcher;
     private readonly HashSet<Guid> _started = [];
     private readonly HashSet<Guid> _resolving = [];
@@ -38,7 +39,8 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         IDialogService? dialogs = null,
         IInfoBarService? notices = null,
         IFileHistoryService? history = null,
-        IRootsService? roots = null)
+        IRootsService? roots = null,
+        INotificationService? notifications = null)
         : base(PageKeys.Operations, "FileHistory.Page", FASymbol.Clock)
     {
         ArgumentNullException.ThrowIfNull(operations);
@@ -47,6 +49,7 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
         _operations = operations;
         _dialogs = dialogs;
         _notices = notices;
+        _notifications = notifications;
         _dispatcher = dispatcher;
         History = history is null ? null : new FileHistoryFeedViewModel(history, dispatcher, roots, notices);
         _operations.Updated += (_, info) => _dispatcher.Post(() => Upsert(info));
@@ -56,6 +59,12 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
 
     /// <inheritdoc />
     public event EventHandler<OperationInfo>? OperationFinished;
+
+    /// <summary>
+    /// Операция дольше этого — «долгая»: при скрытом главном окне о её завершении скажет карточка у трея (этап 21.1);
+    /// о короткой — только подсказка значка.
+    /// </summary>
+    public static TimeSpan LongOperation { get; } = TimeSpan.FromSeconds(10);
 
     /// <summary>Первая загрузка списка.</summary>
     public Task Initialization { get; }
@@ -232,6 +241,16 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
     {
         var info = item.Info;
         var title = OperationItemViewModel.Describe(info);
+        if (_notifications is not null)
+        {
+            if (ToNotification(item, title) is { } notification)
+            {
+                _notifications.Show(notification);
+            }
+
+            return;
+        }
+
         switch (info.State)
         {
             case FileOperationState.Completed when item.CanUndo:
@@ -243,6 +262,31 @@ public sealed partial class OperationsViewModel : PageViewModel, IOperationsCoor
             case FileOperationState.Failed:
                 _notices?.Show(L.T("Operations.TheOperationFailed"), title + (info.Message is { Length: > 0 } message ? ": " + message : string.Empty), FAInfoBarSeverity.Error);
                 break;
+        }
+    }
+
+    // Итог операции для канала уведомлений: тот же текст и «Отменить», что и в полосе главного окна.
+    private Notification? ToNotification(OperationItemViewModel item, string title)
+    {
+        var info = item.Info;
+        switch (info.State)
+        {
+            case FileOperationState.Completed:
+                var isLong = info.Completed is { } completed && completed - info.Created >= LongOperation;
+                return new Notification(NotificationKind.Operation, L.T("Common.Done"), title)
+                {
+                    Severity = FAInfoBarSeverity.Success,
+                    Importance = isLong ? NotificationImportance.Normal : NotificationImportance.Quiet,
+                    Actions = item.CanUndo ? [new NotificationAction(L.T("Operations.Undo"), () => _ = UndoAsync(item))] : [],
+                };
+            case FileOperationState.Failed:
+                return new Notification(NotificationKind.Operation, L.T("Operations.TheOperationFailed"), title + (info.Message is { Length: > 0 } message ? ": " + message : string.Empty))
+                {
+                    Severity = FAInfoBarSeverity.Error,
+                    Importance = NotificationImportance.Urgent,
+                };
+            default:
+                return null;
         }
     }
 

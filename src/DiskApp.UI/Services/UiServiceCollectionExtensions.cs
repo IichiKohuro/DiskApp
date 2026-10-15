@@ -36,6 +36,9 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IInfoBarService, InfoBarService>();
         services.AddSingleton<ITipsService, NoTips>();
+        services.AddSingleton<INotificationHost, NullNotificationHost>();
+        services.AddSingleton<INotificationService>(static provider => new NotificationService(provider.GetRequiredService<INotificationHost>(), provider.GetService<IInfoBarService>()));
+        services.AddSingleton<IndexNotifications>();
 
         // ViewModel страниц живут столько же, сколько приложение: состояние поиска и настроек переживает закрытие окон.
         services.AddSingleton<MainViewModel>();
@@ -54,7 +57,8 @@ public static class UiServiceCollectionExtensions
             inbox: provider.GetService<IInboxService>(),
             dispatcher: provider.GetService<IDispatcher>(),
             actions: provider.GetService<IFileActions>(),
-            layout: provider.GetService<ILayoutStore>()));
+            layout: provider.GetService<ILayoutStore>(),
+            notifications: provider.GetService<INotificationService>()));
         services.AddSingleton<TagsViewModel>();
         services.AddSingleton<NotesViewModel>();
         services.AddSingleton<OperationsViewModel>();

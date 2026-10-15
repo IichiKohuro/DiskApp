@@ -279,6 +279,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private readonly IRootsService _roots;
     private readonly IDialogService? _dialogs;
     private readonly IInfoBarService? _notices;
+    private readonly INotificationService? _notifications;
     private readonly IInboxService _inbox;
     private readonly IDispatcher? _dispatcher;
     private CancellationTokenSource? _inboxReload;
@@ -317,6 +318,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <param name="dispatcher">UI-поток для событий очереди; <c>null</c> — вызывать сразу.</param>
     /// <param name="actions">Действия над файлом: «Показать в папке»; <c>null</c> — пункта нет.</param>
     /// <param name="layout">Ширина панели рабочих папок между запусками; <c>null</c> — не запоминается.</param>
+    /// <param name="notifications">Канал уведомлений: сводка авторазбора при скрытом главном окне — карточкой у трея.</param>
     public SortingViewModel(
         ISortingSettings settings,
         IBrowseService browse,
@@ -330,9 +332,11 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         IInboxService? inbox = null,
         IDispatcher? dispatcher = null,
         IFileActions? actions = null,
-        ILayoutStore? layout = null)
+        ILayoutStore? layout = null,
+        INotificationService? notifications = null)
         : base(PageKeys.Inbox, "Sorting.Title", FASymbol.Download)
     {
+        _notifications = notifications;
         _clock = clock ?? (static () => DateTimeOffset.Now);
         _actions = actions;
 
@@ -1033,7 +1037,20 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         var message = destinations.Length == 1
             ? L.F("Sorting.AutoSortedTo", what, DescribeDestination(destinations[0]))
             : L.F("Sorting.AutoSortedMany", what, destinations.Length);
-        _notices?.Show(L.T("Sorting.AutoSortTitle"), message, FAInfoBarSeverity.Success, L.T("Sorting.Undo"), () => _ = UndoAllAsync([.. operations.Select(static operation => operation.Id)]));
+        void Undo() => _ = UndoAllAsync([.. operations.Select(static operation => operation.Id)]);
+        if (_notifications is not null)
+        {
+            // При скрытом главном окне сводка авторазбора — тихой карточкой у трея с «Отменить» (этап 21.1).
+            _notifications.Show(new Notification(NotificationKind.AutoSort, L.T("Sorting.AutoSortTitle"), message)
+            {
+                Severity = FAInfoBarSeverity.Success,
+                Actions = [new NotificationAction(L.T("Sorting.Undo"), Undo)],
+            });
+        }
+        else
+        {
+            _notices?.Show(L.T("Sorting.AutoSortTitle"), message, FAInfoBarSeverity.Success, L.T("Sorting.Undo"), Undo);
+        }
     }
 
     private async Task UndoAllAsync(IReadOnlyList<Guid> operations)

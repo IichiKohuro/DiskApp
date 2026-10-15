@@ -137,6 +137,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             }
         };
 
+        // Непрочитанное уведомление (этап 21.1) — первая ступень нарастания: подсказка у значка.
+        _services.GetRequiredService<INotificationService>().Changed += (_, _) => Dispatcher.UIThread.Post(UpdateTray);
+
         _instanceServer = new InstanceServer(_names.Pipe, OnSecondInstanceArguments, _log);
         _instanceServer.Start();
 
@@ -280,6 +283,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         return reserved;
     }
 
+    /// <summary>Главное окно открыто и не свёрнуто: уведомления уходят в его полосу (этап 21.1).</summary>
+    public bool IsMainWindowVisible => _mainWindow is { IsVisible: true } window && window.WindowState != WindowState.Minimized;
+
     /// <inheritdoc />
     public void ShowMainWindow()
     {
@@ -292,6 +298,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
         _mainWindow.Show();
         _mainWindow.Activate();
+        _services.GetRequiredService<INotificationService>().MarkAllRead();
 
         if (_whatsNewPending)
         {
@@ -918,6 +925,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             _trayStatus.Apply(progress);
             UpdateTray();
         });
+        _services.GetRequiredService<IndexNotifications>().Attach(hub, _services.GetRequiredService<DiskApp.UI.Services.IDispatcher>());
         _ = StartHubAsync(hub);
     }
 
@@ -979,6 +987,11 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         if (_services.GetService<SortingViewModel>() is { BadgeValue: > 0 } sorting)
         {
             tooltip += " · " + L.F("DesktopShell.FilesToSort", sorting.BadgeValue);
+        }
+
+        if (_services.GetService<INotificationService>() is { LatestUnread: { } unread })
+        {
+            tooltip += " · " + unread.Notification.Title;
         }
 
         _tray.ToolTipText = tooltip.Length <= 127 ? tooltip : tooltip[..126] + "…";

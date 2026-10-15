@@ -181,6 +181,7 @@ internal static class Program
             services.AddSingleton<SettingsTipsService>();
             services.AddSingleton<ITipsService>(static provider => provider.GetRequiredService<SettingsTipsService>());
             services.AddSingleton<DesktopShell>();
+            services.AddSingleton<INotificationHost>(static provider => new NotificationCardPresenter(() => provider.GetRequiredService<DesktopShell>().IsMainWindowVisible));
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IHotkeyChecker>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IAppMaintenance>(static provider => new DesktopMaintenance(

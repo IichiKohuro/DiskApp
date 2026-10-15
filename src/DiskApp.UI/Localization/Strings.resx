@@ -1320,6 +1320,39 @@
   <data name="Month.Short.9" xml:space="preserve">
     <value>сен</value>
   </data>
+  <data name="Notifications.Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Notifications.IndexError" xml:space="preserve">
+    <value>Ошибка индексации</value>
+  </data>
+  <data name="Notifications.IndexErrorText" xml:space="preserve">
+    <value>«{0}»: индексация не удалась. Подробности — в журнале.</value>
+  </data>
+  <data name="Notifications.Open" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="Notifications.RootBack" xml:space="preserve">
+    <value>Папка снова доступна</value>
+  </data>
+  <data name="Notifications.RootBackText" xml:space="preserve">
+    <value>«{0}»</value>
+  </data>
+  <data name="Notifications.RootOffline" xml:space="preserve">
+    <value>Папка недоступна</value>
+  </data>
+  <data name="Notifications.RootOfflineText" xml:space="preserve">
+    <value>«{0}»: диск отключён или нет сети. Индекс сохранён, поиск находит файлы.</value>
+  </data>
+  <data name="Notifications.RootWithDetail" xml:space="preserve">
+    <value>«{0}»: {1}</value>
+  </data>
+  <data name="Notifications.SomeFolder" xml:space="preserve">
+    <value>Папка индекса</value>
+  </data>
+  <data name="Notifications.WindowTitle" xml:space="preserve">
+    <value>Уведомление DiskApp</value>
+  </data>
   <data name="NullAutoStart.AutostartIsNotSupportedOnThis" xml:space="preserve">
     <value>Автозапуск на этой платформе пока не поддерживается.</value>
   </data>
