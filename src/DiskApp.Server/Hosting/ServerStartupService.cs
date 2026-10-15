@@ -70,12 +70,16 @@ internal sealed class ServerStartupService(
     {
         _resumeSubscription?.Dispose();
 
-        // Операции останавливаются первыми: они сообщают индексатору о затронутых папках.
+        // Операции останавливаются первыми: они сообщают индексатору о затронутых папках. Время шагов — в журнале: по нему
+        // ищется, что задерживает выход (FEEDBACK.md, 2026-10-14).
+        var stopwatch = Stopwatch.StartNew();
         await services.GetRequiredService<FileOperationService>().DisposeAsync().ConfigureAwait(false);
+        var operationsMs = stopwatch.ElapsedMilliseconds;
         if (_indexer is { } indexer)
         {
+            stopwatch.Restart();
             await indexer.DisposeAsync().ConfigureAwait(false);
-            ServerLog.IndexerStopped(logger);
+            ServerLog.IndexerStopped(logger, stopwatch.ElapsedMilliseconds, operationsMs);
         }
     }
 

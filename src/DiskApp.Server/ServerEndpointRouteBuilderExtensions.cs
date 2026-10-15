@@ -14,14 +14,15 @@ namespace DiskApp.Server;
 public static class ServerEndpointRouteBuilderExtensions
 {
     /// <summary>
-    /// Промежуточные слои: краткий журнал запросов, обработчик исключений и коды ошибок в формате ProblemDetails,
-    /// проверки локального режима (loopback, чужой Origin, токен сессии).
+    /// Промежуточные слои: краткий журнал запросов, отказ в новых подключениях к хабу при остановке, обработчик исключений
+    /// и коды ошибок в формате ProblemDetails, проверки локального режима (loopback, чужой Origin, токен сессии).
     /// </summary>
     public static IApplicationBuilder UseDiskAppServer(this IApplicationBuilder app)
     {
         ArgumentNullException.ThrowIfNull(app);
 
         app.UseMiddleware<RequestLoggingMiddleware>();
+        app.UseMiddleware<HubShutdownMiddleware>();
         app.UseExceptionHandler();
         app.UseStatusCodePages();
         app.UseMiddleware<LocalSecurityMiddleware>();

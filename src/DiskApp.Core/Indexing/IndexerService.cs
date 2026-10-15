@@ -21,6 +21,8 @@ namespace DiskApp.Core.Indexing;
 /// </summary>
 public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 {
+    private static readonly TimeSpan SlowStopThreshold = TimeSpan.FromSeconds(1);
+
     private readonly IRootRepository _roots;
     private readonly IFileIndexRepository _entries;
     private readonly IScanLogRepository _scanLog;
@@ -397,6 +399,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             return;
         }
 
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         await _stop.CancelAsync().ConfigureAwait(false);
         _pause.Resume();
         _progressSubscription.Dispose();
@@ -406,6 +409,7 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             await SwallowAsync(task).ConfigureAwait(false);
         }
 
+        var loopsMs = stopwatch.ElapsedMilliseconds;
         Task[] running;
         lock (_gate)
         {
@@ -417,10 +421,13 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
             await SwallowAsync(task).ConfigureAwait(false);
         }
 
+        var tasksMs = stopwatch.ElapsedMilliseconds - loopsMs;
+        var watchers = 0;
         foreach (var session in Sessions())
         {
             if (session.Processor is { } processor)
             {
+                watchers++;
                 await processor.DisposeAsync().ConfigureAwait(false);
             }
 
@@ -429,6 +436,12 @@ public sealed class IndexerService : IAsyncDisposable, IPathChangeSink
 
         _wake.Dispose();
         _stop.Dispose();
+
+        // Выход иногда ждал ровно 5 с (FEEDBACK.md, 2026-10-14): медленный шаг остановки называется в журнале.
+        if (stopwatch.Elapsed >= SlowStopThreshold)
+        {
+            IndexerLog.SlowStop(_logger, stopwatch.ElapsedMilliseconds, loopsMs, running.Length, tasksMs, watchers, stopwatch.ElapsedMilliseconds - loopsMs - tasksMs);
+        }
     }
 
     private static bool SameIndexingParameters(Root left, Root right)

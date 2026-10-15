@@ -55,4 +55,7 @@ internal static partial class IndexerLog
 
     [LoggerMessage(EventId = 2012, Level = LogLevel.Information, Message = "Сетевой корень {RootPath} не ответил за {TimeoutSeconds} с: считается недоступным")]
     public static partial void ProbeTimedOut(ILogger logger, string rootPath, double timeoutSeconds);
+
+    [LoggerMessage(EventId = 2013, Level = LogLevel.Warning, Message = "Остановка индексатора заняла {TotalMs} мс: диспетчер и планировщик {LoopsMs} мс, задачи индексации ({Running}) {TasksMs} мс, наблюдатели ({Watchers}) {WatchersMs} мс")]
+    public static partial void SlowStop(ILogger logger, long totalMs, long loopsMs, int running, long tasksMs, int watchers, long watchersMs);
 }

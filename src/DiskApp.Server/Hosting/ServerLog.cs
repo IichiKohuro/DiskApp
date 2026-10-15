@@ -13,8 +13,8 @@ internal static partial class ServerLog
     [LoggerMessage(EventId = 4002, Level = LogLevel.Information, Message = "Индексатор запущен за {ElapsedMs} мс")]
     public static partial void IndexerStarted(ILogger logger, long elapsedMs);
 
-    [LoggerMessage(EventId = 4003, Level = LogLevel.Information, Message = "Индексатор остановлен")]
-    public static partial void IndexerStopped(ILogger logger);
+    [LoggerMessage(EventId = 4003, Level = LogLevel.Information, Message = "Индексатор остановлен за {ElapsedMs} мс, файловые операции перед ним — за {OperationsMs} мс")]
+    public static partial void IndexerStopped(ILogger logger, long elapsedMs, long operationsMs);
 
     [LoggerMessage(EventId = 4004, Level = LogLevel.Warning, Message = "Настройки {Path}: {Outcome}; повреждённый файл отложен в {CorruptPath}")]
     public static partial void SettingsRecovered(ILogger logger, string path, string outcome, string? corruptPath);

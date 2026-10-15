@@ -26,6 +26,7 @@ internal static class Program
 {
     private static readonly TimeSpan SecondInstanceTimeout = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan ServerStopTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan HubStopTimeout = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan ServerSlowStartNotice = TimeSpan.FromSeconds(10);
 
     /// <summary>
@@ -251,9 +252,24 @@ internal static class Program
         {
             await serverStart.ConfigureAwait(false);
             using var timeout = new CancellationTokenSource(ServerStopTimeout);
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            Log.Information("Остановка сервера");
+
+            // Хаб закрывается первым: иначе он переподключается к останавливающемуся серверу (FEEDBACK.md, 2026-10-14).
+            try
+            {
+                await host.Services.GetRequiredService<DiskAppHubConnection>().DisposeAsync().AsTask()
+                    .WaitAsync(HubStopTimeout).ConfigureAwait(false);
+            }
+            catch (TimeoutException)
+            {
+                Log.Warning("Хаб не закрылся за {Timeout}", HubStopTimeout);
+            }
+
             try
             {
                 await host.StopAsync(timeout.Token).ConfigureAwait(false);
+                Log.Information("Сервер остановлен за {ElapsedMs} мс", stopwatch.ElapsedMilliseconds);
             }
             catch (OperationCanceledException)
             {
