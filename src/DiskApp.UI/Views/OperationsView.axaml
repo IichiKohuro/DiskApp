@@ -92,7 +92,7 @@
                     <StackPanel Spacing="8" DataContext="{Binding History}" x:DataType="vm:FileHistoryFeedViewModel">
                         <WrapPanel ItemSpacing="8" LineSpacing="8">
                             <TextBox AutomationProperties.Name="{loc:Str FileHistory.SearchByName}"
-                                     Watermark="{loc:Str FileHistory.SearchByName}"
+                                     PlaceholderText="{loc:Str FileHistory.SearchByName}"
                                      Text="{Binding SearchText}"
                                      MinWidth="260" />
                             <ComboBox AutomationProperties.Name="{loc:Str FileHistory.Filter.Folder}" ItemsSource="{Binding Folders}" SelectedItem="{Binding SelectedFolder, Mode=TwoWay}" MinWidth="160" />

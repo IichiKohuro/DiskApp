@@ -3097,34 +3097,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>A folder added as a root inside another root (TCI2 inside 10S-417) is no longer indexed twice: a file belongs to the deepest root. Duplicates leave search by themselves on the first start.</value>
+    <value>History replaces Operations: what happened to your files, when and by whom — in DiskApp, Sorting and File Explorer. Moves and renames can be put back, recycled files restored.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>A root inside a root, no duplicates</value>
+    <value>File history</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>root:10S-417 and in:10S-417 also find the files of TCI2: they physically lie inside. In the Browse tree a nested root is shown as a separate root.</value>
+    <value>Search for a file by its old name, and the Was section below the results tells where it went — renamed, moved or in the Recycle Bin — with Find and Put back.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>A root scope includes nested roots</value>
+    <value>Search by a former name</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Add a root inside another one or remove it, and the entries move between roots together with open history, favorites and tags. Settings explain which root now owns the files.</value>
+    <value>In Search and Browse, expand History below the buttons to see the file's path through moves and renames. How long to keep it — Settings → Data → File history.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Roots change, history stays</value>
+    <value>History in the file card</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Right-click a work folder chip → Edit… → Name templates: a mask (417_*), Move automatically or Suggest first, conditions. Below you see how many files match right now.</value>
+    <value>Sorting remembers where you put files: “→ 417 › Acts · 5 files with the word “act” went there”, and the folder is chosen for you. Keep here counts too.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Name templates of work folders</value>
+    <value>Work folder suggestions</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>A downloaded file matching a Move automatically template goes into its work folder by itself once the download is over; on top — Auto-sorting with Undo.</value>
+    <value>Search by folder auto-tags is 2–3 times faster with an exact match count; tag: also finds files of a root inside a folder with an auto-tag.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Auto-sorting</value>
+    <value>Faster tag:</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>
