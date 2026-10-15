@@ -199,7 +199,7 @@ public sealed class TipsAndWhatsNewTests
 
             // Assert
             whatsNew.Title.ShouldBe($"What's new in DiskApp {AppVersion.Current}");
-            whatsNew.Items[0].Title.ShouldBe("A root inside a root, no duplicates");
+            whatsNew.Items[0].Title.ShouldBe("File history");
         }
         finally
         {

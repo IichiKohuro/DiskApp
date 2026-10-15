@@ -144,6 +144,9 @@ public sealed class SampleFileHistoryService : IFileHistoryService
     /// <summary>Ошибка следующего «Вернуть».</summary>
     public string? FailRevertWith { get; set; }
 
+    /// <summary>Часы для событий «Вернуть» и «Восстановить».</summary>
+    public Func<DateTimeOffset> Clock { get; init; } = static () => DateTimeOffset.Now;
+
     /// <summary>Пример ленты для превью: перенос «Разбором», переименование и удаление в Проводнике.</summary>
     public static SampleFileHistoryService WithSamples(DateTimeOffset now)
         => new(
@@ -231,8 +234,8 @@ public sealed class SampleFileHistoryService : IFileHistoryService
         }
 
         Add(item.Kind == FileEventKind.Recycled
-            ? item with { Kind = FileEventKind.Restored, Source = FileEventSource.DiskApp, Time = DateTimeOffset.Now, CanRevert = false }
-            : item with { Path = item.OldPath!, OldPath = item.Path, Source = FileEventSource.DiskApp, Time = DateTimeOffset.Now });
+            ? item with { Kind = FileEventKind.Restored, Source = FileEventSource.DiskApp, Time = Clock(), CanRevert = false }
+            : item with { Path = item.OldPath!, OldPath = item.Path, Source = FileEventSource.DiskApp, Time = Clock() });
         return Task.CompletedTask;
     }
 }

@@ -107,7 +107,10 @@ public sealed class FileHistoryViewModelTests
         [
             Event(Now.AddMinutes(-2), FileEventKind.Moved, FileEventSource.Explorer, @"D:\417\акт.pdf", @"C:\Загрузки\акт.pdf"),
             Event(Now.AddMinutes(-1), FileEventKind.Recycled, FileEventSource.DiskApp, @"D:\план.docx"),
-        ]);
+        ])
+        {
+            Clock = static () => Now,
+        };
         var feed = Feed(history);
         await feed.ActivateAsync();
         var items = feed.Days[0].Items;
