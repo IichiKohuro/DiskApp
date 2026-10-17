@@ -136,7 +136,7 @@ public sealed class NotificationsTests
     }
 
     [Fact]
-    public void Card_TwoActionsAtMost_ActionClosesAndRuns_UrgentStaysLonger()
+    public void Card_ThreeActionsAtMost_ActionClosesAndRuns_UrgentStaysLonger()
     {
         // Arrange
         var ran = new List<string>();
@@ -144,7 +144,7 @@ public sealed class NotificationsTests
         {
             Severity = FAInfoBarSeverity.Error,
             Importance = NotificationImportance.Urgent,
-            Actions = [new("A", () => ran.Add("A")), new("B", () => ran.Add("B")), new("C", () => ran.Add("C"))],
+            Actions = [new("A", () => ran.Add("A")), new("B", () => ran.Add("B")), new("C", () => ran.Add("C")), new("D", () => ran.Add("D"))],
         });
         var closed = 0;
         card.CloseRequested += (_, _) => closed++;
@@ -154,7 +154,7 @@ public sealed class NotificationsTests
         card.CloseCommand.Execute(null);
 
         // Assert
-        card.Actions.Select(static action => action.Text).ShouldBe(["A", "B"]);
+        card.Actions.Select(static action => action.Text).ShouldBe(["A", "B", "C"]);
         ran.ShouldBe(["B"]);
         closed.ShouldBe(2);
         (card.IsError, card.AutoCloseAfter).ShouldBe((true, TimeSpan.FromSeconds(15)));

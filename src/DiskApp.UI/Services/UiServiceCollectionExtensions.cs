@@ -45,6 +45,7 @@ public static class UiServiceCollectionExtensions
             provider.GetRequiredService<INotificationService>(),
             provider.GetRequiredService<IUserActivityMonitor>(),
             provider.GetRequiredService<IReminderStore>()));
+        services.AddSingleton<SortingReminders>();
 
         // ViewModel страниц живут столько же, сколько приложение: состояние поиска и настроек переживает закрытие окон.
         services.AddSingleton<MainViewModel>();

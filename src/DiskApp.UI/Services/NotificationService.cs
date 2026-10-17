@@ -72,7 +72,7 @@ public sealed record Notification(NotificationKind Kind, string Title, string Te
     /// <summary>Цвет и значок: сведения, успех, предупреждение, ошибка.</summary>
     public FAInfoBarSeverity Severity { get; init; } = FAInfoBarSeverity.Informational;
 
-    /// <summary>Кнопки; в полосе главного окна — только первая.</summary>
+    /// <summary>Кнопки (в карточке — до трёх); в полосе главного окна — только первая.</summary>
     public IReadOnlyList<NotificationAction> Actions { get; init; } = [];
 
     /// <summary>Одно и то же событие («корень 3 недоступен»): карточкой не чаще <see cref="NotificationService.RepeatInterval"/>.</summary>

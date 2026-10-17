@@ -801,6 +801,9 @@
   <data name="DesktopShell.Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
+  <data name="DesktopShell.SortInboxes" xml:space="preserve">
+    <value>Sort inboxes</value>
+  </data>
   <data name="DesktopShell.TheChosenFolderWasDeletedOr" xml:space="preserve">
     <value>The chosen folder was deleted or is unavailable: the index updates itself.</value>
   </data>
@@ -2966,6 +2969,33 @@
   </data>
   <data name="Sorting.WorkFolders" xml:space="preserve">
     <value>Work folders</value>
+  </data>
+  <data name="SortingReminder.NewSinceMorning.Few" xml:space="preserve">
+    <value>{0} new files since the morning</value>
+  </data>
+  <data name="SortingReminder.NewSinceMorning.Many" xml:space="preserve">
+    <value>{0} new files since the morning</value>
+  </data>
+  <data name="SortingReminder.NewSinceMorning.One" xml:space="preserve">
+    <value>{0} new file since the morning</value>
+  </data>
+  <data name="SortingReminder.NewToday" xml:space="preserve">
+    <value>, {0} of them new today</value>
+  </data>
+  <data name="SortingReminder.Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="SortingReminder.Title" xml:space="preserve">
+    <value>Time to sort your inboxes</value>
+  </data>
+  <data name="SortingReminder.Waiting.Few" xml:space="preserve">
+    <value>{0} files are waiting to be sorted</value>
+  </data>
+  <data name="SortingReminder.Waiting.Many" xml:space="preserve">
+    <value>{0} files are waiting to be sorted</value>
+  </data>
+  <data name="SortingReminder.Waiting.One" xml:space="preserve">
+    <value>{0} file is waiting to be sorted</value>
   </data>
   <data name="TagPicker.Add" xml:space="preserve">
     <value>Add</value>

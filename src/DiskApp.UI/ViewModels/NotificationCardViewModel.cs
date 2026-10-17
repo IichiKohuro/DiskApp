@@ -14,14 +14,14 @@ namespace DiskApp.UI.ViewModels;
 public sealed record NotificationCardAction(string Text, IRelayCommand Command);
 
 /// <summary>
-/// Тихая карточка уведомления у области уведомлений (PLAN.md, этап 21.1, ADR-0013): заголовок, текст, до двух кнопок
+/// Тихая карточка уведомления у области уведомлений (PLAN.md, этап 21.1, ADR-0013): заголовок, текст, до трёх кнопок
 /// и «Закрыть». Окно оболочки показывает её без звука и фокуса и закрывает через <see cref="AutoCloseAfter"/>, пока
 /// над ней нет указателя.
 /// </summary>
 public sealed class NotificationCardViewModel
 {
-    /// <summary>Сколько кнопок помещается в карточку.</summary>
-    public const int MaxActions = 2;
+    /// <summary>Сколько кнопок помещается в карточку: напоминанию нужны «Разобрать», «Позже» и «Сегодня не напоминать».</summary>
+    public const int MaxActions = 3;
 
     /// <summary>Создаёт карточку.</summary>
     public NotificationCardViewModel(Notification notification)

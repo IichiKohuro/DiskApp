@@ -496,6 +496,9 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     [NotifyPropertyChangedFor(nameof(HasKept), nameof(KeptText))]
     public partial int KeptCount { get; set; }
 
+    /// <summary>Новые файлы всех накопителей — без отложенных и «оставленных здесь»: о них напоминает этап 21.3.</summary>
+    public IReadOnlyList<SortItem> WaitingItems => [.. _all.Where(static item => item.State == InboxItemState.New)];
+
     /// <summary>Есть оставленные здесь.</summary>
     public bool HasKept => KeptCount > 0;
 

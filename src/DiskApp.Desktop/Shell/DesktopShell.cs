@@ -58,6 +58,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
 
     private TrayIcon? _tray;
     private NativeMenuItem? _searchItem;
+    private NativeMenuItem? _sortItem;
     private NativeMenuItem? _pauseItem;
     private NativeMenuItem? _openItem;
     private NativeMenuItem? _dropItem;
@@ -749,6 +750,11 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _searchItem.Click += (_, _) => ShowQuickSearch();
         menu.Items.Add(_searchItem);
 
+        // Разбор накопителей — тот же путь, что у кнопки напоминания (этап 21.3).
+        _sortItem = new NativeMenuItem(L.T("DesktopShell.SortInboxes"));
+        _sortItem.Click += (_, _) => NavigateTo(PageKeys.Inbox);
+        menu.Items.Add(_sortItem);
+
         menu.Items.Add(new NativeMenuItemSeparator());
 
         _pauseItem = new NativeMenuItem(L.T("DesktopShell.PauseIndexing")) { IsEnabled = false };
@@ -790,7 +796,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
     /// <summary>Подписи меню трея и подсказка — на новом языке после его смены (этап 9.2).</summary>
     private void RelabelTray()
     {
-        if (_openItem is null || _dropItem is null || _searchItem is null || _settingsItem is null || _exitItem is null)
+        if (_openItem is null || _dropItem is null || _searchItem is null || _sortItem is null || _settingsItem is null || _exitItem is null)
         {
             return;
         }
@@ -798,6 +804,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _openItem.Header = L.T("DesktopShell.OpenDiskApp");
         _dropItem.Header = L.T("DesktopShell.DropWindow");
         _searchItem.Header = L.T("DesktopShell.QuickSearch");
+        _sortItem.Header = L.T("DesktopShell.SortInboxes");
         _settingsItem.Header = L.T("DesktopShell.Settings");
         _exitItem.Header = L.T("DesktopShell.Exit");
         UpdateTray();
@@ -940,6 +947,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         var dispatcher = _services.GetRequiredService<DiskApp.UI.Services.IDispatcher>();
         _services.GetRequiredService<IndexNotifications>().Attach(hub, dispatcher);
         _services.GetRequiredService<ReminderScheduler>().Start(dispatcher);
+        _services.GetRequiredService<SortingReminders>().Start(dispatcher);
         _ = StartHubAsync(hub);
     }
 
