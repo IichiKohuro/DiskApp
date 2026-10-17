@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel;
+using System.Globalization;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -85,6 +86,7 @@ internal static class Program
             Log.Information("Рендеринг: {Rendering}", hardwareAcceleration ? "аппаратный (GPU)" : "программный");
             BuildAvaloniaApp(hardwareAcceleration).SetupWithLifetime(lifetime);
             Log.Information("Avalonia готова через {StartupMs} мс после старта процесса", StartupTimer.Milliseconds);
+            using var popupPlacement = InstallPopupPlacement();
 
             var host = hostCreation.GetAwaiter().GetResult();
             try
@@ -135,6 +137,25 @@ internal static class Program
 #endif
             .WithInterFont()
             .LogToTrace();
+    }
+
+    // Подсказки и меню на мониторе с другим масштабом, чем у основного, иначе обрезаны (PopupMonitorPlacement).
+    private static IDisposable? InstallPopupPlacement()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return null;
+        }
+
+        try
+        {
+            return PopupMonitorPlacement.Install();
+        }
+        catch (Win32Exception exception)
+        {
+            Log.Warning(exception, "Всплывающие окна останутся с масштабом основного монитора");
+            return null;
+        }
     }
 
     private static DiskAppServerHost CreateServerHost(AppPaths paths, IClassicDesktopStyleApplicationLifetime lifetime, InstanceNames names, bool safeMode)
