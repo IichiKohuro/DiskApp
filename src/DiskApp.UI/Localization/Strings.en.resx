@@ -3373,34 +3373,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>History replaces Operations: what happened to your files, when and by whom — in DiskApp, Sorting and File Explorer. Moves and renames can be put back, recycled files restored.</value>
+    <value>The new Projects page: number, title, color and a main folder with subfolders. A project card shows its work folders and notes; New note links the note to the project right away.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>File history</value>
+    <value>Projects</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>Search for a file by its old name, and the Was section below the results tells where it went — renamed, moved or in the Recycle Bin — with Find and Put back.</value>
+    <value>A colored square with the project number shows next to notes and on the work folder chips of Sorting. Pick the project of a note in the note itself and filter notes by project.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Search by a former name</value>
+    <value>Project number icon</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>In Search and Browse, expand History below the buttons to see the file's path through moves and renames. How long to keep it — Settings → Data → File history.</value>
+    <value>Auto-sorting results, long operations and an unavailable index folder show in the main window bar or, when it is closed, as a quiet card near the tray: no sound, no focus, it goes away by itself. Full-screen apps and presentations are never interrupted.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>History in the file card</value>
+    <value>Quiet notifications</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>Sorting remembers where you put files: “→ 417 › Acts · 5 files with the word “act” went there”, and the folder is chosen for you. Keep here counts too.</value>
+    <value>When files pile up in inboxes, DiskApp reminds you at a convenient moment, not in the middle of a presentation or on the lock screen. Later, Not today; quiet hours and Do not disturb are in Settings → Notifications.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Work folder suggestions</value>
+    <value>Reminder to sort</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>Search by folder auto-tags is 2–3 times faster with an exact match count; tag: also finds files of a root inside a folder with an auto-tag.</value>
+    <value>History replaces Operations: what happened to your files, when and by whom — in DiskApp, Sorting and File Explorer, with Put back and Restore. Search by an old name tells where the file went.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>Faster tag:</value>
+    <value>File history</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>

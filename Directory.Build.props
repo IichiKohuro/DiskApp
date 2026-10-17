@@ -33,7 +33,7 @@
     <RepositoryUrl>https://github.com/IichiKohuro/DiskApp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <VersionPrefix>0.8.6</VersionPrefix>
+    <VersionPrefix>0.9.0</VersionPrefix>
     <!-- Нейтральные ресурсы строк — русские (этап 9.2), английский перевод — во вспомогательной сборке en. -->
     <NeutralLanguage>ru</NeutralLanguage>
   </PropertyGroup>
