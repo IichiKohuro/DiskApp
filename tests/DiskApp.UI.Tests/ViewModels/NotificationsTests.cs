@@ -217,10 +217,94 @@ public sealed class NotificationsTests
         _host.Cards[1].Text.ShouldEndWith(": Диск полон");
     }
 
+    [Fact]
+    public void Preferences_KindOffAndWindowsBusy_NoCards_RespectSwitchable()
+    {
+        // Arrange: напоминания о разборе выключены, лимиты «редко»
+        var activity = new BusyActivity();
+        var service = new NotificationService(_host, _infoBar, () => _now, activity);
+        service.Apply(NotificationPreferences.From(new DiskApp.Contracts.App.NotificationSettingsDto
+        {
+            SortingReminders = false,
+            Persistence = DiskApp.Contracts.App.NotificationPersistence.Rare,
+            QuietHours = true,
+            QuietFrom = "23:00",
+            QuietTo = "не время",
+        }));
+
+        // Act
+        var off = service.Show(new Notification(NotificationKind.Sorting, "Пора разобрать накопители", string.Empty));
+        activity.Busy = UserBusyState.FullScreen;
+        var fullScreen = service.Show(new Notification(NotificationKind.Index, "Ошибка индексации", string.Empty) { Importance = NotificationImportance.Urgent });
+        activity.Busy = UserBusyState.DoNotDisturb;
+        var windowsQuiet = service.Show(new Notification(NotificationKind.Operation, "Готово", "1"));
+        service.RespectWindowsDoNotDisturb = false;
+        var ignored = service.Show(new Notification(NotificationKind.Operation, "Готово", "2"));
+        activity.Busy = UserBusyState.Free;
+        var second = service.Show(new Notification(NotificationKind.Operation, "Готово", "3"));
+        var limited = service.Show(new Notification(NotificationKind.Operation, "Готово", "4"));
+        _host.MainVisible = true;
+        var inWindow = service.Show(new Notification(NotificationKind.Sorting, "Пора разобрать накопители", string.Empty));
+
+        // Assert: выключенный вид — только запись, но в открытом окне виден; «редко» — 2 карточки в час; неверная тишина — нет тишины
+        (off, fullScreen, windowsQuiet, ignored, second, limited, inWindow).ShouldBe(
+            (NotificationRoute.Off, NotificationRoute.Tray, NotificationRoute.Tray, NotificationRoute.Card, NotificationRoute.Card, NotificationRoute.Tray, NotificationRoute.InfoBar));
+        service.QuietHours.ShouldBeNull();
+        service.IsEnabled(NotificationKind.Sorting).ShouldBeFalse();
+        service.UnreadCount.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task Settings_SavedAndAppliedToChannelAndScheduler()
+    {
+        // Arrange
+        var settings = new SampleSettingsService();
+        var page = new SettingsViewModel(Substitute.For<IThemeService>(), new SampleSearchService(), new HotkeyStatus(), settings: settings) { Clock = () => _now };
+        await page.Initialization;
+        var notifications = Service();
+        var scheduler = new ReminderScheduler(notifications, new NullUserActivityMonitor(), new MemoryReminderStore(), () => _now);
+        var applier = new NotificationSettingsApplier(notifications, scheduler);
+
+        // Act
+        page.NotifyIndex = false;
+        page.SelectedPersistence = page.Persistences[2];
+        page.QuietHoursEnabled = true;
+        page.QuietFrom = new TimeSpan(21, 30, 0);
+        page.DoNotDisturbForHourCommand.Execute(null);
+        await page.PendingSave;
+        var saved = await settings.GetAsync(TestContext.Current.CancellationToken);
+        applier.Apply(saved);
+
+        // Assert
+        (saved.Notifications.Index, saved.Notifications.Persistence, saved.Notifications.QuietHours, saved.Notifications.QuietFrom, saved.Notifications.QuietTo)
+            .ShouldBe((false, DiskApp.Contracts.App.NotificationPersistence.Often, true, "21:30", "08:00"));
+        saved.Notifications.DoNotDisturbUntil.ShouldBe(_now.AddHours(1));
+        page.DoNotDisturbText.ShouldStartWith("Включено до ");
+        notifications.IsEnabled(NotificationKind.Index).ShouldBeFalse();
+        (notifications.MaxCardsPerHour, notifications.QuietHours, notifications.DoNotDisturbUntil).ShouldBe((8, (new TimeOnly(21, 30), new TimeOnly(8, 0)), _now.AddHours(1)));
+        (scheduler.MinInterval, scheduler.MaxPerDay).ShouldBe((TimeSpan.FromMinutes(30), 6));
+        page.DoNotDisturbOffCommand.Execute(null);
+        await page.PendingSave;
+        (await settings.GetAsync(TestContext.Current.CancellationToken)).Notifications.DoNotDisturbUntil.ShouldBeNull();
+    }
+
     private static HubStatusDto Status(params (long Id, string Label, RootStatus Status)[] roots)
         => new(new IndexStatusDto(IndexerState.Idle, false, [.. roots.Select(static root => new RootIndexStatusDto(root.Id, @"D:\" + root.Label, root.Label, root.Status, null, null, false, null, null))]), []);
 
     private NotificationService Service() => new(_host, _infoBar, () => _now);
+
+    private sealed class BusyActivity : IUserActivityMonitor
+    {
+        public UserBusyState Busy { get; set; }
+
+        public UserActivity Current => new(TimeSpan.Zero, Busy, false);
+
+        public event EventHandler<bool>? SessionLockChanged
+        {
+            add { }
+            remove { }
+        }
+    }
 
     private sealed class RecordingHost : INotificationHost
     {

@@ -2238,6 +2238,24 @@
   <data name="Settings.DiskappLinks" xml:space="preserve">
     <value>Ссылки diskapp://</value>
   </data>
+  <data name="Settings.DoNotDisturb" xml:space="preserve">
+    <value>Не беспокоить</value>
+  </data>
+  <data name="Settings.DoNotDisturbForHour" xml:space="preserve">
+    <value>На час</value>
+  </data>
+  <data name="Settings.DoNotDisturbOff" xml:space="preserve">
+    <value>Выключено: карточки и напоминания приходят</value>
+  </data>
+  <data name="Settings.DoNotDisturbTurnOff" xml:space="preserve">
+    <value>Выключить</value>
+  </data>
+  <data name="Settings.DoNotDisturbUntil" xml:space="preserve">
+    <value>Включено до {0}: только подсказка у значка в трее</value>
+  </data>
+  <data name="Settings.DoNotDisturbUntilTomorrow" xml:space="preserve">
+    <value>До завтра</value>
+  </data>
   <data name="Settings.Drive" xml:space="preserve">
     <value>Диск</value>
   </data>
@@ -2430,6 +2448,42 @@
   <data name="Settings.NormalInformation" xml:space="preserve">
     <value>Обычно (Information)</value>
   </data>
+  <data name="Settings.NotificationKinds" xml:space="preserve">
+    <value>О чём сообщать</value>
+  </data>
+  <data name="Settings.NotificationKindsDescription" xml:space="preserve">
+    <value>Выключенное не появляется карточкой и в подсказке значка; в открытом главном окне итог действия виден, как раньше</value>
+  </data>
+  <data name="Settings.NotificationPersistence" xml:space="preserve">
+    <value>Настойчивость</value>
+  </data>
+  <data name="Settings.NotificationPersistenceDescription" xml:space="preserve">
+    <value>Сколько карточек в час и как часто напоминать</value>
+  </data>
+  <data name="Settings.Notifications" xml:space="preserve">
+    <value>Уведомления</value>
+  </data>
+  <data name="Settings.NotificationsNormal" xml:space="preserve">
+    <value>Обычно</value>
+  </data>
+  <data name="Settings.NotificationsOften" xml:space="preserve">
+    <value>Часто</value>
+  </data>
+  <data name="Settings.NotificationsRare" xml:space="preserve">
+    <value>Редко</value>
+  </data>
+  <data name="Settings.NotifyAutoSort" xml:space="preserve">
+    <value>Авторазбор: что и куда перенесено</value>
+  </data>
+  <data name="Settings.NotifyIndex" xml:space="preserve">
+    <value>Папка индекса недоступна, ошибка индексации</value>
+  </data>
+  <data name="Settings.NotifyOperations" xml:space="preserve">
+    <value>Долгие и неудачные файловые операции</value>
+  </data>
+  <data name="Settings.NotifySortingReminders" xml:space="preserve">
+    <value>Напоминание о разборе накопителей</value>
+  </data>
   <data name="Settings.Onboarding" xml:space="preserve">
     <value>Знакомство с DiskApp</value>
   </data>
@@ -2480,6 +2534,18 @@
   </data>
   <data name="Settings.QuickSearch" xml:space="preserve">
     <value>Быстрый поиск</value>
+  </data>
+  <data name="Settings.QuietFrom" xml:space="preserve">
+    <value>Тишина с</value>
+  </data>
+  <data name="Settings.QuietHours" xml:space="preserve">
+    <value>Часы тишины</value>
+  </data>
+  <data name="Settings.QuietHoursDescription" xml:space="preserve">
+    <value>В это время — без карточек и напоминаний; конец раньше начала — через полночь</value>
+  </data>
+  <data name="Settings.QuietTo" xml:space="preserve">
+    <value>Тишина до</value>
   </data>
   <data name="Settings.Rebuild" xml:space="preserve">
     <value>Пересобрать</value>
@@ -2540,6 +2606,12 @@
   </data>
   <data name="Settings.ResetSettingsDescription" xml:space="preserve">
     <value>Все настройки — к значениям по умолчанию; прежний файл сохранится рядом</value>
+  </data>
+  <data name="Settings.RespectWindowsDoNotDisturb" xml:space="preserve">
+    <value>Учитывать «Не беспокоить» Windows</value>
+  </data>
+  <data name="Settings.RespectWindowsDoNotDisturbDescription" xml:space="preserve">
+    <value>Полноэкранные приложения и презентации DiskApp не прерывает в любом случае</value>
   </data>
   <data name="Settings.RestartToApply" xml:space="preserve">
     <value>Перезапустите DiskApp, чтобы применить: «Выход» в меню трея и новый запуск.</value>

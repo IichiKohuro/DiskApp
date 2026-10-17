@@ -54,6 +54,59 @@ public sealed record AppSettings
 
     /// <summary>История файлов: сколько хранить.</summary>
     public HistorySettings History { get; set; } = new();
+
+    /// <summary>Уведомления и напоминания: что показывать, как часто, когда молчать.</summary>
+    public NotificationSettings Notifications { get; set; } = new();
+}
+
+/// <summary>Как часто DiskApp позволяет себе карточки и напоминания.</summary>
+public enum NotificationPersistence
+{
+    /// <summary>Редко: 2 карточки в час, напоминание — раз в 2 часа, одно в день.</summary>
+    Rare,
+
+    /// <summary>Обычно: 4 карточки в час, напоминание — раз в час, три в день.</summary>
+    Normal,
+
+    /// <summary>Часто: 8 карточек в час, напоминание — раз в полчаса, шесть в день.</summary>
+    Often,
+}
+
+/// <summary>
+/// Уведомления и напоминания (PLAN.md, этап 21.5, ADR-0013, п. 5): виды вкл./выкл., настойчивость, часы тишины,
+/// «Не беспокоить» Windows и свой «не беспокоить» на время.
+/// </summary>
+public sealed record NotificationSettings
+{
+    /// <summary>Сводка авторазбора.</summary>
+    public bool AutoSort { get; set; } = true;
+
+    /// <summary>Итог долгих и неудачных файловых операций.</summary>
+    public bool Operations { get; set; } = true;
+
+    /// <summary>Папка индекса недоступна, ошибка индексации.</summary>
+    public bool Index { get; set; } = true;
+
+    /// <summary>Напоминание о разборе накопителей.</summary>
+    public bool SortingReminders { get; set; } = true;
+
+    /// <summary>Настойчивость.</summary>
+    public NotificationPersistence Persistence { get; set; } = NotificationPersistence.Normal;
+
+    /// <summary>Часы тишины включены.</summary>
+    public bool QuietHours { get; set; }
+
+    /// <summary>Начало тишины, «ЧЧ:ММ» по местному времени.</summary>
+    public string QuietFrom { get; set; } = "22:00";
+
+    /// <summary>Конец тишины, «ЧЧ:ММ»; раньше начала — через полночь.</summary>
+    public string QuietTo { get; set; } = "08:00";
+
+    /// <summary>Учитывать «Не беспокоить» и полноэкранный режим Windows.</summary>
+    public bool RespectWindowsDoNotDisturb { get; set; } = true;
+
+    /// <summary>«Не беспокоить» в DiskApp до этого времени; <c>null</c> — выключено.</summary>
+    public DateTimeOffset? DoNotDisturbUntil { get; set; }
 }
 
 /// <summary>

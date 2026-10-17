@@ -104,11 +104,11 @@ public sealed class ReminderScheduler : IDisposable
         _returnedAt = _clock();
     }
 
-    /// <summary>Удобные напоминания — не чаще.</summary>
-    public TimeSpan MinInterval { get; init; } = TimeSpan.FromMinutes(60);
+    /// <summary>Удобные напоминания — не чаще (настойчивость в настройках).</summary>
+    public TimeSpan MinInterval { get; set; } = TimeSpan.FromMinutes(60);
 
-    /// <summary>Удобных напоминаний в день — не больше.</summary>
-    public int MaxPerDay { get; init; } = 3;
+    /// <summary>Удобных напоминаний в день — не больше (настойчивость в настройках).</summary>
+    public int MaxPerDay { get; set; } = 3;
 
     /// <summary>Простой ввода дольше — пользователь отошёл.</summary>
     public TimeSpan AwayThreshold { get; init; } = TimeSpan.FromMinutes(10);
@@ -203,6 +203,14 @@ public sealed class ReminderScheduler : IDisposable
     /// <summary>«Завтра»: следующее утро в <see cref="MorningAt"/>.</summary>
     public DateTimeOffset Tomorrow(DateTimeOffset now) => At(now.LocalDateTime.Date.AddDays(1), MorningAt);
 
+    /// <summary>Применяет настойчивость из настроек.</summary>
+    public void Apply(NotificationPreferences preferences)
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+        MinInterval = preferences.ReminderInterval;
+        MaxPerDay = preferences.RemindersPerDay;
+    }
+
     /// <summary>Сеанс заблокирован или разблокирован: разблокировка — возвращение к компьютеру.</summary>
     public void OnSessionLockChanged(bool locked)
     {
@@ -224,7 +232,8 @@ public sealed class ReminderScheduler : IDisposable
         var now = _clock();
         var activity = _activity.Current;
         UpdatePresence(activity, now);
-        if (activity.IsLocked || activity.Busy != UserBusyState.Free || _notifications.IsQuiet(now))
+        var windowsQuiet = activity.Busy == UserBusyState.DoNotDisturb ? _notifications.RespectWindowsDoNotDisturb : activity.Busy != UserBusyState.Free;
+        if (activity.IsLocked || windowsQuiet || _notifications.IsQuiet(now))
         {
             return false;
         }

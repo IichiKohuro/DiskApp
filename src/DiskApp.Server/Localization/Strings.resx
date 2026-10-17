@@ -264,11 +264,17 @@
   <data name="SettingsEndpoints.ThePatternCannotBeEmpty" xml:space="preserve">
     <value>Шаблон не может быть пустым.</value>
   </data>
+  <data name="SettingsEndpoints.TimeFormat" xml:space="preserve">
+    <value>Время — в виде ЧЧ:ММ, например 22:00.</value>
+  </data>
   <data name="SettingsEndpoints.UnknownLanguage" xml:space="preserve">
     <value>Язык — system, ru или en.</value>
   </data>
   <data name="SettingsEndpoints.UnknownMonitor" xml:space="preserve">
     <value>Неизвестный монитор.</value>
+  </data>
+  <data name="SettingsEndpoints.UnknownPersistence" xml:space="preserve">
+    <value>Настойчивость — Rare, Normal или Often.</value>
   </data>
   <data name="SettingsEndpoints.UnknownSetting" xml:space="preserve">
     <value>Неизвестная настройка.</value>

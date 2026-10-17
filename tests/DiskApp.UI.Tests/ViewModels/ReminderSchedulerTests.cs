@@ -125,6 +125,25 @@ public sealed class ReminderSchedulerTests
     }
 
     [Fact]
+    public void WindowsDoNotDisturbIgnored_WhenTurnedOffInSettings_PresentationStillHolds()
+    {
+        // Arrange
+        var (scheduler, notifications) = Create();
+        notifications.RespectWindowsDoNotDisturb = false;
+        scheduler.Schedule(new ReminderRequest("a", "test", Start, ReminderTiming.Exact));
+        scheduler.Schedule(new ReminderRequest("b", "test", Start, ReminderTiming.Exact));
+
+        // Act
+        _activity.Busy = UserBusyState.Presentation;
+        var presentation = scheduler.Tick();
+        _activity.Busy = UserBusyState.DoNotDisturb;
+        var windowsQuiet = scheduler.Tick();
+
+        // Assert
+        (presentation, windowsQuiet).ShouldBe((false, true));
+    }
+
+    [Fact]
     public void MissedWhileClosed_ShownAfterStart()
     {
         // Arrange: прошлый запуск оставил просроченные заявки

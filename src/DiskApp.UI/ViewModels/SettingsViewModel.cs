@@ -97,7 +97,6 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
         StartWithWindows = _autoStart.IsEnabled;
         AutoStartNote = _autoStart.Warning;
         CloseToTray = true;
-        RemindAboutInbox = true;
 
         VersionText = L.F("Settings.VersionAlpha", AppVersion.Current);
         Categories =
@@ -110,6 +109,7 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
             new SettingsCategory("behavior", L.T("Settings.Behavior"), FASymbol.Settings),
             new SettingsCategory("integrations", L.T("Settings.Integrations"), FASymbol.Link),
             new SettingsCategory("inbox", L.T("Settings.Inbox"), FASymbol.Download),
+            new SettingsCategory("notifications", L.T("Settings.Notifications"), FASymbol.Clock),
             new SettingsCategory("data", L.T("Settings.Data"), FASymbol.Library),
             new SettingsCategory(LogsCategory, L.T("Settings.Logs"), FASymbol.List),
             new SettingsCategory("about", L.T("Settings.About"), FASymbol.Help),
@@ -181,10 +181,6 @@ public sealed partial class SettingsViewModel : PageViewModel, IPageLifecycle
     /// <summary>Закрывать главное окно в трей.</summary>
     [ObservableProperty]
     public partial bool CloseToTray { get; set; }
-
-    /// <summary>Напоминать о разборе входящих.</summary>
-    [ObservableProperty]
-    public partial bool RemindAboutInbox { get; set; }
 
     /// <summary>Действующие глобальные сочетания: быстрый поиск, главное окно, окно Drag&amp;Drop (ADR-0006, ADR-0011).</summary>
     public HotkeyStatus Hotkeys { get; }

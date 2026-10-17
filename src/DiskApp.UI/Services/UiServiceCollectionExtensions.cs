@@ -37,7 +37,10 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<IInfoBarService, InfoBarService>();
         services.AddSingleton<ITipsService, NoTips>();
         services.AddSingleton<INotificationHost, NullNotificationHost>();
-        services.AddSingleton<INotificationService>(static provider => new NotificationService(provider.GetRequiredService<INotificationHost>(), provider.GetService<IInfoBarService>()));
+        services.AddSingleton<INotificationService>(static provider => new NotificationService(
+            provider.GetRequiredService<INotificationHost>(),
+            provider.GetService<IInfoBarService>(),
+            activity: provider.GetRequiredService<IUserActivityMonitor>()));
         services.AddSingleton<IndexNotifications>();
         services.AddSingleton<IUserActivityMonitor, NullUserActivityMonitor>();
         services.AddSingleton<IReminderStore, MemoryReminderStore>();
@@ -45,7 +48,12 @@ public static class UiServiceCollectionExtensions
             provider.GetRequiredService<INotificationService>(),
             provider.GetRequiredService<IUserActivityMonitor>(),
             provider.GetRequiredService<IReminderStore>()));
-        services.AddSingleton<SortingReminders>();
+        services.AddSingleton(static provider => new SortingReminders(
+            provider.GetRequiredService<ReminderScheduler>(),
+            provider.GetRequiredService<SortingViewModel>(),
+            provider.GetService<IAppCommands>(),
+            notifications: provider.GetRequiredService<INotificationService>()));
+        services.AddSingleton<NotificationSettingsApplier>();
 
         // ViewModel страниц живут столько же, сколько приложение: состояние поиска и настроек переживает закрытие окон.
         services.AddSingleton<MainViewModel>();

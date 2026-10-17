@@ -2238,6 +2238,24 @@
   <data name="Settings.DiskappLinks" xml:space="preserve">
     <value>diskapp:// links</value>
   </data>
+  <data name="Settings.DoNotDisturb" xml:space="preserve">
+    <value>Do not disturb</value>
+  </data>
+  <data name="Settings.DoNotDisturbForHour" xml:space="preserve">
+    <value>For an hour</value>
+  </data>
+  <data name="Settings.DoNotDisturbOff" xml:space="preserve">
+    <value>Off: cards and reminders come</value>
+  </data>
+  <data name="Settings.DoNotDisturbTurnOff" xml:space="preserve">
+    <value>Turn off</value>
+  </data>
+  <data name="Settings.DoNotDisturbUntil" xml:space="preserve">
+    <value>On until {0}: only the tray icon tooltip</value>
+  </data>
+  <data name="Settings.DoNotDisturbUntilTomorrow" xml:space="preserve">
+    <value>Until tomorrow</value>
+  </data>
   <data name="Settings.Drive" xml:space="preserve">
     <value>Drive</value>
   </data>
@@ -2430,6 +2448,42 @@
   <data name="Settings.NormalInformation" xml:space="preserve">
     <value>Normal (Information)</value>
   </data>
+  <data name="Settings.NotificationKinds" xml:space="preserve">
+    <value>What to tell about</value>
+  </data>
+  <data name="Settings.NotificationKindsDescription" xml:space="preserve">
+    <value>Turned off items do not show as cards or in the tray tooltip; with the main window open the result of an action still shows</value>
+  </data>
+  <data name="Settings.NotificationPersistence" xml:space="preserve">
+    <value>Persistence</value>
+  </data>
+  <data name="Settings.NotificationPersistenceDescription" xml:space="preserve">
+    <value>How many cards an hour and how often to remind</value>
+  </data>
+  <data name="Settings.Notifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Settings.NotificationsNormal" xml:space="preserve">
+    <value>Normally</value>
+  </data>
+  <data name="Settings.NotificationsOften" xml:space="preserve">
+    <value>Often</value>
+  </data>
+  <data name="Settings.NotificationsRare" xml:space="preserve">
+    <value>Rarely</value>
+  </data>
+  <data name="Settings.NotifyAutoSort" xml:space="preserve">
+    <value>Auto-sorting: what went where</value>
+  </data>
+  <data name="Settings.NotifyIndex" xml:space="preserve">
+    <value>Indexed folder unavailable, indexing error</value>
+  </data>
+  <data name="Settings.NotifyOperations" xml:space="preserve">
+    <value>Long and failed file operations</value>
+  </data>
+  <data name="Settings.NotifySortingReminders" xml:space="preserve">
+    <value>Reminder to sort inboxes</value>
+  </data>
   <data name="Settings.Onboarding" xml:space="preserve">
     <value>Getting started</value>
   </data>
@@ -2480,6 +2534,18 @@
   </data>
   <data name="Settings.QuickSearch" xml:space="preserve">
     <value>Quick search</value>
+  </data>
+  <data name="Settings.QuietFrom" xml:space="preserve">
+    <value>Quiet from</value>
+  </data>
+  <data name="Settings.QuietHours" xml:space="preserve">
+    <value>Quiet hours</value>
+  </data>
+  <data name="Settings.QuietHoursDescription" xml:space="preserve">
+    <value>No cards or reminders during this time; an end before the start goes past midnight</value>
+  </data>
+  <data name="Settings.QuietTo" xml:space="preserve">
+    <value>Quiet until</value>
   </data>
   <data name="Settings.Rebuild" xml:space="preserve">
     <value>Rebuild</value>
@@ -2540,6 +2606,12 @@
   </data>
   <data name="Settings.ResetSettingsDescription" xml:space="preserve">
     <value>All settings back to their defaults; the previous file is kept next to it</value>
+  </data>
+  <data name="Settings.RespectWindowsDoNotDisturb" xml:space="preserve">
+    <value>Respect Windows Do not disturb</value>
+  </data>
+  <data name="Settings.RespectWindowsDoNotDisturbDescription" xml:space="preserve">
+    <value>DiskApp never interrupts full-screen apps and presentations</value>
   </data>
   <data name="Settings.RestartToApply" xml:space="preserve">
     <value>Restart DiskApp to apply: Exit in the tray menu, then start it again.</value>

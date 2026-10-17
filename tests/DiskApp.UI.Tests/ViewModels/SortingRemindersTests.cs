@@ -108,6 +108,19 @@ public sealed class SortingRemindersTests
         scheduler.Pending.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task TurnedOffInSettings_NoRequest()
+    {
+        // Arrange
+        var (_, scheduler, page) = await CreateAsync(turnedOff: true);
+
+        // Act
+        await ReloadAsync(page, [At("акт.pdf", Morning.AddMinutes(5)), Item("старый.pdf", 24 * 5)]);
+
+        // Assert
+        scheduler.Pending.ShouldBeEmpty();
+    }
+
     private static InboxEntry Item(string name, int hoursAgo, InboxItemState state = InboxItemState.New) => At(name, Morning.AddHours(-hoursAgo), state);
 
     private static InboxEntry At(string name, DateTimeOffset modified, InboxItemState state = InboxItemState.New)
@@ -119,7 +132,9 @@ public sealed class SortingRemindersTests
         await page.RefreshAsync();
     }
 
-    private async Task<(SortingReminders Reminders, ReminderScheduler Scheduler, SortingViewModel Page)> CreateAsync(params InboxEntry[] items)
+    private async Task<(SortingReminders Reminders, ReminderScheduler Scheduler, SortingViewModel Page)> CreateAsync(params InboxEntry[] items) => await CreateAsync(false, items);
+
+    private async Task<(SortingReminders Reminders, ReminderScheduler Scheduler, SortingViewModel Page)> CreateAsync(bool turnedOff, params InboxEntry[] items)
     {
         _inbox.GetAsync(Arg.Any<CancellationToken>()).Returns(new InboxSnapshotInfo([new InboxFolderState(Downloads, null)], items, null));
         var page = new SortingViewModel(
@@ -136,12 +151,17 @@ public sealed class SortingRemindersTests
         var host = Substitute.For<INotificationHost>();
         host.When(static h => h.ShowCard(Arg.Any<NotificationCardViewModel>())).Do(call => _cards.Add(call.Arg<NotificationCardViewModel>()));
         var notifications = new NotificationService(host, clock: () => _now);
+        if (turnedOff)
+        {
+            notifications.Apply(NotificationPreferences.From(new DiskApp.Contracts.App.NotificationSettingsDto { SortingReminders = false }));
+        }
+
         var scheduler = new ReminderScheduler(notifications, new NullUserActivityMonitor(), new MemoryReminderStore(), () => _now)
         {
             // Пользователь не отходит от компьютера: удобный момент — через 2 часа после срока; для теста — сразу.
             MaxWaitForGoodMoment = TimeSpan.Zero,
         };
-        var reminders = new SortingReminders(scheduler, page, _commands, () => _now);
+        var reminders = new SortingReminders(scheduler, page, _commands, () => _now, notifications);
         await page.RefreshAsync();
         return (reminders, scheduler, page);
     }

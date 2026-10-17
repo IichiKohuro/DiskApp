@@ -264,11 +264,17 @@
   <data name="SettingsEndpoints.ThePatternCannotBeEmpty" xml:space="preserve">
     <value>The pattern cannot be empty.</value>
   </data>
+  <data name="SettingsEndpoints.TimeFormat" xml:space="preserve">
+    <value>Use HH:mm, for example 22:00.</value>
+  </data>
   <data name="SettingsEndpoints.UnknownLanguage" xml:space="preserve">
     <value>The language is system, ru or en.</value>
   </data>
   <data name="SettingsEndpoints.UnknownMonitor" xml:space="preserve">
     <value>Unknown monitor.</value>
+  </data>
+  <data name="SettingsEndpoints.UnknownPersistence" xml:space="preserve">
+    <value>Persistence must be Rare, Normal or Often.</value>
   </data>
   <data name="SettingsEndpoints.UnknownSetting" xml:space="preserve">
     <value>Unknown setting.</value>

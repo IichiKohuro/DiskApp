@@ -234,7 +234,6 @@ internal static partial class SettingsEndpoints
             errors["sorting.nameTemplate"] = [L.F("SettingsEndpoints.TemplateLongerThan", 200)];
         }
 
-        // Очередь накопителей (этап 17.1): «время успокоения» и шаблоны игнора.
         if (settings.History.RetentionDays is < 1 or > HistorySettings.MaxRetentionDays)
         {
             errors["history.retentionDays"] = [L.F("SettingsEndpoints.HistoryRetentionRange", HistorySettings.MaxRetentionDays)];
@@ -244,6 +243,22 @@ internal static partial class SettingsEndpoints
         {
             errors["history.maxSizeMegabytes"] = [L.F("SettingsEndpoints.HistorySizeRange", HistorySettings.MaxSizeLimitMegabytes)];
         }
+
+        // Уведомления (этап 21.5): часы тишины — «ЧЧ:ММ», настойчивость — из списка.
+        foreach (var (field, value) in new[] { ("notifications.quietFrom", settings.Notifications.QuietFrom), ("notifications.quietTo", settings.Notifications.QuietTo) })
+        {
+            if (!TimeOnly.TryParseExact(value, "HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _))
+            {
+                errors[field] = [L.T("SettingsEndpoints.TimeFormat")];
+            }
+        }
+
+        if (!Enum.IsDefined(settings.Notifications.Persistence))
+        {
+            errors["notifications.persistence"] = [L.T("SettingsEndpoints.UnknownPersistence")];
+        }
+
+        // Очередь накопителей (этап 17.1): «время успокоения» и шаблоны игнора.
 
         if (settings.Sorting.SettleSeconds is < 0 or > SortingSettings.MaxSettleSeconds)
         {

@@ -21,6 +21,7 @@ public sealed class SortingReminders : IDisposable
     public const string Kind = "sorting";
 
     private readonly ReminderScheduler _scheduler;
+    private readonly INotificationService? _notifications;
     private readonly SortingViewModel _sorting;
     private readonly IAppCommands? _commands;
     private readonly Func<DateTimeOffset> _clock;
@@ -29,8 +30,9 @@ public sealed class SortingReminders : IDisposable
     private DateTime? _shownOn;
 
     /// <summary>Создаёт источник и регистрирует вид заявки.</summary>
-    public SortingReminders(ReminderScheduler scheduler, SortingViewModel sorting, IAppCommands? commands = null, Func<DateTimeOffset>? clock = null)
+    public SortingReminders(ReminderScheduler scheduler, SortingViewModel sorting, IAppCommands? commands = null, Func<DateTimeOffset>? clock = null, INotificationService? notifications = null)
     {
+        _notifications = notifications;
         _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
         _sorting = sorting ?? throw new ArgumentNullException(nameof(sorting));
         _commands = commands;
@@ -65,7 +67,9 @@ public sealed class SortingReminders : IDisposable
     {
         var waiting = _sorting.WaitingItems;
         var now = _clock();
-        if (waiting.Count == 0)
+
+        // Выключено в «Уведомлениях» (этап 21.5) — заявки нет, как и при пустых накопителях.
+        if (waiting.Count == 0 || _notifications?.IsEnabled(NotificationKind.Sorting) == false)
         {
             _scheduler.Complete(RequestId);
             return;
@@ -129,7 +133,7 @@ public sealed class SortingReminders : IDisposable
     private Notification? Build(ReminderRequest request)
     {
         var waiting = _sorting.WaitingItems;
-        if (waiting.Count == 0)
+        if (waiting.Count == 0 || _notifications?.IsEnabled(NotificationKind.Sorting) == false)
         {
             return null;
         }

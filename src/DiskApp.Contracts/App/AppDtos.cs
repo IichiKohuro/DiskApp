@@ -69,6 +69,56 @@ public sealed record SettingsDto
 
     /// <summary>История файлов: сколько хранить.</summary>
     public HistorySettingsDto History { get; set; } = new();
+
+    /// <summary>Уведомления и напоминания.</summary>
+    public NotificationSettingsDto Notifications { get; set; } = new();
+}
+
+/// <summary>Как часто DiskApp позволяет себе карточки и напоминания.</summary>
+public enum NotificationPersistence
+{
+    /// <summary>Редко.</summary>
+    Rare,
+
+    /// <summary>Обычно.</summary>
+    Normal,
+
+    /// <summary>Часто.</summary>
+    Often,
+}
+
+/// <summary>Уведомления и напоминания (этап 21.5).</summary>
+public sealed record NotificationSettingsDto
+{
+    /// <summary>Сводка авторазбора.</summary>
+    public bool AutoSort { get; set; } = true;
+
+    /// <summary>Итог долгих и неудачных файловых операций.</summary>
+    public bool Operations { get; set; } = true;
+
+    /// <summary>Папка индекса недоступна, ошибка индексации.</summary>
+    public bool Index { get; set; } = true;
+
+    /// <summary>Напоминание о разборе накопителей.</summary>
+    public bool SortingReminders { get; set; } = true;
+
+    /// <summary>Настойчивость.</summary>
+    public NotificationPersistence Persistence { get; set; } = NotificationPersistence.Normal;
+
+    /// <summary>Часы тишины включены.</summary>
+    public bool QuietHours { get; set; }
+
+    /// <summary>Начало тишины, «ЧЧ:ММ».</summary>
+    public string QuietFrom { get; set; } = "22:00";
+
+    /// <summary>Конец тишины, «ЧЧ:ММ»; раньше начала — через полночь.</summary>
+    public string QuietTo { get; set; } = "08:00";
+
+    /// <summary>Учитывать «Не беспокоить» и полноэкранный режим Windows.</summary>
+    public bool RespectWindowsDoNotDisturb { get; set; } = true;
+
+    /// <summary>«Не беспокоить» в DiskApp до этого времени.</summary>
+    public DateTimeOffset? DoNotDisturbUntil { get; set; }
 }
 
 /// <summary>История файлов (этап 20.3): события хранятся не дольше срока и не больше предела — что наступит раньше.</summary>

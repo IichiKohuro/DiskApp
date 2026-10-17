@@ -948,6 +948,7 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         _services.GetRequiredService<IndexNotifications>().Attach(hub, dispatcher);
         _services.GetRequiredService<ReminderScheduler>().Start(dispatcher);
         _services.GetRequiredService<SortingReminders>().Start(dispatcher);
+        _services.GetRequiredService<NotificationSettingsApplier>().Attach(hub, dispatcher);
         _ = StartHubAsync(hub);
     }
 
@@ -975,6 +976,10 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
         try
         {
             await hub.StartAsync().ConfigureAwait(false);
+
+            // Настройки «Уведомлений» (этап 21.5) — как только сервер готов; изменения потом придут через хаб.
+            _ = _services.GetRequiredService<NotificationSettingsApplier>().LoadAsync(
+                _services.GetRequiredService<ISettingsService>(), _services.GetRequiredService<DiskApp.UI.Services.IDispatcher>());
 
             // Сервер готов: очередь накопителей читается сразу, а не при первом открытии окна — подсказка у значка
             // знает, сколько файлов ждут разбора, и очередь подписывается на изменения накопителей (этап 17.1).

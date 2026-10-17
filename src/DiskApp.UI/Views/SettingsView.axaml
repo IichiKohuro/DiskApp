@@ -495,6 +495,66 @@
                     </ui:FASettingsExpander>
                 </StackPanel>
 
+                <!-- Уведомления (этап 21.5) -->
+                <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=notifications}">
+                    <TextBlock Classes="section" Text="{loc:Str Settings.Notifications}" />
+                    <ui:FASettingsExpander Header="{loc:Str Settings.DoNotDisturb}" Description="{Binding DoNotDisturbText}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Clock" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <WrapPanel ItemSpacing="8" LineSpacing="8">
+                                <Button Content="{loc:Str Settings.DoNotDisturbForHour}" Command="{Binding DoNotDisturbForHourCommand}" />
+                                <Button Content="{loc:Str Settings.DoNotDisturbUntilTomorrow}" Command="{Binding DoNotDisturbUntilTomorrowCommand}" />
+                                <Button Content="{loc:Str Settings.DoNotDisturbTurnOff}" Command="{Binding DoNotDisturbOffCommand}" IsVisible="{Binding IsDoNotDisturbOn}" />
+                            </WrapPanel>
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.NotificationKinds}" Description="{loc:Str Settings.NotificationKindsDescription}" IsExpanded="False">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="List" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.NotifyAutoSort}">
+                            <ui:FASettingsExpanderItem.Footer>
+                                <ToggleSwitch AutomationProperties.Name="{loc:Str Settings.NotifyAutoSort}" IsChecked="{Binding NotifyAutoSort, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
+                            </ui:FASettingsExpanderItem.Footer>
+                        </ui:FASettingsExpanderItem>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.NotifySortingReminders}">
+                            <ui:FASettingsExpanderItem.Footer>
+                                <ToggleSwitch AutomationProperties.Name="{loc:Str Settings.NotifySortingReminders}" IsChecked="{Binding NotifySortingReminders, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
+                            </ui:FASettingsExpanderItem.Footer>
+                        </ui:FASettingsExpanderItem>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.NotifyOperations}">
+                            <ui:FASettingsExpanderItem.Footer>
+                                <ToggleSwitch AutomationProperties.Name="{loc:Str Settings.NotifyOperations}" IsChecked="{Binding NotifyOperations, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
+                            </ui:FASettingsExpanderItem.Footer>
+                        </ui:FASettingsExpanderItem>
+                        <ui:FASettingsExpanderItem Content="{loc:Str Settings.NotifyIndex}">
+                            <ui:FASettingsExpanderItem.Footer>
+                                <ToggleSwitch AutomationProperties.Name="{loc:Str Settings.NotifyIndex}" IsChecked="{Binding NotifyIndex, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
+                            </ui:FASettingsExpanderItem.Footer>
+                        </ui:FASettingsExpanderItem>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.NotificationPersistence}" Description="{loc:Str Settings.NotificationPersistenceDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Sync" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <ComboBox AutomationProperties.Name="{loc:Str Settings.NotificationPersistence}" ItemsSource="{Binding Persistences}" SelectedItem="{Binding SelectedPersistence, Mode=TwoWay}" MinWidth="150" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.QuietHours}" Description="{loc:Str Settings.QuietHoursDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Clock" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <WrapPanel ItemSpacing="8" LineSpacing="8">
+                                <TimePicker AutomationProperties.Name="{loc:Str Settings.QuietFrom}" ToolTip.Tip="{loc:Str Settings.QuietFrom}" ClockIdentifier="24HourClock" MinuteIncrement="15" SelectedTime="{Binding QuietFrom, Mode=TwoWay}" IsEnabled="{Binding QuietHoursEnabled}" />
+                                <TimePicker AutomationProperties.Name="{loc:Str Settings.QuietTo}" ToolTip.Tip="{loc:Str Settings.QuietTo}" ClockIdentifier="24HourClock" MinuteIncrement="15" SelectedTime="{Binding QuietTo, Mode=TwoWay}" IsEnabled="{Binding QuietHoursEnabled}" />
+                                <ToggleSwitch AutomationProperties.Name="{loc:Str Settings.QuietHours}" IsChecked="{Binding QuietHoursEnabled, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
+                            </WrapPanel>
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                    <ui:FASettingsExpander Header="{loc:Str Settings.RespectWindowsDoNotDisturb}" Description="{loc:Str Settings.RespectWindowsDoNotDisturbDescription}">
+                        <ui:FASettingsExpander.IconSource><ui:FASymbolIconSource Symbol="Settings" /></ui:FASettingsExpander.IconSource>
+                        <ui:FASettingsExpander.Footer>
+                            <ToggleSwitch AutomationProperties.Name="{loc:Str Settings.RespectWindowsDoNotDisturb}" IsChecked="{Binding RespectWindowsDoNotDisturb, Mode=TwoWay}" OnContent="{loc:Str Common.On}" OffContent="{loc:Str Common.Off}" />
+                        </ui:FASettingsExpander.Footer>
+                    </ui:FASettingsExpander>
+                </StackPanel>
+
                 <!-- Данные -->
                 <StackPanel Spacing="4" IsVisible="{Binding SelectedCategory.Key, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=data}">
                     <TextBlock Classes="section" Text="{loc:Str Settings.Data}" />

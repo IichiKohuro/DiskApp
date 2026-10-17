@@ -402,6 +402,7 @@ public sealed partial class SettingsViewModel
             IgnorePatternsText = string.Join(", ", settings.Sorting.IgnorePatterns);
             ClipboardNameTemplate = settings.Add.ClipboardNameTemplate;
             SelectedLogLevel = LogLevels.FirstOrDefault(option => option.Value == settings.Diagnostics.LogLevel) ?? LogLevels[1];
+            ApplyNotifications(settings.Notifications);
         }
         finally
         {

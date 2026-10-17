@@ -240,6 +240,19 @@ internal static class DtoMapper
             IgnorePatterns = settings.Sorting.IgnorePatterns,
         },
         History = new HistorySettingsDto { RetentionDays = settings.History.RetentionDays, MaxSizeMegabytes = settings.History.MaxSizeMegabytes },
+        Notifications = new NotificationSettingsDto
+        {
+            AutoSort = settings.Notifications.AutoSort,
+            Operations = settings.Notifications.Operations,
+            Index = settings.Notifications.Index,
+            SortingReminders = settings.Notifications.SortingReminders,
+            Persistence = (Contract.App.NotificationPersistence)(int)settings.Notifications.Persistence,
+            QuietHours = settings.Notifications.QuietHours,
+            QuietFrom = settings.Notifications.QuietFrom,
+            QuietTo = settings.Notifications.QuietTo,
+            RespectWindowsDoNotDisturb = settings.Notifications.RespectWindowsDoNotDisturb,
+            DoNotDisturbUntil = settings.Notifications.DoNotDisturbUntil,
+        },
     };
 
     /// <summary>Событие истории файлов (этап 20).</summary>
@@ -349,6 +362,21 @@ internal static class DtoMapper
         History = dto.History is { } history
             ? current.History with { RetentionDays = history.RetentionDays, MaxSizeMegabytes = history.MaxSizeMegabytes }
             : current.History,
+        Notifications = dto.Notifications is { } notifications
+            ? new NotificationSettings
+            {
+                AutoSort = notifications.AutoSort,
+                Operations = notifications.Operations,
+                Index = notifications.Index,
+                SortingReminders = notifications.SortingReminders,
+                Persistence = (Core.Settings.NotificationPersistence)(int)notifications.Persistence,
+                QuietHours = notifications.QuietHours,
+                QuietFrom = notifications.QuietFrom?.Trim() ?? string.Empty,
+                QuietTo = notifications.QuietTo?.Trim() ?? string.Empty,
+                RespectWindowsDoNotDisturb = notifications.RespectWindowsDoNotDisturb,
+                DoNotDisturbUntil = notifications.DoNotDisturbUntil,
+            }
+            : current.Notifications,
     };
 
     /// <summary>Папки разбора из DTO: пути и подписи без пробелов по краям, шаблоны — без пустых условий.</summary>
