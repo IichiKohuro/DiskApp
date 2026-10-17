@@ -52,6 +52,9 @@ internal sealed unsafe class MessageWindow : IDisposable
     /// <summary>Пользователь вернулся в сеанс: после переключения пользователей или через удалённый рабочий стол.</summary>
     public event EventHandler? SessionReconnected;
 
+    /// <summary>Сеанс заблокирован (<c>true</c>) или разблокирован (<c>false</c>): для «умного момента» (этап 21.2).</summary>
+    public event EventHandler<bool>? SessionLockChanged;
+
     /// <summary>Дескриптор окна.</summary>
     public nint Handle => _handle;
 
@@ -117,6 +120,22 @@ internal sealed unsafe class MessageWindow : IDisposable
             {
                 // Исключение нельзя выпускать в неуправляемый код: процесс упадёт без журнала.
                 Log.Error(exception, "Ошибка обработчика горячей клавиши {Id}", (int)wParam);
+            }
+
+            return 0;
+        }
+
+        if (message == NativeMethods.WmWtsSessionChange
+            && (int)wParam is NativeMethods.WtsSessionLock or NativeMethods.WtsSessionUnlock
+            && Windows.TryGetValue(window, out var locking))
+        {
+            try
+            {
+                locking.SessionLockChanged?.Invoke(locking, (int)wParam == NativeMethods.WtsSessionLock);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Ошибка обработчика блокировки сеанса");
             }
 
             return 0;

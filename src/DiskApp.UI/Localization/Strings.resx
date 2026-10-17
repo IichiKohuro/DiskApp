@@ -1839,6 +1839,15 @@
   <data name="RegistryAutoStart.WindowsDidNotAllowChangingAutostart" xml:space="preserve">
     <value>Windows не дала изменить автозапуск: </value>
   </data>
+  <data name="Reminders.Done" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="Reminders.Later" xml:space="preserve">
+    <value>Позже</value>
+  </data>
+  <data name="Reminders.NotToday" xml:space="preserve">
+    <value>Сегодня не напоминать</value>
+  </data>
   <data name="RootCard.CouldNotChangeThePauseOf" xml:space="preserve">
     <value>Не удалось изменить паузу «{0}»</value>
   </data>

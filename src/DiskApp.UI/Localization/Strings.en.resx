@@ -1839,6 +1839,15 @@
   <data name="RegistryAutoStart.WindowsDidNotAllowChangingAutostart" xml:space="preserve">
     <value>Windows did not allow changing autostart: </value>
   </data>
+  <data name="Reminders.Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Reminders.Later" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="Reminders.NotToday" xml:space="preserve">
+    <value>Not today</value>
+  </data>
   <data name="RootCard.CouldNotChangeThePauseOf" xml:space="preserve">
     <value>Could not change the pause of “{0}”</value>
   </data>

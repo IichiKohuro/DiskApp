@@ -182,6 +182,7 @@ internal static class Program
             services.AddSingleton<ITipsService>(static provider => provider.GetRequiredService<SettingsTipsService>());
             services.AddSingleton<DesktopShell>();
             services.AddSingleton<INotificationHost>(static provider => new NotificationCardPresenter(() => provider.GetRequiredService<DesktopShell>().IsMainWindowVisible));
+            services.AddSingleton<IReminderStore>(static provider => new JsonReminderStore(Path.Combine(provider.GetRequiredService<DiskApp.Core.Abstractions.IAppPaths>().DataDirectory, "reminders.json")));
             services.AddSingleton<IAppCommands>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IHotkeyChecker>(static provider => provider.GetRequiredService<DesktopShell>());
             services.AddSingleton<IAppMaintenance>(static provider => new DesktopMaintenance(
@@ -210,6 +211,10 @@ internal static class Program
                 services.AddSingleton<DiskApp.Core.Abstractions.IFileLockInspector, DiskApp.Infrastructure.Platform.Windows.WindowsFileLockInspector>();
                 services.AddSingleton<DiskApp.Core.Abstractions.IRecycleBin, DiskApp.Infrastructure.Platform.Windows.WindowsRecycleBin>();
                 services.AddSingleton<DesktopResumeSource>();
+                services.AddSingleton<WindowsUserActivityMonitor>();
+                services.AddSingleton<IUserActivityMonitor>(static provider => OperatingSystem.IsWindows()
+                    ? provider.GetRequiredService<WindowsUserActivityMonitor>()
+                    : new NullUserActivityMonitor());
                 services.AddSingleton<DiskApp.Core.Abstractions.ISystemResumeSource>(static provider => OperatingSystem.IsWindows()
                     ? provider.GetRequiredService<DesktopResumeSource>()
                     : throw new PlatformNotSupportedException());

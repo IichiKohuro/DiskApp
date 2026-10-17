@@ -49,6 +49,17 @@ internal static unsafe partial class NativeMethods
     /// <summary>Код ошибки «горячая клавиша уже зарегистрирована» (<c>ERROR_HOTKEY_ALREADY_REGISTERED</c>).</summary>
     public const int ErrorHotkeyAlreadyRegistered = 1409;
 
+    /// <summary><c>LASTINPUTINFO</c>.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LastInputInfo
+    {
+        /// <summary>Размер структуры.</summary>
+        public uint Size;
+
+        /// <summary>Тик последнего ввода.</summary>
+        public uint Time;
+    }
+
     /// <summary>Точка в пикселях экрана (<c>POINT</c>).</summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct Point
@@ -154,6 +165,12 @@ internal static unsafe partial class NativeMethods
     /// <summary>Уведомления только о своём сеансе (<c>NOTIFY_FOR_THIS_SESSION</c>).</summary>
     public const uint NotifyForThisSession = 0;
 
+    /// <summary>Сеанс заблокирован (<c>WTS_SESSION_LOCK</c>).</summary>
+    public const int WtsSessionLock = 0x7;
+
+    /// <summary>Сеанс разблокирован (<c>WTS_SESSION_UNLOCK</c>).</summary>
+    public const int WtsSessionUnlock = 0x8;
+
     [LibraryImport("wtsapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool WTSRegisterSessionNotification(nint window, uint flags);
@@ -165,6 +182,15 @@ internal static unsafe partial class NativeMethods
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetCursorPos(out Point point);
+
+    /// <summary>Время последнего ввода с клавиатуры и мыши в тиках <c>GetTickCount</c> (этап 21.2).</summary>
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetLastInputInfo(ref LastInputInfo info);
+
+    /// <summary>Можно ли сейчас показывать уведомления: полный экран, презентация, «тихие часы» (этап 21.2).</summary>
+    [LibraryImport("shell32.dll")]
+    public static partial int SHQueryUserNotificationState(out int state);
 
     [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16)]
     public static partial nint GetModuleHandleW(string? moduleName);

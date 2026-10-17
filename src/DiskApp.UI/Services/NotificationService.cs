@@ -137,6 +137,9 @@ public interface INotificationService
     /// <summary>Показывает уведомление по нарастанию: полоса главного окна → тихая карточка → подсказка в трее.</summary>
     NotificationRoute Show(Notification notification);
 
+    /// <summary>Сейчас тишина: «не беспокоить» DiskApp или часы тишины.</summary>
+    bool IsQuiet(DateTimeOffset now);
+
     /// <summary>Пользователь открыл главное окно: непрочитанных больше нет.</summary>
     void MarkAllRead();
 }
@@ -244,7 +247,7 @@ public sealed class NotificationService : INotificationService
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>Сейчас тишина: «не беспокоить» или часы тишины.</summary>
+    /// <inheritdoc />
     public bool IsQuiet(DateTimeOffset now)
     {
         if (DoNotDisturbUntil is { } until && now < until)

@@ -829,6 +829,18 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             return;
         }
 
+        // Блокировка сеанса — сигнал «умного момента» (этап 21.2).
+        if (OperatingSystem.IsWindows() && _services.GetService<WindowsUserActivityMonitor>() is { } activity)
+        {
+            _messageWindow.SessionLockChanged += (_, locked) =>
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    activity.OnSessionLockChanged(locked);
+                }
+            };
+        }
+
         if (_services.GetService<DesktopResumeSource>() is { } resume)
         {
             _messageWindow.SessionReconnected += (_, _) =>
@@ -925,7 +937,9 @@ internal sealed class DesktopShell : IAppCommands, IHotkeyChecker, IDisposable
             _trayStatus.Apply(progress);
             UpdateTray();
         });
-        _services.GetRequiredService<IndexNotifications>().Attach(hub, _services.GetRequiredService<DiskApp.UI.Services.IDispatcher>());
+        var dispatcher = _services.GetRequiredService<DiskApp.UI.Services.IDispatcher>();
+        _services.GetRequiredService<IndexNotifications>().Attach(hub, dispatcher);
+        _services.GetRequiredService<ReminderScheduler>().Start(dispatcher);
         _ = StartHubAsync(hub);
     }
 
