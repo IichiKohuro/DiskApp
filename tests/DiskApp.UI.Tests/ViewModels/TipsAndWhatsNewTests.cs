@@ -199,7 +199,7 @@ public sealed class TipsAndWhatsNewTests
 
             // Assert
             whatsNew.Title.ShouldBe($"What's new in DiskApp {AppVersion.Current}");
-            whatsNew.Items[0].Title.ShouldBe("Projects");
+            whatsNew.Items[0].Title.ShouldBe("Tooltips on a second monitor");
         }
         finally
         {

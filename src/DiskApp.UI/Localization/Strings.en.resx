@@ -3373,34 +3373,34 @@
     <value> entries</value>
   </data>
   <data name="WhatsNew.1.Text" xml:space="preserve">
-    <value>The new Projects page: number, title, color and a main folder with subfolders. A project card shows its work folders and notes; New note links the note to the project right away.</value>
+    <value>When monitors have different scaling (say, 125% and 100%), tooltips on the second monitor are no longer cut off: a work folder chip shows the whole path again instead of “D:”, and + shows “Add a work folder”.</value>
   </data>
   <data name="WhatsNew.1.Title" xml:space="preserve">
-    <value>Projects</value>
+    <value>Tooltips on a second monitor</value>
   </data>
   <data name="WhatsNew.2.Text" xml:space="preserve">
-    <value>A colored square with the project number shows next to notes and on the work folder chips of Sorting. Pick the project of a note in the note itself and filter notes by project.</value>
+    <value>The new Projects page: number, title, color and a main folder with subfolders. A project card shows its work folders and notes; New note links the note to the project right away.</value>
   </data>
   <data name="WhatsNew.2.Title" xml:space="preserve">
-    <value>Project number icon</value>
+    <value>Projects</value>
   </data>
   <data name="WhatsNew.3.Text" xml:space="preserve">
-    <value>Auto-sorting results, long operations and an unavailable index folder show in the main window bar or, when it is closed, as a quiet card near the tray: no sound, no focus, it goes away by itself. Full-screen apps and presentations are never interrupted.</value>
+    <value>A colored square with the project number shows next to notes and on the work folder chips of Sorting. Pick the project of a note in the note itself and filter notes by project.</value>
   </data>
   <data name="WhatsNew.3.Title" xml:space="preserve">
-    <value>Quiet notifications</value>
+    <value>Project number icon</value>
   </data>
   <data name="WhatsNew.4.Text" xml:space="preserve">
-    <value>When files pile up in inboxes, DiskApp reminds you at a convenient moment, not in the middle of a presentation or on the lock screen. Later, Not today; quiet hours and Do not disturb are in Settings → Notifications.</value>
+    <value>Auto-sorting results, long operations and an unavailable index folder show in the main window bar or, when it is closed, as a quiet card near the tray: no sound, no focus, it goes away by itself. Full-screen apps and presentations are never interrupted.</value>
   </data>
   <data name="WhatsNew.4.Title" xml:space="preserve">
-    <value>Reminder to sort</value>
+    <value>Quiet notifications</value>
   </data>
   <data name="WhatsNew.5.Text" xml:space="preserve">
-    <value>History replaces Operations: what happened to your files, when and by whom — in DiskApp, Sorting and File Explorer, with Put back and Restore. Search by an old name tells where the file went.</value>
+    <value>When files pile up in inboxes, DiskApp reminds you at a convenient moment, not in the middle of a presentation or on the lock screen. Later, Not today; quiet hours and Do not disturb are in Settings → Notifications.</value>
   </data>
   <data name="WhatsNew.5.Title" xml:space="preserve">
-    <value>File history</value>
+    <value>Reminder to sort</value>
   </data>
   <data name="WhatsNew.Close" xml:space="preserve">
     <value>Got it</value>
