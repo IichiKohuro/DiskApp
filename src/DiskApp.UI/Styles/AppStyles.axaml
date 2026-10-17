@@ -1,7 +1,8 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="using:DiskApp.UI.Localization"
-        xmlns:ui="using:FluentAvalonia.UI.Controls">
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:ic="using:FluentIcons.Avalonia">
     <!-- Общие стили поверх FluentAvalonia: карточки, второстепенный текст, списки результатов, поле поиска.
          Цвета только из ресурсов темы (DynamicResource), чтобы светлая и тёмная темы и акцент системы работали сами. -->
 
@@ -51,6 +52,15 @@
     </Style>
     <Style Selector="Button.card:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}" />
+    </Style>
+
+    <!-- Иконка в списке папок и мест: акцентом, а папка — привычным жёлтым, как в Проводнике (FolderIconBrush).
+         Класс folder ставит конвертер FileKindConverters.IsFolder по значку строки. -->
+    <Style Selector="ic|SymbolIcon.place">
+        <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+    </Style>
+    <Style Selector="ic|SymbolIcon.place.folder">
+        <Setter Property="Foreground" Value="{DynamicResource FolderIconBrush}" />
     </Style>
 
     <!-- Текст второго и третьего плана -->

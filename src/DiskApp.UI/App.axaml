@@ -17,6 +17,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://DiskApp.UI/Styles/Tokens.axaml" />
+                <ResourceInclude Source="avares://DiskApp.UI/Styles/IconColors.axaml" />
                 <ResourceInclude Source="avares://DiskApp.UI/Styles/Templates.axaml" />
             </ResourceDictionary.MergedDictionaries>
             <!-- Панель заголовка FAAppWindow тянет окно, только если у неё есть фон: в светлой теме FluentAvalonia ресурса

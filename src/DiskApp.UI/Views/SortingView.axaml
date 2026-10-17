@@ -282,7 +282,7 @@
                         <TreeView.ItemTemplate>
                             <TreeDataTemplate x:DataType="vm:SortFolderNode" ItemsSource="{Binding Children}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <ic:SymbolIcon Symbol="{Binding IsNew, Converter={x:Static c:SortingConverters.FolderSymbol}}" FontSize="16" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" IsVisible="{Binding !IsPlaceholder}" />
+                                    <ic:SymbolIcon Symbol="{Binding IsNew, Converter={x:Static c:SortingConverters.FolderSymbol}}" FontSize="16" Foreground="{DynamicResource FolderIconBrush}" IsVisible="{Binding !IsPlaceholder}" />
                                     <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </TreeDataTemplate>

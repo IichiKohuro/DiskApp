@@ -107,7 +107,7 @@
                                               Command="{Binding $parent[UserControl].((vm:BrowseViewModel)DataContext).EditFolderAutoTagsCommand}" CommandParameter="{Binding}" />
                                 </MenuFlyout>
                             </StackPanel.ContextFlyout>
-                            <ic:SymbolIcon Symbol="{Binding Symbol}" FontSize="16" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                            <ic:SymbolIcon Classes="place" Classes.folder="{Binding Symbol, Converter={x:Static c:FileKindConverters.IsFolder}}" Symbol="{Binding Symbol}" FontSize="16" />
                             <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                         </StackPanel>
                     </TreeDataTemplate>

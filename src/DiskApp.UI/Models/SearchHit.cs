@@ -113,4 +113,11 @@ public static class FileKindSymbols
         FileKind.Text => Symbol.DocumentBulletList,
         _ => Symbol.Document,
     };
+
+    /// <summary>
+    /// Иконка папки (<c>Folder</c>, <c>FolderOpen</c>, <c>FolderAdd</c>…): рисуется жёлтым, как в Проводнике.
+    /// Архив (<c>FolderZip</c>) — файл, а не папка.
+    /// </summary>
+    public static bool IsFolder(Symbol symbol)
+        => symbol != Symbol.FolderZip && symbol.ToString().StartsWith("Folder", StringComparison.Ordinal);
 }

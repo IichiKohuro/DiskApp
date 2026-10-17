@@ -1,0 +1,40 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sty="using:FluentAvalonia.Styling">
+    <!-- Цвета иконок. Папки — привычным жёлтым, как в Проводнике, а не акцентом (замечание пользователя, 2026-10-17).
+         У каждого раздела в панели навигации свой цвет, чтобы находить его взглядом (NavIconColor, ключ —
+         NavIconBrush.<ключ страницы>); «Обзор» — жёлтый, как папки, «Настройки» — нейтральные, как в Windows.
+         В тёмной теме — светлые тона, в светлой — тёмные, чтобы иконки читались на фоне панели. При высокой
+         контрастности цвета разделов не применяются, а папки рисуются цветом текста. -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="FolderIconBrush" Color="#FFC83D" />
+            <SolidColorBrush x:Key="NavIconBrush.home" Color="#6CB4FF" />
+            <SolidColorBrush x:Key="NavIconBrush.search" Color="#3DD6C6" />
+            <SolidColorBrush x:Key="NavIconBrush.browse" Color="#FFC83D" />
+            <SolidColorBrush x:Key="NavIconBrush.collections" Color="#C29BFF" />
+            <SolidColorBrush x:Key="NavIconBrush.tags" Color="#6CCB5F" />
+            <SolidColorBrush x:Key="NavIconBrush.inbox" Color="#FF9E57" />
+            <SolidColorBrush x:Key="NavIconBrush.projects" Color="#FF7A7A" />
+            <SolidColorBrush x:Key="NavIconBrush.notes" Color="#F27AD2" />
+            <SolidColorBrush x:Key="NavIconBrush.operations" Color="#9DA8FF" />
+            <SolidColorBrush x:Key="NavIconBrush.settings" Color="#B5B5B5" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="FolderIconBrush" Color="#C98A00" />
+            <SolidColorBrush x:Key="NavIconBrush.home" Color="#0F6CBD" />
+            <SolidColorBrush x:Key="NavIconBrush.search" Color="#038387" />
+            <SolidColorBrush x:Key="NavIconBrush.browse" Color="#C98A00" />
+            <SolidColorBrush x:Key="NavIconBrush.collections" Color="#8764B8" />
+            <SolidColorBrush x:Key="NavIconBrush.tags" Color="#107C10" />
+            <SolidColorBrush x:Key="NavIconBrush.inbox" Color="#CA5010" />
+            <SolidColorBrush x:Key="NavIconBrush.projects" Color="#D13438" />
+            <SolidColorBrush x:Key="NavIconBrush.notes" Color="#BF0077" />
+            <SolidColorBrush x:Key="NavIconBrush.operations" Color="#4F6BED" />
+            <SolidColorBrush x:Key="NavIconBrush.settings" Color="#616161" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="{x:Static sty:FluentAvaloniaTheme.HighContrastTheme}">
+            <SolidColorBrush x:Key="FolderIconBrush" Color="{DynamicResource SystemColorWindowTextColor}" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

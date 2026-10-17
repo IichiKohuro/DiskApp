@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:c="using:DiskApp.UI.Controls"
              xmlns:vm="using:DiskApp.UI.ViewModels"
              xmlns:views="using:DiskApp.UI.Views"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
@@ -26,7 +27,7 @@
                          SelectedItem="{Binding SelectedPage, Mode=TwoWay}">
         <ui:FANavigationView.MenuItemTemplate>
             <DataTemplate DataType="vm:PageViewModel">
-                <ui:FANavigationViewItem Content="{Binding Title}">
+                <ui:FANavigationViewItem Content="{Binding Title}" c:NavIconColor.ResourceKey="{Binding IconBrushKey}">
                     <ui:FANavigationViewItem.IconSource>
                         <ui:FASymbolIconSource Symbol="{Binding Icon}" />
                     </ui:FANavigationViewItem.IconSource>

@@ -121,6 +121,9 @@ public abstract partial class PageViewModel : ViewModelBase
     /// <summary>Иконка пункта навигации.</summary>
     public FASymbol Icon { get; }
 
+    /// <summary>Ресурс цвета иконки в навигации: у каждого раздела свой (Styles/IconColors.axaml).</summary>
+    public string IconBrushKey => "NavIconBrush." + Key;
+
     /// <summary>Счётчик на пункте навигации, например число входящих; 0 — без счётчика.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasBadge))]

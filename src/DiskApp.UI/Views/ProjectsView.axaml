@@ -129,7 +129,7 @@
                         <StackPanel Spacing="6">
                             <TextBlock FontWeight="SemiBold" Text="{loc:Str Projects.Folder}" />
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                                <ic:SymbolIcon Symbol="Folder" FontSize="22" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                <ic:SymbolIcon Symbol="Folder" FontSize="22" VerticalAlignment="Center" Foreground="{DynamicResource FolderIconBrush}" />
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
                                     <TextBlock Text="{Binding FolderName}" TextTrimming="CharacterEllipsis" />
                                     <TextBlock Classes="tertiary" FontSize="12" Text="{Binding FolderText}" TextTrimming="PathSegmentEllipsis" ToolTip.Tip="{Binding FolderPath}" />

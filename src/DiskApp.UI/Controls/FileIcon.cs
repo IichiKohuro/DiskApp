@@ -48,6 +48,9 @@ public sealed class FileIcon : Border
     private readonly SymbolIcon _fallback = new() { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     private int _version;
 
+    // Заглушка папки — жёлтая, как в Проводнике (FolderIconBrush), остальные — цветом Foreground.
+    private IDisposable? _folderForeground;
+
     // Миниатюра грузится, когда иконка подошла к видимой области прокрутки (этап 10.2): плитка «Обзора» не виртуализуется,
     // и без этого папка с тысячами фотографий запрашивала бы все миниатюры сразу. До того — иконка типа, она в кэше по
     // расширению и дешёвая.
@@ -139,6 +142,7 @@ public sealed class FileIcon : Border
         if (change.Property == SymbolProperty)
         {
             _fallback.Symbol = Symbol;
+            UpdateFallbackForeground();
         }
         else if (change.Property == IconSizeProperty)
         {
@@ -185,6 +189,18 @@ public sealed class FileIcon : Border
                 Reload();
             }
         }
+    }
+
+    private void UpdateFallbackForeground()
+    {
+        var folder = FileKindSymbols.IsFolder(Symbol);
+        if (folder == _folderForeground is not null)
+        {
+            return;
+        }
+
+        _folderForeground?.Dispose();
+        _folderForeground = folder ? _fallback.Bind(TextElement.ForegroundProperty, this.GetResourceObservable("FolderIconBrush")) : null;
     }
 
     private void ApplySize()
