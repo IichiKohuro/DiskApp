@@ -402,7 +402,8 @@ DiskApp/
 ├─ docs/                       VISION.md, ARCHITECTURE.md, ADR/, QA_CHECKLIST.md, FEEDBACK.md, images/; USER_GUIDE.md (этап 9)
 ├─ spikes/                     спайки этапа 0.6 с результатами замеров
 ├─ scripts/                    publish.ps1 (сборка exe), protect-main.ps1 (защита ветки)
-├─ releases/                   локальные сборки publish.ps1 (не в git)
+├─ releases/                   все локальные сборки publish.ps1 (не в git)
+├─ release/                    последняя сборка publish.ps1 (не в git)
 └─ .github/workflows/          ci.yml; release.yml (этап 11)
 ```
 
@@ -463,7 +464,7 @@ dotnet run --project src/DiskApp.Desktop
 dotnet test
 ```
 
-Самодостаточный exe без установленного .NET (self-contained, ReadyToRun) собирает скрипт; результат — `releases\diskapp_v{версия}_{стадия}[_singlefile].exe`, например `releases\diskapp_v0.1.0_alpha_singlefile.exe`. Стадия (`alpha`, `beta`, `rc`, `release`) задаётся параметром `-Stage` и попадает в версию сборки; `-SingleFile:$false` даёт обычную папку с библиотеками рядом и без суффикса в имени:
+Самодостаточный exe без установленного .NET (self-contained, ReadyToRun) собирает скрипт; результат — `releases\diskapp_v{версия}_{стадия}[_singlefile].exe`, например `releases\diskapp_v0.1.0_alpha_singlefile.exe`; та же сборка копируется в `release\`, где лежит только последняя. Стадия (`alpha`, `beta`, `rc`, `release`) задаётся параметром `-Stage` и попадает в версию сборки; `-SingleFile:$false` даёт обычную папку с библиотеками рядом и без суффикса в имени:
 
 ```powershell
 .\scripts\publish.ps1 -Stage alpha

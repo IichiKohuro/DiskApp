@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Собирает DiskApp для запуска без установленного .NET и кладёт результат в releases\.
+    Собирает DiskApp для запуска без установленного .NET: в releases\ копятся все сборки, в release\ — только последняя.
 
 .DESCRIPTION
     Решение 10 плана: self-contained, ReadyToRun. Имя результата:
@@ -13,7 +13,8 @@
     они распаковываются при первом запуске; в имени есть _singlefile. Обычная сборка (-SingleFile:$false) —
     папка releases\diskapp_v{версия}_{стадия}\ с exe и библиотеками рядом, без суффикса в имени.
 
-    Папка releases\ в .gitignore. Установщик и автообновление (Velopack) появятся в этапе 11.
+    Та же сборка с тем же именем копируется в release\, прежнее содержимое release\ удаляется: там всегда одна,
+    последняя сборка. Папки releases\ и release\ в .gitignore. Установщик и автообновление (Velopack) появятся в этапе 11.
 
 .PARAMETER Stage
     Стадия зрелости: alpha (ранняя, не всё готово), beta (функции есть, идёт проверка), rc (кандидат
@@ -43,6 +44,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $releases = Join-Path $root 'releases'
+$latest = Join-Path $root 'release'
 $project = Join-Path $root 'src\DiskApp.Desktop'
 
 $props = Get-Content (Join-Path $root 'Directory.Build.props') -Raw
@@ -87,5 +89,16 @@ else {
     $target = Join-Path $publishDirectory $exeName
 }
 
+# release\ — только последняя сборка. Запущенный оттуда DiskApp держит exe, и очистка не пройдёт.
+try {
+    if (Test-Path $latest) { Get-ChildItem $latest -Force | Remove-Item -Recurse -Force }
+}
+catch {
+    throw "Не получилось очистить release\: закройте DiskApp, запущенный оттуда, и повторите. $($_.Exception.Message)"
+}
+New-Item -ItemType Directory $latest -Force | Out-Null
+Copy-Item $(if ($SingleFile) { $target } else { $publishDirectory }) $latest -Recurse
+
 $size = [math]::Round((Get-Item $target).Length / 1MB, 1)
 Write-Host "Готово: $target ($size МБ, $Runtime, версия $version, стадия $Stage$(if ($SingleFile) { ', single-file' }))"
+Write-Host "Последняя сборка: $(Join-Path $latest $(if ($SingleFile) { $exeName } else { $baseName }))"

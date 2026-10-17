@@ -492,7 +492,8 @@ logs/
 *.db-shm
 # Результаты тестов
 TestResults/
-# Локальные сборки для запуска (dotnet publish, scripts/publish.ps1)
+# Локальные сборки для запуска (scripts/publish.ps1): все версии и последняя
 /releases/
+/release/
 # Локальные настройки инструментов
 .claude/settings.local.json

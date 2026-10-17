@@ -653,7 +653,7 @@ Serilog пишет структурные логи в `logs\diskapp-<дата>.l
 
 CI — GitHub Actions на `windows-latest` (`.github/workflows/ci.yml`): SDK по `global.json`, кэш NuGet, `restore` → `build -c Release` → `test` с TRX и Cobertura (сводка покрытия ReportGenerator в job summary, артефакт `test-results`) → `dotnet format --verify-no-changes`; запускается на push в `main`, pull request и вручную. Ветка `main` защищена от принудительной отправки и удаления (`scripts/protect-main.ps1`); готовые ветки сливаются в неё локально fast-forward (CONTRIBUTING.md).
 
-Публикация сейчас — `scripts/publish.ps1`: `dotnet publish` self-contained, single-file, ReadyToRun для `win-x64` (или `win-arm64`), результат `releases\diskapp_v{версия}_{стадия}[_singlefile].exe`; стадия (`alpha`, `beta`, `rc`, `release`) становится суффиксом SemVer к `VersionPrefix`. Такая сборка весит около 200 МБ из-за self-contained ASP.NET Core и Avalonia; бюджет установщика 80 МБ — задача этапа 11 (тримминг, версия из git через MinVer, установщик и дельта-обновления Velopack с GitHub Releases как источником, портативная сборка zip с файлом `portable`).
+Публикация сейчас — `scripts/publish.ps1`: `dotnet publish` self-contained, single-file, ReadyToRun для `win-x64` (или `win-arm64`), результат `releases\diskapp_v{версия}_{стадия}[_singlefile].exe` (все сборки) и его копия в `release\` (только последняя); стадия (`alpha`, `beta`, `rc`, `release`) становится суффиксом SemVer к `VersionPrefix`. Такая сборка весит около 200 МБ из-за self-contained ASP.NET Core и Avalonia; бюджет установщика 80 МБ — задача этапа 11 (тримминг, версия из git через MinVer, установщик и дельта-обновления Velopack с GitHub Releases как источником, портативная сборка zip с файлом `portable`).
 
 ## 16. Бюджеты и измерения
 
