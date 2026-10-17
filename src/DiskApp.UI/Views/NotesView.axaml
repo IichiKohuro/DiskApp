@@ -15,6 +15,15 @@
     <UserControl.KeyBindings>
         <KeyBinding Gesture="Ctrl+N" Command="{Binding NewNoteCommand}" />
     </UserControl.KeyBindings>
+    <UserControl.Resources>
+        <!-- Проект в выборе и отборе: иконка с номером и подпись -->
+        <DataTemplate x:Key="ProjectChoiceTemplate" x:DataType="vm:NoteProjectChoice">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <c:ProjectBadge BadgeSize="18" VerticalAlignment="Center" Number="{Binding Project.Number}" Color="{Binding Project.Color}" IsVisible="{Binding HasProject}" />
+                <TextBlock Text="{Binding Text}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
     <!-- Колонки: список, разделитель (ширина списка запоминается), заметка -->
     <Grid x:Name="RootGrid" Margin="16,12,16,8" RowDefinitions="Auto,*">
         <Grid.ColumnDefinitions>
@@ -54,6 +63,16 @@
                         </Button.Flyout>
                     </Button>
                 </Grid>
+                <!-- Отбор по проекту (этап 24) — только если проекты есть -->
+                <ComboBox DockPanel.Dock="Top" HorizontalAlignment="Stretch" Margin="0,0,0,6" AutomationProperties.Name="{loc:Str Notes.ProjectFilter}"
+                          ItemsSource="{Binding ProjectFilters}" SelectedItem="{Binding SelectedProjectFilter, Mode=TwoWay}" ItemTemplate="{StaticResource ProjectChoiceTemplate}">
+                    <ComboBox.IsVisible>
+                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                            <Binding Path="HasProjects" />
+                            <Binding Path="!ShowTrash" />
+                        </MultiBinding>
+                    </ComboBox.IsVisible>
+                </ComboBox>
                 <ComboBox DockPanel.Dock="Top" HorizontalAlignment="Stretch" Margin="0,0,0,8" AutomationProperties.Name="{loc:Str Notes.TagFilter}"
                           ItemsSource="{Binding TagFilters}" SelectedItem="{Binding SelectedTagFilter, Mode=TwoWay}" IsVisible="{Binding !ShowTrash}" />
                 <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="2,0,2,8" IsVisible="{Binding ShowTrash}">
@@ -73,6 +92,8 @@
                                     <DockPanel>
                                         <ic:SymbolIcon DockPanel.Dock="Right" Symbol="Pin" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" IsVisible="{Binding IsPinned}"
                                                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                        <c:ProjectBadge DockPanel.Dock="Left" BadgeSize="18" Margin="0,0,6,0" VerticalAlignment="Center" IsVisible="{Binding HasProject}"
+                                                        Number="{Binding Project.Number}" Color="{Binding Project.Color}" ToolTip.Tip="{Binding Project.DisplayName}" />
                                         <TextBlock FontWeight="SemiBold" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
                                     </DockPanel>
                                     <TextBlock Classes="secondary" FontSize="12" Text="{Binding Snippet}" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" />
@@ -120,6 +141,16 @@
                             <Button Classes="accent" Content="{loc:Str Notes.Restore}" Command="{Binding RestoreCommand}" IsVisible="{Binding ShowTrash}" />
                             <Button Content="{loc:Str Notes.DeleteForever}" Command="{Binding DeleteForeverCommand}" IsVisible="{Binding ShowTrash}" />
                         </StackPanel>
+                        <!-- Проект заметки (этап 24): привязка — в самой заметке -->
+                        <ComboBox DockPanel.Dock="Left" Width="200" Margin="0,0,8,0" VerticalAlignment="Top" AutomationProperties.Name="{loc:Str Notes.Project}" ToolTip.Tip="{loc:Str Notes.Project}"
+                                  ItemsSource="{Binding ProjectChoices}" SelectedItem="{Binding SelectedProject, Mode=TwoWay}" ItemTemplate="{StaticResource ProjectChoiceTemplate}">
+                            <ComboBox.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                    <Binding Path="HasProjects" />
+                                    <Binding Path="CanEdit" />
+                                </MultiBinding>
+                            </ComboBox.IsVisible>
+                        </ComboBox>
                         <!-- Теги заметки: чипы и поле с подсказками из тегов заметок -->
                         <v:AutoTagsEditorView DataContext="{Binding TagsEditor}" IsVisible="{Binding $parent[UserControl].((vm:NotesViewModel)DataContext).CanEdit}" Margin="0,0,12,0" />
                     </DockPanel>

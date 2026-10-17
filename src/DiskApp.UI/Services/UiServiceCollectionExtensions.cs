@@ -27,6 +27,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<ISortingSettings, SampleSortingSettings>();
         services.AddSingleton<IInboxService>(static provider => new BrowseInboxService(provider.GetRequiredService<IBrowseService>(), provider.GetRequiredService<ISortingSettings>()));
         services.AddSingleton<INotesService, SampleNotesService>();
+        services.AddSingleton<IProjectsService, SampleProjectsService>();
         services.AddSingleton<IFileHistoryService>(static _ => SampleFileHistoryService.WithSamples(DateTimeOffset.Now));
         services.AddSingleton<ILayoutStore, MemoryLayoutStore>();
         services.AddSingleton<IThemeService, AppThemeService>();
@@ -73,9 +74,18 @@ public static class UiServiceCollectionExtensions
             dispatcher: provider.GetService<IDispatcher>(),
             actions: provider.GetService<IFileActions>(),
             layout: provider.GetService<ILayoutStore>(),
-            notifications: provider.GetService<INotificationService>()));
+            notifications: provider.GetService<INotificationService>(),
+            projects: provider.GetService<IProjectsService>()));
         services.AddSingleton<TagsViewModel>();
         services.AddSingleton<NotesViewModel>();
+        services.AddSingleton(static provider => new ProjectsViewModel(
+            provider.GetRequiredService<IProjectsService>(),
+            provider.GetService<INotesService>(),
+            provider.GetService<ISortingSettings>(),
+            provider.GetService<IDialogService>(),
+            provider.GetService<IInfoBarService>(),
+            provider.GetService<IAppCommands>(),
+            provider.GetService<NotesViewModel>()));
         services.AddSingleton<OperationsViewModel>();
         services.AddSingleton<IOperationsCoordinator>(static provider => provider.GetRequiredService<OperationsViewModel>());
         services.AddSingleton<QuickSearchViewModel>();

@@ -39,65 +39,13 @@ internal static partial class ProjectEndpoints
             .WithDescription("Папка и заметки остаются; заметки — без проекта.");
     }
 
-    /// <summary>Сравнение номеров: числа внутри — как числа, «417» после «99», без учёта регистра.</summary>
-    public static int CompareNumbers(string? left, string? right)
-    {
-        var a = left ?? string.Empty;
-        var b = right ?? string.Empty;
-        int i = 0, j = 0;
-        while (i < a.Length && j < b.Length)
-        {
-            if (char.IsAsciiDigit(a[i]) && char.IsAsciiDigit(b[j]))
-            {
-                var startA = i;
-                var startB = j;
-                while (i < a.Length && char.IsAsciiDigit(a[i]))
-                {
-                    i++;
-                }
-
-                while (j < b.Length && char.IsAsciiDigit(b[j]))
-                {
-                    j++;
-                }
-
-                var digitsA = a[startA..i].TrimStart('0');
-                var digitsB = b[startB..j].TrimStart('0');
-                var byLength = digitsA.Length.CompareTo(digitsB.Length);
-                if (byLength != 0)
-                {
-                    return byLength;
-                }
-
-                var byDigits = string.CompareOrdinal(digitsA, digitsB);
-                if (byDigits != 0)
-                {
-                    return byDigits;
-                }
-            }
-            else
-            {
-                var byChar = char.ToLowerInvariant(a[i]).CompareTo(char.ToLowerInvariant(b[j]));
-                if (byChar != 0)
-                {
-                    return byChar;
-                }
-
-                i++;
-                j++;
-            }
-        }
-
-        return (a.Length - i).CompareTo(b.Length - j);
-    }
-
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex ColorPattern();
 
     private static async Task<Ok<ProjectDto[]>> ListAsync(IProjectRepository projects, CancellationToken cancellationToken)
     {
         var list = await projects.GetAllAsync(cancellationToken).ConfigureAwait(false);
-        return TypedResults.Ok(list.OrderBy(static project => project.Number, Comparer<string>.Create(CompareNumbers)).ThenBy(static project => project.Id).Select(static project => project.ToDto()).ToArray());
+        return TypedResults.Ok(list.OrderBy(static project => project.Number, Comparer<string>.Create(ProjectNumbers.Compare)).ThenBy(static project => project.Id).Select(static project => project.ToDto()).ToArray());
     }
 
     private static async Task<Results<Ok<ProjectDto>, ProblemHttpResult>> GetAsync(long id, IProjectRepository projects, CancellationToken cancellationToken)

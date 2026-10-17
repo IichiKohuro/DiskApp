@@ -1323,6 +1323,18 @@
   <data name="Month.Short.9" xml:space="preserve">
     <value>Sep</value>
   </data>
+  <data name="Notes.AllProjects" xml:space="preserve">
+    <value>All projects</value>
+  </data>
+  <data name="Notes.NoProject" xml:space="preserve">
+    <value>No project</value>
+  </data>
+  <data name="Notes.Project" xml:space="preserve">
+    <value>Note project</value>
+  </data>
+  <data name="Notes.ProjectFilter" xml:space="preserve">
+    <value>Filter by project</value>
+  </data>
   <data name="Notifications.Close" xml:space="preserve">
     <value>Close</value>
   </data>
@@ -1589,6 +1601,123 @@
   </data>
   <data name="Program.TheServerIsTakingLongerThan" xml:space="preserve">
     <value>The server is taking longer than usual to start</value>
+  </data>
+  <data name="Projects.AutoColor" xml:space="preserve">
+    <value>Color by number</value>
+  </data>
+  <data name="Projects.Badge" xml:space="preserve">
+    <value>Project {0}</value>
+  </data>
+  <data name="Projects.ChooseFolder" xml:space="preserve">
+    <value>Choose folder</value>
+  </data>
+  <data name="Projects.ClearFolder" xml:space="preserve">
+    <value>Unlink folder</value>
+  </data>
+  <data name="Projects.Color" xml:space="preserve">
+    <value>Icon color</value>
+  </data>
+  <data name="Projects.Delete" xml:space="preserve">
+    <value>Delete project</value>
+  </data>
+  <data name="Projects.DeleteMessage" xml:space="preserve">
+    <value>The folder and notes stay; the notes will have no project.</value>
+  </data>
+  <data name="Projects.DeleteTitle" xml:space="preserve">
+    <value>Delete project {0}?</value>
+  </data>
+  <data name="Projects.Description" xml:space="preserve">
+    <value>Number, color, main folder and notes of a job. The number icon shows on Sorting and next to notes.</value>
+  </data>
+  <data name="Projects.Empty" xml:space="preserve">
+    <value>No projects yet. A project groups a main folder with its subfolders and notes; its number icon shows on Sorting and next to notes.</value>
+  </data>
+  <data name="Projects.Failed" xml:space="preserve">
+    <value>Failed: {0}</value>
+  </data>
+  <data name="Projects.Folder" xml:space="preserve">
+    <value>Main folder</value>
+  </data>
+  <data name="Projects.FolderHint" xml:space="preserve">
+    <value>Subfolders inside it belong to the project too.</value>
+  </data>
+  <data name="Projects.More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Projects.New" xml:space="preserve">
+    <value>New project</value>
+  </data>
+  <data name="Projects.NewNote" xml:space="preserve">
+    <value>New note</value>
+  </data>
+  <data name="Projects.NoFolder" xml:space="preserve">
+    <value>No folder chosen</value>
+  </data>
+  <data name="Projects.NoNotes" xml:space="preserve">
+    <value>No notes yet.</value>
+  </data>
+  <data name="Projects.NotFound" xml:space="preserve">
+    <value>Project {0} not found.</value>
+  </data>
+  <data name="Projects.Notes.Few" xml:space="preserve">
+    <value>notes</value>
+  </data>
+  <data name="Projects.Notes.Many" xml:space="preserve">
+    <value>notes</value>
+  </data>
+  <data name="Projects.Notes.One" xml:space="preserve">
+    <value>note</value>
+  </data>
+  <data name="Projects.NothingFound" xml:space="preserve">
+    <value>Nothing found</value>
+  </data>
+  <data name="Projects.NothingOpen" xml:space="preserve">
+    <value>Pick a project on the left or create a new one.</value>
+  </data>
+  <data name="Projects.Number" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="Projects.NumberPlaceholder" xml:space="preserve">
+    <value>For example, 417</value>
+  </data>
+  <data name="Projects.NumberRequired" xml:space="preserve">
+    <value>Enter the project number.</value>
+  </data>
+  <data name="Projects.NumberTaken" xml:space="preserve">
+    <value>Number {0} is already taken.</value>
+  </data>
+  <data name="Projects.NumberTakenBy" xml:space="preserve">
+    <value>Number {0} is already used by “{1}”.</value>
+  </data>
+  <data name="Projects.NumberTooLong" xml:space="preserve">
+    <value>The number can be at most {0} characters.</value>
+  </data>
+  <data name="Projects.OpenFolder" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Projects.OtherFolder" xml:space="preserve">
+    <value>Other folder…</value>
+  </data>
+  <data name="Projects.PickFolderTitle" xml:space="preserve">
+    <value>Project main folder</value>
+  </data>
+  <data name="Projects.ProjectNotes" xml:space="preserve">
+    <value>Project notes</value>
+  </data>
+  <data name="Projects.ProjectTitle" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Projects.Search" xml:space="preserve">
+    <value>Find a project</value>
+  </data>
+  <data name="Projects.Title" xml:space="preserve">
+    <value>Projects</value>
+  </data>
+  <data name="Projects.TitlePlaceholder" xml:space="preserve">
+    <value>For example, Lenin Street school</value>
+  </data>
+  <data name="Projects.WorkFolders" xml:space="preserve">
+    <value>Work folders</value>
   </data>
   <data name="QuickSearch.Archives" xml:space="preserve">
     <value>Archives</value>
@@ -3038,6 +3167,9 @@
   </data>
   <data name="Sorting.Undo" xml:space="preserve">
     <value>Undo</value>
+  </data>
+  <data name="Sorting.WorkFolderProject" xml:space="preserve">
+    <value>Project {0}</value>
   </data>
   <data name="Sorting.WorkFolders" xml:space="preserve">
     <value>Work folders</value>

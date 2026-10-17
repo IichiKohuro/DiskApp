@@ -29,7 +29,7 @@ public sealed class NotesViewModelTests
     public async Task NewNote_LeftEmpty_IsNotSavedAndDisappears()
     {
         // Arrange
-        await _service.CreateAsync("Первая", [], TestContext.Current.CancellationToken);
+        await _service.CreateAsync("Первая", [], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
 
         // Act
@@ -70,7 +70,7 @@ public sealed class NotesViewModelTests
     public async Task Typing_SavedByItselfAfterPause()
     {
         // Arrange
-        var note = await _service.CreateAsync("Черновик", [], TestContext.Current.CancellationToken);
+        var note = await _service.CreateAsync("Черновик", [], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
 
         // Act
@@ -86,8 +86,8 @@ public sealed class NotesViewModelTests
     public async Task EditThenSwitchAtOnce_SavesTextIntoNoteItWasTypedIn()
     {
         // Arrange
-        var first = await _service.CreateAsync("Первая", [], TestContext.Current.CancellationToken);
-        var second = await _service.CreateAsync("Вторая", [], TestContext.Current.CancellationToken);
+        var first = await _service.CreateAsync("Первая", [], cancellationToken: TestContext.Current.CancellationToken);
+        var second = await _service.CreateAsync("Вторая", [], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
         page.SelectedNote = page.Notes.Single(item => item.Note.Id == first.Id);
 
@@ -107,8 +107,8 @@ public sealed class NotesViewModelTests
     public async Task TogglePin_MovesNoteToTop()
     {
         // Arrange
-        var old = await _service.CreateAsync("Старая", [], TestContext.Current.CancellationToken);
-        await _service.CreateAsync("Новая", [], TestContext.Current.CancellationToken);
+        var old = await _service.CreateAsync("Старая", [], cancellationToken: TestContext.Current.CancellationToken);
+        await _service.CreateAsync("Новая", [], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
         page.SelectedNote = page.Notes.Single(item => item.Note.Id == old.Id);
 
@@ -144,8 +144,8 @@ public sealed class NotesViewModelTests
     public async Task TagFilter_ShowsOnlyNotesWithTag()
     {
         // Arrange
-        await _service.CreateAsync("Дача", ["дом"], TestContext.Current.CancellationToken);
-        await _service.CreateAsync("Отчёт", ["работа"], TestContext.Current.CancellationToken);
+        await _service.CreateAsync("Дача", ["дом"], cancellationToken: TestContext.Current.CancellationToken);
+        await _service.CreateAsync("Отчёт", ["работа"], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
 
         // Act
@@ -162,8 +162,8 @@ public sealed class NotesViewModelTests
     public async Task Search_FindsByTextAfterPause_EmptyResultExplains()
     {
         // Arrange
-        await _service.CreateAsync("Ёлка\nукрасить к празднику", [], TestContext.Current.CancellationToken);
-        await _service.CreateAsync("Отчёт", [], TestContext.Current.CancellationToken);
+        await _service.CreateAsync("Ёлка\nукрасить к празднику", [], cancellationToken: TestContext.Current.CancellationToken);
+        await _service.CreateAsync("Отчёт", [], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
 
         // Act
@@ -182,7 +182,7 @@ public sealed class NotesViewModelTests
     public async Task TagsEditor_NewTag_SavedWithNoteAsOwnTagWithColor()
     {
         // Arrange
-        await _service.CreateAsync("Идея", [], TestContext.Current.CancellationToken);
+        await _service.CreateAsync("Идея", [], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
 
         // Act
@@ -202,7 +202,7 @@ public sealed class NotesViewModelTests
     public async Task Delete_MovesToTrash_UndoRestores()
     {
         // Arrange
-        var note = await _service.CreateAsync("Удаляемая", [], TestContext.Current.CancellationToken);
+        var note = await _service.CreateAsync("Удаляемая", [], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
         Action? undo = null;
         _notices.When(notices => notices.Show("Заметка в корзине", "Удаляемая", FAInfoBarSeverity.Informational, "Отменить", Arg.Any<Action>()))
@@ -224,8 +224,8 @@ public sealed class NotesViewModelTests
     public async Task Trash_ReadOnly_RestoreAndDeleteForever()
     {
         // Arrange
-        var kept = await _service.CreateAsync("Вернуть", [], TestContext.Current.CancellationToken);
-        var gone = await _service.CreateAsync("Стереть", [], TestContext.Current.CancellationToken);
+        var kept = await _service.CreateAsync("Вернуть", [], cancellationToken: TestContext.Current.CancellationToken);
+        var gone = await _service.CreateAsync("Стереть", [], cancellationToken: TestContext.Current.CancellationToken);
         await _service.DeleteAsync(kept.Id, cancellationToken: TestContext.Current.CancellationToken);
         await _service.DeleteAsync(gone.Id, cancellationToken: TestContext.Current.CancellationToken);
         _dialogs.ConfirmAsync("Удалить заметку навсегда?", Arg.Any<string>(), "Удалить навсегда").Returns(true);
@@ -254,7 +254,7 @@ public sealed class NotesViewModelTests
     public async Task ToggleTask_InPreview_ChangesBodyAndSaves()
     {
         // Arrange
-        await _service.CreateAsync("- [ ] позвонить", [], TestContext.Current.CancellationToken);
+        await _service.CreateAsync("- [ ] позвонить", [], cancellationToken: TestContext.Current.CancellationToken);
         var page = await OpenAsync();
         page.TogglePreviewCommand.Execute(null);
 

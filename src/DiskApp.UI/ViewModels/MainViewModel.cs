@@ -82,8 +82,9 @@ public sealed partial class MainViewModel : ViewModelBase
         SortingViewModel sorting,
         SettingsViewModel settings,
         ISearchService searchService,
-        NotesViewModel? notes = null)
-        : this(home, search, browse, operations, collections, tags, sorting, settings, searchService, static () => DateTimeOffset.Now, notes)
+        NotesViewModel? notes = null,
+        ProjectsViewModel? projects = null)
+        : this(home, search, browse, operations, collections, tags, sorting, settings, searchService, static () => DateTimeOffset.Now, notes, projects)
     {
     }
 
@@ -98,7 +99,8 @@ public sealed partial class MainViewModel : ViewModelBase
         SettingsViewModel settings,
         ISearchService searchService,
         Func<DateTimeOffset> clock,
-        PageViewModel? notes = null)
+        PageViewModel? notes = null,
+        PageViewModel? projects = null)
     {
         ArgumentNullException.ThrowIfNull(inbox);
         ArgumentNullException.ThrowIfNull(home);
@@ -124,6 +126,7 @@ public sealed partial class MainViewModel : ViewModelBase
             collections,
             tags,
             inbox,
+            .. (projects is null ? Array.Empty<PageViewModel>() : [projects]),
             .. (notes is null ? Array.Empty<PageViewModel>() : [notes]),
             operations,
         ];

@@ -36,6 +36,9 @@ public static class PageKeys
     /// <summary>Входящие.</summary>
     public const string Inbox = "inbox";
 
+    /// <summary>Проекты (этап 24).</summary>
+    public const string Projects = "projects";
+
     /// <summary>Заметки (этап 23).</summary>
     public const string Notes = "notes";
 

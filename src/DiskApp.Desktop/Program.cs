@@ -174,6 +174,7 @@ internal static class Program
             services.AddSingleton<ISortingSettings, ApiSortingSettings>();
             services.AddSingleton<IInboxService, ApiInboxService>();
             services.AddSingleton<INotesService, ApiNotesService>();
+            services.AddSingleton<IProjectsService, ApiProjectsService>();
             services.AddSingleton<IFileHistoryService, ApiFileHistoryService>();
             services.AddSingleton<ILayoutStore>(static provider => new Windows.DesktopLayoutStore(
                 new Windows.WindowPlacementStore(Path.Combine(provider.GetRequiredService<DiskApp.Core.Abstractions.IAppPaths>().DataDirectory, "window-state.json"))));

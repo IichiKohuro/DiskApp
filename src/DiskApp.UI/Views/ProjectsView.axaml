@@ -1,0 +1,186 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:DiskApp.UI.Localization"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="using:DiskApp.UI.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:s="using:DiskApp.UI.Services"
+             xmlns:vm="using:DiskApp.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="720"
+             x:Class="DiskApp.UI.Views.ProjectsView"
+             x:DataType="vm:ProjectsViewModel">
+    <!-- Страница «Проекты» (PLAN.md, этап 24, ADR-0017): слева проекты по номеру с поиском, справа карточка — номер,
+         название, цвет иконки, основная папка, заметки проекта. Редкое (отвязать папку, удалить) — в «Ещё». -->
+    <UserControl.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewProjectCommand}" />
+    </UserControl.KeyBindings>
+    <Grid Margin="16,12,16,8" RowDefinitions="Auto,*" ColumnDefinitions="300,12,*">
+        <DockPanel Grid.ColumnSpan="3" Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right" VerticalAlignment="Bottom" Classes="accent" Command="{Binding NewProjectCommand}" ToolTip.Tip="Ctrl+N"
+                    AutomationProperties.Name="{loc:Str Projects.New}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <ic:SymbolIcon Symbol="Add" FontSize="16" />
+                    <TextBlock Text="{loc:Str Projects.New}" />
+                </StackPanel>
+            </Button>
+            <StackPanel Spacing="4">
+                <TextBlock Theme="{StaticResource TitleLargeTextBlockStyle}" Text="{loc:Str Projects.Title}" />
+                <TextBlock Classes="secondary" TextWrapping="Wrap" Text="{loc:Str Projects.Description}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Список -->
+        <Border Grid.Row="1" Classes="card" Padding="8">
+            <DockPanel>
+                <TextBox DockPanel.Dock="Top" Margin="0,0,0,8" AutomationProperties.Name="{loc:Str Projects.Search}" PlaceholderText="{loc:Str Projects.Search}"
+                         Text="{Binding SearchText, Mode=TwoWay}" />
+                <Panel>
+                    <ListBox AutomationProperties.Name="{loc:Str Projects.Title}" ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject, Mode=TwoWay}" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProjectItem">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Margin="0,4" ToolTip.Tip="{Binding Project.DisplayName}">
+                                    <c:ProjectBadge BadgeSize="36" VerticalAlignment="Center" Number="{Binding Number}" Color="{Binding Color}" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding NumberText}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Classes="secondary" FontSize="12" Text="{Binding Title}" TextTrimming="CharacterEllipsis" IsVisible="{Binding !!Title.Length}" />
+                                        <TextBlock Classes="tertiary" FontSize="11" Text="{Binding Details}" TextTrimming="CharacterEllipsis" IsVisible="{Binding !!Details.Length}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" MaxWidth="250" IsVisible="{Binding IsEmpty}">
+                        <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" Text="{Binding EmptyText}" />
+                        <Button HorizontalAlignment="Center" Content="{loc:Str Projects.New}" Command="{Binding NewProjectCommand}" IsVisible="{Binding !SearchText.Length}" />
+                    </StackPanel>
+                </Panel>
+            </DockPanel>
+        </Border>
+
+        <!-- Карточка проекта -->
+        <Border Grid.Row="1" Grid.Column="2" Classes="card" Padding="16">
+            <Panel>
+                <ScrollViewer IsVisible="{Binding HasProject}">
+                    <StackPanel Spacing="18" Margin="0,0,8,0">
+                        <!-- Иконка, номер, название; «Ещё» — отвязать папку, удалить проект -->
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                            <c:ProjectBadge x:Name="CardBadge" BadgeSize="72" VerticalAlignment="Top" Number="{Binding Number}" Color="{Binding BadgeColor}" />
+                            <StackPanel Grid.Column="1" Spacing="8">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Classes="secondary" FontSize="12" Text="{loc:Str Projects.Number}" />
+                                    <TextBox x:Name="NumberBox" MaxWidth="240" HorizontalAlignment="Left" MinWidth="160" MaxLength="20"
+                                             AutomationProperties.Name="{loc:Str Projects.Number}" PlaceholderText="{loc:Str Projects.NumberPlaceholder}"
+                                             Text="{Binding Number, Mode=TwoWay}" />
+                                    <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                               Text="{Binding NumberError}" IsVisible="{Binding HasNumberError}" />
+                                </StackPanel>
+                                <StackPanel Spacing="4">
+                                    <TextBlock Classes="secondary" FontSize="12" Text="{loc:Str Projects.ProjectTitle}" />
+                                    <TextBox MaxLength="200" AutomationProperties.Name="{loc:Str Projects.ProjectTitle}" PlaceholderText="{loc:Str Projects.TitlePlaceholder}"
+                                             Text="{Binding ProjectTitle, Mode=TwoWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Grid.Column="2" VerticalAlignment="Top" Classes="tool" AutomationProperties.Name="{loc:Str Projects.More}" ToolTip.Tip="{loc:Str Projects.More}">
+                                <ic:SymbolIcon Symbol="MoreHorizontal" FontSize="16" />
+                                <Button.Flyout>
+                                    <MenuFlyout>
+                                        <MenuItem Header="{loc:Str Projects.ClearFolder}" Command="{Binding ClearFolderCommand}" IsVisible="{Binding HasFolder}" />
+                                        <Separator IsVisible="{Binding HasFolder}" />
+                                        <MenuItem Header="{loc:Str Projects.Delete}" Command="{Binding DeleteCommand}" />
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                            </Button>
+                        </Grid>
+
+                        <!-- Цвет иконки: по номеру или из палитры -->
+                        <StackPanel Spacing="6">
+                            <TextBlock FontWeight="SemiBold" Text="{loc:Str Projects.Color}" />
+                            <ListBox Classes="swatches" AutomationProperties.Name="{loc:Str Projects.Color}" ItemsSource="{Binding Colors}" SelectedItem="{Binding SelectedColor, Mode=TwoWay}"
+                                     Background="Transparent">
+                                <ListBox.Styles>
+                                    <Style Selector="ListBox.swatches ListBoxItem">
+                                        <Setter Property="Padding" Value="3" />
+                                        <Setter Property="Margin" Value="0,0,4,4" />
+                                        <Setter Property="MinWidth" Value="0" />
+                                        <Setter Property="MinHeight" Value="0" />
+                                        <Setter Property="CornerRadius" Value="8" />
+                                    </Style>
+                                </ListBox.Styles>
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ProjectColorChoice">
+                                        <Panel Width="28" Height="28" ToolTip.Tip="{Binding Text}" AutomationProperties.Name="{Binding Text}">
+                                            <Border CornerRadius="6" Background="{Binding Color, Converter={x:Static c:TagConverters.Brush}}" IsVisible="{Binding !IsAuto}" />
+                                            <Border CornerRadius="6" BorderThickness="1" BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}" IsVisible="{Binding IsAuto}">
+                                                <ic:SymbolIcon Symbol="ColorBackground" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                        </Panel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+
+                        <!-- Основная папка: одна, подпапки — тоже проект -->
+                        <StackPanel Spacing="6">
+                            <TextBlock FontWeight="SemiBold" Text="{loc:Str Projects.Folder}" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <ic:SymbolIcon Symbol="Folder" FontSize="22" VerticalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                    <TextBlock Text="{Binding FolderName}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Classes="tertiary" FontSize="12" Text="{Binding FolderText}" TextTrimming="PathSegmentEllipsis" ToolTip.Tip="{Binding FolderPath}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                    <Button Content="{loc:Str Projects.OpenFolder}" Command="{Binding OpenFolderCommand}" IsVisible="{Binding HasFolder}" />
+                                    <Button x:Name="ChooseFolderButton" Click="OnChooseFolderClick" AutomationProperties.Name="{loc:Str Projects.ChooseFolder}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{loc:Str Projects.ChooseFolder}" />
+                                            <ic:SymbolIcon Symbol="ArrowDown" FontSize="12" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Заметки проекта -->
+                        <StackPanel Spacing="6" IsVisible="{Binding CanUseNotes}">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Command="{Binding NewNoteCommand}" AutomationProperties.Name="{loc:Str Projects.NewNote}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <ic:SymbolIcon Symbol="Add" FontSize="14" />
+                                        <TextBlock Text="{loc:Str Projects.NewNote}" />
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{loc:Str Projects.ProjectNotes}" />
+                            </DockPanel>
+                            <TextBlock Classes="secondary" Text="{loc:Str Projects.NoNotes}" IsVisible="{Binding !HasProjectNotes}" />
+                            <ItemsControl ItemsSource="{Binding ProjectNotes}" IsVisible="{Binding HasProjectNotes}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="s:NoteInfo">
+                                        <Button Classes="tool" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="8,6" AutomationProperties.Name="{Binding Title}"
+                                                Command="{Binding $parent[UserControl].((vm:ProjectsViewModel)DataContext).OpenNoteCommand}" CommandParameter="{Binding}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <ic:SymbolIcon Symbol="Note" FontSize="16" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                <ic:SymbolIcon Symbol="Pin" FontSize="12" VerticalAlignment="Center" IsVisible="{Binding IsPinned}"
+                                                               Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" IsVisible="{Binding !HasProject}">
+                    <ic:SymbolIcon Symbol="Folder" FontSize="36" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    <TextBlock Classes="secondary" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="320" Text="{loc:Str Projects.NothingOpen}" />
+                </StackPanel>
+            </Panel>
+        </Border>
+    </Grid>
+</UserControl>

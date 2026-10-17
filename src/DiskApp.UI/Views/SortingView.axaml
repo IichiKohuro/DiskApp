@@ -232,6 +232,8 @@
                                     <Border Classes="keycap" IsVisible="{Binding HasNumber}" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding NumberText}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
+                                    <!-- Папка проекта (этап 24): иконка с номером проекта -->
+                                    <c:ProjectBadge BadgeSize="18" VerticalAlignment="Center" Number="{Binding Project.Number}" Color="{Binding Project.Color}" IsVisible="{Binding HasProject}" />
                                     <TextBlock Text="{Binding Folder.Title}" VerticalAlignment="Center" />
                                     <StackPanel.ContextFlyout>
                                         <MenuFlyout>

@@ -19,11 +19,20 @@ namespace DiskApp.UI.ViewModels;
 public sealed partial class NoteItem : ObservableObject
 {
     /// <summary>Создаёт строку.</summary>
-    public NoteItem(NoteInfo note, Func<DateTimeOffset> clock)
+    public NoteItem(NoteInfo note, Func<DateTimeOffset> clock, ProjectInfo? project = null)
     {
         Note = note ?? throw new ArgumentNullException(nameof(note));
         Clock = clock;
+        Project = project;
     }
+
+    /// <summary>Проект заметки — иконка с номером в строке (этап 24); <c>null</c> — без проекта.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasProject))]
+    public partial ProjectInfo? Project { get; set; }
+
+    /// <summary>Заметка в проекте.</summary>
+    public bool HasProject => Project is not null;
 
     /// <summary>Заметка.</summary>
     [ObservableProperty]
@@ -54,6 +63,18 @@ public sealed partial class NoteItem : ObservableObject
     public override string ToString() => Title;
 }
 
+/// <summary>Проект в выборе заметки и в фильтре списка; без проекта — «Без проекта» или «Все проекты».</summary>
+/// <param name="Project">Проект; <c>null</c> — без проекта или все.</param>
+/// <param name="Text">Подпись.</param>
+public sealed record NoteProjectChoice(ProjectInfo? Project, string Text)
+{
+    /// <summary>Есть проект — показывается его иконка.</summary>
+    public bool HasProject => Project is not null;
+
+    /// <inheritdoc />
+    public override string ToString() => Text;
+}
+
 /// <summary>Фильтр списка по тегу заметок; без тега — все.</summary>
 /// <param name="Tag">Тег; <c>null</c> — «Все теги».</param>
 /// <param name="Text">Подпись.</param>
@@ -67,6 +88,7 @@ public sealed record NoteTagFilter(TagInfo? Tag, string Text)
 /// Страница «Заметки» (PLAN.md, этап 23, ADR-0014): список слева — закреплённые сверху, поиск по тексту, фильтр по тегу,
 /// корзина; справа — заметка: текст в Markdown, правка или просмотр, свои теги, закрепить, удалить с «Отменить».
 /// Изменения сохраняются сами после паузы в наборе; новая заметка попадает на сервер, когда в ней что-то написано.
+/// Заметка привязывается к проекту в самой заметке, список фильтруется по проекту (этап 24).
 /// </summary>
 public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
 {
@@ -92,7 +114,11 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     private readonly IInfoBarService? _notices;
     private readonly Func<DateTimeOffset> _clock;
     private readonly ILayoutStore? _layout;
+    private readonly IProjectsService? _projects;
     private IReadOnlyList<TagInfo> _knownTags = [];
+    private IReadOnlyList<ProjectInfo> _knownProjects = [];
+    private long? _openOnNavigate;
+    private long? _newForProjectOnNavigate;
     private CancellationTokenSource? _saveDelay;
     private CancellationTokenSource? _searchDelay;
     private Task _saving = Task.CompletedTask;
@@ -105,9 +131,11 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     /// <param name="notices">Уведомления: «Отменить» после удаления.</param>
     /// <param name="clock">Часы.</param>
     /// <param name="layout">Ширина списка между запусками; <c>null</c> — не запоминается.</param>
-    public NotesViewModel(INotesService notes, IDialogService? dialogs = null, IInfoBarService? notices = null, Func<DateTimeOffset>? clock = null, ILayoutStore? layout = null)
+    /// <param name="projects">Проекты (этап 24): привязка заметки и фильтр; <c>null</c> — без проектов.</param>
+    public NotesViewModel(INotesService notes, IDialogService? dialogs = null, IInfoBarService? notices = null, Func<DateTimeOffset>? clock = null, ILayoutStore? layout = null, IProjectsService? projects = null)
         : base(PageKeys.Notes, "Notes.Title", FASymbol.Edit)
     {
+        _projects = projects;
         _notes = notes ?? throw new ArgumentNullException(nameof(notes));
         _dialogs = dialogs;
         _notices = notices;
@@ -116,6 +144,10 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
         _layout = layout;
         TagFilters.Add(new NoteTagFilter(null, L.T("Notes.AllTags")));
         SelectedTagFilter = TagFilters[0];
+        ProjectFilters.Add(new NoteProjectChoice(null, L.T("Notes.AllProjects")));
+        SelectedProjectFilter = ProjectFilters[0];
+        ProjectChoices.Add(new NoteProjectChoice(null, L.T("Notes.NoProject")));
+        SelectedProject = ProjectChoices[0];
     }
 
     /// <summary>Новая заметка создана: поле текста получает фокус, чтобы сразу писать.</summary>
@@ -138,6 +170,24 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
 
     /// <summary>Выбран тег, а не «Все теги»: его можно переименовать или удалить.</summary>
     public bool HasTagFilter => SelectedTagFilter?.Tag is not null;
+
+    /// <summary>Фильтры по проекту: «Все проекты» и проекты.</summary>
+    public ObservableCollection<NoteProjectChoice> ProjectFilters { get; } = [];
+
+    /// <summary>Выбранный фильтр по проекту.</summary>
+    [ObservableProperty]
+    public partial NoteProjectChoice? SelectedProjectFilter { get; set; }
+
+    /// <summary>Проекты для открытой заметки: «Без проекта» и проекты.</summary>
+    public ObservableCollection<NoteProjectChoice> ProjectChoices { get; } = [];
+
+    /// <summary>Проект открытой заметки.</summary>
+    [ObservableProperty]
+    public partial NoteProjectChoice? SelectedProject { get; set; }
+
+    /// <summary>Проекты есть: видны выбор проекта в заметке и фильтр списка.</summary>
+    [ObservableProperty]
+    public partial bool HasProjects { get; set; }
 
     /// <summary>Поиск по тексту заметок.</summary>
     [ObservableProperty]
@@ -183,7 +233,7 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     public string PreviewToggleText => IsPreview ? L.T("Notes.Edit") : L.T("Notes.Preview");
 
     /// <summary>Подпись вместо пустого списка.</summary>
-    public string EmptyText => ShowTrash ? L.T("Notes.TrashEmpty") : SearchText.Trim().Length > 0 || HasTagFilter ? L.T("Notes.NothingFound") : L.T("Notes.NoNotesYet");
+    public string EmptyText => ShowTrash ? L.T("Notes.TrashEmpty") : SearchText.Trim().Length > 0 || HasTagFilter || SelectedProjectFilter?.Project is not null ? L.T("Notes.NothingFound") : L.T("Notes.NoNotesYet");
 
     /// <summary>Список пуст.</summary>
     public bool IsEmpty => Notes.Count == 0;
@@ -206,7 +256,37 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     }
 
     /// <inheritdoc />
-    public void OnNavigatedTo() => PendingLoad = ReloadAsync(SelectedNote?.Note.Id);
+    public void OnNavigatedTo()
+    {
+        var newFor = _newForProjectOnNavigate;
+        var open = _openOnNavigate;
+        _newForProjectOnNavigate = null;
+        _openOnNavigate = null;
+        PendingLoad = newFor is { } projectId ? NewNoteForAsync(projectId) : ReloadAsync(open ?? SelectedNote?.Note.Id);
+    }
+
+    /// <summary>Открыть заметку при следующем входе на страницу: щелчок по заметке в карточке проекта.</summary>
+    public void OpenOnNavigate(long noteId)
+    {
+        _newForProjectOnNavigate = null;
+        _openOnNavigate = noteId;
+        if (Notes.All(item => item.Note.Id != noteId))
+        {
+            // Заметку мог скрывать отбор списка — он снимается, чтобы заметка была видна в списке.
+            _loadingFilters = true;
+            SelectedProjectFilter = ProjectFilters[0];
+            SelectedTagFilter = TagFilters[0];
+            _loadingFilters = false;
+            ShowTrash = false;
+        }
+    }
+
+    /// <summary>Новая заметка проекта при следующем входе на страницу: «Новая заметка» в карточке проекта.</summary>
+    public void NewNoteOnNavigate(long projectId)
+    {
+        _openOnNavigate = null;
+        _newForProjectOnNavigate = projectId;
+    }
 
     /// <inheritdoc />
     public void OnNavigatedFrom() => _ = FlushAsync();
@@ -236,18 +316,23 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
         return ReloadAsync(SelectedNote?.Note.Id);
     }
 
-    /// <summary>Новая заметка: сразу в правке, на сервер попадёт с первым словом.</summary>
+    /// <summary>Новая заметка: сразу в правке, на сервер попадёт с первым словом. При фильтре по проекту — в нём.</summary>
     [RelayCommand]
-    private async Task NewNoteAsync()
+    private Task NewNoteAsync() => NewNoteForAsync(SelectedProjectFilter?.Project?.Id);
+
+    private async Task NewNoteForAsync(long? projectId)
     {
         await FlushAsync();
-        if (ShowTrash)
+
+        // Новая заметка проекта — в списке его заметок; пустой список — первый вход на страницу, проекты ещё не прочитаны.
+        var refilter = projectId is not null && SelectedProjectFilter?.Project?.Id != projectId;
+        if (ShowTrash || refilter || Notes.Count == 0)
         {
             ShowTrash = false;
-            await ReloadAsync(null);
+            await ReloadAsync(null, keepProjectId: projectId);
         }
 
-        var draft = new NoteItem(new NoteInfo(0, string.Empty, string.Empty, false, _clock(), null, []), _clock);
+        var draft = new NoteItem(new NoteInfo(0, string.Empty, string.Empty, false, _clock(), null, [], projectId), _clock, ProjectById(projectId));
         Notes.Insert(0, draft);
         OnPropertyChanged(nameof(IsEmpty));
         IsPreview = false;
@@ -389,6 +474,7 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
         {
             Body = newValue?.Note.Body ?? string.Empty;
             IsPinned = newValue?.Note.IsPinned ?? false;
+            SelectedProject = ProjectChoices.FirstOrDefault(choice => choice.Project is { } project && project.Id == newValue?.Note.ProjectId) ?? ProjectChoices[0];
             if (TagsEditor is not null)
             {
                 TagsEditor.Tags.CollectionChanged -= OnTagsChanged;
@@ -409,6 +495,25 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     }
 
     partial void OnBodyChanged(string value) => QueueSave(SaveDelay);
+
+    partial void OnSelectedProjectChanged(NoteProjectChoice? value)
+    {
+        if (!_loadingNote && SelectedNote is { } item && CanEdit)
+        {
+            item.Project = value?.Project;
+        }
+
+        QueueSave(TagsSaveDelay);
+    }
+
+    partial void OnSelectedProjectFilterChanged(NoteProjectChoice? value)
+    {
+        OnPropertyChanged(nameof(EmptyText));
+        if (!_loadingFilters)
+        {
+            PendingLoad = ReloadAsync(SelectedNote?.Note.Id);
+        }
+    }
 
     partial void OnListColumnWidthChanged(GridLength value)
     {
@@ -467,7 +572,7 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
     private SaveRequest? Capture(NoteItem? item)
         => item is null || ShowTrash
             ? null
-            : new SaveRequest(item, Body, IsPinned, TagsEditor?.Names ?? [.. item.Note.Tags.Select(static tag => tag.Name)], TagsEditor?.NewNames ?? []);
+            : new SaveRequest(item, Body, IsPinned, TagsEditor?.Names ?? [.. item.Note.Tags.Select(static tag => tag.Name)], TagsEditor?.NewNames ?? [], item.Project?.Id);
 
     // Сохранения идут по одному: следующее ждёт предыдущее, иначе быстрый набор мог бы обогнать сам себя.
     private Task SaveQueuedAsync(SaveRequest? request)
@@ -488,7 +593,7 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
 
         var note = request.Item.Note;
         var sameTags = request.Names.Count == note.Tags.Count && request.Names.All(name => note.Tags.Any(tag => string.Equals(tag.Name, name, StringComparison.OrdinalIgnoreCase)));
-        if ((note.Body == request.Body && note.IsPinned == request.IsPinned && sameTags) || (note.Id == 0 && request.Body.Trim().Length == 0 && request.Names.Count == 0))
+        if ((note.Body == request.Body && note.IsPinned == request.IsPinned && sameTags && note.ProjectId == request.ProjectId) || (note.Id == 0 && request.Body.Trim().Length == 0 && request.Names.Count == 0))
         {
             return;
         }
@@ -511,14 +616,15 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
             }
 
             var saved = note.Id == 0
-                ? await _notes.CreateAsync(request.Body, request.Names)
-                : await _notes.UpdateAsync(note.Id, request.Body, request.IsPinned, request.Names);
+                ? await _notes.CreateAsync(request.Body, request.Names, request.ProjectId)
+                : await _notes.UpdateAsync(note.Id, request.Body, request.IsPinned, request.Names, request.ProjectId);
             if (note.Id == 0 && request.IsPinned)
             {
-                saved = await _notes.UpdateAsync(saved.Id, request.Body, request.IsPinned, request.Names);
+                saved = await _notes.UpdateAsync(saved.Id, request.Body, request.IsPinned, request.Names, request.ProjectId);
             }
 
             request.Item.Note = saved;
+            request.Item.Project = ProjectById(saved.ProjectId);
             if (ReferenceEquals(SelectedNote, request.Item) && TagsEditor is { } editor)
             {
                 // Новый тег получил цвет при сохранении — чип в заметке тоже.
@@ -550,7 +656,7 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
         await PendingLoad;
     }
 
-    private async Task ReloadAsync(long? selectId, long? keepTagId = null)
+    private async Task ReloadAsync(long? selectId, long? keepTagId = null, long? keepProjectId = null)
     {
         await FlushAsync();
         if (selectId == 0)
@@ -564,13 +670,19 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
         {
             _knownTags = await _notes.GetTagsAsync();
             RebuildFilters(keepTagId);
-            list = await _notes.GetNotesAsync(SearchText.Trim(), SelectedTagFilter?.Tag?.Id, ShowTrash);
+            if (_projects is not null)
+            {
+                _knownProjects = await _projects.GetProjectsAsync();
+                RebuildProjects(keepProjectId);
+            }
+
+            list = await _notes.GetNotesAsync(SearchText.Trim(), SelectedTagFilter?.Tag?.Id, ShowTrash, ShowTrash ? null : SelectedProjectFilter?.Project?.Id);
         });
 
         Notes.Clear();
         foreach (var note in list)
         {
-            Notes.Add(new NoteItem(note, _clock));
+            Notes.Add(new NoteItem(note, _clock, ProjectById(note.ProjectId)));
         }
 
         OnPropertyChanged(nameof(IsEmpty));
@@ -599,6 +711,51 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
         }
     }
 
+    private ProjectInfo? ProjectById(long? id) => id is { } value ? _knownProjects.FirstOrDefault(project => project.Id == value) : null;
+
+    private void RebuildProjects(long? keepProjectId = null)
+    {
+        var filter = keepProjectId ?? SelectedProjectFilter?.Project?.Id;
+        _loadingFilters = true;
+        try
+        {
+            ProjectFilters.Clear();
+            ProjectFilters.Add(new NoteProjectChoice(null, L.T("Notes.AllProjects")));
+            foreach (var project in _knownProjects)
+            {
+                ProjectFilters.Add(new NoteProjectChoice(project, project.DisplayName));
+            }
+
+            SelectedProjectFilter = ProjectFilters.FirstOrDefault(choice => choice.Project?.Id == filter) ?? ProjectFilters[0];
+        }
+        finally
+        {
+            _loadingFilters = false;
+        }
+
+        // Выбор проекта открытой заметки перестраивается без сохранения: заметка от этого не меняется.
+        var current = SelectedProject?.Project?.Id;
+        var loading = _loadingNote;
+        _loadingNote = true;
+        try
+        {
+            ProjectChoices.Clear();
+            ProjectChoices.Add(new NoteProjectChoice(null, L.T("Notes.NoProject")));
+            foreach (var project in _knownProjects)
+            {
+                ProjectChoices.Add(new NoteProjectChoice(project, project.DisplayName));
+            }
+
+            SelectedProject = ProjectChoices.FirstOrDefault(choice => choice.Project?.Id == current) ?? ProjectChoices[0];
+        }
+        finally
+        {
+            _loadingNote = loading;
+        }
+
+        HasProjects = _knownProjects.Count > 0;
+    }
+
     private async Task RestoreByIdAsync(long id)
     {
         if (await TryAsync(() => _notes.RestoreAsync(id)))
@@ -622,5 +779,5 @@ public sealed partial class NotesViewModel : PageViewModel, IPageLifecycle
         }
     }
 
-    private sealed record SaveRequest(NoteItem Item, string Body, bool IsPinned, IReadOnlyList<string> Names, IReadOnlyList<string> NewNames);
+    private sealed record SaveRequest(NoteItem Item, string Body, bool IsPinned, IReadOnlyList<string> Names, IReadOnlyList<string> NewNames, long? ProjectId);
 }

@@ -50,6 +50,9 @@
         <DataTemplate DataType="vm:TagsViewModel">
             <views:TagsView />
         </DataTemplate>
+        <DataTemplate DataType="vm:ProjectsViewModel">
+            <views:ProjectsView />
+        </DataTemplate>
         <DataTemplate DataType="vm:NotesViewModel">
             <views:NotesView />
         </DataTemplate>

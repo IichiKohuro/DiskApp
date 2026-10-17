@@ -14,21 +14,22 @@ namespace DiskApp.UI.Services;
 /// <param name="Modified">Изменена.</param>
 /// <param name="Deleted">Удалена в корзину; <c>null</c> — нет.</param>
 /// <param name="Tags">Теги заметки — свой список, не теги файлов.</param>
-public sealed record NoteInfo(long Id, string Title, string Body, bool IsPinned, DateTimeOffset Modified, DateTimeOffset? Deleted, IReadOnlyList<TagInfo> Tags);
+/// <param name="ProjectId">Проект заметки (этап 24); <c>null</c> — без проекта.</param>
+public sealed record NoteInfo(long Id, string Title, string Body, bool IsPinned, DateTimeOffset Modified, DateTimeOffset? Deleted, IReadOnlyList<TagInfo> Tags, long? ProjectId = null);
 
 /// <summary>
 /// Заметки и теги заметок (PLAN.md, этап 23, ADR-0014).
 /// </summary>
 public interface INotesService
 {
-    /// <summary>Заметки: закреплённые сверху; поиск по тексту, тег, корзина.</summary>
-    Task<IReadOnlyList<NoteInfo>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default);
+    /// <summary>Заметки: закреплённые сверху; поиск по тексту, тег, корзина, проект.</summary>
+    Task<IReadOnlyList<NoteInfo>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, long? projectId = null, CancellationToken cancellationToken = default);
 
-    /// <summary>Новая заметка.</summary>
-    Task<NoteInfo> CreateAsync(string body, IReadOnlyList<string> tags, CancellationToken cancellationToken = default);
+    /// <summary>Новая заметка; <paramref name="projectId"/> — сразу в проекте.</summary>
+    Task<NoteInfo> CreateAsync(string body, IReadOnlyList<string> tags, long? projectId = null, CancellationToken cancellationToken = default);
 
-    /// <summary>Сохраняет текст, закрепление и теги; новые имена тегов становятся тегами заметок.</summary>
-    Task<NoteInfo> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<string> tags, CancellationToken cancellationToken = default);
+    /// <summary>Сохраняет текст, закрепление, теги и проект; новые имена тегов становятся тегами заметок.</summary>
+    Task<NoteInfo> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<string> tags, long? projectId = null, CancellationToken cancellationToken = default);
 
     /// <summary>В корзину заметок; <paramref name="permanent"/> — навсегда, только из корзины.</summary>
     Task DeleteAsync(long id, bool permanent = false, CancellationToken cancellationToken = default);
@@ -55,16 +56,16 @@ public sealed class ApiNotesService(IDiskAppApi api) : INotesService
     private readonly IDiskAppApi _api = api ?? throw new ArgumentNullException(nameof(api));
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<NoteInfo>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default)
-        => [.. (await _api.GetNotesAsync(query, tagId, deleted, cancellationToken: cancellationToken).ConfigureAwait(false)).Select(ToNote)];
+    public async Task<IReadOnlyList<NoteInfo>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, long? projectId = null, CancellationToken cancellationToken = default)
+        => [.. (await _api.GetNotesAsync(query, tagId, deleted, projectId, cancellationToken).ConfigureAwait(false)).Select(ToNote)];
 
     /// <inheritdoc />
-    public async Task<NoteInfo> CreateAsync(string body, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)
-        => ToNote(await _api.CreateNoteAsync(new NoteRequest { Body = body, Tags = tags }, cancellationToken).ConfigureAwait(false));
+    public async Task<NoteInfo> CreateAsync(string body, IReadOnlyList<string> tags, long? projectId = null, CancellationToken cancellationToken = default)
+        => ToNote(await _api.CreateNoteAsync(new NoteRequest { Body = body, Tags = tags, ProjectId = projectId }, cancellationToken).ConfigureAwait(false));
 
     /// <inheritdoc />
-    public async Task<NoteInfo> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)
-        => ToNote(await _api.UpdateNoteAsync(id, new NoteRequest { Body = body, IsPinned = isPinned, Tags = tags }, cancellationToken).ConfigureAwait(false));
+    public async Task<NoteInfo> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<string> tags, long? projectId = null, CancellationToken cancellationToken = default)
+        => ToNote(await _api.UpdateNoteAsync(id, new NoteRequest { Body = body, IsPinned = isPinned, Tags = tags, ProjectId = projectId }, cancellationToken).ConfigureAwait(false));
 
     /// <inheritdoc />
     public Task DeleteAsync(long id, bool permanent = false, CancellationToken cancellationToken = default) => _api.DeleteNoteAsync(id, permanent, cancellationToken);
@@ -91,7 +92,7 @@ public sealed class ApiNotesService(IDiskAppApi api) : INotesService
     private static TagInfo ToTag(TagDto dto) => new(dto.Id, dto.Name, dto.Color);
 
     private static NoteInfo ToNote(NoteDto dto)
-        => new(dto.Id, dto.Title, dto.Body, dto.IsPinned, dto.ModifiedUtc.ToLocalTime(), dto.DeletedUtc?.ToLocalTime(), [.. dto.Tags.Select(ToTag)]);
+        => new(dto.Id, dto.Title, dto.Body, dto.IsPinned, dto.ModifiedUtc.ToLocalTime(), dto.DeletedUtc?.ToLocalTime(), [.. dto.Tags.Select(ToTag)], dto.ProjectId);
 }
 
 /// <summary>
@@ -126,7 +127,7 @@ public sealed class SampleNotesService : INotesService
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<NoteInfo>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<NoteInfo>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, long? projectId = null, CancellationToken cancellationToken = default)
     {
         var terms = (query ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         lock (_gate)
@@ -134,6 +135,7 @@ public sealed class SampleNotesService : INotesService
             IReadOnlyList<NoteInfo> result = [.. _notes
                 .Where(note => (note.Deleted is not null) == deleted)
                 .Where(note => tagId is null || note.Tags.Any(tag => tag.Id == tagId))
+                .Where(note => projectId is null || note.ProjectId == projectId)
                 .Where(note => terms.All(term => Fold(note.Body).Contains(Fold(term), StringComparison.Ordinal)))
                 .OrderByDescending(static note => note.IsPinned)
                 .ThenByDescending(static note => note.Modified)];
@@ -142,18 +144,18 @@ public sealed class SampleNotesService : INotesService
     }
 
     /// <inheritdoc />
-    public Task<NoteInfo> CreateAsync(string body, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)
+    public Task<NoteInfo> CreateAsync(string body, IReadOnlyList<string> tags, long? projectId = null, CancellationToken cancellationToken = default)
     {
         lock (_gate)
         {
-            var note = new NoteInfo(_nextId++, Title(body), body, false, _clock(), null, Resolve(tags));
+            var note = new NoteInfo(_nextId++, Title(body), body, false, _clock(), null, Resolve(tags), projectId);
             _notes.Add(note);
             return Task.FromResult(note);
         }
     }
 
     /// <inheritdoc />
-    public Task<NoteInfo> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)
+    public Task<NoteInfo> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<string> tags, long? projectId = null, CancellationToken cancellationToken = default)
     {
         lock (_gate)
         {
@@ -163,7 +165,7 @@ public sealed class SampleNotesService : INotesService
                 throw new InvalidOperationException(L.F("Notes.NotFoundSample", id));
             }
 
-            var note = _notes[index] with { Title = Title(body), Body = body, IsPinned = isPinned, Modified = _clock(), Tags = Resolve(tags) };
+            var note = _notes[index] with { Title = Title(body), Body = body, IsPinned = isPinned, Modified = _clock(), Tags = Resolve(tags), ProjectId = projectId };
             _notes[index] = note;
             return Task.FromResult(note);
         }
@@ -199,6 +201,15 @@ public sealed class SampleNotesService : INotesService
             var index = _notes.FindIndex(note => note.Id == id);
             _notes[index] = _notes[index] with { Deleted = null };
             return Task.FromResult(_notes[index]);
+        }
+    }
+
+    /// <summary>Заметок проекта без корзины — для <see cref="SampleProjectsService.NoteCounter"/>.</summary>
+    public int CountForProject(long projectId)
+    {
+        lock (_gate)
+        {
+            return _notes.Count(note => note.ProjectId == projectId && note.Deleted is null);
         }
     }
 

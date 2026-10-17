@@ -1323,6 +1323,18 @@
   <data name="Month.Short.9" xml:space="preserve">
     <value>сен</value>
   </data>
+  <data name="Notes.AllProjects" xml:space="preserve">
+    <value>Все проекты</value>
+  </data>
+  <data name="Notes.NoProject" xml:space="preserve">
+    <value>Без проекта</value>
+  </data>
+  <data name="Notes.Project" xml:space="preserve">
+    <value>Проект заметки</value>
+  </data>
+  <data name="Notes.ProjectFilter" xml:space="preserve">
+    <value>Отбор по проекту</value>
+  </data>
   <data name="Notifications.Close" xml:space="preserve">
     <value>Закрыть</value>
   </data>
@@ -1589,6 +1601,123 @@
   </data>
   <data name="Program.TheServerIsTakingLongerThan" xml:space="preserve">
     <value>Сервер запускается дольше обычного</value>
+  </data>
+  <data name="Projects.AutoColor" xml:space="preserve">
+    <value>Цвет по номеру</value>
+  </data>
+  <data name="Projects.Badge" xml:space="preserve">
+    <value>Проект {0}</value>
+  </data>
+  <data name="Projects.ChooseFolder" xml:space="preserve">
+    <value>Выбрать папку</value>
+  </data>
+  <data name="Projects.ClearFolder" xml:space="preserve">
+    <value>Отвязать папку</value>
+  </data>
+  <data name="Projects.Color" xml:space="preserve">
+    <value>Цвет иконки</value>
+  </data>
+  <data name="Projects.Delete" xml:space="preserve">
+    <value>Удалить проект</value>
+  </data>
+  <data name="Projects.DeleteMessage" xml:space="preserve">
+    <value>Папка и заметки останутся на месте, заметки — без проекта.</value>
+  </data>
+  <data name="Projects.DeleteTitle" xml:space="preserve">
+    <value>Удалить проект {0}?</value>
+  </data>
+  <data name="Projects.Description" xml:space="preserve">
+    <value>Номер, цвет, основная папка и заметки работы. Иконка с номером видна на «Разборе» и у заметок.</value>
+  </data>
+  <data name="Projects.Empty" xml:space="preserve">
+    <value>Проектов пока нет. Проект объединяет основную папку с подпапками и заметки; его иконка с номером видна на «Разборе» и у заметок.</value>
+  </data>
+  <data name="Projects.Failed" xml:space="preserve">
+    <value>Не получилось: {0}</value>
+  </data>
+  <data name="Projects.Folder" xml:space="preserve">
+    <value>Основная папка</value>
+  </data>
+  <data name="Projects.FolderHint" xml:space="preserve">
+    <value>Подпапки внутри неё — тоже проект.</value>
+  </data>
+  <data name="Projects.More" xml:space="preserve">
+    <value>Ещё</value>
+  </data>
+  <data name="Projects.New" xml:space="preserve">
+    <value>Новый проект</value>
+  </data>
+  <data name="Projects.NewNote" xml:space="preserve">
+    <value>Новая заметка</value>
+  </data>
+  <data name="Projects.NoFolder" xml:space="preserve">
+    <value>Папка не выбрана</value>
+  </data>
+  <data name="Projects.NoNotes" xml:space="preserve">
+    <value>Заметок пока нет.</value>
+  </data>
+  <data name="Projects.NotFound" xml:space="preserve">
+    <value>Проект {0} не найден.</value>
+  </data>
+  <data name="Projects.Notes.Few" xml:space="preserve">
+    <value>заметки</value>
+  </data>
+  <data name="Projects.Notes.Many" xml:space="preserve">
+    <value>заметок</value>
+  </data>
+  <data name="Projects.Notes.One" xml:space="preserve">
+    <value>заметка</value>
+  </data>
+  <data name="Projects.NothingFound" xml:space="preserve">
+    <value>Ничего не найдено</value>
+  </data>
+  <data name="Projects.NothingOpen" xml:space="preserve">
+    <value>Выберите проект слева или создайте новый.</value>
+  </data>
+  <data name="Projects.Number" xml:space="preserve">
+    <value>Номер</value>
+  </data>
+  <data name="Projects.NumberPlaceholder" xml:space="preserve">
+    <value>Например, 417</value>
+  </data>
+  <data name="Projects.NumberRequired" xml:space="preserve">
+    <value>Введите номер проекта.</value>
+  </data>
+  <data name="Projects.NumberTaken" xml:space="preserve">
+    <value>Номер {0} уже занят.</value>
+  </data>
+  <data name="Projects.NumberTakenBy" xml:space="preserve">
+    <value>Номер {0} уже у проекта «{1}».</value>
+  </data>
+  <data name="Projects.NumberTooLong" xml:space="preserve">
+    <value>Номер — не длиннее {0} символов.</value>
+  </data>
+  <data name="Projects.OpenFolder" xml:space="preserve">
+    <value>Открыть</value>
+  </data>
+  <data name="Projects.OtherFolder" xml:space="preserve">
+    <value>Другая папка…</value>
+  </data>
+  <data name="Projects.PickFolderTitle" xml:space="preserve">
+    <value>Основная папка проекта</value>
+  </data>
+  <data name="Projects.ProjectNotes" xml:space="preserve">
+    <value>Заметки проекта</value>
+  </data>
+  <data name="Projects.ProjectTitle" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="Projects.Search" xml:space="preserve">
+    <value>Найти проект</value>
+  </data>
+  <data name="Projects.Title" xml:space="preserve">
+    <value>Проекты</value>
+  </data>
+  <data name="Projects.TitlePlaceholder" xml:space="preserve">
+    <value>Например, Школа на Ленина</value>
+  </data>
+  <data name="Projects.WorkFolders" xml:space="preserve">
+    <value>Рабочие папки</value>
   </data>
   <data name="QuickSearch.Archives" xml:space="preserve">
     <value>Архивы</value>
@@ -3038,6 +3167,9 @@
   </data>
   <data name="Sorting.Undo" xml:space="preserve">
     <value>Отменить</value>
+  </data>
+  <data name="Sorting.WorkFolderProject" xml:space="preserve">
+    <value>Проект {0}</value>
   </data>
   <data name="Sorting.WorkFolders" xml:space="preserve">
     <value>Рабочие папки</value>

@@ -142,8 +142,12 @@ public sealed record NamePreset(string Title, string Template)
 /// <param name="Number">Номер клавиши; 0 — без клавиши (десятая и дальше).</param>
 /// <param name="Folder">Папка.</param>
 /// <param name="IsMissing">Папки нет в индексе: переименована, перенесена или удалена (этап 17.2).</param>
-public sealed record WorkFolderItem(int Number, SortingFolderInfo Folder, bool IsMissing = false)
+/// <param name="Project">Проект, к папке которого относится рабочая папка (этап 24); <c>null</c> — нет.</param>
+public sealed record WorkFolderItem(int Number, SortingFolderInfo Folder, bool IsMissing = false, ProjectInfo? Project = null)
 {
+    /// <summary>Папка — проект или внутри папки проекта (этап 24): на чипе его иконка с номером.</summary>
+    public bool HasProject => Project is not null;
+
     /// <summary>Подпись для чтения с экрана и списков: «2 417».</summary>
     public string Text => Number > 0 ? $"{Number} {Folder.Title}" : Folder.Title;
 
@@ -154,7 +158,8 @@ public sealed record WorkFolderItem(int Number, SortingFolderInfo Folder, bool I
     public bool HasNumber => Number > 0;
 
     /// <summary>Подсказка: путь, а если папки нет в индексе — что с ней делать (этап 17.2).</summary>
-    public string Tip => IsMissing ? L.F("Sorting.WorkFolderMissing", Folder.Path) : Folder.Path;
+    public string Tip => (Project is { } project ? L.F("Sorting.WorkFolderProject", project.DisplayName) + Environment.NewLine : string.Empty)
+        + (IsMissing ? L.F("Sorting.WorkFolderMissing", Folder.Path) : Folder.Path);
 
     /// <inheritdoc />
     public override string ToString() => Text;
@@ -280,6 +285,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     private readonly IDialogService? _dialogs;
     private readonly IInfoBarService? _notices;
     private readonly INotificationService? _notifications;
+    private readonly IProjectsService? _projects;
+    private IReadOnlyList<ProjectInfo> _projectList = [];
     private readonly IInboxService _inbox;
     private readonly IDispatcher? _dispatcher;
     private CancellationTokenSource? _inboxReload;
@@ -319,6 +326,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// <param name="actions">Действия над файлом: «Показать в папке»; <c>null</c> — пункта нет.</param>
     /// <param name="layout">Ширина панели рабочих папок между запусками; <c>null</c> — не запоминается.</param>
     /// <param name="notifications">Канал уведомлений: сводка авторазбора при скрытом главном окне — карточкой у трея.</param>
+    /// <param name="projects">Проекты (этап 24): иконка проекта на чипе рабочей папки; <c>null</c> — без иконок.</param>
     public SortingViewModel(
         ISortingSettings settings,
         IBrowseService browse,
@@ -333,9 +341,16 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         IDispatcher? dispatcher = null,
         IFileActions? actions = null,
         ILayoutStore? layout = null,
-        INotificationService? notifications = null)
+        INotificationService? notifications = null,
+        IProjectsService? projects = null)
         : base(PageKeys.Inbox, "Sorting.Title", FASymbol.Download)
     {
+        _projects = projects;
+        if (projects is not null)
+        {
+            projects.Changed += OnProjectsChanged;
+        }
+
         _notifications = notifications;
         _clock = clock ?? (static () => DateTimeOffset.Now);
         _actions = actions;
@@ -591,6 +606,7 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
                 _nameTemplateLoaded = true;
             }
 
+            await LoadProjectsAsync();
             ShowWorkFolders();
             await LoadInboxesAsync();
             await LoadTagsAsync();
@@ -1600,7 +1616,8 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
         WorkFolders.Clear();
         for (var i = 0; i < _folders.WorkFolders.Count; i++)
         {
-            WorkFolders.Add(new WorkFolderItem(i < 9 ? i + 1 : 0, _folders.WorkFolders[i], _missing.Contains(_folders.WorkFolders[i].Path)));
+            var folder = _folders.WorkFolders[i];
+            WorkFolders.Add(new WorkFolderItem(i < 9 ? i + 1 : 0, folder, _missing.Contains(folder.Path), ProjectInfo.ForPath(_projectList, folder.Path)));
         }
 
         HasNoWorkFolders = WorkFolders.Count == 0;
@@ -2021,6 +2038,43 @@ public sealed partial class SortingViewModel : PageViewModel, IPageLifecycle
     /// Отмечает рабочие папки, которых нет в индексе (этап 17.2): переименованную в Проводнике сервер переносит сам, а
     /// перенесённую в другое место или удалённую — нет, и пользователь видит это на чипе и в карточке.
     /// </summary>
+    private async Task LoadProjectsAsync()
+    {
+        if (_projects is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _projectList = await _projects.GetProjectsAsync();
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Без проектов чипы просто без иконок.
+            _ = exception;
+        }
+    }
+
+    // Проект создан, перекрашен или удалён на странице «Проекты» — иконки на чипах обновляются.
+    private void OnProjectsChanged(object? sender, EventArgs e)
+    {
+        async Task ReloadAsync()
+        {
+            await LoadProjectsAsync();
+            ShowWorkFolders();
+        }
+
+        if (_dispatcher is { } dispatcher)
+        {
+            dispatcher.Post(() => _ = ReloadAsync());
+        }
+        else
+        {
+            _ = ReloadAsync();
+        }
+    }
+
     private async Task CheckWorkFoldersAsync()
     {
         var missing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
