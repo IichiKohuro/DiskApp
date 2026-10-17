@@ -180,6 +180,24 @@
   <data name="Operations.AccessDenied" xml:space="preserve">
     <value>Доступ запрещён</value>
   </data>
+  <data name="Projects.ColorFormat" xml:space="preserve">
+    <value>Цвет — в виде #RRGGBB.</value>
+  </data>
+  <data name="Projects.FolderMustBeFull" xml:space="preserve">
+    <value>Папка проекта — полный путь, например D:\Работа\417.</value>
+  </data>
+  <data name="Projects.NotFound" xml:space="preserve">
+    <value>Проекта {0} нет.</value>
+  </data>
+  <data name="Projects.NumberLength" xml:space="preserve">
+    <value>Номер — от 1 до {0} символов.</value>
+  </data>
+  <data name="Projects.NumberTaken" xml:space="preserve">
+    <value>Номер «{0}» уже у другого проекта.</value>
+  </data>
+  <data name="Projects.TitleLength" xml:space="preserve">
+    <value>Название — не длиннее {0} символов.</value>
+  </data>
   <data name="RootEndpoints.FolderNotFoundOrUnavailable" xml:space="preserve">
     <value>Папка «{0}» не найдена или недоступна.</value>
   </data>

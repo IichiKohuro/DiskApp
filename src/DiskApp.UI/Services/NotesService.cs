@@ -56,7 +56,7 @@ public sealed class ApiNotesService(IDiskAppApi api) : INotesService
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<NoteInfo>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default)
-        => [.. (await _api.GetNotesAsync(query, tagId, deleted, cancellationToken).ConfigureAwait(false)).Select(ToNote)];
+        => [.. (await _api.GetNotesAsync(query, tagId, deleted, cancellationToken: cancellationToken).ConfigureAwait(false)).Select(ToNote)];
 
     /// <inheritdoc />
     public async Task<NoteInfo> CreateAsync(string body, IReadOnlyList<string> tags, CancellationToken cancellationToken = default)

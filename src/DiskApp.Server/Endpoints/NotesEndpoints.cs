@@ -33,7 +33,7 @@ internal static partial class NotesEndpoints
         notes.MapGet(ApiRoutes.V1.Notes, ListAsync)
             .WithName("GetNotes")
             .WithSummary("Заметки")
-            .WithDescription("Закреплённые сверху, затем новые; q — слова в заголовке или тексте (без учёта регистра и «ё»), tagId — тег заметок, deleted=true — корзина.");
+            .WithDescription("Закреплённые сверху, затем новые; q — слова в заголовке или тексте (без учёта регистра и «ё»), tagId — тег заметок, projectId — проект, deleted=true — корзина.");
         notes.MapPost(ApiRoutes.V1.Notes, CreateAsync)
             .WithName("CreateNote")
             .WithSummary("Новая заметка")
@@ -55,10 +55,10 @@ internal static partial class NotesEndpoints
     [GeneratedRegex("^#[0-9A-Fa-f]{6}$")]
     private static partial Regex ColorPattern();
 
-    private static async Task<Ok<NoteDto[]>> ListAsync(string? q, long? tagId, bool? deleted, int? limit, INoteRepository notes, IClock clock, CancellationToken cancellationToken)
+    private static async Task<Ok<NoteDto[]>> ListAsync(string? q, long? tagId, long? projectId, bool? deleted, int? limit, INoteRepository notes, IClock clock, CancellationToken cancellationToken)
     {
         await notes.PurgeDeletedBeforeAsync(clock.UtcNow - TrashRetention, cancellationToken).ConfigureAwait(false);
-        var list = await notes.ListAsync(new NoteQuery(q, tagId, deleted ?? false, limit ?? 500), cancellationToken).ConfigureAwait(false);
+        var list = await notes.ListAsync(new NoteQuery(q, tagId, deleted ?? false, limit ?? 500, projectId), cancellationToken).ConfigureAwait(false);
         return TypedResults.Ok(list.Select(static note => note.ToDto()).ToArray());
     }
 
@@ -67,27 +67,27 @@ internal static partial class NotesEndpoints
             ? TypedResults.Ok(note.ToDto())
             : ApiProblems.NotFound(L.F("Notes.NotFound", id));
 
-    private static async Task<Results<Created<NoteDto>, ValidationProblem>> CreateAsync(NoteRequest request, INoteRepository notes, INoteTagRepository tags, IClock clock, CancellationToken cancellationToken)
+    private static async Task<Results<Created<NoteDto>, ValidationProblem>> CreateAsync(NoteRequest request, INoteRepository notes, INoteTagRepository tags, IProjectRepository projects, IClock clock, CancellationToken cancellationToken)
     {
-        if (Validate(request) is { } invalid)
+        if ((Validate(request) ?? await ValidateProjectAsync(request, projects, cancellationToken).ConfigureAwait(false)) is { } invalid)
         {
             return invalid;
         }
 
         var tagIds = await TagIdsAsync(request, tags, cancellationToken).ConfigureAwait(false);
-        var note = await notes.AddAsync(request.Body, request.IsPinned, tagIds, clock.UtcNow, cancellationToken).ConfigureAwait(false);
+        var note = await notes.AddAsync(request.Body, request.IsPinned, tagIds, clock.UtcNow, request.ProjectId, cancellationToken).ConfigureAwait(false);
         return TypedResults.Created(ApiRoutes.V1.Note(note.Id), note.ToDto());
     }
 
-    private static async Task<Results<Ok<NoteDto>, ValidationProblem, ProblemHttpResult>> UpdateAsync(long id, NoteRequest request, INoteRepository notes, INoteTagRepository tags, IClock clock, CancellationToken cancellationToken)
+    private static async Task<Results<Ok<NoteDto>, ValidationProblem, ProblemHttpResult>> UpdateAsync(long id, NoteRequest request, INoteRepository notes, INoteTagRepository tags, IProjectRepository projects, IClock clock, CancellationToken cancellationToken)
     {
-        if (Validate(request) is { } invalid)
+        if ((Validate(request) ?? await ValidateProjectAsync(request, projects, cancellationToken).ConfigureAwait(false)) is { } invalid)
         {
             return invalid;
         }
 
         var tagIds = await TagIdsAsync(request, tags, cancellationToken).ConfigureAwait(false);
-        return await notes.UpdateAsync(id, request.Body, request.IsPinned, tagIds, clock.UtcNow, cancellationToken).ConfigureAwait(false) is { } note
+        return await notes.UpdateAsync(id, request.Body, request.IsPinned, tagIds, clock.UtcNow, request.ProjectId, cancellationToken).ConfigureAwait(false) is { } note
             ? TypedResults.Ok(note.ToDto())
             : ApiProblems.NotFound(L.F("Notes.NotFound", id));
     }
@@ -153,6 +153,12 @@ internal static partial class NotesEndpoints
         => await tags.DeleteAsync(id, cancellationToken).ConfigureAwait(false)
             ? TypedResults.NoContent()
             : ApiProblems.NotFound(L.F("Library.TagNotFound", id));
+
+    // Проект заметки (этап 24) должен существовать.
+    private static async Task<ValidationProblem?> ValidateProjectAsync(NoteRequest request, IProjectRepository projects, CancellationToken cancellationToken)
+        => request.ProjectId is { } projectId && await projects.GetAsync(projectId, cancellationToken).ConfigureAwait(false) is null
+            ? ApiProblems.Invalid("projectId", L.F("Projects.NotFound", projectId))
+            : null;
 
     private static async Task<Tag?> FindByNameAsync(INoteTagRepository tags, string name, CancellationToken cancellationToken)
     {

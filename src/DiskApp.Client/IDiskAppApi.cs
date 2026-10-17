@@ -6,6 +6,7 @@ using DiskApp.Contracts.History;
 using DiskApp.Contracts.Library;
 using DiskApp.Contracts.Notes;
 using DiskApp.Contracts.Operations;
+using DiskApp.Contracts.Projects;
 using DiskApp.Contracts.Roots;
 using DiskApp.Contracts.Search;
 
@@ -146,7 +147,7 @@ public interface IDiskAppApi
     Task<FileHistoryRevertDto> RevertFileEventAsync(long id, CancellationToken cancellationToken = default);
 
     /// <summary>Заметки (этап 23): закреплённые сверху; поиск по тексту, тег заметок, корзина.</summary>
-    Task<IReadOnlyList<NoteDto>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<NoteDto>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, long? projectId = null, CancellationToken cancellationToken = default);
 
     /// <summary>Заметка.</summary>
     Task<NoteDto> GetNoteAsync(long id, CancellationToken cancellationToken = default);
@@ -174,6 +175,18 @@ public interface IDiskAppApi
 
     /// <summary>Удалить тег заметок.</summary>
     Task DeleteNoteTagAsync(long id, CancellationToken cancellationToken = default);
+
+    /// <summary>Проекты по номеру (этап 24).</summary>
+    Task<IReadOnlyList<ProjectDto>> GetProjectsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Новый проект; номер занят — 409.</summary>
+    Task<ProjectDto> CreateProjectAsync(ProjectRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Изменить проект.</summary>
+    Task<ProjectDto> UpdateProjectAsync(long id, ProjectRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Удалить проект: папка и заметки остаются.</summary>
+    Task DeleteProjectAsync(long id, CancellationToken cancellationToken = default);
 
     /// <summary>Операции.</summary>
     Task<IReadOnlyList<OperationDto>> GetOperationsAsync(CancellationToken cancellationToken = default);

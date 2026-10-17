@@ -13,6 +13,7 @@ using DiskApp.Contracts.History;
 using DiskApp.Contracts.Library;
 using DiskApp.Contracts.Notes;
 using DiskApp.Contracts.Operations;
+using DiskApp.Contracts.Projects;
 using DiskApp.Contracts.Roots;
 using DiskApp.Contracts.Search;
 
@@ -338,8 +339,15 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
     public Task DeleteTagAsync(long id, CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Delete, ApiRoutes.V1.Tag(id), cancellationToken);
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<NoteDto>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, CancellationToken cancellationToken = default)
-        => GetAsync(ApiRoutes.V1.Notes + new QueryBuilder().Add("q", string.IsNullOrWhiteSpace(query) ? null : query).Add("tagId", tagId?.ToString(CultureInfo.InvariantCulture)).Add("deleted", deleted ? "true" : null), Json.IReadOnlyListNoteDto, cancellationToken);
+    public Task<IReadOnlyList<NoteDto>> GetNotesAsync(string? query = null, long? tagId = null, bool deleted = false, long? projectId = null, CancellationToken cancellationToken = default)
+        => GetAsync(
+            ApiRoutes.V1.Notes + new QueryBuilder()
+                .Add("q", string.IsNullOrWhiteSpace(query) ? null : query)
+                .Add("tagId", tagId?.ToString(CultureInfo.InvariantCulture))
+                .Add("projectId", projectId?.ToString(CultureInfo.InvariantCulture))
+                .Add("deleted", deleted ? "true" : null),
+            Json.IReadOnlyListNoteDto,
+            cancellationToken);
 
     /// <inheritdoc />
     public Task<NoteDto> GetNoteAsync(long id, CancellationToken cancellationToken = default) => GetAsync(ApiRoutes.V1.Note(id), Json.NoteDto, cancellationToken);
@@ -373,6 +381,21 @@ public sealed class HttpDiskAppApi(HttpClient http) : IDiskAppApi
 
     /// <inheritdoc />
     public Task DeleteNoteTagAsync(long id, CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Delete, ApiRoutes.V1.NoteTag(id), cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<ProjectDto>> GetProjectsAsync(CancellationToken cancellationToken = default)
+        => GetAsync(ApiRoutes.V1.Projects, Json.IReadOnlyListProjectDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ProjectDto> CreateProjectAsync(ProjectRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Post, ApiRoutes.V1.Projects, request, Json.ProjectRequest, Json.ProjectDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ProjectDto> UpdateProjectAsync(long id, ProjectRequest request, CancellationToken cancellationToken = default)
+        => SendAsync(HttpMethod.Put, ApiRoutes.V1.Project(id), request, Json.ProjectRequest, Json.ProjectDto, cancellationToken);
+
+    /// <inheritdoc />
+    public Task DeleteProjectAsync(long id, CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Delete, ApiRoutes.V1.Project(id), cancellationToken);
 
     /// <inheritdoc />
     public Task<IReadOnlyList<CollectionDto>> GetCollectionsAsync(CancellationToken cancellationToken = default)

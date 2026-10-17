@@ -152,7 +152,10 @@ internal static class DtoMapper
     public static FolderTagsDto ToDto(this FolderTags folder) => new(folder.Path, [.. folder.Tags.Select(static tag => tag.ToDto())]);
 
     public static Contracts.Notes.NoteDto ToDto(this Note note)
-        => new(note.Id, note.Title, note.Body, note.IsPinned, note.CreatedUtc, note.ModifiedUtc, note.DeletedUtc, [.. note.Tags.Select(static tag => tag.ToDto())]);
+        => new(note.Id, note.Title, note.Body, note.IsPinned, note.CreatedUtc, note.ModifiedUtc, note.DeletedUtc, [.. note.Tags.Select(static tag => tag.ToDto())], note.ProjectId);
+
+    public static Contracts.Projects.ProjectDto ToDto(this Project project)
+        => new(project.Id, project.Number, project.Title, project.Color, project.FolderPath, project.NoteCount, project.CreatedUtc, project.ModifiedUtc);
 
     public static CollectionDto ToDto(this Collection collection) => new(collection.Id, collection.Name, (Contract.Library.CollectionKind)(int)collection.Kind, collection.Query);
 

@@ -22,17 +22,19 @@ public interface INoteRepository
     /// <param name="isPinned">Закрепить.</param>
     /// <param name="tagIds">Теги заметок.</param>
     /// <param name="nowUtc">Время создания.</param>
+    /// <param name="projectId">Проект заметки; <c>null</c> — без проекта.</param>
     /// <param name="cancellationToken">Отмена.</param>
-    Task<Note> AddAsync(string body, bool isPinned, IReadOnlyList<long> tagIds, DateTimeOffset nowUtc, CancellationToken cancellationToken = default);
+    Task<Note> AddAsync(string body, bool isPinned, IReadOnlyList<long> tagIds, DateTimeOffset nowUtc, long? projectId = null, CancellationToken cancellationToken = default);
 
-    /// <summary>Заменяет текст, закрепление и теги; <c>null</c> — заметки нет или она в корзине.</summary>
+    /// <summary>Заменяет текст, закрепление, теги и проект; <c>null</c> — заметки нет или она в корзине.</summary>
     /// <param name="id">Идентификатор.</param>
     /// <param name="body">Текст в Markdown.</param>
     /// <param name="isPinned">Закрепить.</param>
     /// <param name="tagIds">Теги заметок.</param>
     /// <param name="nowUtc">Время изменения.</param>
+    /// <param name="projectId">Проект заметки; <c>null</c> — без проекта.</param>
     /// <param name="cancellationToken">Отмена.</param>
-    Task<Note?> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<long> tagIds, DateTimeOffset nowUtc, CancellationToken cancellationToken = default);
+    Task<Note?> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<long> tagIds, DateTimeOffset nowUtc, long? projectId = null, CancellationToken cancellationToken = default);
 
     /// <summary>Убирает заметку в корзину; <c>false</c> — нет такой или уже в корзине.</summary>
     /// <param name="id">Идентификатор.</param>

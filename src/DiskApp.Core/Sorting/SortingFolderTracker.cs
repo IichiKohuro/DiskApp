@@ -30,6 +30,7 @@ public sealed class SortingFolderTracker : IDisposable
     private readonly IFolderTagRepository? _folderTags;
     private readonly Action? _folderTagsMoved;
     private readonly SortingHistory? _history;
+    private readonly IProjectRepository? _projects;
     private readonly PathNormalizer _paths;
     private readonly ILogger _logger;
     private readonly IDisposable _renames;
@@ -48,6 +49,7 @@ public sealed class SortingFolderTracker : IDisposable
     /// <param name="folderTags">Авто-теги папок (этап 19); <c>null</c> — пути авто-тегов не отслеживаются.</param>
     /// <param name="folderTagsMoved">Вызывается, когда пути авто-тегов поменялись: сбросить кэш поиска.</param>
     /// <param name="history">История решений разбора (этап 17.4); <c>null</c> — её пути не отслеживаются.</param>
+    /// <param name="projects">Проекты (этап 24): папка проекта следует за переименованием; <c>null</c> — не отслеживается.</param>
     public SortingFolderTracker(
         IIndexEventBus events,
         FileOperationService operations,
@@ -56,7 +58,8 @@ public sealed class SortingFolderTracker : IDisposable
         ILogger<SortingFolderTracker>? logger = null,
         IFolderTagRepository? folderTags = null,
         Action? folderTagsMoved = null,
-        SortingHistory? history = null)
+        SortingHistory? history = null,
+        IProjectRepository? projects = null)
     {
         ArgumentNullException.ThrowIfNull(events);
         _operations = operations ?? throw new ArgumentNullException(nameof(operations));
@@ -66,6 +69,7 @@ public sealed class SortingFolderTracker : IDisposable
         _folderTags = folderTags;
         _folderTagsMoved = folderTagsMoved;
         _history = history;
+        _projects = projects;
         _renames = events.Subscribe<EntryRenamedEvent>(OnRenamed);
         _completed = events.Subscribe<OperationCompletedEvent>(OnOperationCompleted);
     }
@@ -204,6 +208,20 @@ public sealed class SortingFolderTracker : IDisposable
             if (_history is not null)
             {
                 await _history.MovePathsAsync(moves).ConfigureAwait(false);
+            }
+
+            // Основная папка проекта (этап 24) — тоже по пути.
+            if (_projects is not null)
+            {
+                foreach (var project in await _projects.GetAllAsync().ConfigureAwait(false))
+                {
+                    if (project.FolderPath is { } folder
+                        && moves.Aggregate(folder, (path, move) => MapPath(path, move.From, move.To, _paths)!) is var mapped
+                        && !ReferenceEquals(mapped, folder))
+                    {
+                        await _projects.MoveFolderAsync(folder, mapped).ConfigureAwait(false);
+                    }
+                }
             }
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or System.Data.Common.DbException)

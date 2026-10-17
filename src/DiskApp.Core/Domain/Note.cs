@@ -28,6 +28,9 @@ public sealed record Note
 
     /// <summary>Теги заметки — не теги файлов: у заметок свой список.</summary>
     public IReadOnlyList<Tag> Tags { get; init; } = [];
+
+    /// <summary>Проект заметки (этап 24); <c>null</c> — заметка сама по себе.</summary>
+    public long? ProjectId { get; init; }
 }
 
 /// <summary>Что показать в списке заметок.</summary>
@@ -35,7 +38,8 @@ public sealed record Note
 /// <param name="TagId">Только с этим тегом заметок; <c>null</c> — с любыми.</param>
 /// <param name="Deleted">Корзина заметок вместо обычного списка.</param>
 /// <param name="Limit">Сколько заметок вернуть.</param>
-public sealed record NoteQuery(string? Text = null, long? TagId = null, bool Deleted = false, int Limit = 500);
+/// <param name="ProjectId">Только заметки этого проекта (этап 24); <c>null</c> — любые.</param>
+public sealed record NoteQuery(string? Text = null, long? TagId = null, bool Deleted = false, int Limit = 500, long? ProjectId = null);
 
 /// <summary>Заголовок и выдержка из текста заметки.</summary>
 public static class NoteText

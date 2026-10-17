@@ -182,6 +182,12 @@ public static class ApiRoutes
         /// <summary>Тег заметок.</summary>
         public const string NoteTagById = NoteTags + "/{id:long}";
 
+        /// <summary>Проекты (этап 24): список и создание.</summary>
+        public const string Projects = Prefix + "/projects";
+
+        /// <summary>Проект: чтение, правка, удаление.</summary>
+        public const string ProjectById = Projects + "/{id:long}";
+
         /// <summary>Тег по идентификатору.</summary>
         public const string TagById = Tags + "/{id:long}";
 
@@ -217,6 +223,9 @@ public static class ApiRoutes
 
         /// <summary>Адрес тега заметок.</summary>
         public static string NoteTag(long id) => NoteTags + "/" + Id(id);
+
+        /// <summary>Адрес проекта.</summary>
+        public static string Project(long id) => Projects + "/" + Id(id);
 
         /// <summary>Адрес коллекции.</summary>
         public static string Collection(long id) => Collections + "/" + Id(id);

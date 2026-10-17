@@ -180,6 +180,24 @@
   <data name="Operations.AccessDenied" xml:space="preserve">
     <value>Access denied</value>
   </data>
+  <data name="Projects.ColorFormat" xml:space="preserve">
+    <value>Use #RRGGBB for the color.</value>
+  </data>
+  <data name="Projects.FolderMustBeFull" xml:space="preserve">
+    <value>The project folder must be a full path, for example D:\Work\417.</value>
+  </data>
+  <data name="Projects.NotFound" xml:space="preserve">
+    <value>There is no project {0}.</value>
+  </data>
+  <data name="Projects.NumberLength" xml:space="preserve">
+    <value>The number takes 1 to {0} characters.</value>
+  </data>
+  <data name="Projects.NumberTaken" xml:space="preserve">
+    <value>Number “{0}” already belongs to another project.</value>
+  </data>
+  <data name="Projects.TitleLength" xml:space="preserve">
+    <value>The title takes at most {0} characters.</value>
+  </data>
   <data name="RootEndpoints.FolderNotFoundOrUnavailable" xml:space="preserve">
     <value>Folder “{0}” not found or unavailable.</value>
   </data>

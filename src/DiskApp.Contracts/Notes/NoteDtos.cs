@@ -11,7 +11,8 @@ namespace DiskApp.Contracts.Notes;
 /// <param name="ModifiedUtc">Изменена.</param>
 /// <param name="DeletedUtc">Удалена в корзину; <c>null</c> — нет.</param>
 /// <param name="Tags">Теги заметки — из списка тегов заметок, не файлов.</param>
-public sealed record NoteDto(long Id, string Title, string Body, bool IsPinned, DateTimeOffset CreatedUtc, DateTimeOffset ModifiedUtc, DateTimeOffset? DeletedUtc, IReadOnlyList<TagDto> Tags);
+/// <param name="ProjectId">Проект заметки (этап 24); <c>null</c> — заметка сама по себе.</param>
+public sealed record NoteDto(long Id, string Title, string Body, bool IsPinned, DateTimeOffset CreatedUtc, DateTimeOffset ModifiedUtc, DateTimeOffset? DeletedUtc, IReadOnlyList<TagDto> Tags, long? ProjectId = null);
 
 /// <summary>
 /// Новая заметка или её правка: <c>POST /api/v1/notes</c>, <c>PUT /api/v1/notes/{id}</c>. Теги — по именам: недостающие
@@ -33,4 +34,7 @@ public sealed record NoteRequest
 
     /// <summary>Имена тегов заметки.</summary>
     public IReadOnlyList<string> Tags { get; set; } = [];
+
+    /// <summary>Проект заметки; <c>null</c> — без проекта.</summary>
+    public long? ProjectId { get; set; }
 }

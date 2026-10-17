@@ -14,7 +14,7 @@ namespace DiskApp.Infrastructure.Sqlite.Repositories;
 /// </summary>
 public sealed class SqliteNoteRepository(SqliteDatabase database) : SqliteRepository(database), INoteRepository
 {
-    private const string Columns = "n.id AS Id, n.title AS Title, n.body AS Body, n.is_pinned AS IsPinned, n.created_utc AS CreatedUtc, n.modified_utc AS ModifiedUtc, n.deleted_utc AS DeletedUtc";
+    private const string Columns = "n.id AS Id, n.title AS Title, n.body AS Body, n.is_pinned AS IsPinned, n.created_utc AS CreatedUtc, n.modified_utc AS ModifiedUtc, n.deleted_utc AS DeletedUtc, n.project_id AS ProjectId";
 
     /// <inheritdoc />
     public Task<IReadOnlyList<Note>> ListAsync(NoteQuery query, CancellationToken cancellationToken = default)
@@ -30,6 +30,12 @@ public sealed class SqliteNoteRepository(SqliteDatabase database) : SqliteReposi
         {
             where.Add($"instr(n.search_folded, @T{i}) > 0");
             parameters.Add($"T{i}", terms[i]);
+        }
+
+        if (query.ProjectId is { } projectId)
+        {
+            where.Add("n.project_id = @ProjectId");
+            parameters.Add("ProjectId", projectId);
         }
 
         if (query.TagId is { } tagId)
@@ -55,7 +61,7 @@ public sealed class SqliteNoteRepository(SqliteDatabase database) : SqliteReposi
         => ReadAsync(connection => Get(connection, null, id), cancellationToken);
 
     /// <inheritdoc />
-    public Task<Note> AddAsync(string body, bool isPinned, IReadOnlyList<long> tagIds, DateTimeOffset nowUtc, CancellationToken cancellationToken = default)
+    public Task<Note> AddAsync(string body, bool isPinned, IReadOnlyList<long> tagIds, DateTimeOffset nowUtc, long? projectId = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(body);
         ArgumentNullException.ThrowIfNull(tagIds);
@@ -65,8 +71,8 @@ public sealed class SqliteNoteRepository(SqliteDatabase database) : SqliteReposi
             using var transaction = connection.BeginTransaction();
             var now = SqliteTime.Encode(nowUtc);
             var id = connection.ExecuteScalar<long>(
-                "INSERT INTO notes (title, body, search_folded, is_pinned, created_utc, modified_utc) VALUES (@Title, @Body, @Folded, @Pinned, @Now, @Now) RETURNING id",
-                new { Title = NoteText.TitleOf(body), Body = body, Folded = Fold(body), Pinned = isPinned ? 1 : 0, Now = now },
+                "INSERT INTO notes (title, body, search_folded, is_pinned, created_utc, modified_utc, project_id) VALUES (@Title, @Body, @Folded, @Pinned, @Now, @Now, @Project) RETURNING id",
+                new { Title = NoteText.TitleOf(body), Body = body, Folded = Fold(body), Pinned = isPinned ? 1 : 0, Now = now, Project = projectId },
                 transaction);
             SetTags(connection, transaction, id, tagIds);
             var note = Get(connection, transaction, id)!;
@@ -76,7 +82,7 @@ public sealed class SqliteNoteRepository(SqliteDatabase database) : SqliteReposi
     }
 
     /// <inheritdoc />
-    public Task<Note?> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<long> tagIds, DateTimeOffset nowUtc, CancellationToken cancellationToken = default)
+    public Task<Note?> UpdateAsync(long id, string body, bool isPinned, IReadOnlyList<long> tagIds, DateTimeOffset nowUtc, long? projectId = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(body);
         ArgumentNullException.ThrowIfNull(tagIds);
@@ -85,8 +91,8 @@ public sealed class SqliteNoteRepository(SqliteDatabase database) : SqliteReposi
         {
             using var transaction = connection.BeginTransaction();
             var changed = connection.Execute(
-                "UPDATE notes SET title = @Title, body = @Body, search_folded = @Folded, is_pinned = @Pinned, modified_utc = @Now WHERE id = @Id AND deleted_utc IS NULL",
-                new { Id = id, Title = NoteText.TitleOf(body), Body = body, Folded = Fold(body), Pinned = isPinned ? 1 : 0, Now = SqliteTime.Encode(nowUtc) },
+                "UPDATE notes SET title = @Title, body = @Body, search_folded = @Folded, is_pinned = @Pinned, modified_utc = @Now, project_id = @Project WHERE id = @Id AND deleted_utc IS NULL",
+                new { Id = id, Title = NoteText.TitleOf(body), Body = body, Folded = Fold(body), Pinned = isPinned ? 1 : 0, Now = SqliteTime.Encode(nowUtc), Project = projectId },
                 transaction);
             if (changed == 0)
             {
@@ -178,6 +184,8 @@ public sealed class SqliteNoteRepository(SqliteDatabase database) : SqliteReposi
 
         public long? DeletedUtc { get; set; }
 
+        public long? ProjectId { get; set; }
+
         public Note ToNote(IReadOnlyList<Tag> tags) => new()
         {
             Id = Id,
@@ -188,6 +196,7 @@ public sealed class SqliteNoteRepository(SqliteDatabase database) : SqliteReposi
             ModifiedUtc = SqliteTime.Decode(ModifiedUtc),
             DeletedUtc = DeletedUtc is { } deleted ? SqliteTime.Decode(deleted) : null,
             Tags = tags,
+            ProjectId = ProjectId,
         };
     }
 

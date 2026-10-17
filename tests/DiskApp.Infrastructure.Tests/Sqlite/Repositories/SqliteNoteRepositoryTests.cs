@@ -17,8 +17,8 @@ public sealed class SqliteNoteRepositoryTests
         await using var context = await CreateAsync();
 
         // Act
-        var note = await context.Notes.AddAsync("\n# Звонок по проекту 417\n\nТекст", false, [], Now, TestContext.Current.CancellationToken);
-        var updated = await context.Notes.UpdateAsync(note.Id, "- [ ] Купить бумагу", true, [], Now.AddMinutes(5), TestContext.Current.CancellationToken);
+        var note = await context.Notes.AddAsync("\n# Звонок по проекту 417\n\nТекст", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
+        var updated = await context.Notes.UpdateAsync(note.Id, "- [ ] Купить бумагу", true, [], Now.AddMinutes(5), cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         note.Title.ShouldBe("Звонок по проекту 417");
@@ -28,7 +28,7 @@ public sealed class SqliteNoteRepositoryTests
         updated.IsPinned.ShouldBeTrue();
         updated.CreatedUtc.ShouldBe(Now);
         updated.ModifiedUtc.ShouldBe(Now.AddMinutes(5));
-        (await context.Notes.UpdateAsync(999, "нет такой", false, [], Now, TestContext.Current.CancellationToken)).ShouldBeNull();
+        (await context.Notes.UpdateAsync(999, "нет такой", false, [], Now, cancellationToken: TestContext.Current.CancellationToken)).ShouldBeNull();
     }
 
     [Fact]
@@ -36,8 +36,8 @@ public sealed class SqliteNoteRepositoryTests
     {
         // Arrange
         await using var context = await CreateAsync();
-        var hedgehog = await context.Notes.AddAsync("Ёжик в тумане\nМультфильм Норштейна", false, [], Now, TestContext.Current.CancellationToken);
-        await context.Notes.AddAsync("Туманный Альбион", false, [], Now.AddMinutes(1), TestContext.Current.CancellationToken);
+        var hedgehog = await context.Notes.AddAsync("Ёжик в тумане\nМультфильм Норштейна", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
+        await context.Notes.AddAsync("Туманный Альбион", false, [], Now.AddMinutes(1), cancellationToken: TestContext.Current.CancellationToken);
 
         // Act
         var byYo = await context.Notes.ListAsync(new NoteQuery("ЕЖИК"), TestContext.Current.CancellationToken);
@@ -57,9 +57,9 @@ public sealed class SqliteNoteRepositoryTests
     {
         // Arrange
         await using var context = await CreateAsync();
-        var old = await context.Notes.AddAsync("Старая", false, [], Now, TestContext.Current.CancellationToken);
-        var pinned = await context.Notes.AddAsync("Закреплённая", true, [], Now.AddMinutes(1), TestContext.Current.CancellationToken);
-        var fresh = await context.Notes.AddAsync("Свежая", false, [], Now.AddMinutes(2), TestContext.Current.CancellationToken);
+        var old = await context.Notes.AddAsync("Старая", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
+        var pinned = await context.Notes.AddAsync("Закреплённая", true, [], Now.AddMinutes(1), cancellationToken: TestContext.Current.CancellationToken);
+        var fresh = await context.Notes.AddAsync("Свежая", false, [], Now.AddMinutes(2), cancellationToken: TestContext.Current.CancellationToken);
 
         // Act
         var list = await context.Notes.ListAsync(new NoteQuery(), TestContext.Current.CancellationToken);
@@ -76,8 +76,8 @@ public sealed class SqliteNoteRepositoryTests
         var fileTag = await context.Tags.AddAsync("Работа", "#ff0000", TestContext.Current.CancellationToken);
         var noteTag = await context.NoteTags.AddAsync("работа", null, TestContext.Current.CancellationToken);
         var other = await context.NoteTags.AddAsync("Идеи", "#00ff00", TestContext.Current.CancellationToken);
-        var work = await context.Notes.AddAsync("План на неделю", false, [noteTag.Id, other.Id, noteTag.Id], Now, TestContext.Current.CancellationToken);
-        await context.Notes.AddAsync("Без тегов", false, [], Now, TestContext.Current.CancellationToken);
+        var work = await context.Notes.AddAsync("План на неделю", false, [noteTag.Id, other.Id, noteTag.Id], Now, cancellationToken: TestContext.Current.CancellationToken);
+        await context.Notes.AddAsync("Без тегов", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
 
         // Act
         var filtered = await context.Notes.ListAsync(new NoteQuery(TagId: noteTag.Id), TestContext.Current.CancellationToken);
@@ -101,13 +101,13 @@ public sealed class SqliteNoteRepositoryTests
     {
         // Arrange
         await using var context = await CreateAsync();
-        var note = await context.Notes.AddAsync("В корзину", false, [], Now, TestContext.Current.CancellationToken);
-        var kept = await context.Notes.AddAsync("Остаётся", false, [], Now, TestContext.Current.CancellationToken);
+        var note = await context.Notes.AddAsync("В корзину", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
+        var kept = await context.Notes.AddAsync("Остаётся", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
 
         // Act
         var purgedLive = await context.Notes.PurgeAsync(kept.Id, TestContext.Current.CancellationToken);
         var trashed = await context.Notes.TrashAsync(note.Id, Now.AddHours(1), TestContext.Current.CancellationToken);
-        var editedInTrash = await context.Notes.UpdateAsync(note.Id, "Правка в корзине", false, [], Now, TestContext.Current.CancellationToken);
+        var editedInTrash = await context.Notes.UpdateAsync(note.Id, "Правка в корзине", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
         var live = await context.Notes.ListAsync(new NoteQuery(), TestContext.Current.CancellationToken);
         var trash = await context.Notes.ListAsync(new NoteQuery(Deleted: true), TestContext.Current.CancellationToken);
         var restored = await context.Notes.RestoreAsync(note.Id, TestContext.Current.CancellationToken);
@@ -132,9 +132,9 @@ public sealed class SqliteNoteRepositoryTests
     {
         // Arrange
         await using var context = await CreateAsync();
-        var old = await context.Notes.AddAsync("Давно удалена", false, [], Now, TestContext.Current.CancellationToken);
-        var recent = await context.Notes.AddAsync("Удалена вчера", false, [], Now, TestContext.Current.CancellationToken);
-        var live = await context.Notes.AddAsync("Живая", false, [], Now.AddDays(-90), TestContext.Current.CancellationToken);
+        var old = await context.Notes.AddAsync("Давно удалена", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
+        var recent = await context.Notes.AddAsync("Удалена вчера", false, [], Now, cancellationToken: TestContext.Current.CancellationToken);
+        var live = await context.Notes.AddAsync("Живая", false, [], Now.AddDays(-90), cancellationToken: TestContext.Current.CancellationToken);
         await context.Notes.TrashAsync(old.Id, Now.AddDays(-31), TestContext.Current.CancellationToken);
         await context.Notes.TrashAsync(recent.Id, Now.AddDays(-1), TestContext.Current.CancellationToken);
 

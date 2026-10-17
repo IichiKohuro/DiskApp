@@ -105,7 +105,8 @@ public static class ServerServiceCollectionExtensions
             provider.GetRequiredService<ILogger<SortingFolderTracker>>(),
             provider.GetRequiredService<IFolderTagRepository>(),
             () => provider.GetRequiredService<SearchService>().InvalidateCaches(),
-            provider.GetRequiredService<SortingHistory>()));
+            provider.GetRequiredService<SortingHistory>(),
+            provider.GetRequiredService<IProjectRepository>()));
         services.AddSingleton(static provider => new InboxService(
             provider.GetRequiredService<ISettingsStore<AppSettings>>(),
             provider.GetRequiredService<IRootRepository>(),
@@ -180,6 +181,7 @@ public static class ServerServiceCollectionExtensions
         services.AddSingleton<ISortingStatsRepository>(static provider => new SqliteSortingStatsRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<IFileHistoryRepository>(static provider => new SqliteFileHistoryRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<PathNormalizer>()));
         services.AddSingleton<INoteRepository>(static provider => new SqliteNoteRepository(provider.GetRequiredService<SqliteDatabase>()));
+        services.AddSingleton<IProjectRepository>(static provider => new SqliteProjectRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<INoteTagRepository>(static provider => new SqliteNoteTagRepository(provider.GetRequiredService<SqliteDatabase>()));
         services.AddSingleton<ICollectionRepository>(static provider => new SqliteCollectionRepository(provider.GetRequiredService<SqliteDatabase>(), provider.GetRequiredService<IClock>()));
         services.AddSingleton<IQueryHistoryRepository>(static provider => new SqliteQueryHistoryRepository(provider.GetRequiredService<SqliteDatabase>()));
